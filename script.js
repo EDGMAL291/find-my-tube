@@ -20,13 +20,15 @@ function renderCards(filteredTests) {
   filteredTests.forEach((test) => {
     const card = document.createElement("div");
     card.className = "card";
-    card.style.borderTopColor = test.borderColor;
 
     card.innerHTML = `
       <h2>${test.name}</h2>
       <div class="field">
         <span class="label">Tube Color</span>
-        <span>${test.tubeColor}</span>
+        <div class="tube-color-row">
+          <span class="tube-icon" style="--tube-color: ${test.borderColor};" aria-hidden="true"></span>
+          <span>${test.tubeColor}</span>
+        </div>
       </div>
       <div class="field">
         <span class="label">Specimen</span>

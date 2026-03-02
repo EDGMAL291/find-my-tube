@@ -68,6 +68,7 @@ body::after {
   font-size: clamp(1.8rem, 2.2vw, 2.35rem);
   margin-bottom: 8px;
   letter-spacing: -0.03em;
+  text-align: center;
 }
 
 .header p {
@@ -158,7 +159,6 @@ body::after {
   border-radius: 18px;
   padding: 18px;
   border: 1px solid var(--glass-border);
-  border-top: 8px solid #cbd5e1;
   background: var(--glass-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -197,6 +197,36 @@ body::after {
   display: block;
   margin-bottom: 2px;
   color: #0b3b53;
+}
+
+.tube-color-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tube-icon {
+  --tube-color: #cbd5e1;
+  position: relative;
+  display: inline-block;
+  width: 14px;
+  height: 30px;
+  border-radius: 4px 4px 9px 9px;
+  border: 1px solid rgba(15, 23, 42, 0.35);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), var(--tube-color) 55%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.tube-icon::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -2px;
+  width: 16px;
+  height: 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(15, 23, 42, 0.35);
+  background: rgba(248, 250, 252, 0.95);
 }
 
 .no-results {
