@@ -536,7 +536,6 @@ function renderGroupChips() {
       refreshSubsectionOptions();
       subsectionFilter.value = "";
       applyFilters();
-      searchInput.focus();
     });
   });
 }
