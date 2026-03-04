@@ -488,7 +488,7 @@ body::after {
   font-size: 0.74rem;
   font-weight: 600;
   padding: 4px 9px;
-  margin: 0 0 10px 6px;
+  margin: 0 0 10px 0;
   color: #35505d;
   background: rgba(255, 252, 247, 0.88);
   border: 1px solid rgba(120, 102, 74, 0.25);
@@ -663,32 +663,40 @@ body::after {
   }
 
   .cards {
-    gap: 12px;
+    gap: 8px;
+    grid-template-columns: 1fr;
   }
 
   .card h2 {
-    font-size: 1.03rem;
-    margin-bottom: 8px;
+    font-size: 0.96rem;
+    margin-bottom: 6px;
+    line-height: 1.25;
   }
 
   .field {
-    margin-bottom: 8px;
-    font-size: 0.9rem;
+    margin-bottom: 6px;
+    font-size: 0.84rem;
+    line-height: 1.35;
   }
 
   .label {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
   }
 
   .test-group-badge {
-    font-size: 0.72rem;
-    padding: 4px 8px;
+    font-size: 0.66rem;
+    padding: 3px 7px;
+    margin-bottom: 7px;
   }
 
   .test-subgroup-badge {
-    font-size: 0.69rem;
-    padding: 3px 8px;
-    margin-left: 4px;
+    font-size: 0.62rem;
+    padding: 2px 7px;
+    margin-bottom: 8px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .card-extra {
@@ -701,14 +709,21 @@ body::after {
 
   .card-toggle-btn {
     display: inline-flex;
+    font-size: 0.76rem;
+    padding: 6px 9px;
   }
 
   .card-actions {
     justify-content: space-between;
+    margin-top: 8px;
   }
 
   .copy-btn {
-    font-size: 0.8rem;
-    padding: 7px 10px;
+    font-size: 0.76rem;
+    padding: 6px 9px;
+  }
+
+  .critical-prep-field {
+    padding-left: 8px;
   }
 }

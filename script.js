@@ -193,11 +193,15 @@ function normalizeTurnaroundTime(value) {
   const normalized = raw
     .replace(/\s*to\s*/gi, " to ")
     .replace(/\s*-\s*/g, "-")
-    .replace(/same day/gi, "Same day")
-    .replace(/hours?/gi, "h")
-    .replace(/days?/gi, "d");
+    .replace(/same day/gi, "Same day");
 
-  return normalized;
+  return normalized
+    .replace(/\bhrs?\b/gi, "hours")
+    .replace(/\bhours?\b/gi, "hours")
+    .replace(/\bday\b/gi, "day")
+    .replace(/\bdays\b/gi, "days")
+    .replace(/\b(\d+)\s*h\b/gi, "$1 hours")
+    .replace(/\b(\d+)\s*d\b/gi, (_, n) => `${n} ${Number(n) === 1 ? "day" : "days"}`);
 }
 
 function normalizeTubeColor(value) {
@@ -666,17 +670,17 @@ function renderCards(filteredTests) {
     card.innerHTML = `
       <h2>${test.name}${searchEmoji ? ` <span class="profile-emoji" aria-hidden="true">${searchEmoji}</span>` : ""}</h2>
       <div class="test-group-badge">${test.section.label}</div>
-      <div class="test-subgroup-badge">${test.grouping.subsection}</div>
       ${specimenField}
       <div class="field">
         <span class="label">Turnaround Time</span>
         <span>${test.turnaroundTime}</span>
       </div>
-      <div class="field critical-prep-field">
-        <span class="label">Critical Prep</span>
-        <span>${test.criticalPrep}</span>
-      </div>
       <div class="card-extra">
+        <div class="test-subgroup-badge">${test.grouping.subsection}</div>
+        <div class="field critical-prep-field">
+          <span class="label">Critical Prep</span>
+          <span>${test.criticalPrep}</span>
+        </div>
         <div class="field">
           <span class="label">Clinical Use</span>
           <span>${test.clinicalUse}</span>
@@ -746,6 +750,13 @@ function bindEvents() {
   subsectionFilter.addEventListener("change", applyFilters);
 
   resetFiltersBtn.addEventListener("click", () => {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    if (typeof searchInput.blur === "function") {
+      searchInput.blur();
+    }
+
     searchInput.value = "";
     sectionFilter.value = "";
     refreshSubsectionOptions();
