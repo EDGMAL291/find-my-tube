@@ -10,6 +10,12 @@ const factDots = document.getElementById("factDots");
 const tipText = document.getElementById("tipText");
 const tipDots = document.getElementById("tipDots");
 const groupChips = document.getElementById("groupChips");
+const installHelper = document.getElementById("installHelper");
+const installHelperText = document.getElementById("installHelperText");
+const installHelperBtn = document.getElementById("installHelperBtn");
+
+let deferredInstallPrompt = null;
+const INSTALL_HELPER_HIDDEN_KEY = "find_my_tube_install_helper_hidden";
 
 const facts = [
   "Biochemistry profiles like U&E and LFT are commonly serum-based (gold-top) in routine workflows.",
@@ -765,9 +771,103 @@ function bindEvents() {
   });
 }
 
+function detectPlatform() {
+  const ua = navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isAndroid = /android/.test(ua);
+  return { isIOS, isAndroid };
+}
+
+function isStandaloneMode() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function shouldHideInstallHelper() {
+  try {
+    return localStorage.getItem(INSTALL_HELPER_HIDDEN_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function setInstallHelperHidden() {
+  try {
+    localStorage.setItem(INSTALL_HELPER_HIDDEN_KEY, "1");
+  } catch (_) {
+    // Ignore storage errors (private mode / blocked storage).
+  }
+}
+
+function renderInstallHelper() {
+  if (!installHelper || !installHelperText || !installHelperBtn) return;
+
+  if (isStandaloneMode()) {
+    setInstallHelperHidden();
+    installHelper.hidden = true;
+    return;
+  }
+
+  if (shouldHideInstallHelper()) {
+    installHelper.hidden = true;
+    return;
+  }
+
+  const { isIOS, isAndroid } = detectPlatform();
+  installHelper.hidden = false;
+
+  if (isIOS) {
+    installHelperText.textContent = "Install on iPhone: tap Share, then Add to Home Screen.";
+    installHelperBtn.hidden = true;
+    return;
+  }
+
+  if (isAndroid) {
+    if (deferredInstallPrompt) {
+      installHelperText.textContent = "Install this app for faster access and offline use.";
+      installHelperBtn.hidden = false;
+      return;
+    }
+
+    installHelperText.textContent = "On Android, open browser menu and choose Add to Home screen or Install app.";
+    installHelperBtn.hidden = true;
+    return;
+  }
+
+  installHelperText.textContent = "On desktop, use your browser menu and choose Install app.";
+  installHelperBtn.hidden = deferredInstallPrompt ? false : true;
+}
+
+function initInstallHelper() {
+  if (!installHelperBtn) return;
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    renderInstallHelper();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    setInstallHelperHidden();
+    renderInstallHelper();
+  });
+
+  installHelperBtn.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    renderInstallHelper();
+  });
+
+  renderInstallHelper();
+}
+
 renderFactsCarousel();
 renderGroupChips();
 renderSectionOptions();
 refreshSubsectionOptions();
 bindEvents();
+initInstallHelper();
 applyFilters();

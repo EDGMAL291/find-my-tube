@@ -1,6 +1,6 @@
 {
   "name": "Find My Tube",
-  "short_name": "FindTube",
+  "short_name": "Find My Tube",
   "description": "Lab test lookup for tube type, specimen requirements, and turnaround guidance.",
   "start_url": "./index.html",
   "scope": "./",
