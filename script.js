@@ -672,24 +672,34 @@ function renderCards(filteredTests) {
         <span class="label">Turnaround Time</span>
         <span>${test.turnaroundTime}</span>
       </div>
-      <div class="field">
-        <span class="label">Clinical Use</span>
-        <span>${test.clinicalUse}</span>
-      </div>
       <div class="field critical-prep-field">
         <span class="label">Critical Prep</span>
         <span>${test.criticalPrep}</span>
       </div>
-      <div class="field">
-        <span class="label">Notes</span>
-        <span>${test.notes}</span>
+      <div class="card-extra">
+        <div class="field">
+          <span class="label">Clinical Use</span>
+          <span>${test.clinicalUse}</span>
+        </div>
+        <div class="field">
+          <span class="label">Notes</span>
+          <span>${test.notes}</span>
+        </div>
       </div>
       <div class="card-actions">
+        <button class="card-toggle-btn" type="button" aria-expanded="false">See more</button>
         <button class="copy-btn" type="button">Copy Summary</button>
       </div>
     `;
 
+    const toggleBtn = card.querySelector(".card-toggle-btn");
     const copyBtn = card.querySelector(".copy-btn");
+    toggleBtn.addEventListener("click", () => {
+      const expanded = card.classList.toggle("expanded");
+      toggleBtn.textContent = expanded ? "See less" : "See more";
+      toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    });
+
     copyBtn.addEventListener("click", async () => {
       const original = copyBtn.textContent;
       try {
@@ -741,7 +751,6 @@ function bindEvents() {
     refreshSubsectionOptions();
     subsectionFilter.value = "";
     applyFilters();
-    searchInput.focus();
   });
 }
 
