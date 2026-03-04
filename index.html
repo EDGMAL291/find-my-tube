@@ -9,10 +9,19 @@
 <body>
   <div class="container">
     <header class="header">
-      <h1>Find my tube</h1>
+      <h1 class="brand-title" aria-label="Find my tube">
+        <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
+        <span class="brand-gap"></span>
+        <span>my</span>
+        <span class="brand-gap"></span>
+        <span>tube</span>
+      </h1>
       <p>
         Search for a laboratory test to see the correct tube, specimen type,
         turnaround time, and special notes.
+      </p>
+      <p class="site-disclaimer">
+        Clinical support tool only. Always follow your local lab protocol and confirm urgent/special handling with PathCare.
       </p>
     </header>
 
@@ -20,15 +29,38 @@
       <input
         type="text"
         id="searchInput"
-        placeholder="Search test name e.g. FBC, INR, U&E..."
+        placeholder="Search by test, alias, condition, or section (e.g. FBC, heart attack, Cardiac Markers)"
       />
+    </section>
+
+    <section class="filter-box">
+      <label class="filter-item">
+        <span>Section</span>
+        <select id="sectionFilter">
+          <option value="">All sections</option>
+        </select>
+      </label>
+      <label class="filter-item">
+        <span>Subsection</span>
+        <select id="subsectionFilter">
+          <option value="">All subsections</option>
+        </select>
+      </label>
+      <button type="button" class="filter-reset-btn" id="resetFiltersBtn">Reset</button>
     </section>
 
     <section class="pre-search" id="preSearchPanel">
       <div class="fact-carousel">
-        <p class="fact-kicker">Interesting lab facts</p>
-        <p class="fact-text" id="factText"></p>
-        <div class="fact-dots" id="factDots"></div>
+        <div class="mini-carousel">
+          <p class="fact-kicker">Interesting lab facts</p>
+          <p class="fact-text" id="factText"></p>
+          <div class="fact-dots" id="factDots"></div>
+        </div>
+        <div class="mini-carousel">
+          <p class="fact-kicker">Quick collection tips</p>
+          <p class="fact-text" id="tipText"></p>
+          <div class="fact-dots" id="tipDots"></div>
+        </div>
       </div>
 
       <div class="group-hints">

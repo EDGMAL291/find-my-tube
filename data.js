@@ -56,6 +56,15 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "Ammonia",
+    tubeColor: "Green (Heparin)",
+    specimen: "Heparin plasma",
+    turnaroundTime: "Urgent / same day",
+    notes: "PathCare courier/driver must be called first. Lab calls doctor to draw while driver waits, then plasma is separated immediately on receipt.",
+    criticalPrep: "Call PathCare courier first. Draw sample only when courier is on-site waiting. Separate plasma immediately after collection and dispatch without delay.",
+    borderColor: "#22c55e"
+  },
+  {
     name: "Iron Studies",
     tubeColor: "Gold",
     specimen: "Serum",
@@ -97,11 +106,11 @@ const tests = [
   },
   {
     name: "Blood Group & Rh",
-    tubeColor: "Pink",
+    tubeColor: "Purple",
     specimen: "EDTA whole blood",
     turnaroundTime: "2-6 hours",
     notes: "Label sample at bedside to reduce identification errors.",
-    borderColor: "pink"
+    borderColor: "purple"
   },
   {
     name: "Glucose",
@@ -113,11 +122,11 @@ const tests = [
   },
   {
     name: "ESR",
-    tubeColor: "Black",
-    specimen: "Citrate whole blood",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
     turnaroundTime: "Same day",
     notes: "Use correct ESR tube where applicable.",
-    borderColor: "black"
+    borderColor: "purple"
   },
   {
     name: "Procalcitonin (PCT)",
@@ -425,10 +434,35 @@ const tests = [
   },
   {
     name: "CSF MCS",
-    tubeColor: "Sterile CSF container",
-    specimen: "CSF",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
     turnaroundTime: "24-72 hours",
     notes: "Microbiology culture and sensitivity of CSF.",
+    specimenGuide: "CSF in tan tube (per lab protocol).",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Swab MCS",
+    tubeColor: "N/A (Swab-specific)",
+    specimen: "Wound/throat/nasal/other clinical swab",
+    turnaroundTime: "24-72 hours",
+    notes: "Microbiology culture and sensitivity on swab specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Stool MCS",
+    tubeColor: "Sterile stool container",
+    specimen: "Stool",
+    turnaroundTime: "24-72 hours",
+    notes: "Microbiology culture and sensitivity on stool specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Sputum MCS",
+    tubeColor: "Sterile sputum container",
+    specimen: "Sputum",
+    turnaroundTime: "24-72 hours",
+    notes: "Microbiology culture and sensitivity on sputum specimen.",
     borderColor: "#64748b"
   },
   {
@@ -470,6 +504,46 @@ const tests = [
     turnaroundTime: "1-3 days",
     notes: "Coeliac antibody screening panel.",
     borderColor: "yellow"
+  },
+  {
+    name: "IgE Total",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Allergy screening baseline. If positive IgE/screening, request individual allergen tests.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Phadiatop Inhalant Screen",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Inhalant allergy screen. If positive IgE/screening, request individual allergen tests.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Pediatric Food Screen",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Paediatric food allergy screen. If positive IgE/screening, request individual allergen tests.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Adult Food Screen",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Adult food allergy screen. If positive IgE/screening, request individual allergen tests.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Skin Prick Test",
+    tubeColor: "N/A (Clinic procedure)",
+    specimen: "Skin test (in vivo)",
+    turnaroundTime: "Same day",
+    notes: "Allergy skin prick panel. If screening is positive, request individual allergen tests as needed.",
+    borderColor: "#64748b"
   },
   {
     name: "Creatinine",
@@ -600,12 +674,12 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Troponin T HS",
-    tubeColor: "Gold",
+    name: "Troponin I",
+    tubeColor: "green (Heparin)",
     specimen: "Serum",
     turnaroundTime: "1-4 hours",
     notes: "High-sensitivity cardiac injury marker.",
-    borderColor: "yellow"
+    borderColor: "green"
   },
   {
     name: "NT-proBNP",
