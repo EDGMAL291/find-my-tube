@@ -43,6 +43,18 @@ git push origin main
 - Share the generated Netlify URL with reviewers
 - Optionally set a custom site name/domain
 
+## Install As App (PWA)
+
+This project now includes:
+- `manifest.webmanifest`
+- `service-worker.js` (offline caching)
+- app icons (`icon-192.svg`, `icon-512.svg`)
+
+How to install:
+1. Open the deployed site in Chrome/Edge on Android or desktop.
+2. Use browser menu -> `Install app` (or `Add to Home Screen`).
+3. Launch from home screen/app launcher in standalone mode.
+
 ## Files
 
 - `index.html` - structure and content
