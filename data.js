@@ -470,5 +470,293 @@ const tests = [
     turnaroundTime: "1-3 days",
     notes: "Coeliac antibody screening panel.",
     borderColor: "yellow"
+  },
+  {
+    name: "Creatinine",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Routine renal function test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Uric Acid",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Chemistry profile test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Sodium",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Electrolyte profile test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Potassium",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Electrolyte profile test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Chloride",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Electrolyte profile test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Calcium",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Bone/electrolyte chemistry marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Phosphate",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Bone and renal chemistry marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Magnesium",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Routine chemistry test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Albumin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Protein chemistry marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Bilirubin Total",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Liver/pancreas profile component.",
+    borderColor: "yellow"
+  },
+  {
+    name: "ALT",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Liver enzyme test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "AST",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Liver enzyme test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "GGT",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Liver enzyme test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "ALP",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Liver and bone enzyme marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "LDH",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "General tissue injury marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CK Total",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Muscle/cardiac enzyme marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Troponin T HS",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-4 hours",
+    notes: "High-sensitivity cardiac injury marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "NT-proBNP",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-12 hours",
+    notes: "Cardiac strain/heart failure marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "HDL Cholesterol",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Lipid profile component.",
+    borderColor: "yellow"
+  },
+  {
+    name: "LDL Cholesterol",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Lipid profile component.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Triglycerides",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Lipid profile component.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Beta-hCG Quantitative",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-12 hours",
+    notes: "Pregnancy-related endocrine marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "C-Peptide",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-2 days",
+    notes: "Diabetes/endocrine investigation.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Anti-Thyroglobulin Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Autoimmune thyroid antibody test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "TSH Receptor Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Graves disease-associated antibody test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Lupus Anticoagulant",
+    tubeColor: "Light Blue",
+    specimen: "Citrate plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Coagulation autoantibody screen.",
+    borderColor: "#89CFF0"
+  },
+  {
+    name: "Anti-CCP Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Rheumatology autoimmune marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "ANCA",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Autoimmune vasculitis screen.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Anti-dsDNA",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Systemic autoimmune marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Complement C3",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Complement pathway marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Complement C4",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Complement pathway marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "H. pylori Stool Antigen",
+    tubeColor: "Stool container",
+    specimen: "Stool",
+    turnaroundTime: "1-3 days",
+    notes: "Stool antigen test for Helicobacter pylori.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "C. difficile Toxin A/B",
+    tubeColor: "Stool container",
+    specimen: "Stool",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Stool toxin assay for C. difficile infection.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Semen Analysis",
+    tubeColor: "Sterile semen container",
+    specimen: "Semen",
+    turnaroundTime: "Same day",
+    notes: "Male fertility and post-vasectomy checks.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "MRSA Screen",
+    tubeColor: "N/A (Swab-specific)",
+    specimen: "Nasal/groin/other screening swab",
+    turnaroundTime: "1-3 days",
+    notes: "Culture or PCR-based MRSA screening.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Group B Streptococcus PCR",
+    tubeColor: "N/A (Swab-specific)",
+    specimen: "Recto-vaginal swab",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular Group B Strep screening test.",
+    borderColor: "#64748b"
   }
 ];

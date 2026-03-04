@@ -115,7 +115,7 @@ function getLabGroup(testName) {
 function getProfileEmoji(testName) {
   const name = testName.toLowerCase();
 
-  if (name.includes("liver") || name.includes("lft")) return "🫀";
+  if (name.includes("liver") || name.includes("lft")) return "🧪";
   if (name.includes("u&e") || name === "u&e") return "🫘";
   return "";
 }
