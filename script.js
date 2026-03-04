@@ -15,7 +15,6 @@ const installHelperText = document.getElementById("installHelperText");
 const installHelperBtn = document.getElementById("installHelperBtn");
 
 let deferredInstallPrompt = null;
-const INSTALL_HELPER_HIDDEN_KEY = "find_my_tube_install_helper_hidden";
 
 const facts = [
   "Biochemistry profiles like U&E and LFT are commonly serum-based (gold-top) in routine workflows.",
@@ -782,32 +781,10 @@ function isStandaloneMode() {
   return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 }
 
-function shouldHideInstallHelper() {
-  try {
-    return localStorage.getItem(INSTALL_HELPER_HIDDEN_KEY) === "1";
-  } catch (_) {
-    return false;
-  }
-}
-
-function setInstallHelperHidden() {
-  try {
-    localStorage.setItem(INSTALL_HELPER_HIDDEN_KEY, "1");
-  } catch (_) {
-    // Ignore storage errors (private mode / blocked storage).
-  }
-}
-
 function renderInstallHelper() {
   if (!installHelper || !installHelperText || !installHelperBtn) return;
 
   if (isStandaloneMode()) {
-    setInstallHelperHidden();
-    installHelper.hidden = true;
-    return;
-  }
-
-  if (shouldHideInstallHelper()) {
     installHelper.hidden = true;
     return;
   }
@@ -848,7 +825,6 @@ function initInstallHelper() {
 
   window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
-    setInstallHelperHidden();
     renderInstallHelper();
   });
 
