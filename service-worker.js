@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v1";
+const CACHE_NAME = "find-my-tube-v2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -10,8 +10,8 @@ const CORE_ASSETS = [
   "./data.js?v=20260302",
   "./lab-bg.svg",
   "./manifest.webmanifest",
-  "./icon-192.svg",
-  "./icon-512.svg"
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
