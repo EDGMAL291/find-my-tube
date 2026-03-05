@@ -832,5 +832,1413 @@ const tests = [
     turnaroundTime: "1-3 days",
     notes: "Molecular Group B Strep screening test.",
     borderColor: "#64748b"
+  },
+  {
+    name: "Blood Gases",
+    tubeColor: "Green (Heparin)",
+    specimen: "Heparinized whole blood",
+    turnaroundTime: "Urgent / same day",
+    notes: "Analyze promptly after collection.",
+    borderColor: "#22c55e"
+  },
+  {
+    name: "Creatinine Clearance (Serum and 24hr Urine)",
+    tubeColor: "Gold + 24hr urine container",
+    specimen: "Serum and 24hr urine",
+    turnaroundTime: "1 day",
+    notes: "Requires paired serum and timed urine sample.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Lactate",
+    tubeColor: "Grey",
+    specimen: "Fluoride plasma",
+    turnaroundTime: "Urgent / same day",
+    notes: "Transport quickly to reduce pre-analytical error.",
+    borderColor: "gray"
+  },
+  {
+    name: "PTH",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1 day",
+    notes: "Parathyroid hormone test from renal/bone panel.",
+    borderColor: "purple"
+  },
+  {
+    name: "Vitamin D (25OH)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Vitamin D status test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Urea",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Renal chemistry marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Protein:Creatinine Ratio (Random Urine)",
+    tubeColor: "Sterile urine container",
+    specimen: "Random urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Urine protein quantification ratio.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Albumin:Creatinine Ratio (Random Urine)",
+    tubeColor: "Sterile urine container",
+    specimen: "Random urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Urine albumin quantification ratio.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Calcium/Phosphate (24hr Urine)",
+    tubeColor: "24hr urine container",
+    specimen: "24hr urine",
+    turnaroundTime: "1 day",
+    notes: "Timed urine mineral excretion test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Uric Acid (24hr Urine)",
+    tubeColor: "24hr urine container",
+    specimen: "24hr urine",
+    turnaroundTime: "1 day",
+    notes: "Timed urine uric acid excretion test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Bilirubin Total and Conjugated",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Liver panel bilirubin fractionation.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Bilirubin (Neonatal Screen)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Urgent / same day",
+    notes: "Neonatal bilirubin assessment.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Total Protein",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Liver and nutrition chemistry marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Pre-Albumin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1 day",
+    notes: "Short-term nutritional marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Amylase",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Pancreatic enzyme test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Lipase",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Pancreatic enzyme test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Alpha-1-Antitrypsin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Protein deficiency/inflammation marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Steatocrit",
+    tubeColor: "Stool container",
+    specimen: "Stool",
+    turnaroundTime: "1-3 days",
+    notes: "Fecal fat screening test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Myoglobin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day",
+    notes: "Cardiac/muscle injury marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CK-MB Mass",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day",
+    notes: "Cardiac injury marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Cholesterol Total",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Lipid profile component.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Lipoprotein (a)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Cardiovascular risk marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Apolipoprotein A1 and B",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Advanced lipid risk profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Homocysteine (Fasting)",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1 day",
+    notes: "Cardiovascular/thrombotic risk marker.",
+    borderColor: "purple"
+  },
+  {
+    name: "hs-CRP",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day",
+    notes: "High-sensitivity inflammatory marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Glucose Fasting",
+    tubeColor: "Grey",
+    specimen: "Fluoride plasma",
+    turnaroundTime: "Same day",
+    notes: "Fasting glucose measurement.",
+    borderColor: "gray"
+  },
+  {
+    name: "Glucose Random",
+    tubeColor: "Grey",
+    specimen: "Fluoride plasma",
+    turnaroundTime: "Same day",
+    notes: "Random glucose measurement.",
+    borderColor: "gray"
+  },
+  {
+    name: "OGTT (2hr)",
+    tubeColor: "Grey",
+    specimen: "Fluoride plasma",
+    turnaroundTime: "Same day",
+    notes: "Oral glucose tolerance test.",
+    borderColor: "gray"
+  },
+  {
+    name: "OGTT Pregnancy (75g, 2hr)",
+    tubeColor: "Grey",
+    specimen: "Fluoride plasma",
+    turnaroundTime: "Same day",
+    notes: "Gestational oral glucose tolerance test.",
+    borderColor: "gray"
+  },
+  {
+    name: "Insulin (Fasting)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1 day",
+    notes: "Fasting insulin level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "IgG Subfractions 1-4",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "2-5 days",
+    notes: "Immunoglobulin G subclass profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Immunoglobulin G (IgG)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Immunoglobulin quantification.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Immunoglobulin A (IgA)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Immunoglobulin quantification.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Immunoglobulin M (IgM)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Immunoglobulin quantification.",
+    borderColor: "yellow"
+  },
+  {
+    name: "TSH",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "6-24 hours",
+    notes: "Thyroid stimulating hormone.",
+    borderColor: "yellow"
+  },
+  {
+    name: "TSH (Cord Blood)",
+    tubeColor: "Gold",
+    specimen: "Cord blood serum",
+    turnaroundTime: "6-24 hours",
+    notes: "Neonatal thyroid screening request.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Hirsutism Screen (Full)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Endocrine reproductive profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Infertility Screen (Female)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Female infertility hormone profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Infertility Screen (Male)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Male infertility hormone profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Total Testosterone (+SHBG if Female)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Reproductive endocrine marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Free Testosterone (Calculated, Male)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Male androgen profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "17-OH Progesterone",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Congenital adrenal hyperplasia workup marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Semen Analysis Post Vasectomy",
+    tubeColor: "Sterile semen container",
+    specimen: "Semen",
+    turnaroundTime: "Same day",
+    notes: "Post-vasectomy fertility clearance check.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "E2 (Routine)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "6-24 hours",
+    notes: "Estradiol measurement.",
+    borderColor: "yellow"
+  },
+  {
+    name: "E2 (On anti-E2 Rx)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "6-24 hours",
+    notes: "Estradiol monitoring while on therapy.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Cortisol (24hr Urine)",
+    tubeColor: "24hr urine container",
+    specimen: "24hr urine",
+    turnaroundTime: "1-3 days",
+    notes: "Timed urinary cortisol.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Aldosterone:Renin Ratio",
+    tubeColor: "Gold",
+    specimen: "Serum/plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Hypertension endocrine workup.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Dexamethasone Suppression",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1 day",
+    notes: "Cortisol suppression protocol test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "5-HIAA (24hr Urine)",
+    tubeColor: "24hr urine container",
+    specimen: "24hr urine",
+    turnaroundTime: "2-5 days",
+    notes: "Carcinoid syndrome marker.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Metanephrines (24hr Urine)",
+    tubeColor: "24hr urine container",
+    specimen: "24hr urine",
+    turnaroundTime: "2-5 days",
+    notes: "Pheochromocytoma workup marker.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "AFP",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Tumor marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CA 15-3",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Tumor marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CA 19-9",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Tumor marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CA 125",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Tumor marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CA 72-4",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Tumor marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CEA",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Tumor marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Protein Electrophoresis with Immunofixation",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "2-5 days",
+    notes: "Myeloma/monoclonal protein workup.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Free Light Chains (Serum)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "2-5 days",
+    notes: "Myeloma marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Bence-Jones Protein (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "2-5 days",
+    notes: "Urine myeloma marker.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Beta-2 Microglobulin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Hematologic tumor marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Total PSA only / Follow Up",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1 day",
+    notes: "PSA follow-up request.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Haemochromatosis PCR",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "2-7 days",
+    notes: "Genetic hemochromatosis test.",
+    borderColor: "purple"
+  },
+  {
+    name: "Acute Porphyria Attack Screen (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "2-7 days",
+    notes: "Porphyria screening assay.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Porphobilinogen Follow-up (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "2-7 days",
+    notes: "Porphyria follow-up assay.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Full Porphyria Screen (Urine, Blood, Stool)",
+    tubeColor: "Mixed specimen containers",
+    specimen: "Urine, blood, stool",
+    turnaroundTime: "2-7 days",
+    notes: "Comprehensive porphyria panel.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Porphyria Variegata PCR (R59W)",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "2-7 days",
+    notes: "Genetic porphyria test.",
+    borderColor: "purple"
+  },
+  {
+    name: "ISAC Comprehensive Allergy Component Profile",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "2-7 days",
+    notes: "Comprehensive component-resolved allergy panel.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Haemolytic Profile",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1 day",
+    notes: "Hemolysis workup panel.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Bone Marrow (Consult Pathologist)",
+    tubeColor: "N/A (Procedure specimen)",
+    specimen: "Bone marrow aspirate/trephine",
+    turnaroundTime: "By pathology workflow",
+    notes: "Specialist pathology consultation request.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Folate (RBC)",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1-3 days",
+    notes: "Red cell folate measurement.",
+    borderColor: "purple"
+  },
+  {
+    name: "Folate (Serum)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Serum folate measurement.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Vitamin B12",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1 day",
+    notes: "Vitamin B12 level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Haemoglobin",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Complete blood count component.",
+    borderColor: "purple"
+  },
+  {
+    name: "Hb Electrophoresis",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1-3 days",
+    notes: "Hemoglobinopathy assessment.",
+    borderColor: "purple"
+  },
+  {
+    name: "Malaria Smear (Thick and Thin)",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Urgent / same day",
+    notes: "Microscopy for malaria parasites.",
+    borderColor: "purple"
+  },
+  {
+    name: "Malaria Smear and Antigen",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Urgent / same day",
+    notes: "Combined microscopy and rapid antigen test.",
+    borderColor: "purple"
+  },
+  {
+    name: "Malaria PCR (with ID if Positive)",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular malaria test with species ID.",
+    borderColor: "purple"
+  },
+  {
+    name: "Reticulocytes",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Reticulocyte count.",
+    borderColor: "purple"
+  },
+  {
+    name: "WBC and Differential Count",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "White cell count and differential.",
+    borderColor: "purple"
+  },
+  {
+    name: "Direct Coombs",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Direct antiglobulin test.",
+    borderColor: "purple"
+  },
+  {
+    name: "RBC Antibody Screen (Antenatal)",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1 day",
+    notes: "Antenatal red cell antibody screen.",
+    borderColor: "purple"
+  },
+  {
+    name: "Antibody Identification",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1-2 days",
+    notes: "Blood bank antibody identification.",
+    borderColor: "purple"
+  },
+  {
+    name: "Antibody Titration",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1-2 days",
+    notes: "Blood bank antibody titer.",
+    borderColor: "purple"
+  },
+  {
+    name: "Inherited Thrombotic Screen",
+    tubeColor: "Purple + Light Blue",
+    specimen: "EDTA blood and citrate plasma",
+    turnaroundTime: "2-7 days",
+    notes: "Inherited thrombophilia panel.",
+    borderColor: "#89CFF0"
+  },
+  {
+    name: "Antiphospholipid Syndrome Profile",
+    tubeColor: "Gold + Light Blue",
+    specimen: "Serum and citrate plasma",
+    turnaroundTime: "2-7 days",
+    notes: "Lupus anticoagulant and antiphospholipid antibodies.",
+    borderColor: "#89CFF0"
+  },
+  {
+    name: "INR and Dosage",
+    tubeColor: "Light Blue",
+    specimen: "Citrate plasma",
+    turnaroundTime: "Same day",
+    notes: "Warfarin monitoring profile.",
+    borderColor: "#89CFF0"
+  },
+  {
+    name: "XDP (D-Dimer)",
+    tubeColor: "Light Blue",
+    specimen: "Citrate plasma",
+    turnaroundTime: "Same day",
+    notes: "Cross-linked fibrin degradation product.",
+    borderColor: "#89CFF0"
+  },
+  {
+    name: "PFA-200 Platelet Screen",
+    tubeColor: "Light Blue",
+    specimen: "Citrate whole blood",
+    turnaroundTime: "Same day",
+    notes: "Platelet function screen.",
+    borderColor: "#89CFF0"
+  },
+  {
+    name: "Drugs of Abuse Screen (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Multi-drug screening panel.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Amphetamine (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Barbiturate (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Benzodiazepine (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Cannabis (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Cocaine (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Ethanol (Blood)",
+    tubeColor: "Grey",
+    specimen: "Fluoride plasma",
+    turnaroundTime: "Same day",
+    notes: "Blood alcohol level.",
+    borderColor: "gray"
+  },
+  {
+    name: "Mandrax (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Methcathinone CAT (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Opiates (Urine)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug screen analyte.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Paracetamol (Blood)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day",
+    notes: "Therapeutic/toxicology level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Salicylate (Blood)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day",
+    notes: "Therapeutic/toxicology level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Carbamazepine (Tegretol)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Digoxin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Levetiracetam (Keppra)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Lithium",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Phenobarbitone",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Phenytoin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Sodium Valproate",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Theophylline",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Drug monitoring level.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Trough Amikacin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Aminoglycoside therapeutic level (trough).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Trough Gentamycin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Aminoglycoside therapeutic level (trough).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Trough Tobramycin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Aminoglycoside therapeutic level (trough).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Trough Vancomycin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Vancomycin therapeutic level (trough).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Peak Amikacin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Aminoglycoside therapeutic level (peak).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Peak Gentamycin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Aminoglycoside therapeutic level (peak).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Peak Tobramycin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Aminoglycoside therapeutic level (peak).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Peak Vancomycin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Vancomycin therapeutic level (peak).",
+    borderColor: "yellow"
+  },
+  {
+    name: "Arthritis Profile (ESR, CRP, UA, RF, CCP)",
+    tubeColor: "Gold + Purple",
+    specimen: "Serum and EDTA blood",
+    turnaroundTime: "1-3 days",
+    notes: "Combined autoimmune arthritis profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Autoimmune Profile (FBC, ESR, CRP, RF, CCP, ANA Screen)",
+    tubeColor: "Gold + Purple",
+    specimen: "Serum and EDTA blood",
+    turnaroundTime: "1-3 days",
+    notes: "Broad autoimmune screening profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "RF-IgM and Anti-CCP",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Rheumatoid serology panel.",
+    borderColor: "yellow"
+  },
+  {
+    name: "ANA Screen and Reflex ENA Antibodies",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Autoimmune connective tissue serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "ENA and dsDNA Panel",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "ENA subset and dsDNA markers.",
+    borderColor: "yellow"
+  },
+  {
+    name: "dsDNA (Quantitative)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Quantitative dsDNA antibody test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Autoimmune vasculitis and GBM screen.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Antiphospholipid Antibodies (Anti-b2GP and ACL)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Antiphospholipid antibody panel.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Gastric Antibodies (IF and Parietal Cell)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Autoimmune gastritis/pernicious anemia serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Autoimmune Liver Profile",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Autoimmune liver disease serology profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Systemic Sclerosis Profile",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Scleroderma antibody profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Autoimmune Myositis Profile",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Myositis antibody profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Interleukin 6",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Cytokine marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Autoimmune Bullous Dermatoses",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Pemphigus/pemphigoid antibody workup.",
+    borderColor: "yellow"
+  },
+  {
+    name: "SARS-CoV-2 IgG (N-antibody)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "COVID-19 nucleocapsid IgG serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "SARS-CoV-2 IgG (S-antibody post vaccine)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "COVID-19 spike IgG serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "ASOT and Anti-DNase B",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Recent streptococcal infection serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "EBV IgM",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Epstein-Barr virus serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "EBV IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Epstein-Barr virus serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "EBV PCR (Viral Load)",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular EBV quantification.",
+    borderColor: "purple"
+  },
+  {
+    name: "B-D-Glucan",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Invasive fungal infection marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Bilharzia Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Schistosoma serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Bilharzia Urine-CCA (Ag)",
+    tubeColor: "Urine container",
+    specimen: "Urine",
+    turnaroundTime: "1-3 days",
+    notes: "Urine schistosoma antigen test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Brucella IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Brucella serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Brucella PCR",
+    tubeColor: "N/A (Specimen-specific)",
+    specimen: "Specimen per request",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular brucella test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Herpes Simplex I IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "HSV-1 serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Herpes Simplex II IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "HSV-2 serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Herpes Simplex (I, II) IgM",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "HSV IgM serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "HSV-1/HSV-2/VZV PCR",
+    tubeColor: "N/A (Swab/CSF/vesicle fluid)",
+    specimen: "Swab, CSF, or vesicle fluid",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular herpes/varicella panel.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Measles IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Measles serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Measles PCR",
+    tubeColor: "N/A (Specimen-specific)",
+    specimen: "Specimen per request",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular measles test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Mumps IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Mumps serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Mumps PCR",
+    tubeColor: "N/A (Specimen-specific)",
+    specimen: "Specimen per request",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular mumps test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Parvovirus B19 IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Parvovirus serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Parvovirus B19 PCR",
+    tubeColor: "N/A (Specimen-specific)",
+    specimen: "Specimen per request",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular parvovirus test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Rickettsia IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Rickettsial serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CMV IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Cytomegalovirus serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CMV PCR (Viral Load)",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular CMV quantification.",
+    borderColor: "purple"
+  },
+  {
+    name: "CMV PCR Qualitative",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Qualitative CMV PCR.",
+    borderColor: "purple"
+  },
+  {
+    name: "Rubella IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Rubella serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Rubella IgM only",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Rubella IgM serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Rubella IgG only",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Rubella IgG immunity serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Syphilis (Automated Antibody Screening)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-2 days",
+    notes: "Positive results reflex to RPR.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Toxoplasma IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Toxoplasma serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Toxoplasma gondii PCR",
+    tubeColor: "N/A (Specimen-specific)",
+    specimen: "Specimen per request",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular toxoplasma test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Varicella IgM/IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Varicella-zoster serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Widal",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Typhoid serology test.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Hepatitis A and B Status (Acute)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Acute viral hepatitis profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Hepatitis B Status (Chronic)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Chronic hepatitis B profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Hepatitis B (Acute)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Acute hepatitis B profile.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Hepatitis B PCR (Viral Load)",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1-3 days",
+    notes: "HBV molecular quantification.",
+    borderColor: "purple"
+  },
+  {
+    name: "Hepatitis A IgG (Immunity)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Hepatitis A immunity marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Hepatitis C PCR (Viral Load)",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1-3 days",
+    notes: "HCV molecular quantification.",
+    borderColor: "purple"
+  },
+  {
+    name: "Hepatitis C Viral Load and Genotype",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "2-7 days",
+    notes: "HCV quantification with genotype.",
+    borderColor: "purple"
+  },
+  {
+    name: "Hepatitis E IgM",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Hepatitis E acute infection marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Hepatitis E IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Hepatitis E exposure/immunity marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CD4 Count",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1 day",
+    notes: "HIV immune monitoring marker.",
+    borderColor: "purple"
+  },
+  {
+    name: "CD4/CD8 Count",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1 day",
+    notes: "Lymphocyte subset profile.",
+    borderColor: "purple"
+  },
+  {
+    name: "HIV PCR Qualitative",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Qualitative HIV PCR test.",
+    borderColor: "purple"
+  },
+  {
+    name: "HIV-1 Resistance Genotyping (incl. Integrase)",
+    tubeColor: "Purple",
+    specimen: "EDTA plasma",
+    turnaroundTime: "3-10 days",
+    notes: "HIV drug resistance genotyping.",
+    borderColor: "purple"
   }
 ];
