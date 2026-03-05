@@ -58,6 +58,23 @@
       </label>
       <button type="button" class="filter-reset-btn" id="resetFiltersBtn">Reset</button>
     </section>
+    <section class="draw-nav">
+      <button type="button" class="open-draw-btn" id="openDrawPlannerBtn">Draw Bloods</button>
+    </section>
+
+    <section class="draw-selection-panel" id="drawSelectionPanel" hidden>
+      <div class="draw-selection-head">
+        <h3>Select Tests For Draw Bloods</h3>
+        <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn">Close</button>
+      </div>
+      <input
+        type="text"
+        id="drawSearchInput"
+        class="draw-search-input"
+        placeholder="Search tests for draw planning"
+      />
+      <div class="draw-selection-list" id="drawSelectionList"></div>
+    </section>
 
     <section class="pre-search" id="preSearchPanel">
       <div class="fact-carousel">
@@ -78,6 +95,19 @@
         <p>Choose a laboratory discipline to jump into the right test list faster.</p>
         <div class="group-chips" id="groupChips"></div>
       </div>
+    </section>
+
+    <section class="draw-planner" id="drawPlanner" hidden>
+      <div class="draw-planner-head">
+        <h2>Draw Bloods</h2>
+        <button type="button" class="draw-reset-btn" id="drawResetBtn">Clear selected tests</button>
+      </div>
+      <p class="draw-planner-sub">
+        Select tests from cards below to estimate tube colors needed for the draw.
+      </p>
+      <p class="draw-planner-count" id="drawPlannerCount"></p>
+      <div class="draw-groups" id="drawGroups"></div>
+      <p class="draw-planner-note" id="drawPlannerNote"></p>
     </section>
 
     <p class="results-info" id="resultsInfo"></p>

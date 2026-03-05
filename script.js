@@ -13,8 +13,71 @@ const groupChips = document.getElementById("groupChips");
 const installHelper = document.getElementById("installHelper");
 const installHelperText = document.getElementById("installHelperText");
 const installHelperBtn = document.getElementById("installHelperBtn");
+const drawPlanner = document.getElementById("drawPlanner");
+const drawPlannerCount = document.getElementById("drawPlannerCount");
+const drawGroups = document.getElementById("drawGroups");
+const drawPlannerNote = document.getElementById("drawPlannerNote");
+const drawResetBtn = document.getElementById("drawResetBtn");
+const openDrawPlannerBtn = document.getElementById("openDrawPlannerBtn");
+const closeDrawPlannerBtn = document.getElementById("closeDrawPlannerBtn");
+const drawSelectionPanel = document.getElementById("drawSelectionPanel");
+const drawSearchInput = document.getElementById("drawSearchInput");
+const drawSelectionList = document.getElementById("drawSelectionList");
 
 let deferredInstallPrompt = null;
+const selectedTestNames = new Set();
+
+const exactDrawRules = [
+  {
+    id: "full-blood-and-grouping",
+    tests: ["FBC", "ESR", "HbA1c", "Blood Group & Rh"],
+    items: [{ key: "Purple", label: "Purple", count: 2 }]
+  },
+  {
+    id: "coagulation-panel",
+    tests: ["INR", "Prothrombin Time (PT)", "Partial Thromboplastin Time (PTT)", "D-Dimer"],
+    items: [{ key: "Blue", label: "Blue", count: 1 }]
+  },
+  {
+    id: "chemistry-core",
+    tests: ["U&E", "CRP", "Liver Function Tests (LFT)", "Lipid Profile / Lipogram"],
+    items: [{ key: "Gold/Yellow", label: "Gold/Yellow", count: 1 }]
+  },
+  {
+    id: "thyroid-panel",
+    tests: ["TSH", "Free T4", "Free T3", "Thyroid Antibodies (TPO and Tg Ab)"],
+    items: [{ key: "Gold/Yellow", label: "Gold/Yellow", count: 1 }]
+  },
+  {
+    id: "cardiac-panel",
+    tests: ["Troponin I", "CK Total", "LDH", "NT-proBNP"],
+    items: [
+      { key: "Gold/Yellow", label: "Gold/Yellow", count: 1 },
+      { key: "Green", label: "Green", count: 1 }
+    ]
+  },
+  {
+    id: "glucose-ogtt-panel",
+    tests: ["Glucose Fasting", "Insulin (Fasting)", "OGTT (2hr)", "HbA1c"],
+    items: [
+      { key: "Gray", label: "Gray", count: 2, detail: "Second gray tube at 2 hours for OGTT." },
+      { key: "Purple", label: "Purple", count: 1 }
+    ]
+  },
+  {
+    id: "tumour-markers-core",
+    tests: ["PSA", "CEA", "CA 19-9", "CA 125"],
+    items: [{ key: "Gold/Yellow", label: "Gold/Yellow", count: 1 }]
+  },
+  {
+    id: "sepsis-culture-panel",
+    tests: ["Blood Culture", "Procalcitonin (PCT)", "Lactate", "CRP"],
+    items: [
+      { key: "Blood Culture Bottles", label: "Blood Culture Bottles", count: 2, detail: "Anaerobic and aerobic bottles." },
+      { key: "Gold/Yellow", label: "Gold/Yellow", count: 1 }
+    ]
+  }
+];
 
 const facts = [
   "Biochemistry profiles like U&E and LFT are commonly serum-based (gold-top) in routine workflows.",
@@ -213,17 +276,219 @@ function normalizeTubeColor(value) {
   const map = {
     grey: "Gray",
     gray: "Gray",
-    yellow: "Gold",
+    yellow: "Gold/Yellow",
+    "yellow/gold": "Gold/Yellow",
+    "gold/yellow": "Gold/Yellow",
     lavender: "Lavender",
     purple: "Purple",
     pink: "Pink",
     black: "Black",
-    gold: "Gold"
+    gold: "Gold/Yellow"
   };
 
   const raw = String(value || "").trim();
   const key = raw.toLowerCase();
   return map[key] || raw;
+}
+
+function getTubeGroups(tubeColorValue) {
+  const text = String(tubeColorValue || "").toLowerCase();
+  const groups = [];
+  const colorPatterns = [
+    { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
+    { key: "Pink", pattern: /\bpink\b/ },
+    { key: "Blue", pattern: /\blight blue\b|\bblue\b|citrate/ },
+    { key: "Gold/Yellow", pattern: /\bgold\b|\byellow\b|sst|serum separator/ },
+    { key: "Green", pattern: /\bgreen\b|heparin/ },
+    { key: "Gray", pattern: /\bgray\b|\bgrey\b|fluoride/ },
+    { key: "Red", pattern: /\bred\b|plain serum/ },
+    { key: "Black", pattern: /\bblack\b/ }
+  ];
+
+  colorPatterns.forEach((entry) => {
+    if (entry.pattern.test(text)) groups.push(entry.key);
+  });
+
+  return [...new Set(groups)];
+}
+
+function getTubeSwatchColor(tubeGroup) {
+  const swatch = {
+    Purple: "#8b5cf6",
+    Pink: "#ec4899",
+    Blue: "#89CFF0",
+    "Gold/Yellow": "#facc15",
+    Green: "#22c55e",
+    Gray: "#9ca3af",
+    Red: "#ef4444",
+    Black: "#111827",
+    "Blood Culture Bottles": "#a16207"
+  };
+
+  return swatch[tubeGroup] || "#94a3b8";
+}
+
+function getSelectedTests() {
+  return enrichedTests.filter((test) => selectedTestNames.has(test.name));
+}
+
+function renderDrawSelectionList() {
+  if (!drawSelectionList) return;
+  const query = normalizeForSearch(drawSearchInput?.value || "");
+
+  const candidates = enrichedTests
+    .filter((test) => !query || test.searchBlob.includes(query))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (!candidates.length) {
+    drawSelectionList.innerHTML = `<p class="draw-selection-empty">No tests match this search.</p>`;
+    return;
+  }
+
+  drawSelectionList.innerHTML = candidates
+    .map((test) => `
+      <label class="draw-selection-item">
+        <input type="checkbox" data-draw-test="${test.name}" ${selectedTestNames.has(test.name) ? "checked" : ""} />
+        <span>${test.name}</span>
+      </label>
+    `)
+    .join("");
+
+  drawSelectionList.querySelectorAll("input[data-draw-test]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const testName = checkbox.getAttribute("data-draw-test");
+      if (checkbox.checked) {
+        selectedTestNames.add(testName);
+      } else {
+        selectedTestNames.delete(testName);
+      }
+      renderDrawPlanner();
+      renderCards(getFilteredTests());
+    });
+  });
+}
+
+function normalizeNameKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function findExactDrawRule(selectedTests) {
+  const selected = new Set(selectedTests.map((test) => normalizeNameKey(test.name)));
+
+  return exactDrawRules.find((rule) => {
+    if (selected.size !== rule.tests.length) return false;
+    return rule.tests.every((name) => selected.has(normalizeNameKey(name)));
+  }) || null;
+}
+
+function getDefaultPlanItems(selectedTests) {
+  const grouped = new Map();
+  const manual = [];
+
+  selectedTests.forEach((test) => {
+    const groups = getTubeGroups(test.tubeColor);
+    if (!groups.length) {
+      manual.push(test.name);
+      return;
+    }
+
+    groups.forEach((group) => {
+      if (!grouped.has(group)) {
+        grouped.set(group, { key: group, label: group, count: 1, tests: new Set() });
+      }
+      grouped.get(group).tests.add(test.name);
+    });
+  });
+
+  const items = [...grouped.values()]
+    .map((item) => ({ ...item, tests: [...item.tests] }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  return { items, manual, ruleId: null };
+}
+
+function applyHivRprRule(plan, selectedTests) {
+  const selectedLower = selectedTests.map((test) => test.name.toLowerCase());
+  const hasHiv = selectedLower.some((name) => name.includes("hiv"));
+  const hasRpr = selectedLower.some((name) => name.includes("rpr"));
+  const withOtherTests = selectedTests.length > 1;
+  if (!withOtherTests || (!hasHiv && !hasRpr)) return "";
+
+  let goldItem = plan.items.find((item) => item.key === "Gold/Yellow");
+  if (!goldItem) {
+    goldItem = { key: "Gold/Yellow", label: "Gold/Yellow", count: 2, tests: [] };
+    plan.items.push(goldItem);
+  } else {
+    goldItem.count = Math.max(goldItem.count, 2);
+  }
+
+  plan.items.sort((a, b) => a.label.localeCompare(b.label));
+  return "HIV/RPR rule applied: use 2 x Gold/Yellow when requested with other tests.";
+}
+
+function getLabDrawPlan(selectedTests) {
+  const exactRule = findExactDrawRule(selectedTests);
+  if (exactRule) {
+    return {
+      ruleId: exactRule.id,
+      items: exactRule.items.map((item) => ({ ...item, tests: [...selectedTests.map((test) => test.name)] })),
+      manual: []
+    };
+  }
+
+  return getDefaultPlanItems(selectedTests);
+}
+
+function renderDrawPlanner() {
+  if (!drawPlanner || !drawPlannerCount || !drawGroups || !drawPlannerNote) return;
+
+  const selectedTests = getSelectedTests();
+  if (!selectedTests.length) {
+    drawPlanner.hidden = false;
+    drawPlannerCount.textContent = "0 selected tests • 0 draw types needed";
+    drawGroups.innerHTML = `
+      <article class="draw-group-card">
+        <p class="draw-group-tests">No tests selected yet. Search for a test and tap "Add to Draw Bloods" on the card.</p>
+      </article>
+    `;
+    drawPlannerNote.textContent = "This section updates as soon as you add tests.";
+    return;
+  }
+
+  drawPlanner.hidden = false;
+  const plan = getLabDrawPlan(selectedTests);
+  const hivRprNote = applyHivRprRule(plan, selectedTests);
+  const totalTubeTypes = plan.items.length;
+  drawPlannerCount.textContent = `${selectedTests.length} selected test${selectedTests.length > 1 ? "s" : ""} • ${totalTubeTypes} draw type${totalTubeTypes !== 1 ? "s" : ""} needed`;
+
+  drawGroups.innerHTML = plan.items
+    .map((item) => {
+      const testList = item.tests?.length ? item.tests.join(", ") : "Rule-based tube requirement.";
+      return `
+        <article class="draw-group-card">
+          <div class="draw-group-top">
+            <span class="tube-icon" style="--tube-color: ${getTubeSwatchColor(item.key)};" aria-hidden="true"></span>
+            <div>
+              <h3>${item.label}</h3>
+              <p>Draw ${item.count} x ${item.label}</p>
+            </div>
+          </div>
+          ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
+          <p class="draw-group-tests">${testList}</p>
+        </article>
+      `;
+    })
+    .join("");
+
+  if (plan.manual.length) {
+    drawPlannerNote.textContent = `Manual review needed for: ${plan.manual.join(", ")}. These may require non-blood specimens or special containers.`;
+  } else if (hivRprNote) {
+    drawPlannerNote.textContent = hivRprNote;
+  } else if (plan.ruleId) {
+    drawPlannerNote.textContent = "Lab draw rule matched for this exact test set.";
+  } else {
+    drawPlannerNote.textContent = "Default estimate uses one tube per detected color.";
+  }
 }
 
 function inferCriticalPrep(test) {
@@ -486,7 +751,25 @@ function enrichTest(test) {
   return normalized;
 }
 
-const enrichedTests = tests.map(enrichTest);
+function dedupeTestsByName(testList) {
+  const seen = new Set();
+  const unique = [];
+
+  testList.forEach((test) => {
+    const key = normalizeNameKey(test.name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    unique.push(test);
+  });
+
+  return unique;
+}
+
+const sourceTests = dedupeTestsByName(tests);
+if (sourceTests.length !== tests.length) {
+  console.warn(`Find My Tube: removed ${tests.length - sourceTests.length} duplicate test entries by name.`);
+}
+const enrichedTests = sourceTests.map(enrichTest);
 
 function getSubsectionsForSection(sectionId) {
   const found = new Set(
@@ -650,6 +933,8 @@ function renderCards(filteredTests) {
     const searchEmoji = getProfileEmoji(test.name);
     const card = document.createElement("div");
     card.className = "card";
+    const isSelected = selectedTestNames.has(test.name);
+    card.classList.toggle("card-selected", isSelected);
 
     const specimenField = isMicro
       ? `
@@ -697,11 +982,13 @@ function renderCards(filteredTests) {
       </div>
       <div class="card-actions">
         <button class="card-toggle-btn" type="button" aria-expanded="false">See more</button>
+        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Selected for Draw Bloods" : "Add to Draw Bloods"}</button>
         <button class="copy-btn" type="button">Copy Summary</button>
       </div>
     `;
 
     const toggleBtn = card.querySelector(".card-toggle-btn");
+    const drawSelectBtn = card.querySelector(".draw-select-btn");
     const copyBtn = card.querySelector(".copy-btn");
     toggleBtn.addEventListener("click", () => {
       const expanded = card.classList.toggle("expanded");
@@ -725,6 +1012,18 @@ function renderCards(filteredTests) {
       }
     });
 
+    drawSelectBtn.addEventListener("click", () => {
+      if (selectedTestNames.has(test.name)) {
+        selectedTestNames.delete(test.name);
+      } else {
+        selectedTestNames.add(test.name);
+      }
+
+      renderDrawPlanner();
+      renderDrawSelectionList();
+      renderCards(getFilteredTests());
+    });
+
     cardsContainer.appendChild(card);
   });
 }
@@ -738,10 +1037,12 @@ function applyFilters() {
   if (!hasQuery && !hasSectionFilter && !hasSubsectionFilter) {
     resultsInfo.textContent = "Start typing a test or use filters to narrow results.";
     cardsContainer.innerHTML = "";
+    renderDrawPlanner();
     return;
   }
 
   renderCards(getFilteredTests());
+  renderDrawPlanner();
 }
 
 function bindEvents() {
@@ -768,6 +1069,36 @@ function bindEvents() {
     subsectionFilter.value = "";
     applyFilters();
   });
+
+  if (drawResetBtn) {
+    drawResetBtn.addEventListener("click", () => {
+      selectedTestNames.clear();
+      renderDrawPlanner();
+      renderDrawSelectionList();
+      renderCards(getFilteredTests());
+    });
+  }
+
+  if (openDrawPlannerBtn) {
+    openDrawPlannerBtn.addEventListener("click", () => {
+      if (!drawSelectionPanel) return;
+      drawSelectionPanel.hidden = false;
+      drawSelectionPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      renderDrawSelectionList();
+      if (drawSearchInput) drawSearchInput.focus();
+    });
+  }
+
+  if (closeDrawPlannerBtn) {
+    closeDrawPlannerBtn.addEventListener("click", () => {
+      if (!drawSelectionPanel) return;
+      drawSelectionPanel.hidden = true;
+    });
+  }
+
+  if (drawSearchInput) {
+    drawSearchInput.addEventListener("input", renderDrawSelectionList);
+  }
 }
 
 function detectPlatform() {
@@ -847,3 +1178,4 @@ refreshSubsectionOptions();
 bindEvents();
 initInstallHelper();
 applyFilters();
+renderDrawSelectionList();
