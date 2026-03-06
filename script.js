@@ -95,6 +95,7 @@ const profileComponentsByName = {
     "Total Bilirubin",
     "Direct Bilirubin",
     "Indirect Bilirubin",
+    "LD (On Request)",
     "Albumin",
     "Total Protein",
     "Globulins"
