@@ -651,32 +651,32 @@ const tests = [
   },
   {
     name: "LDH",
-    tubeColor: "Gold",
-    specimen: "Serum",
+    tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
+    specimen: "Heparinised plasma (preferred) or serum",
     turnaroundTime: "4-8 hours",
     notes: "General tissue injury marker.",
     borderColor: "yellow"
   },
   {
     name: "CK Total",
-    tubeColor: "Gold",
-    specimen: "Serum",
+    tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
+    specimen: "Heparinised plasma (preferred) or serum",
     turnaroundTime: "4-8 hours",
     notes: "Muscle/cardiac enzyme marker.",
     borderColor: "yellow"
   },
   {
     name: "Troponin I",
-    tubeColor: "green (Heparin)",
-    specimen: "Serum",
+    tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
+    specimen: "Heparinised plasma (preferred) or serum",
     turnaroundTime: "1-4 hours",
-    notes: "High-sensitivity cardiac injury marker.",
+    notes: "Primary biomarker for suspected acute myocardial injury.",
     borderColor: "green"
   },
   {
     name: "NT-proBNP",
-    tubeColor: "Gold",
-    specimen: "Serum",
+    tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
+    specimen: "Heparinised plasma (preferred) or serum",
     turnaroundTime: "4-12 hours",
     notes: "Cardiac strain/heart failure marker.",
     borderColor: "yellow"

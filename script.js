@@ -58,8 +58,8 @@ const exactDrawRules = [
     id: "cardiac-panel",
     tests: ["Troponin I", "CK Total", "LDH", "NT-proBNP"],
     items: [
-      { key: "Gold/Yellow", label: "Gold/Yellow", count: 1 },
-      { key: "Green", label: "Green", count: 1 }
+      { key: "Green", label: "Green", count: 1, detail: "Preferred tube for most urgent cardiac marker workflows." },
+      { key: "Gold/Yellow", label: "Gold/Yellow", count: 1, detail: "Acceptable alternative if local policy uses serum collection." }
     ]
   },
   {
@@ -192,13 +192,13 @@ const clinicalProfileByName = {
     use: "Baseline screen for anaemia, infection, inflammation, and platelet disorders.",
     keywords: ["anaemia", "anemia", "infection", "platelets", "low hb", "fatigue", "leukemia"]
   },
-  "Troponin T HS": {
+  "Troponin I": {
     use: "Primary marker for suspected acute coronary syndrome / heart attack.",
     keywords: ["heart attack", "myocardial infarction", "chest pain", "acs", "coronary syndrome"]
   },
   "CK Total": {
     use: "Adjunct cardiac/muscle injury marker in chest pain and myopathy contexts.",
-    keywords: ["heart attack", "muscle injury", "myopathy", "chest pain"]
+    keywords: ["muscle injury", "myopathy", "chest pain"]
   },
   "D-Dimer": {
     use: "Rule-out support test in suspected venous thromboembolism.",
@@ -968,12 +968,17 @@ function getFilteredTests() {
   const selectedSubsection = subsectionFilter?.value || "";
   const normalizedQuery = normalizeForSearch(query);
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
+  const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
+    .includes(normalizedQuery);
 
   return enrichedTests.filter((test) => {
     if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
     if (selectedSubsection && test.grouping.subsection !== selectedSubsection) return false;
     if (isInflammatoryShortcut) {
       return test.name === "CRP" || test.name === "Procalcitonin (PCT)";
+    }
+    if (isHeartAttackShortcut) {
+      return test.name === "Troponin I" || test.name === "CK Total";
     }
     return matchesQuery(test, query);
   });
