@@ -1034,7 +1034,7 @@ function renderCards(filteredTests) {
       `
       : `
       <div class="field">
-        <span class="label">Tube Color</span>
+        <span class="label">Tube Colour</span>
         <div class="tube-color-row">
           <span class="tube-icon" style="--tube-color: ${test.borderColor};" aria-hidden="true"></span>
           <span>${test.tubeColor}</span>
