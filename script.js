@@ -794,14 +794,6 @@ function getTestGrouping(testName) {
   return { sectionId: "general", subsection: "General" };
 }
 
-function getProfileEmoji(testName) {
-  const name = testName.toLowerCase();
-
-  if (name.includes("liver") || name.includes("lft")) return "🧪";
-  if (name.includes("u&e") || name === "u&e") return "🫘";
-  return "";
-}
-
 function enrichTest(test) {
   const grouping = getTestGrouping(test.name);
   const section = sectionMeta[grouping.sectionId] || sectionMeta.general;
@@ -1024,7 +1016,6 @@ function renderCards(filteredTests) {
 
   filteredTests.forEach((test) => {
     const isMicro = test.grouping.sectionId === "micro_virology";
-    const searchEmoji = getProfileEmoji(test.name);
     const card = document.createElement("div");
     card.className = "card";
     const isSelected = selectedTestNames.has(test.name);
@@ -1053,7 +1044,7 @@ function renderCards(filteredTests) {
       `;
 
     card.innerHTML = `
-      <h2>${test.name}${searchEmoji ? ` <span class="profile-emoji" aria-hidden="true">${searchEmoji}</span>` : ""}</h2>
+      <h2>${test.name}</h2>
       <div class="card-meta-row">
         <div class="test-group-badge">${test.section.label}</div>
         ${hasProfileComponents ? `<button class="profile-tests-btn" type="button" data-profile-name="${test.name}">Tests</button>` : ""}
