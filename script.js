@@ -24,6 +24,10 @@ const drawSearchInput = document.getElementById("drawSearchInput");
 const drawSelectionList = document.getElementById("drawSelectionList");
 const drawSelectionCount = document.getElementById("drawSelectionCount");
 const submitDrawSelectionBtn = document.getElementById("submitDrawSelectionBtn");
+const profileModal = document.getElementById("profileModal");
+const profileModalTitle = document.getElementById("profileModalTitle");
+const profileModalList = document.getElementById("profileModalList");
+const closeProfileModalBtn = document.getElementById("closeProfileModalBtn");
 
 let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
@@ -411,12 +415,36 @@ function openDrawModal() {
   if (drawResultCard) drawResultCard.hidden = true;
   renderDrawSelectionList();
   if (drawSearchInput) drawSearchInput.focus();
+  syncModalOpenClass();
 }
 
 function closeDrawModal() {
   if (!drawModal) return;
   drawModal.hidden = true;
-  document.body.classList.remove("modal-open");
+  syncModalOpenClass();
+}
+
+function openProfileModal(testName) {
+  if (!profileModal || !profileModalList || !profileModalTitle) return;
+  const components = profileComponentsByName[testName] || [];
+  if (!components.length) return;
+
+  profileModalTitle.textContent = `${testName} Includes`;
+  profileModalList.innerHTML = components.map((item) => `<li>${item}</li>`).join("");
+  profileModal.hidden = false;
+  syncModalOpenClass();
+}
+
+function closeProfileModal() {
+  if (!profileModal) return;
+  profileModal.hidden = true;
+  syncModalOpenClass();
+}
+
+function syncModalOpenClass() {
+  const drawOpen = Boolean(drawModal && !drawModal.hidden);
+  const profileOpen = Boolean(profileModal && !profileModal.hidden);
+  document.body.classList.toggle("modal-open", drawOpen || profileOpen);
 }
 
 function normalizeNameKey(value) {
@@ -997,17 +1025,6 @@ function renderCards(filteredTests) {
     card.classList.toggle("card-selected", isSelected);
     const profileComponents = profileComponentsByName[test.name] || [];
     const hasProfileComponents = profileComponents.length > 0;
-    const profileIncludesBlock = profileComponents.length
-      ? `
-      <div class="profile-components" aria-label="Profile includes" hidden>
-        <span class="label">Profile Includes</span>
-        <div class="profile-component-chips">
-          ${profileComponents.map((item) => `<span class="profile-component-chip">${item}</span>`).join("")}
-        </div>
-      </div>
-      `
-      : "";
-
     const specimenField = isMicro
       ? `
       <div class="field">
@@ -1033,9 +1050,8 @@ function renderCards(filteredTests) {
       <h2>${test.name}${searchEmoji ? ` <span class="profile-emoji" aria-hidden="true">${searchEmoji}</span>` : ""}</h2>
       <div class="card-meta-row">
         <div class="test-group-badge">${test.section.label}</div>
-        ${hasProfileComponents ? `<button class="profile-tests-btn" type="button" aria-expanded="false">Tests</button>` : ""}
+        ${hasProfileComponents ? `<button class="profile-tests-btn" type="button" data-profile-name="${test.name}">Tests</button>` : ""}
       </div>
-      ${profileIncludesBlock}
       ${specimenField}
       <div class="field">
         <span class="label">Turnaround Time</span>
@@ -1067,7 +1083,6 @@ function renderCards(filteredTests) {
     const drawSelectBtn = card.querySelector(".draw-select-btn");
     const copyBtn = card.querySelector(".copy-btn");
     const profileTestsBtn = card.querySelector(".profile-tests-btn");
-    const profileComponentsPanel = card.querySelector(".profile-components");
     toggleBtn.addEventListener("click", () => {
       const expanded = card.classList.toggle("expanded");
       toggleBtn.textContent = expanded ? "See less" : "See more";
@@ -1101,12 +1116,10 @@ function renderCards(filteredTests) {
       renderCards(getFilteredTests());
     });
 
-    if (profileTestsBtn && profileComponentsPanel) {
+    if (profileTestsBtn) {
       profileTestsBtn.addEventListener("click", () => {
-        const willShow = profileComponentsPanel.hidden;
-        profileComponentsPanel.hidden = !willShow;
-        profileTestsBtn.setAttribute("aria-expanded", willShow ? "true" : "false");
-        profileTestsBtn.textContent = willShow ? "Hide Tests" : "Tests";
+        const name = profileTestsBtn.getAttribute("data-profile-name");
+        openProfileModal(name);
       });
     }
 
@@ -1190,10 +1203,30 @@ function bindEvents() {
     });
   }
 
+  if (closeProfileModalBtn) {
+    closeProfileModalBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeProfileModal();
+    });
+  }
+
+  if (profileModal) {
+    profileModal.addEventListener("click", (event) => {
+      if (event.target !== profileModal) return;
+      closeProfileModal();
+    });
+  }
+
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (!drawModal || drawModal.hidden) return;
-    closeDrawModal();
+    if (profileModal && !profileModal.hidden) {
+      closeProfileModal();
+      return;
+    }
+    if (drawModal && !drawModal.hidden) {
+      closeDrawModal();
+    }
   });
 }
 

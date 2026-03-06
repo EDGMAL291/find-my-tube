@@ -487,6 +487,75 @@ body::after {
   display: none !important;
 }
 
+.profile-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(28, 33, 38, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: modalFadeIn 0.2s ease;
+}
+
+.profile-modal[hidden] {
+  display: none !important;
+}
+
+.profile-modal-card {
+  width: min(520px, calc(100vw - 28px));
+  max-height: 80vh;
+  overflow: auto;
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid rgba(120, 102, 74, 0.3);
+  background: rgba(255, 251, 245, 0.98);
+  box-shadow: 0 20px 40px rgba(10, 12, 15, 0.26);
+  animation: modalCardIn 0.24s ease;
+}
+
+.profile-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.profile-modal-head h3 {
+  font-size: 1rem;
+  color: #1e3139;
+}
+
+.profile-modal-close-btn {
+  border: 1px solid rgba(120, 102, 74, 0.32);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #3d5360;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.profile-modal-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.profile-modal-list li {
+  border: 1px solid rgba(120, 102, 74, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #31444f;
+  font-size: 0.9rem;
+  padding: 9px 10px;
+}
+
 .draw-modal-card {
   width: min(720px, calc(100vw - 28px));
   max-height: 88vh;
@@ -1034,6 +1103,15 @@ body::after {
 
   .draw-close-btn {
     width: 100%;
+  }
+
+  .profile-modal-close-btn {
+    width: 100%;
+  }
+
+  .profile-modal-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .draw-selection-actions {
