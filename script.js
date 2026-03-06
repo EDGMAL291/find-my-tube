@@ -1020,38 +1020,6 @@ function getFilteredTests() {
   });
 }
 
-function getCopySummary(test) {
-  const specimenLine = test.grouping.sectionId === "micro_virology"
-    ? `Required Specimen: ${test.specimenGuide}`
-    : `Tube: ${test.tubeColor}\nSpecimen: ${test.specimen}`;
-
-  return [
-    `${test.name}`,
-    `Section: ${test.section.label} > ${test.grouping.subsection}`,
-    `Clinical Use: ${test.clinicalUse}`,
-    specimenLine,
-    `Turnaround: ${test.turnaroundTime}`,
-    `Critical Preparation: ${test.criticalPrep}`
-  ].join("\n");
-}
-
-async function copyText(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  document.execCommand("copy");
-  textarea.remove();
-}
-
 function renderCards(filteredTests) {
   cardsContainer.innerHTML = "";
 
@@ -1121,34 +1089,16 @@ function renderCards(filteredTests) {
       <div class="card-actions">
         <button class="card-toggle-btn" type="button" aria-expanded="false">See more</button>
         <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Selected for Draw Bloods" : "Add to Draw Bloods"}</button>
-        <button class="copy-btn" type="button">Copy Summary</button>
       </div>
     `;
 
     const toggleBtn = card.querySelector(".card-toggle-btn");
     const drawSelectBtn = card.querySelector(".draw-select-btn");
-    const copyBtn = card.querySelector(".copy-btn");
     const profileTestsBtn = card.querySelector(".profile-tests-btn");
     toggleBtn.addEventListener("click", () => {
       const expanded = card.classList.toggle("expanded");
       toggleBtn.textContent = expanded ? "See less" : "See more";
       toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
-    });
-
-    copyBtn.addEventListener("click", async () => {
-      const original = copyBtn.textContent;
-      try {
-        await copyText(getCopySummary(test));
-        copyBtn.textContent = "Copied";
-        setTimeout(() => {
-          copyBtn.textContent = original;
-        }, 1200);
-      } catch (_) {
-        copyBtn.textContent = "Copy failed";
-        setTimeout(() => {
-          copyBtn.textContent = original;
-        }, 1400);
-      }
     });
 
     drawSelectBtn.addEventListener("click", () => {
