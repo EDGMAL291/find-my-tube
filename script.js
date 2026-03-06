@@ -135,7 +135,7 @@ const factTips = [
 ];
 
 const sectionMeta = {
-  chemistry: { label: "Chemistry", hint: "Kidney function (U+E), Bone (CMP profile), liver function and pancreas" },
+  chemistry: { label: "Biochemistry", hint: "Kidney function (U+E), Bone (CMP profile), liver function and pancreas" },
   endocrinology: { label: "Endocrinology", hint: "Thyroid, reproductive, adrenal, diabetes hormones" },
   tumour_markers: { label: "Tumour Markers", hint: "PSA, AFP, CEA, CA markers, beta-hCG" },
   metabolic_genetic: { label: "Metabolic / Genetic Disorders", hint: "Porphyria and inherited disorder screens" },
