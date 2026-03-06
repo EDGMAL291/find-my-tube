@@ -291,6 +291,10 @@ function normalizeForSearch(value) {
     .trim();
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function normalizeTurnaroundTime(value) {
   const raw = String(value || "").trim();
   if (!raw) return "N/A";
@@ -959,7 +963,10 @@ function matchesQuery(test, rawQuery) {
   if (!query) return true;
 
   const tokens = query.split(" ").filter(Boolean);
-  return tokens.every((token) => test.searchBlob.includes(token));
+  return tokens.every((token) => {
+    const pattern = new RegExp(`\\b${escapeRegExp(token)}\\b`);
+    return pattern.test(test.searchBlob);
+  });
 }
 
 function getFilteredTests() {
