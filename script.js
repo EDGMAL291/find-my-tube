@@ -991,8 +991,7 @@ function getCopySummary(test) {
     `Clinical Use: ${test.clinicalUse}`,
     specimenLine,
     `Turnaround: ${test.turnaroundTime}`,
-    `Critical Prep: ${test.criticalPrep}`,
-    `Notes: ${test.notes}`
+    `Critical Preparation: ${test.criticalPrep}`
   ].join("\n");
 }
 
@@ -1072,16 +1071,12 @@ function renderCards(filteredTests) {
       <div class="card-extra">
         <div class="test-subgroup-badge">${test.grouping.subsection}</div>
         <div class="field critical-prep-field">
-          <span class="label">Critical Prep</span>
+          <span class="label">Critical Preparation</span>
           <span>${test.criticalPrep}</span>
         </div>
         <div class="field">
           <span class="label">Clinical Use</span>
           <span>${test.clinicalUse}</span>
-        </div>
-        <div class="field">
-          <span class="label">Notes</span>
-          <span>${test.notes}</span>
         </div>
       </div>
       <div class="card-actions">
