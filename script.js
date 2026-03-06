@@ -87,6 +87,17 @@ const exactDrawRules = [
 
 const profileComponentsByName = {
   "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
+  "Liver Function Tests (LFT)": [
+    "ALT",
+    "AST",
+    "ALP",
+    "GGT",
+    "Total Bilirubin",
+    "Direct Bilirubin",
+    "Albumin",
+    "Total Protein",
+    "Globulins"
+  ],
   "CMP (Comprehensive Metabolic Panel)": [
     "Sodium",
     "Potassium",
