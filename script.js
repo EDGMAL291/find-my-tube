@@ -86,7 +86,7 @@ const exactDrawRules = [
 ];
 
 const profileComponentsByName = {
-  "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine"],
+  "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
   "CMP (Comprehensive Metabolic Panel)": [
     "Sodium",
     "Potassium",
