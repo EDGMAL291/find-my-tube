@@ -32,11 +32,11 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "CMP (Comprehensive Metabolic Panel)",
+    name: "CMP",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "4-8 hours",
-    notes: "Includes electrolytes, renal and liver markers.",
+    notes: "Calcium, magnesium, phosphate profile with albumin/corrected calcium context.",
     borderColor: "yellow"
   },
   {

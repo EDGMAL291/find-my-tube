@@ -100,19 +100,12 @@ const profileComponentsByName = {
     "Total Protein",
     "Globulins"
   ],
-  "CMP (Comprehensive Metabolic Panel)": [
-    "Sodium",
-    "Potassium",
-    "Chloride",
-    "Urea",
-    "Creatinine",
+  "CMP": [
     "Calcium",
-    "Protein",
-    "Albumin (Alb - for corrected calcium)",
-    "ALT",
-    "AST",
-    "ALP",
-    "Bilirubin"
+    "Magnesium",
+    "Phosphate",
+    "Alb",
+    "Corrected Calcium"
   ]
 };
 
@@ -167,6 +160,7 @@ const chipGroups = [
 
 const aliasByName = {
   "U&E": ["U+E", "UE", "Renal profile", "Kidney function"],
+  "CMP": ["Comprehensive Metabolic Panel", "CMP profile"],
   "FBC": ["CBC", "Complete blood count", "Full blood count"],
   "Liver Function Tests (LFT)": ["LFT", "Liver profile", "Hepatic profile"],
   "INR": ["PT INR", "Clotting ratio"],
