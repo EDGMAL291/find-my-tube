@@ -393,10 +393,10 @@ function collapseUESelection(selectionSet) {
 
 function renderDrawSelectionList() {
   if (!drawSelectionList) return;
-  const query = normalizeForSearch(drawSearchInput?.value || "");
+  const query = drawSearchInput?.value || "";
 
   const candidates = enrichedTests
-    .filter((test) => !query || test.searchBlob.includes(query))
+    .filter((test) => !query || matchesQuery(test, query))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   if (!candidates.length) {
