@@ -822,9 +822,10 @@ body::after {
 .card-meta-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .card-meta-row .test-group-badge {
