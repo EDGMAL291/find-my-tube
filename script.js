@@ -87,6 +87,7 @@ const exactDrawRules = [
 
 const profileComponentsByName = {
   "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
+  "Blood Gases": ["pH", "pCO2", "pO2", "HCO3-", "Base Excess", "O2 Saturation", "Lactate"],
   "Liver Function Tests (LFT)": [
     "ALT",
     "AST",
@@ -226,6 +227,10 @@ const clinicalProfileByName = {
 };
 
 const clinicalProfileBySubsection = {
+  "Blood Gases": {
+    use: "Acid-base and oxygenation assessment in urgent/critical care contexts.",
+    keywords: ["blood gas", "abg", "acid base", "oxygenation", "ventilation"]
+  },
   "Cardiac Markers": {
     use: "Used for suspected myocardial injury, heart attack, and cardiac stress.",
     keywords: ["heart attack", "myocardial infarction", "chest pain", "cardiac injury"]
@@ -622,6 +627,8 @@ function getClinicalProfile(testName, grouping) {
 function getTestGrouping(testName) {
   const name = testName.toLowerCase();
 
+  if (name.includes("blood gases")) return { sectionId: "chemistry", subsection: "Blood Gases" };
+
   if (
     name.includes("alcohol") ||
     name.includes("ethanol") ||
@@ -959,10 +966,15 @@ function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = sectionFilter?.value || "";
   const selectedSubsection = subsectionFilter?.value || "";
+  const normalizedQuery = normalizeForSearch(query);
+  const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
 
   return enrichedTests.filter((test) => {
     if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
     if (selectedSubsection && test.grouping.subsection !== selectedSubsection) return false;
+    if (isInflammatoryShortcut) {
+      return test.name === "CRP" || test.name === "Procalcitonin (PCT)";
+    }
     return matchesQuery(test, query);
   });
 }

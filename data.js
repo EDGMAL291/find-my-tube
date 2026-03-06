@@ -827,8 +827,8 @@ const tests = [
   },
   {
     name: "Blood Gases",
-    tubeColor: "Green (Heparin)",
-    specimen: "Heparinized whole blood",
+    tubeColor: "Green (Heparinised)",
+    specimen: "Heparinised whole blood",
     turnaroundTime: "Urgent / same day",
     notes: "Analyze promptly after collection.",
     borderColor: "#22c55e"
