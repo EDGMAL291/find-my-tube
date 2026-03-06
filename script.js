@@ -373,6 +373,18 @@ function getSelectedTests() {
   return enrichedTests.filter((test) => selectedTestNames.has(test.name));
 }
 
+const ueComponentTests = ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine"];
+
+function collapseUESelection(selectionSet) {
+  const hasProfile = selectionSet.has("U&E");
+  const hasAllComponents = ueComponentTests.every((name) => selectionSet.has(name));
+
+  if (hasProfile || hasAllComponents) {
+    selectionSet.add("U&E");
+    ueComponentTests.forEach((name) => selectionSet.delete(name));
+  }
+}
+
 function renderDrawSelectionList() {
   if (!drawSelectionList) return;
   const query = normalizeForSearch(drawSearchInput?.value || "");
@@ -403,6 +415,7 @@ function renderDrawSelectionList() {
       } else {
         stagedSelectedTestNames.delete(testName);
       }
+      collapseUESelection(stagedSelectedTestNames);
       renderDrawSelectionSummary();
     });
   });
@@ -977,6 +990,13 @@ function getFilteredTests() {
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
     .includes(normalizedQuery);
+  const isUEProfileShortcut = [
+    "u plus e",
+    "u and e",
+    "u e",
+    "kidney function",
+    "renal profile"
+  ].includes(normalizedQuery);
 
   return enrichedTests.filter((test) => {
     if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
@@ -986,6 +1006,9 @@ function getFilteredTests() {
     }
     if (isHeartAttackShortcut) {
       return test.name === "Troponin I" || test.name === "CK Total";
+    }
+    if (isUEProfileShortcut) {
+      return test.name === "U&E";
     }
     return matchesQuery(test, query);
   });
@@ -1128,6 +1151,7 @@ function renderCards(filteredTests) {
       } else {
         selectedTestNames.add(test.name);
       }
+      collapseUESelection(selectedTestNames);
 
       renderDrawSelectionList();
       renderCards(getFilteredTests());
@@ -1208,6 +1232,7 @@ function bindEvents() {
     submitDrawSelectionBtn.addEventListener("click", () => {
       selectedTestNames.clear();
       stagedSelectedTestNames.forEach((name) => selectedTestNames.add(name));
+      collapseUESelection(selectedTestNames);
       renderDrawResult();
       renderCards(getFilteredTests());
     });
