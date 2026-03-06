@@ -94,6 +94,7 @@ const profileComponentsByName = {
     "GGT",
     "Total Bilirubin",
     "Direct Bilirubin",
+    "Indirect Bilirubin",
     "Albumin",
     "Total Protein",
     "Globulins"
@@ -106,7 +107,7 @@ const profileComponentsByName = {
     "Creatinine",
     "Calcium",
     "Protein",
-    "Albumin",
+    "Albumin (Alb - for corrected calcium)",
     "ALT",
     "AST",
     "ALP",
