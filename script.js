@@ -1,7 +1,4 @@
 const searchInput = document.getElementById("searchInput");
-const sectionFilter = document.getElementById("sectionFilter");
-const subsectionFilter = document.getElementById("subsectionFilter");
-const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 const cardsContainer = document.getElementById("cardsContainer");
 const resultsInfo = document.getElementById("resultsInfo");
 const preSearchPanel = document.getElementById("preSearchPanel");
@@ -32,6 +29,7 @@ const closeProfileModalBtn = document.getElementById("closeProfileModalBtn");
 let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
 let stagedSelectedTestNames = new Set();
+let activeSectionGroup = "";
 
 const exactDrawRules = [
   {
@@ -888,16 +886,6 @@ if (sourceTests.length !== tests.length) {
 }
 const enrichedTests = sourceTests.map(enrichTest);
 
-function getSubsectionsForSection(sectionId) {
-  const found = new Set(
-    enrichedTests
-      .filter((test) => !sectionId || test.grouping.sectionId === sectionId)
-      .map((test) => test.grouping.subsection)
-  );
-
-  return [...found].sort((a, b) => a.localeCompare(b));
-}
-
 function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
   if (!textElement || !dotsElement || !items.length) return;
 
@@ -941,40 +929,10 @@ function renderGroupChips() {
   groupChips.querySelectorAll(".group-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       const groupId = chip.getAttribute("data-group");
-      sectionFilter.value = groupId;
-      refreshSubsectionOptions();
-      subsectionFilter.value = "";
+      activeSectionGroup = activeSectionGroup === groupId ? "" : groupId;
       applyFilters();
     });
   });
-}
-
-function renderSectionOptions() {
-  if (!sectionFilter) return;
-
-  sectionFilter.innerHTML = `
-    <option value="">All sections</option>
-    ${chipGroups
-      .map((id) => `<option value="${id}">${sectionMeta[id].label}</option>`)
-      .join("")}
-    <option value="general">General</option>
-  `;
-}
-
-function refreshSubsectionOptions() {
-  if (!subsectionFilter) return;
-
-  const selectedSection = sectionFilter?.value || "";
-  const options = getSubsectionsForSection(selectedSection);
-  const current = subsectionFilter.value;
-
-  subsectionFilter.innerHTML = `
-    <option value="">All subsections</option>
-    ${options.map((name) => `<option value="${name}">${name}</option>`).join("")}
-  `;
-
-  const stillValid = options.includes(current);
-  subsectionFilter.value = stillValid ? current : "";
 }
 
 function matchesQuery(test, rawQuery) {
@@ -990,8 +948,7 @@ function matchesQuery(test, rawQuery) {
 
 function getFilteredTests() {
   const query = searchInput?.value || "";
-  const selectedSection = sectionFilter?.value || "";
-  const selectedSubsection = subsectionFilter?.value || "";
+  const selectedSection = activeSectionGroup || "";
   const normalizedQuery = normalizeForSearch(query);
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
@@ -1006,7 +963,6 @@ function getFilteredTests() {
 
   return enrichedTests.filter((test) => {
     if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
-    if (selectedSubsection && test.grouping.subsection !== selectedSubsection) return false;
     if (isInflammatoryShortcut) {
       return test.name === "CRP" || test.name === "Procalcitonin (PCT)";
     }
@@ -1126,11 +1082,10 @@ function renderCards(filteredTests) {
 
 function applyFilters() {
   const hasQuery = (searchInput?.value || "").trim().length > 0;
-  const hasSectionFilter = Boolean(sectionFilter?.value);
-  const hasSubsectionFilter = Boolean(subsectionFilter?.value);
-  preSearchPanel.style.display = hasQuery || hasSectionFilter || hasSubsectionFilter ? "none" : "grid";
+  const hasSectionFilter = Boolean(activeSectionGroup);
+  preSearchPanel.style.display = hasQuery || hasSectionFilter ? "none" : "grid";
 
-  if (!hasQuery && !hasSectionFilter && !hasSubsectionFilter) {
+  if (!hasQuery && !hasSectionFilter) {
     resultsInfo.textContent = "Start typing a test or use filters to narrow results.";
     cardsContainer.innerHTML = "";
     return;
@@ -1141,28 +1096,6 @@ function applyFilters() {
 
 function bindEvents() {
   searchInput.addEventListener("input", applyFilters);
-
-  sectionFilter.addEventListener("change", () => {
-    refreshSubsectionOptions();
-    applyFilters();
-  });
-
-  subsectionFilter.addEventListener("change", applyFilters);
-
-  resetFiltersBtn.addEventListener("click", () => {
-    if (document.activeElement && typeof document.activeElement.blur === "function") {
-      document.activeElement.blur();
-    }
-    if (typeof searchInput.blur === "function") {
-      searchInput.blur();
-    }
-
-    searchInput.value = "";
-    sectionFilter.value = "";
-    refreshSubsectionOptions();
-    subsectionFilter.value = "";
-    applyFilters();
-  });
 
   if (openDrawPlannerBtn) {
     openDrawPlannerBtn.addEventListener("click", (event) => {
@@ -1300,8 +1233,6 @@ function initInstallHelper() {
 
 renderFactsCarousel();
 renderGroupChips();
-renderSectionOptions();
-refreshSubsectionOptions();
 bindEvents();
 initInstallHelper();
 applyFilters();

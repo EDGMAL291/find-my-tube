@@ -251,94 +251,6 @@ body::after {
   background: rgba(255, 252, 247, 0.96);
 }
 
-.filter-box {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 12px;
-  margin: 0 0 20px;
-  border-radius: 18px;
-  padding: 16px;
-  border: 1px solid rgba(140, 116, 82, 0.28);
-  background: linear-gradient(135deg, rgba(252, 247, 238, 0.92), rgba(242, 233, 218, 0.76));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow:
-    0 14px 30px rgba(65, 53, 38, 0.13),
-    0 0 0 1px rgba(255, 255, 255, 0.22) inset;
-}
-
-.filter-item {
-  display: grid;
-  gap: 7px;
-}
-
-.filter-item span {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #2f4957;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding-left: 2px;
-}
-
-.filter-item select {
-  width: 100%;
-  appearance: none;
-  -webkit-appearance: none;
-  border: 1px solid rgba(124, 102, 70, 0.36);
-  border-radius: 12px;
-  padding: 11px 42px 11px 13px;
-  background:
-    linear-gradient(45deg, transparent 50%, #4c6a78 50%) calc(100% - 19px) calc(50% + 1px) / 7px 7px no-repeat,
-    linear-gradient(135deg, #4c6a78 50%, transparent 50%) calc(100% - 14px) calc(50% + 1px) / 7px 7px no-repeat,
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 245, 236, 0.88));
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 0.93rem;
-  font-weight: 600;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.filter-item select:hover {
-  border-color: rgba(15, 118, 110, 0.46);
-}
-
-.filter-item select:focus {
-  outline: none;
-  border-color: var(--focus);
-  box-shadow:
-    0 0 0 4px rgba(15, 118, 110, 0.15),
-    0 8px 16px rgba(15, 118, 110, 0.08);
-  transform: translateY(-1px);
-}
-
-.filter-reset-btn {
-  align-self: end;
-  border: 1px solid rgba(15, 118, 110, 0.42);
-  background: linear-gradient(180deg, rgba(240, 255, 252, 0.95), rgba(228, 248, 244, 0.92));
-  color: #0d605a;
-  border-radius: 12px;
-  padding: 11px 14px;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow:
-    0 8px 16px rgba(15, 118, 110, 0.11),
-    0 1px 0 rgba(255, 255, 255, 0.45) inset;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.filter-reset-btn:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(180deg, rgba(231, 252, 248, 0.98), rgba(217, 244, 239, 0.98));
-  border-color: rgba(15, 118, 110, 0.58);
-  box-shadow:
-    0 12px 20px rgba(15, 118, 110, 0.14),
-    0 1px 0 rgba(255, 255, 255, 0.45) inset;
-}
 
 .pre-search {
   display: grid;
@@ -1068,10 +980,6 @@ body::after {
     min-height: 0;
   }
 
-  .filter-box {
-    grid-template-columns: 1fr;
-  }
-
   .open-draw-btn {
     width: 100%;
   }
@@ -1100,10 +1008,6 @@ body::after {
   }
 
   .draw-submit-btn {
-    width: 100%;
-  }
-
-  .filter-reset-btn {
     width: 100%;
   }
 
