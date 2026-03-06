@@ -13,19 +13,21 @@ const groupChips = document.getElementById("groupChips");
 const installHelper = document.getElementById("installHelper");
 const installHelperText = document.getElementById("installHelperText");
 const installHelperBtn = document.getElementById("installHelperBtn");
-const drawPlanner = document.getElementById("drawPlanner");
+const drawModal = document.getElementById("drawModal");
+const drawResultCard = document.getElementById("drawResultCard");
 const drawPlannerCount = document.getElementById("drawPlannerCount");
 const drawGroups = document.getElementById("drawGroups");
 const drawPlannerNote = document.getElementById("drawPlannerNote");
-const drawResetBtn = document.getElementById("drawResetBtn");
 const openDrawPlannerBtn = document.getElementById("openDrawPlannerBtn");
 const closeDrawPlannerBtn = document.getElementById("closeDrawPlannerBtn");
-const drawSelectionPanel = document.getElementById("drawSelectionPanel");
 const drawSearchInput = document.getElementById("drawSearchInput");
 const drawSelectionList = document.getElementById("drawSelectionList");
+const drawSelectionCount = document.getElementById("drawSelectionCount");
+const submitDrawSelectionBtn = document.getElementById("submitDrawSelectionBtn");
 
 let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
+let stagedSelectedTestNames = new Set();
 
 const exactDrawRules = [
   {
@@ -78,6 +80,24 @@ const exactDrawRules = [
     ]
   }
 ];
+
+const profileComponentsByName = {
+  "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine"],
+  "CMP (Comprehensive Metabolic Panel)": [
+    "Sodium",
+    "Potassium",
+    "Chloride",
+    "Urea",
+    "Creatinine",
+    "Calcium",
+    "Protein",
+    "Albumin",
+    "ALT",
+    "AST",
+    "ALP",
+    "Bilirubin"
+  ]
+};
 
 const facts = [
   "Biochemistry profiles like U&E and LFT are commonly serum-based (gold-top) in routine workflows.",
@@ -136,6 +156,7 @@ const aliasByName = {
   "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
   "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
+  "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
   "Ammonia": ["NH3", "Ammonia plasma"],
   "TB PCR (GeneXpert)": ["Xpert", "GeneXpert"],
   "Urine MCS": ["Urine culture", "MC&S"],
@@ -151,7 +172,7 @@ const aliasByName = {
 };
 
 const clinicalProfileByName = {
-  "Iron Studies": {
+  "Fe Studies": {
     use: "Workup for iron deficiency anaemia and microcytic anaemia.",
     keywords: ["iron deficiency anaemia", "iron deficiency anemia", "microcytic anaemia", "low iron", "fatigue"]
   },
@@ -348,7 +369,7 @@ function renderDrawSelectionList() {
   drawSelectionList.innerHTML = candidates
     .map((test) => `
       <label class="draw-selection-item">
-        <input type="checkbox" data-draw-test="${test.name}" ${selectedTestNames.has(test.name) ? "checked" : ""} />
+        <input type="checkbox" data-draw-test="${test.name}" ${stagedSelectedTestNames.has(test.name) ? "checked" : ""} />
         <span>${test.name}</span>
       </label>
     `)
@@ -358,26 +379,62 @@ function renderDrawSelectionList() {
     checkbox.addEventListener("change", () => {
       const testName = checkbox.getAttribute("data-draw-test");
       if (checkbox.checked) {
-        selectedTestNames.add(testName);
+        stagedSelectedTestNames.add(testName);
       } else {
-        selectedTestNames.delete(testName);
+        stagedSelectedTestNames.delete(testName);
       }
-      renderDrawPlanner();
-      renderCards(getFilteredTests());
+      renderDrawSelectionSummary();
     });
   });
+
+  renderDrawSelectionSummary();
+}
+
+function renderDrawSelectionSummary() {
+  if (!drawSelectionCount) return;
+  const count = stagedSelectedTestNames.size;
+  drawSelectionCount.textContent = `${count} test${count !== 1 ? "s" : ""} selected`;
+}
+
+function animateDrawResultCard() {
+  if (!drawResultCard) return;
+  drawResultCard.classList.remove("draw-result-updated");
+  void drawResultCard.offsetWidth;
+  drawResultCard.classList.add("draw-result-updated");
+}
+
+function openDrawModal() {
+  if (!drawModal) return;
+  stagedSelectedTestNames = new Set(selectedTestNames);
+  drawModal.hidden = false;
+  document.body.classList.add("modal-open");
+  if (drawResultCard) drawResultCard.hidden = true;
+  renderDrawSelectionList();
+  if (drawSearchInput) drawSearchInput.focus();
+}
+
+function closeDrawModal() {
+  if (!drawModal) return;
+  drawModal.hidden = true;
+  document.body.classList.remove("modal-open");
 }
 
 function normalizeNameKey(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function canonicalDrawRuleName(value) {
+  const key = normalizeNameKey(value);
+  if (key === "xdp (d-dimer)" || key === "xdp d dimer" || key === "xdp") return "d-dimer";
+  return key;
+}
+
 function findExactDrawRule(selectedTests) {
-  const selected = new Set(selectedTests.map((test) => normalizeNameKey(test.name)));
+  const selected = new Set(selectedTests.map((test) => canonicalDrawRuleName(test.name)));
 
   return exactDrawRules.find((rule) => {
     if (selected.size !== rule.tests.length) return false;
-    return rule.tests.every((name) => selected.has(normalizeNameKey(name)));
+    return rule.tests.every((name) => selected.has(canonicalDrawRuleName(name)));
   }) || null;
 }
 
@@ -439,56 +496,54 @@ function getLabDrawPlan(selectedTests) {
   return getDefaultPlanItems(selectedTests);
 }
 
-function renderDrawPlanner() {
-  if (!drawPlanner || !drawPlannerCount || !drawGroups || !drawPlannerNote) return;
+function renderDrawResult() {
+  if (!drawResultCard || !drawPlannerCount || !drawGroups || !drawPlannerNote) return;
 
   const selectedTests = getSelectedTests();
   if (!selectedTests.length) {
-    drawPlanner.hidden = false;
-    drawPlannerCount.textContent = "0 selected tests • 0 draw types needed";
+    drawResultCard.hidden = false;
+    drawPlannerCount.textContent = "0 selected tests";
     drawGroups.innerHTML = `
       <article class="draw-group-card">
-        <p class="draw-group-tests">No tests selected yet. Search for a test and tap "Add to Draw Bloods" on the card.</p>
+        <p class="draw-group-tests">No tests selected yet. Tick tests above and submit selection.</p>
       </article>
     `;
-    drawPlannerNote.textContent = "This section updates as soon as you add tests.";
+    drawPlannerNote.textContent = "Result card updates after submit.";
+    animateDrawResultCard();
     return;
   }
 
-  drawPlanner.hidden = false;
   const plan = getLabDrawPlan(selectedTests);
   const hivRprNote = applyHivRprRule(plan, selectedTests);
-  const totalTubeTypes = plan.items.length;
-  drawPlannerCount.textContent = `${selectedTests.length} selected test${selectedTests.length > 1 ? "s" : ""} • ${totalTubeTypes} draw type${totalTubeTypes !== 1 ? "s" : ""} needed`;
+  drawResultCard.hidden = false;
+  drawPlannerCount.textContent = `${selectedTests.length} selected test${selectedTests.length > 1 ? "s" : ""}`;
 
   drawGroups.innerHTML = plan.items
-    .map((item) => {
-      const testList = item.tests?.length ? item.tests.join(", ") : "Rule-based tube requirement.";
-      return `
-        <article class="draw-group-card">
-          <div class="draw-group-top">
-            <span class="tube-icon" style="--tube-color: ${getTubeSwatchColor(item.key)};" aria-hidden="true"></span>
-            <div>
-              <h3>${item.label}</h3>
-              <p>Draw ${item.count} x ${item.label}</p>
-            </div>
+    .map((item) => `
+      <article class="draw-group-card">
+        <div class="draw-group-top">
+          <span class="tube-icon" style="--tube-color: ${getTubeSwatchColor(item.key)};" aria-hidden="true"></span>
+          <div>
+            <h3>${item.label}</h3>
+            <p>Draw ${item.count} x ${item.label}</p>
           </div>
-          ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
-          <p class="draw-group-tests">${testList}</p>
-        </article>
-      `;
-    })
+        </div>
+        ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
+      </article>
+    `)
     .join("");
 
   if (plan.manual.length) {
-    drawPlannerNote.textContent = `Manual review needed for: ${plan.manual.join(", ")}. These may require non-blood specimens or special containers.`;
+    drawPlannerNote.textContent = `Manual review needed for: ${plan.manual.join(", ")}.`;
   } else if (hivRprNote) {
     drawPlannerNote.textContent = hivRprNote;
   } else if (plan.ruleId) {
-    drawPlannerNote.textContent = "Lab draw rule matched for this exact test set.";
+    drawPlannerNote.textContent = "Lab draw rule matched for this exact set.";
   } else {
-    drawPlannerNote.textContent = "Default estimate uses one tube per detected color.";
+    drawPlannerNote.textContent = "Default estimate applied.";
   }
+
+  animateDrawResultCard();
 }
 
 function inferCriticalPrep(test) {
@@ -634,6 +689,7 @@ function getTestGrouping(testName) {
     name.includes("malaria") ||
     name.includes("hb electrophoresis") ||
     name.includes("iron studies") ||
+    name.includes("fe studies") ||
     name.includes("esr")
   ) return { sectionId: "haematology", subsection: "General" };
 
@@ -715,6 +771,9 @@ function enrichTest(test) {
   const grouping = getTestGrouping(test.name);
   const section = sectionMeta[grouping.sectionId] || sectionMeta.general;
   const aliases = aliasByName[test.name] || [];
+  const ironFeSynonyms = /\b(iron|fe)\b/i.test(test.name)
+    ? ["iron", "fe", "iron studies", "fe studies"]
+    : [];
   const clinicalProfile = getClinicalProfile(test.name, grouping);
 
   const normalized = {
@@ -745,6 +804,7 @@ function enrichTest(test) {
     section.label,
     grouping.subsection,
     ...aliases,
+    ...ironFeSynonyms,
     ...normalized.clinicalKeywords
   ].join(" "));
 
@@ -935,6 +995,18 @@ function renderCards(filteredTests) {
     card.className = "card";
     const isSelected = selectedTestNames.has(test.name);
     card.classList.toggle("card-selected", isSelected);
+    const profileComponents = profileComponentsByName[test.name] || [];
+    const hasProfileComponents = profileComponents.length > 0;
+    const profileIncludesBlock = profileComponents.length
+      ? `
+      <div class="profile-components" aria-label="Profile includes" hidden>
+        <span class="label">Profile Includes</span>
+        <div class="profile-component-chips">
+          ${profileComponents.map((item) => `<span class="profile-component-chip">${item}</span>`).join("")}
+        </div>
+      </div>
+      `
+      : "";
 
     const specimenField = isMicro
       ? `
@@ -959,7 +1031,11 @@ function renderCards(filteredTests) {
 
     card.innerHTML = `
       <h2>${test.name}${searchEmoji ? ` <span class="profile-emoji" aria-hidden="true">${searchEmoji}</span>` : ""}</h2>
-      <div class="test-group-badge">${test.section.label}</div>
+      <div class="card-meta-row">
+        <div class="test-group-badge">${test.section.label}</div>
+        ${hasProfileComponents ? `<button class="profile-tests-btn" type="button" aria-expanded="false">Tests</button>` : ""}
+      </div>
+      ${profileIncludesBlock}
       ${specimenField}
       <div class="field">
         <span class="label">Turnaround Time</span>
@@ -990,6 +1066,8 @@ function renderCards(filteredTests) {
     const toggleBtn = card.querySelector(".card-toggle-btn");
     const drawSelectBtn = card.querySelector(".draw-select-btn");
     const copyBtn = card.querySelector(".copy-btn");
+    const profileTestsBtn = card.querySelector(".profile-tests-btn");
+    const profileComponentsPanel = card.querySelector(".profile-components");
     toggleBtn.addEventListener("click", () => {
       const expanded = card.classList.toggle("expanded");
       toggleBtn.textContent = expanded ? "See less" : "See more";
@@ -1019,10 +1097,18 @@ function renderCards(filteredTests) {
         selectedTestNames.add(test.name);
       }
 
-      renderDrawPlanner();
       renderDrawSelectionList();
       renderCards(getFilteredTests());
     });
+
+    if (profileTestsBtn && profileComponentsPanel) {
+      profileTestsBtn.addEventListener("click", () => {
+        const willShow = profileComponentsPanel.hidden;
+        profileComponentsPanel.hidden = !willShow;
+        profileTestsBtn.setAttribute("aria-expanded", willShow ? "true" : "false");
+        profileTestsBtn.textContent = willShow ? "Hide Tests" : "Tests";
+      });
+    }
 
     cardsContainer.appendChild(card);
   });
@@ -1037,12 +1123,10 @@ function applyFilters() {
   if (!hasQuery && !hasSectionFilter && !hasSubsectionFilter) {
     resultsInfo.textContent = "Start typing a test or use filters to narrow results.";
     cardsContainer.innerHTML = "";
-    renderDrawPlanner();
     return;
   }
 
   renderCards(getFilteredTests());
-  renderDrawPlanner();
 }
 
 function bindEvents() {
@@ -1070,35 +1154,47 @@ function bindEvents() {
     applyFilters();
   });
 
-  if (drawResetBtn) {
-    drawResetBtn.addEventListener("click", () => {
-      selectedTestNames.clear();
-      renderDrawPlanner();
-      renderDrawSelectionList();
-      renderCards(getFilteredTests());
-    });
-  }
-
   if (openDrawPlannerBtn) {
-    openDrawPlannerBtn.addEventListener("click", () => {
-      if (!drawSelectionPanel) return;
-      drawSelectionPanel.hidden = false;
-      drawSelectionPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-      renderDrawSelectionList();
-      if (drawSearchInput) drawSearchInput.focus();
+    openDrawPlannerBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (drawModal && !drawModal.hidden) return;
+      openDrawModal();
     });
   }
 
   if (closeDrawPlannerBtn) {
-    closeDrawPlannerBtn.addEventListener("click", () => {
-      if (!drawSelectionPanel) return;
-      drawSelectionPanel.hidden = true;
+    closeDrawPlannerBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeDrawModal();
     });
   }
 
   if (drawSearchInput) {
     drawSearchInput.addEventListener("input", renderDrawSelectionList);
   }
+
+  if (submitDrawSelectionBtn) {
+    submitDrawSelectionBtn.addEventListener("click", () => {
+      selectedTestNames.clear();
+      stagedSelectedTestNames.forEach((name) => selectedTestNames.add(name));
+      renderDrawResult();
+      renderCards(getFilteredTests());
+    });
+  }
+
+  if (drawModal) {
+    drawModal.addEventListener("click", (event) => {
+      if (event.target !== drawModal) return;
+      closeDrawModal();
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (!drawModal || drawModal.hidden) return;
+    closeDrawModal();
+  });
 }
 
 function detectPlatform() {

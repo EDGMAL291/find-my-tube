@@ -39,6 +39,14 @@ body {
   overflow-x: hidden;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
+body.modal-open .container {
+  filter: blur(3px);
+}
+
 body::before,
 body::after {
   content: "";
@@ -462,13 +470,35 @@ body::after {
   box-shadow: 0 10px 18px rgba(15, 118, 110, 0.12);
 }
 
-.draw-selection-panel {
-  margin-bottom: 16px;
+.draw-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(28, 33, 38, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: modalFadeIn 0.2s ease;
+}
+
+.draw-modal[hidden] {
+  display: none !important;
+}
+
+.draw-modal-card {
+  width: min(720px, calc(100vw - 28px));
+  max-height: 88vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
   border-radius: 14px;
   padding: 14px;
   border: 1px solid rgba(120, 102, 74, 0.3);
-  background: rgba(255, 251, 245, 0.92);
-  box-shadow: 0 12px 22px rgba(65, 53, 38, 0.12);
+  background: rgba(255, 251, 245, 0.98);
+  box-shadow: 0 20px 40px rgba(10, 12, 15, 0.26);
+  animation: modalCardIn 0.24s ease;
 }
 
 .draw-selection-head {
@@ -477,6 +507,11 @@ body::after {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgba(255, 251, 245, 0.98);
+  padding-bottom: 8px;
 }
 
 .draw-selection-head h3 {
@@ -507,7 +542,8 @@ body::after {
 }
 
 .draw-selection-list {
-  max-height: 300px;
+  max-height: 42vh;
+  min-height: 180px;
   overflow: auto;
   display: grid;
   gap: 8px;
@@ -530,26 +566,43 @@ body::after {
   font-size: 0.84rem;
 }
 
-.draw-planner {
-  margin-bottom: 18px;
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid rgba(15, 118, 110, 0.3);
-  background: linear-gradient(135deg, rgba(236, 251, 249, 0.92), rgba(224, 244, 240, 0.84));
-  box-shadow: 0 12px 26px rgba(15, 118, 110, 0.12);
-}
-
-.draw-planner-head {
+.draw-selection-actions {
+  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
+  gap: 10px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(255, 251, 245, 0.2), rgba(255, 251, 245, 0.98) 35%);
+  z-index: 2;
 }
 
-.draw-planner-head h2 {
-  font-size: 1.08rem;
-  color: #12434a;
+.draw-selection-count {
+  font-size: 0.84rem;
+  color: #40545f;
+  font-weight: 600;
+}
+
+.draw-submit-btn {
+  border: 1px solid rgba(15, 118, 110, 0.5);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(229, 251, 247, 0.98), rgba(210, 243, 236, 0.95));
+  color: #0d605a;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.draw-result-card {
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.26);
+  background: rgba(236, 251, 249, 0.9);
+  padding: 12px;
 }
 
 .draw-planner-sub,
@@ -571,18 +624,6 @@ body::after {
 .draw-planner-note {
   margin-top: 10px;
   font-size: 0.84rem;
-}
-
-.draw-reset-btn {
-  border: 1px solid rgba(15, 118, 110, 0.38);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.86);
-  color: #0d605a;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  padding: 8px 10px;
-  cursor: pointer;
 }
 
 .draw-groups {
@@ -625,6 +666,10 @@ body::after {
   font-size: 0.8rem;
   color: #536975;
   margin-bottom: 6px;
+}
+
+.draw-result-updated {
+  animation: drawPlannerPulse 0.45s ease;
 }
 
 .results-info {
@@ -703,6 +748,59 @@ body::after {
   color: var(--accent-strong);
   background: rgba(237, 252, 250, 0.8);
   border: 1px solid rgba(15, 118, 110, 0.28);
+}
+
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-meta-row .test-group-badge {
+  margin-bottom: 0;
+}
+
+.profile-components {
+  border: 1px solid rgba(120, 102, 74, 0.24);
+  border-radius: 10px;
+  padding: 7px 8px;
+  background: rgba(255, 255, 255, 0.72);
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.profile-components .label {
+  margin-bottom: 6px;
+  font-size: 0.68rem;
+}
+
+.profile-component-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.profile-component-chip {
+  border: 1px solid rgba(120, 102, 74, 0.24);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  color: #35505d;
+  background: rgba(255, 251, 245, 0.9);
+}
+
+.profile-tests-btn {
+  border: 1px solid rgba(120, 102, 74, 0.3);
+  background: rgba(255, 252, 247, 0.95);
+  color: #3d5360;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .test-subgroup-badge {
@@ -863,6 +961,37 @@ body::after {
   }
 }
 
+@keyframes drawPlannerPulse {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 12px 26px rgba(15, 118, 110, 0.12);
+  }
+  50% {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 28px rgba(15, 118, 110, 0.18);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 12px 26px rgba(15, 118, 110, 0.12);
+  }
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 600px) {
   body {
     padding: 16px;
@@ -907,12 +1036,12 @@ body::after {
     width: 100%;
   }
 
-  .draw-planner-head {
+  .draw-selection-actions {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
-  .draw-reset-btn {
+  .draw-submit-btn {
     width: 100%;
   }
 
@@ -938,6 +1067,16 @@ body::after {
     font-size: 0.96rem;
     margin-bottom: 6px;
     line-height: 1.25;
+  }
+
+  .card-meta-row {
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .profile-components {
+    width: 100%;
   }
 
   .field {

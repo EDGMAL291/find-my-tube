@@ -65,7 +65,7 @@ const tests = [
     borderColor: "#22c55e"
   },
   {
-    name: "Iron Studies",
+    name: "Fe Studies",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "4-8 hours",
@@ -95,14 +95,6 @@ const tests = [
     turnaroundTime: "6-12 hours",
     notes: "Avoid sample collection soon after prostate manipulation.",
     borderColor: "yellow"
-  },
-  {
-    name: "D-Dimer",
-    tubeColor: "Light Blue",
-    specimen: "Citrate plasma",
-    turnaroundTime: "2-4 hours",
-    notes: "Fill tube completely to maintain proper ratio.",
-    borderColor: "#89CFF0"
   },
   {
     name: "Blood Group & Rh",
