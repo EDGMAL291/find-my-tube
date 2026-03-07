@@ -101,6 +101,12 @@ const profileComponentsByName = {
     "TIBC",
     "Transferrin Saturation (Calculated)"
   ],
+  "DIC Screen": [
+    "Prothrombin Time (PT)",
+    "Partial Thromboplastin Time (PTT)",
+    "Fibrinogen",
+    "XDP (D-Dimer)"
+  ],
   "Lipid Profile / Lipogram": [
     "Cholesterol Total",
     "HDL Cholesterol",
@@ -212,6 +218,7 @@ const aliasByName = {
   "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
   "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
+  "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
   "Ammonia": ["NH3", "Ammonia plasma"],
