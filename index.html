@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260308p" />
+  <link rel="stylesheet" href="style.css?v=20260308q" />
 </head>
 <body>
   <div class="container">
@@ -49,10 +49,10 @@
     </section>
 
     <section class="pre-search" id="preSearchPanel">
+      <button type="button" class="fact-toggle-btn" id="toggleFactsBtn" aria-controls="factCarouselContent" aria-expanded="false" hidden>
+        Show tips & facts
+      </button>
       <div class="fact-carousel" id="factCarouselPanel">
-        <button type="button" class="fact-toggle-btn" id="toggleFactsBtn" aria-controls="factCarouselContent" aria-expanded="false" hidden>
-          Show tips & facts
-        </button>
         <div class="fact-carousel-content" id="factCarouselContent">
           <div class="mini-carousel">
             <p class="fact-kicker">Interesting lab facts</p>
@@ -117,7 +117,7 @@
   <script src="script.js?v=20260308p"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.12";
+      const APP_VERSION = "2026-03-08.13";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -132,7 +132,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308p", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308q", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
