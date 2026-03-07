@@ -178,7 +178,7 @@ const facts = [
   "Biochemistry profiles like U&E and LFT are commonly serum-based (gold-top) in routine workflows.",
   "Haematology tests often use EDTA tubes, while coagulation studies generally use citrate tubes.",
   "Microbiology and molecular tests are usually specimen-specific and not tied to one blood tube.",
-  "Selecting by lab section first can reduce request form errors before sample collection.",
+  "Selecting by lab area first can reduce request form errors before sample collection.",
   "Pre-analytical errors (labeling, timing, and transport) can affect results more than analyzer performance.",
   "Cardiac markers are most useful when interpreted with symptom timing and serial sampling.",
   "In suspected sepsis, blood cultures are ideally collected before antibiotics where clinically feasible.",

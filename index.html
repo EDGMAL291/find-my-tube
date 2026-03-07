@@ -63,8 +63,8 @@
       </div>
 
       <div class="group-hints">
-        <h3>Browse by lab section</h3>
-        <p>Choose a laboratory discipline to jump into the right test list faster.</p>
+        <h3>Find Tests by Lab Area</h3>
+        <p>Pick a lab area to surface the right profiles and tests faster.</p>
         <div class="group-chips" id="groupChips"></div>
       </div>
     </section>
@@ -109,10 +109,10 @@
   </section>
 
   <script src="data.js?v=20260308e"></script>
-  <script src="script.js?v=20260308e"></script>
+  <script src="script.js?v=20260308f"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.6";
+      const APP_VERSION = "2026-03-08.8";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -127,7 +127,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308f", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308h", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
