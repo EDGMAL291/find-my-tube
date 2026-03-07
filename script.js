@@ -1164,14 +1164,20 @@ function renderCards(filteredTests) {
     const showTubeChoiceNote = tubeGroups.length > 1
       ? /(preferred|acceptable|alternate|alternative|or|\/)/i.test(String(test.tubeColor || ""))
       : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
+    const hasTubeOptions = tubeGroups.length > 0;
+    const specimenValue = String(isMicro ? test.specimenGuide : test.specimen || "").trim();
+    const isNonBloodSpecimen = /(urine|stool|faec|swab|csf|sputum|respiratory|semen|fluid|tissue|bone marrow|aspirate|saliva|synovial|pleural|ascitic|vaginal|nasopharyngeal|throat)/i
+      .test(specimenValue);
+    const showSpecimenField = isMicro || isNonBloodSpecimen || !hasTubeOptions;
     const specimenField = isMicro
       ? `
       <div class="field">
-        <span class="label">Required Specimen</span>
-        <span>${test.specimenGuide}</span>
+        <span class="label">Specimen</span>
+        <span>${specimenValue}</span>
       </div>
       `
       : `
+      ${hasTubeOptions ? `
       <div class="field">
         <span class="label">Tube Colour</span>
         <div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
@@ -1179,10 +1185,13 @@ function renderCards(filteredTests) {
         </div>
         ${showTubeChoiceNote ? `<span class="tube-choice-note">${test.tubeColor}</span>` : ""}
       </div>
+      ` : ""}
+      ${showSpecimenField ? `
       <div class="field">
         <span class="label">Specimen</span>
-        <span>${test.specimen}</span>
+        <span>${specimenValue}</span>
       </div>
+      ` : ""}
       `;
 
     card.innerHTML = `
