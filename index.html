@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260307l" />
+  <link rel="stylesheet" href="style.css?v=20260308f" />
 </head>
 <body>
   <div class="container">
@@ -45,6 +45,7 @@
 
     <section class="draw-nav">
       <button type="button" class="open-draw-btn" id="openDrawPlannerBtn">Tube Calculator</button>
+      <p class="draw-nav-hint">Need to know how many tubes to draw? Open Tube Calculator.</p>
     </section>
 
     <section class="pre-search" id="preSearchPanel">
@@ -111,7 +112,7 @@
   <script src="script.js?v=20260308e"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.5";
+      const APP_VERSION = "2026-03-08.6";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -126,7 +127,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308e", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308f", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

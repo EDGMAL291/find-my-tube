@@ -382,6 +382,13 @@ body::after {
   box-shadow: 0 10px 18px rgba(15, 118, 110, 0.12);
 }
 
+.draw-nav-hint {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #4f616d;
+}
+
 .draw-modal {
   position: fixed;
   inset: 0;
