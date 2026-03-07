@@ -159,7 +159,7 @@ const chipGroups = [
 
 const aliasByName = {
   "U&E": ["U+E", "UE", "Renal profile", "Kidney function"],
-  "CMP": ["Comprehensive Metabolic Panel", "CMP profile"],
+  "CMP": ["CMP profile", "Bone profile", "Calcium magnesium phosphate profile"],
   "FBC": ["CBC", "Complete blood count", "Full blood count"],
   "Sodium": ["Na"],
   "Potassium": ["K"],
@@ -378,6 +378,7 @@ function getSelectedTests() {
 }
 
 const ueComponentTests = ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine"];
+const cmpComponentTests = ["Calcium", "Magnesium", "Phosphate", "Albumin", "Corrected Calcium (Calculated)"];
 
 function collapseUESelection(selectionSet) {
   const hasProfile = selectionSet.has("U&E");
@@ -387,6 +388,21 @@ function collapseUESelection(selectionSet) {
     selectionSet.add("U&E");
     ueComponentTests.forEach((name) => selectionSet.delete(name));
   }
+}
+
+function collapseCMPSelection(selectionSet) {
+  const hasProfile = selectionSet.has("CMP");
+  const hasAllComponents = cmpComponentTests.every((name) => selectionSet.has(name));
+
+  if (hasProfile || hasAllComponents) {
+    selectionSet.add("CMP");
+    cmpComponentTests.forEach((name) => selectionSet.delete(name));
+  }
+}
+
+function collapseProfileSelections(selectionSet) {
+  collapseUESelection(selectionSet);
+  collapseCMPSelection(selectionSet);
 }
 
 function renderDrawSelectionList() {
@@ -419,7 +435,7 @@ function renderDrawSelectionList() {
       } else {
         stagedSelectedTestNames.delete(testName);
       }
-      collapseUESelection(stagedSelectedTestNames);
+      collapseProfileSelections(stagedSelectedTestNames);
       renderDrawSelectionSummary();
     });
   });
@@ -960,6 +976,14 @@ function getFilteredTests() {
     "kidney function",
     "renal profile"
   ].includes(normalizedQuery);
+  const isCMPProfileShortcut = [
+    "cmp",
+    "cmp profile",
+    "bone profile",
+    "calcium magnesium phosphate",
+    "ca mg po4",
+    "ca mg p"
+  ].includes(normalizedQuery);
 
   return enrichedTests.filter((test) => {
     if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
@@ -971,6 +995,9 @@ function getFilteredTests() {
     }
     if (isUEProfileShortcut) {
       return test.name === "U&E";
+    }
+    if (isCMPProfileShortcut) {
+      return test.name === "CMP";
     }
     return matchesQuery(test, query);
   });
@@ -1063,7 +1090,7 @@ function renderCards(filteredTests) {
       } else {
         selectedTestNames.add(test.name);
       }
-      collapseUESelection(selectedTestNames);
+      collapseProfileSelections(selectedTestNames);
 
       renderDrawSelectionList();
       renderCards(getFilteredTests());
@@ -1121,7 +1148,7 @@ function bindEvents() {
     submitDrawSelectionBtn.addEventListener("click", () => {
       selectedTestNames.clear();
       stagedSelectedTestNames.forEach((name) => selectedTestNames.add(name));
-      collapseUESelection(selectedTestNames);
+      collapseProfileSelections(selectedTestNames);
       renderDrawResult();
       renderCards(getFilteredTests());
     });
