@@ -212,6 +212,7 @@ const aliasByName = {
   "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
   "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
+  "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
   "Ammonia": ["NH3", "Ammonia plasma"],
   "TB PCR (GeneXpert)": ["Xpert", "GeneXpert"],
@@ -886,6 +887,8 @@ function getTestGrouping(testName) {
 
   if (
     name.includes("cmp") ||
+    name.includes("parathyroid") ||
+    name.includes("pth") ||
     name.includes("calcium") ||
     name.includes("phosphate") ||
     name.includes("magnesium") ||
