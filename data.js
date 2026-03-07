@@ -890,11 +890,12 @@ const tests = [
     borderColor: "gray"
   },
   {
-    name: "PTH",
+    name: "Parathyroid Hormone (PTH)",
     tubeColor: "Purple",
     specimen: "EDTA plasma",
     turnaroundTime: "1 day",
-    notes: "Parathyroid hormone test from renal/bone panel.",
+    notes: "Parathyroid hormone test from the renal/bone panel.",
+    criticalPrep: "Collect in a purple EDTA tube, invert gently to mix, avoid clots, and send promptly per lab handling protocol.",
     borderColor: "purple"
   },
   {
