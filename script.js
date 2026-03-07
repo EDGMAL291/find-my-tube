@@ -586,23 +586,41 @@ function getDefaultPlanItems(selectedTests) {
   return { items, manual, ruleId: null };
 }
 
-function applyHivRprRule(plan, selectedTests) {
-  const selectedLower = selectedTests.map((test) => test.name.toLowerCase());
-  const hasHiv = selectedLower.some((name) => name.includes("hiv"));
-  const hasRpr = selectedLower.some((name) => name.includes("rpr"));
-  const withOtherTests = selectedTests.length > 1;
-  if (!withOtherTests || (!hasHiv && !hasRpr)) return "";
+function isDedicatedGoldTubeTest(test) {
+  const name = String(test.name || "").toLowerCase();
+  const tubeGroups = getTubeGroups(test.tubeColor);
+  const isGold = tubeGroups.includes("Gold/Yellow");
+  if (!isGold) return false;
 
+  return (
+    name.includes("rheumatoid factor") ||
+    /\brf\b/.test(name) ||
+    name.includes("rpr") ||
+    name.includes("hiv")
+  );
+}
+
+function applyDedicatedGoldTubeRule(plan, selectedTests) {
+  const dedicatedTests = selectedTests.filter((test) => isDedicatedGoldTubeTest(test));
+  if (!dedicatedTests.length) return "";
+
+  const dedicatedNames = new Set(dedicatedTests.map((test) => test.name));
+  const hasOtherGoldTests = selectedTests.some((test) => {
+    const tubeGroups = getTubeGroups(test.tubeColor);
+    return tubeGroups.includes("Gold/Yellow") && !dedicatedNames.has(test.name);
+  });
+
+  const requiredGoldCount = dedicatedTests.length + (hasOtherGoldTests ? 1 : 0);
   let goldItem = plan.items.find((item) => item.key === "Gold/Yellow");
   if (!goldItem) {
-    goldItem = { key: "Gold/Yellow", label: "Gold/Yellow", count: 2, tests: [] };
+    goldItem = { key: "Gold/Yellow", label: "Gold/Yellow", count: requiredGoldCount, tests: [] };
     plan.items.push(goldItem);
   } else {
-    goldItem.count = Math.max(goldItem.count, 2);
+    goldItem.count = Math.max(goldItem.count, requiredGoldCount);
   }
 
   plan.items.sort((a, b) => a.label.localeCompare(b.label));
-  return "HIV/RPR rule applied: use 2 x Gold/Yellow when requested with other tests.";
+  return "RF/RPR/HIV rule applied: each needs its own Gold/Yellow tube.";
 }
 
 function getLabDrawPlan(selectedTests) {
@@ -636,7 +654,7 @@ function renderDrawResult() {
   }
 
   const plan = getLabDrawPlan(selectedTests);
-  const hivRprNote = applyHivRprRule(plan, selectedTests);
+  const dedicatedTubeNote = applyDedicatedGoldTubeRule(plan, selectedTests);
   drawResultCard.hidden = false;
   drawPlannerCount.textContent = `${selectedTests.length} selected test${selectedTests.length > 1 ? "s" : ""}`;
 
@@ -657,8 +675,8 @@ function renderDrawResult() {
 
   if (plan.manual.length) {
     drawPlannerNote.textContent = `Manual review needed for: ${plan.manual.join(", ")}.`;
-  } else if (hivRprNote) {
-    drawPlannerNote.textContent = hivRprNote;
+  } else if (dedicatedTubeNote) {
+    drawPlannerNote.textContent = dedicatedTubeNote;
   } else if (plan.ruleId) {
     drawPlannerNote.textContent = "Lab draw rule matched for this exact set.";
   } else {

@@ -108,7 +108,7 @@
   </section>
 
   <script src="data.js?v=20260307m"></script>
-  <script src="script.js?v=20260307ab"></script>
+  <script src="script.js?v=20260307ac"></script>
   <script>
     if ("serviceWorker" in navigator) {
       const APP_VERSION = "2026-03-07.3";
@@ -126,7 +126,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260307p", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260307q", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
