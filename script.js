@@ -623,6 +623,26 @@ function applyDedicatedGoldTubeRule(plan, selectedTests) {
   return "RF/RPR/HIV rule applied: each needs its own Gold/Yellow tube.";
 }
 
+function applyPurpleVolumeRule(plan, selectedTests) {
+  const purpleTestCount = selectedTests.filter((test) => {
+    const tubeGroups = getTubeGroups(test.tubeColor);
+    return tubeGroups.includes("Purple");
+  }).length;
+
+  if (purpleTestCount < 3) return "";
+
+  let purpleItem = plan.items.find((item) => item.key === "Purple");
+  if (!purpleItem) {
+    purpleItem = { key: "Purple", label: "Purple", count: 2, tests: [] };
+    plan.items.push(purpleItem);
+  } else {
+    purpleItem.count = Math.max(purpleItem.count, 2);
+  }
+
+  plan.items.sort((a, b) => a.label.localeCompare(b.label));
+  return "Purple rule applied: 3 or more purple-top tests require 2 x Purple tubes.";
+}
+
 function getLabDrawPlan(selectedTests) {
   const exactRule = findExactDrawRule(selectedTests);
   if (exactRule) {
@@ -655,6 +675,7 @@ function renderDrawResult() {
 
   const plan = getLabDrawPlan(selectedTests);
   const dedicatedTubeNote = applyDedicatedGoldTubeRule(plan, selectedTests);
+  const purpleRuleNote = applyPurpleVolumeRule(plan, selectedTests);
   drawResultCard.hidden = false;
   drawPlannerCount.textContent = `${selectedTests.length} selected test${selectedTests.length > 1 ? "s" : ""}`;
 
@@ -673,10 +694,14 @@ function renderDrawResult() {
     `)
     .join("");
 
+  const guidanceNotes = [dedicatedTubeNote, purpleRuleNote].filter(Boolean);
   if (plan.manual.length) {
-    drawPlannerNote.textContent = `Manual review needed for: ${plan.manual.join(", ")}.`;
-  } else if (dedicatedTubeNote) {
-    drawPlannerNote.textContent = dedicatedTubeNote;
+    const manualNote = `Manual review needed for: ${plan.manual.join(", ")}.`;
+    drawPlannerNote.textContent = guidanceNotes.length
+      ? `${manualNote} ${guidanceNotes.join(" ")}`
+      : manualNote;
+  } else if (guidanceNotes.length) {
+    drawPlannerNote.textContent = guidanceNotes.join(" ");
   } else if (plan.ruleId) {
     drawPlannerNote.textContent = "Lab draw rule matched for this exact set.";
   } else {
