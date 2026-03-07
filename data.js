@@ -12,7 +12,15 @@ const tests = [
     tubeColor: "Light Blue",
     specimen: "Citrate plasma",
     turnaroundTime: "2-3 hours",
-    notes: "Tube must be filled correctly to maintain blood-to-anticoagulant ratio.",
+    notes: "Calculated from PT ratio; tube must be filled correctly to maintain blood-to-anticoagulant ratio.",
+    borderColor: "#89CFF0"
+  },
+  {
+    name: "Coagulation Studies",
+    tubeColor: "Light Blue",
+    specimen: "Citrate plasma",
+    turnaroundTime: "2-4 hours",
+    notes: "Profile includes PT, PTT, and INR (calculated).",
     borderColor: "#89CFF0"
   },
   {

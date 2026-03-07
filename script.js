@@ -107,6 +107,11 @@ const profileComponentsByName = {
     "Fibrinogen",
     "XDP (D-Dimer)"
   ],
+  "Coagulation Studies": [
+    "Prothrombin Time (PT)",
+    "Partial Thromboplastin Time (PTT)",
+    "INR"
+  ],
   "Lipid Profile / Lipogram": [
     "Cholesterol Total",
     "HDL Cholesterol",
@@ -214,11 +219,12 @@ const aliasByName = {
   "Magnesium": ["Mg"],
   "Phosphate": ["PO4", "PO4-3", "Phos"],
   "Liver Function Tests (LFT)": ["LFT", "Liver profile", "Hepatic profile"],
-  "INR": ["PT INR", "Clotting ratio"],
+  "INR": ["PT INR", "Clotting ratio", "INR calculated"],
   "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
   "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
+  "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
   "Ammonia": ["NH3", "Ammonia plasma"],
@@ -848,6 +854,9 @@ function getTestGrouping(testName) {
   }
 
   if (
+    name.includes("coagulation studies") ||
+    name.includes("coagulation profile") ||
+    name.includes("clotting profile") ||
     name.includes("inr") ||
     name.includes("prothrombin") ||
     name.includes("ptt") ||
