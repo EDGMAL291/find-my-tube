@@ -379,6 +379,23 @@ function getSelectedTests() {
 
 const ueComponentTests = ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine"];
 const cmpComponentTests = ["Calcium", "Magnesium", "Phosphate", "Albumin", "Corrected Calcium (Calculated)"];
+const ueProfileQueries = new Set(["u plus e", "u and e", "u e", "kidney function", "renal profile"]);
+const cmpProfileQueries = new Set([
+  "cmp",
+  "cmp profile",
+  "bone profile",
+  "calcium magnesium phosphate",
+  "ca mg po4",
+  "ca mg p"
+]);
+
+function isUEProfileQuery(normalizedQuery) {
+  return ueProfileQueries.has(normalizedQuery);
+}
+
+function isCMPProfileQuery(normalizedQuery) {
+  return cmpProfileQueries.has(normalizedQuery);
+}
 
 function collapseUESelection(selectionSet) {
   const hasProfile = selectionSet.has("U&E");
@@ -408,10 +425,17 @@ function collapseProfileSelections(selectionSet) {
 function renderDrawSelectionList() {
   if (!drawSelectionList) return;
   const query = drawSearchInput?.value || "";
+  const normalizedQuery = normalizeForSearch(query);
 
-  const candidates = enrichedTests
-    .filter((test) => !query || matchesQuery(test, query))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  let candidates = enrichedTests;
+  if (isUEProfileQuery(normalizedQuery)) {
+    candidates = enrichedTests.filter((test) => test.name === "U&E");
+  } else if (isCMPProfileQuery(normalizedQuery)) {
+    candidates = enrichedTests.filter((test) => test.name === "CMP");
+  } else {
+    candidates = enrichedTests.filter((test) => !query || matchesQuery(test, query));
+  }
+  candidates = candidates.sort((a, b) => a.name.localeCompare(b.name));
 
   if (!candidates.length) {
     drawSelectionList.innerHTML = `<p class="draw-selection-empty">No tests match this search.</p>`;
@@ -969,21 +993,8 @@ function getFilteredTests() {
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
     .includes(normalizedQuery);
-  const isUEProfileShortcut = [
-    "u plus e",
-    "u and e",
-    "u e",
-    "kidney function",
-    "renal profile"
-  ].includes(normalizedQuery);
-  const isCMPProfileShortcut = [
-    "cmp",
-    "cmp profile",
-    "bone profile",
-    "calcium magnesium phosphate",
-    "ca mg po4",
-    "ca mg p"
-  ].includes(normalizedQuery);
+  const isUEProfileShortcut = isUEProfileQuery(normalizedQuery);
+  const isCMPProfileShortcut = isCMPProfileQuery(normalizedQuery);
 
   return enrichedTests.filter((test) => {
     if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
