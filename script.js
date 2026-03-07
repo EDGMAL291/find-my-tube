@@ -1255,7 +1255,7 @@ function renderCards(filteredTests) {
       </div>
       <div class="card-actions">
         <button class="card-toggle-btn" type="button" aria-expanded="false">See more</button>
-        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Selected for Draw Bloods" : "Add to Draw Bloods"}</button>
+        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Added to Draw Plan" : "Add to Draw Plan"}</button>
       </div>
     `;
 
