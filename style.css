@@ -386,6 +386,9 @@ body::after {
 
 .draw-nav {
   margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .open-draw-btn {
@@ -406,6 +409,8 @@ body::after {
   font-size: 0.82rem;
   line-height: 1.35;
   color: #4f616d;
+  text-align: center;
+  max-width: 440px;
 }
 
 .draw-modal {
@@ -1093,7 +1098,8 @@ body::after {
   }
 
   .open-draw-btn {
-    width: 100%;
+    width: auto;
+    max-width: 100%;
   }
 
   .draw-selection-head {
