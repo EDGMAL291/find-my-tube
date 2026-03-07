@@ -101,6 +101,13 @@ const profileComponentsByName = {
     "TIBC",
     "Transferrin Saturation (Calculated)"
   ],
+  "Lipid Profile / Lipogram": [
+    "Cholesterol Total",
+    "HDL Cholesterol",
+    "LDL Cholesterol",
+    "Triglycerides",
+    "Non-HDL Cholesterol (Calculated)"
+  ],
   "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
   "Blood Gases": ["pH", "pCO2", "pO2", "HCO3-", "Base Excess", "O2 Saturation", "Lactate"],
   "Liver Function Tests (LFT)": [
@@ -178,7 +185,13 @@ const aliasByName = {
   "U&E": ["U+E", "UE", "Renal profile", "Kidney function"],
   "CMP": ["CMP profile", "Bone profile", "Calcium magnesium phosphate profile"],
   "FBC": ["CBC", "Complete blood count", "Full blood count"],
+  "Lipid Profile / Lipogram": ["Lipid profile", "Lipogram", "Lipid"],
   "Blood Gases": ["ABG", "Blood gas", "Blood gases"],
+  "Cholesterol Total": ["Total cholesterol", "TC"],
+  "LDL Cholesterol": ["LDL", "Bad cholesterol"],
+  "HDL Cholesterol": ["HDL", "Good cholesterol"],
+  Triglycerides: ["TG"],
+  "Non-HDL Cholesterol (Calculated)": ["Non HDL cholesterol", "Non-HDL", "Non HDL"],
   "Serum Iron (Fe)": ["Serum iron", "Iron", "Fe"],
   Ferritin: ["Iron stores"],
   Transferrin: ["Iron binding protein"],

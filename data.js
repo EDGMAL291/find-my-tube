@@ -1034,6 +1034,14 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "Non-HDL Cholesterol (Calculated)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Calculated from total cholesterol and HDL cholesterol.",
+    borderColor: "yellow"
+  },
+  {
     name: "Lipoprotein (a)",
     tubeColor: "Gold",
     specimen: "Serum",
