@@ -1410,6 +1410,54 @@ const tests = [
     borderColor: "purple"
   },
   {
+    name: "RBC Count",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Complete blood count component for red cell quantification.",
+    borderColor: "purple"
+  },
+  {
+    name: "Haematocrit (HCT)",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Complete blood count component for packed cell volume.",
+    borderColor: "purple"
+  },
+  {
+    name: "MCV",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Complete blood count red cell index (mean corpuscular volume).",
+    borderColor: "purple"
+  },
+  {
+    name: "MCH",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Complete blood count red cell index (mean corpuscular haemoglobin).",
+    borderColor: "purple"
+  },
+  {
+    name: "MCHC",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Complete blood count red cell index (mean corpuscular haemoglobin concentration).",
+    borderColor: "purple"
+  },
+  {
+    name: "Platelet Count",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "Complete blood count component for platelet quantification.",
+    borderColor: "purple"
+  },
+  {
     name: "Hb Electrophoresis",
     tubeColor: "Purple",
     specimen: "EDTA whole blood",

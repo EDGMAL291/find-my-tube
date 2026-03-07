@@ -84,6 +84,16 @@ const exactDrawRules = [
 ];
 
 const profileComponentsByName = {
+  "FBC": [
+    "Haemoglobin",
+    "WBC and Differential Count",
+    "RBC Count",
+    "Haematocrit (HCT)",
+    "MCV",
+    "MCH",
+    "MCHC",
+    "Platelet Count"
+  ],
   "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
   "Blood Gases": ["pH", "pCO2", "pO2", "HCO3-", "Base Excess", "O2 Saturation", "Lactate"],
   "Liver Function Tests (LFT)": [
@@ -161,6 +171,10 @@ const aliasByName = {
   "U&E": ["U+E", "UE", "Renal profile", "Kidney function"],
   "CMP": ["CMP profile", "Bone profile", "Calcium magnesium phosphate profile"],
   "FBC": ["CBC", "Complete blood count", "Full blood count"],
+  "RBC Count": ["RBC", "Red cell count"],
+  "WBC and Differential Count": ["WBC", "White cell count", "Differential"],
+  "Platelet Count": ["Platelets", "PLT"],
+  "Haematocrit (HCT)": ["HCT", "Hematocrit"],
   "Sodium": ["Na"],
   "Potassium": ["K"],
   "Chloride": ["Cl"],
@@ -379,6 +393,17 @@ function getSelectedTests() {
 
 const ueComponentTests = ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine"];
 const cmpComponentTests = ["Calcium", "Magnesium", "Phosphate", "Albumin", "Corrected Calcium (Calculated)"];
+const fbcComponentTests = [
+  "Haemoglobin",
+  "WBC and Differential Count",
+  "RBC Count",
+  "Haematocrit (HCT)",
+  "MCV",
+  "MCH",
+  "MCHC",
+  "Platelet Count"
+];
+const fbcProfileQueries = new Set(["fbc", "cbc", "full blood count", "complete blood count", "full blood picture"]);
 const ueProfileQueries = new Set(["u plus e", "u and e", "u e", "kidney function", "renal profile"]);
 const cmpProfileQueries = new Set([
   "cmp",
@@ -395,6 +420,10 @@ function isUEProfileQuery(normalizedQuery) {
 
 function isCMPProfileQuery(normalizedQuery) {
   return cmpProfileQueries.has(normalizedQuery);
+}
+
+function isFBCProfileQuery(normalizedQuery) {
+  return fbcProfileQueries.has(normalizedQuery);
 }
 
 function collapseUESelection(selectionSet) {
@@ -417,7 +446,18 @@ function collapseCMPSelection(selectionSet) {
   }
 }
 
+function collapseFBCSelection(selectionSet) {
+  const hasProfile = selectionSet.has("FBC");
+  const hasAllComponents = fbcComponentTests.every((name) => selectionSet.has(name));
+
+  if (hasProfile || hasAllComponents) {
+    selectionSet.add("FBC");
+    fbcComponentTests.forEach((name) => selectionSet.delete(name));
+  }
+}
+
 function collapseProfileSelections(selectionSet) {
+  collapseFBCSelection(selectionSet);
   collapseUESelection(selectionSet);
   collapseCMPSelection(selectionSet);
 }
@@ -428,7 +468,9 @@ function renderDrawSelectionList() {
   const normalizedQuery = normalizeForSearch(query);
 
   let candidates = enrichedTests;
-  if (isUEProfileQuery(normalizedQuery)) {
+  if (isFBCProfileQuery(normalizedQuery)) {
+    candidates = enrichedTests.filter((test) => test.name === "FBC");
+  } else if (isUEProfileQuery(normalizedQuery)) {
     candidates = enrichedTests.filter((test) => test.name === "U&E");
   } else if (isCMPProfileQuery(normalizedQuery)) {
     candidates = enrichedTests.filter((test) => test.name === "CMP");
@@ -993,6 +1035,7 @@ function getFilteredTests() {
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
     .includes(normalizedQuery);
+  const isFBCProfileShortcut = isFBCProfileQuery(normalizedQuery);
   const isUEProfileShortcut = isUEProfileQuery(normalizedQuery);
   const isCMPProfileShortcut = isCMPProfileQuery(normalizedQuery);
 
@@ -1003,6 +1046,9 @@ function getFilteredTests() {
     }
     if (isHeartAttackShortcut) {
       return test.name === "Troponin I" || test.name === "CK Total";
+    }
+    if (isFBCProfileShortcut) {
+      return test.name === "FBC";
     }
     if (isUEProfileShortcut) {
       return test.name === "U&E";
