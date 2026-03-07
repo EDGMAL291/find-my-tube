@@ -112,6 +112,11 @@ const profileComponentsByName = {
     "Partial Thromboplastin Time (PTT)",
     "INR"
   ],
+  "Malaria Profile": [
+    "Malaria Smear (Thick and Thin)",
+    "Malaria Smear and Antigen",
+    "Malaria PCR (with ID if Positive)"
+  ],
   "Lipid Profile / Lipogram": [
     "Cholesterol Total",
     "HDL Cholesterol",
@@ -225,6 +230,7 @@ const aliasByName = {
   "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
+  "Malaria Profile": ["Malaria panel", "Malaria screen", "Malaria studies"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
   "Ammonia": ["NH3", "Ammonia plasma"],

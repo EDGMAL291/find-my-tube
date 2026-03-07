@@ -24,6 +24,14 @@ const tests = [
     borderColor: "#89CFF0"
   },
   {
+    name: "Malaria Profile",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Urgent / same day",
+    notes: "Profile includes smear, antigen, and PCR options for malaria workup.",
+    borderColor: "purple"
+  },
+  {
     name: "U&E",
     tubeColor: "Gold",
     specimen: "Serum",
