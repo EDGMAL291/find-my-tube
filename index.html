@@ -27,7 +27,7 @@
       </h1>
       <p>
         Search for a laboratory test to see the correct tube, specimen type,
-        turnaround time, and special notes.
+        and special notes.
       </p>
       <div class="install-helper" id="installHelper" hidden>
         <p id="installHelperText"></p>
@@ -108,10 +108,10 @@
   </section>
 
   <script src="data.js?v=20260307m"></script>
-  <script src="script.js?v=20260307ae"></script>
+  <script src="script.js?v=20260307af"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-07.3";
+      const APP_VERSION = "2026-03-07.4";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -126,7 +126,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260307s", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260307t", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

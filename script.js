@@ -140,7 +140,7 @@ const facts = [
   "Pre-analytical errors (labeling, timing, and transport) can affect results more than analyzer performance.",
   "Cardiac markers are most useful when interpreted with symptom timing and serial sampling.",
   "In suspected sepsis, blood cultures are ideally collected before antibiotics where clinically feasible.",
-  "Turnaround time differs by method: routine chemistry is faster than many culture-based tests.",
+  "Specimen handling quality has a major impact on result reliability.",
   "A focused test request often reduces redraws and speeds up clinical decision-making."
 ];
 
@@ -1153,10 +1153,6 @@ function renderCards(filteredTests) {
         ${hasProfileComponents ? `<button class="profile-tests-btn" type="button" data-profile-name="${test.name}">Tests</button>` : ""}
       </div>
       ${specimenField}
-      <div class="field">
-        <span class="label">Turnaround Time</span>
-        <span>${test.turnaroundTime}</span>
-      </div>
       <div class="card-extra">
         <div class="test-subgroup-badge">${test.grouping.subsection}</div>
         <div class="field critical-prep-field">
