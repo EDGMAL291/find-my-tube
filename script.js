@@ -2,6 +2,9 @@ const searchInput = document.getElementById("searchInput");
 const cardsContainer = document.getElementById("cardsContainer");
 const resultsInfo = document.getElementById("resultsInfo");
 const preSearchPanel = document.getElementById("preSearchPanel");
+const factCarouselPanel = document.getElementById("factCarouselPanel");
+const factCarouselContent = document.getElementById("factCarouselContent");
+const toggleFactsBtn = document.getElementById("toggleFactsBtn");
 const factText = document.getElementById("factText");
 const factDots = document.getElementById("factDots");
 const tipText = document.getElementById("tipText");
@@ -1102,6 +1105,55 @@ function renderFactsCarousel() {
   startCarousel(factTips, tipText, tipDots, 8200);
 }
 
+function setFactsPanelState(isCollapsed) {
+  if (!factCarouselPanel || !toggleFactsBtn) return;
+  factCarouselPanel.classList.toggle("is-collapsed", isCollapsed);
+  toggleFactsBtn.textContent = isCollapsed ? "Show tips & facts" : "Hide tips & facts";
+  toggleFactsBtn.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+}
+
+function applyFactsPanelMode(isMobile) {
+  if (!factCarouselPanel || !toggleFactsBtn || !factCarouselContent) return;
+
+  if (isMobile) {
+    factCarouselPanel.classList.add("mobile-facts");
+    toggleFactsBtn.hidden = false;
+    if (!factCarouselPanel.dataset.mobileInit) {
+      setFactsPanelState(true);
+      factCarouselPanel.dataset.mobileInit = "1";
+    } else {
+      const collapsed = factCarouselPanel.classList.contains("is-collapsed");
+      setFactsPanelState(collapsed);
+    }
+    return;
+  }
+
+  delete factCarouselPanel.dataset.mobileInit;
+  factCarouselPanel.classList.remove("mobile-facts", "is-collapsed");
+  toggleFactsBtn.hidden = true;
+  toggleFactsBtn.setAttribute("aria-expanded", "true");
+}
+
+function initFactsPanel() {
+  if (!factCarouselPanel || !toggleFactsBtn || !factCarouselContent) return;
+
+  const mediaQuery = window.matchMedia("(max-width: 600px)");
+  const onModeChange = () => applyFactsPanelMode(mediaQuery.matches);
+
+  toggleFactsBtn.addEventListener("click", () => {
+    const isCollapsed = factCarouselPanel.classList.contains("is-collapsed");
+    setFactsPanelState(!isCollapsed);
+  });
+
+  onModeChange();
+
+  if (typeof mediaQuery.addEventListener === "function") {
+    mediaQuery.addEventListener("change", onModeChange);
+  } else {
+    mediaQuery.addListener(onModeChange);
+  }
+}
+
 function renderGroupChips() {
   if (!groupChips) return;
 
@@ -1458,6 +1510,7 @@ function initInstallHelper() {
 }
 
 renderFactsCarousel();
+initFactsPanel();
 renderGroupChips();
 bindEvents();
 initInstallHelper();

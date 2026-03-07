@@ -271,9 +271,28 @@ body::after {
 }
 
 .fact-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fact-carousel-content {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+}
+
+.fact-toggle-btn {
+  display: none;
+  border: 1px solid rgba(15, 118, 110, 0.34);
+  border-radius: 10px;
+  background: rgba(237, 252, 250, 0.75);
+  color: #0d605a;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 8px 10px;
+  cursor: pointer;
 }
 
 .mini-carousel {
@@ -1089,8 +1108,28 @@ body::after {
     grid-template-columns: 1fr;
   }
 
+  .group-hints {
+    order: 1;
+  }
+
   .fact-carousel {
-    grid-template-columns: 1fr;
+    order: 2;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .fact-toggle-btn {
+    display: inline-flex;
+    align-self: flex-start;
+  }
+
+  .fact-carousel.mobile-facts.is-collapsed .fact-carousel-content {
+    display: none;
+  }
+
+  .fact-carousel.mobile-facts .fact-text {
+    font-size: 0.93rem;
+    min-height: 0;
   }
 
   .fact-text {
