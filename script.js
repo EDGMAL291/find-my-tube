@@ -80,6 +80,15 @@ const exactDrawRules = [
       { key: "Blood Culture Bottles", label: "Blood Culture Bottles", count: 2, detail: "Anaerobic and aerobic bottles." },
       { key: "Gold/Yellow", label: "Gold/Yellow", count: 1 }
     ]
+  },
+  {
+    id: "antenatal-profile",
+    tests: ["Antenatal Screen (ANTINV)"],
+    items: [
+      { key: "Purple", label: "Purple", count: 2, detail: "FBC, blood grouping, and antenatal antibody screen coverage." },
+      { key: "Gold/Yellow", label: "Gold/Yellow", count: 3, detail: "Includes dedicated HIV and RPR tubes plus additional antenatal serology." },
+      { key: "Gray", label: "Gray", count: 1, detail: "For glucose." }
+    ]
   }
 ];
 
@@ -111,6 +120,16 @@ const profileComponentsByName = {
     "Prothrombin Time (PT)",
     "Partial Thromboplastin Time (PTT)",
     "INR"
+  ],
+  "Antenatal Screen (ANTINV)": [
+    "Blood Group & Rh",
+    "RBC Antibody Screen (Antenatal)",
+    "FBC",
+    "HIV ELISA",
+    "RPR (Syphilis Screen)",
+    "Hepatitis B Surface Antigen (HBsAg)",
+    "Rubella IgG only",
+    "Glucose"
   ],
   "Arthritis Profile": [
     "ESR",
@@ -238,6 +257,7 @@ const aliasByName = {
   "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
+  "Antenatal Screen (ANTINV)": ["Antenatal screen", "Antenatal profile", "ANTINV", "Antinv", "Antinatal screen"],
   "Arthritis Profile": ["Arthritis panel", "Arthritis screen", "Arthritis Profile (ESR, CRP, UA, RF, CCP)"],
   "Malaria Profile": ["Malaria panel", "Malaria screen", "Malaria studies"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
@@ -268,6 +288,10 @@ const clinicalProfileByName = {
   "Arthritis Profile": {
     use: "Combined inflammatory and rheumatoid workup profile for suspected inflammatory arthritis.",
     keywords: ["arthritis", "joint pain", "rheumatoid", "inflammatory arthritis"]
+  },
+  "Antenatal Screen (ANTINV)": {
+    use: "Booking antenatal profile for blood group, antibodies, key infections, and baseline screening.",
+    keywords: ["antenatal", "pregnancy booking", "antinv", "maternal screen", "prenatal profile"]
   },
   "Troponin I": {
     use: "Primary marker for suspected acute coronary syndrome / heart attack.",
@@ -870,6 +894,10 @@ function getTestGrouping(testName) {
   ) return { sectionId: "immunology", subsection: "Autoimmune / Serology" };
 
   if (name.includes("blood group") || name.includes("crossmatch") || name.includes("coombs")) {
+    return { sectionId: "haematology", subsection: "Blood Grouping" };
+  }
+
+  if (name.includes("antenatal") || name.includes("antinv")) {
     return { sectionId: "haematology", subsection: "Blood Grouping" };
   }
 

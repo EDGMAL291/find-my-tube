@@ -32,6 +32,14 @@ const tests = [
     borderColor: "purple"
   },
   {
+    name: "Antenatal Screen (ANTINV)",
+    tubeColor: "Gold + Purple + Gray",
+    specimen: "Serum, EDTA whole blood, and fluoride plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Booking antenatal profile including blood group, antibody screen, infections, rubella immunity, and glucose.",
+    borderColor: "yellow"
+  },
+  {
     name: "U&E",
     tubeColor: "Gold",
     specimen: "Serum",
