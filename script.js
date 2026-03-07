@@ -722,10 +722,10 @@ function renderDrawResult() {
     drawPlannerCount.textContent = "0 selected tests";
     drawGroups.innerHTML = `
       <article class="draw-group-card">
-        <p class="draw-group-tests">No tests selected yet. Tick tests above and submit selection.</p>
+        <p class="draw-group-tests">No tests selected yet. Tick tests above and calculate tubes.</p>
       </article>
     `;
-    drawPlannerNote.textContent = "Result card updates after submit.";
+    drawPlannerNote.textContent = "Result card updates after calculation.";
     animateDrawResultCard();
     return;
   }
@@ -1255,7 +1255,7 @@ function renderCards(filteredTests) {
       </div>
       <div class="card-actions">
         <button class="card-toggle-btn" type="button" aria-expanded="false">See more</button>
-        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Added to Draw Plan" : "Add to Draw Plan"}</button>
+        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Included in Tube Count" : "Include in Tube Count"}</button>
       </div>
     `;
 

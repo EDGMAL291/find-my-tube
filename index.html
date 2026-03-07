@@ -44,7 +44,7 @@
     </section>
 
     <section class="draw-nav">
-      <button type="button" class="open-draw-btn" id="openDrawPlannerBtn">Plan Draws</button>
+      <button type="button" class="open-draw-btn" id="openDrawPlannerBtn">Tube Calculator</button>
     </section>
 
     <section class="pre-search" id="preSearchPanel">
@@ -75,19 +75,19 @@
   <section class="draw-modal" id="drawModal" hidden>
     <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
       <div class="draw-selection-head">
-        <h3 id="drawModalTitle">Draw Plan</h3>
+        <h3 id="drawModalTitle">Tube Calculator</h3>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn">Close</button>
       </div>
       <input
         type="text"
         id="drawSearchInput"
         class="draw-search-input"
-        placeholder="Search tests for draw planning"
+        placeholder="Search tests to calculate tubes"
       />
       <div class="draw-selection-list" id="drawSelectionList"></div>
       <div class="draw-selection-actions">
         <p class="draw-selection-count" id="drawSelectionCount">0 tests selected</p>
-        <button type="button" class="draw-submit-btn" id="submitDrawSelectionBtn">Build Tube Plan</button>
+        <button type="button" class="draw-submit-btn" id="submitDrawSelectionBtn">Calculate Tubes</button>
       </div>
       <div class="draw-result-card" id="drawResultCard" hidden>
         <p class="draw-planner-count" id="drawPlannerCount"></p>
@@ -107,11 +107,11 @@
     </div>
   </section>
 
-  <script src="data.js?v=20260308d"></script>
-  <script src="script.js?v=20260308d"></script>
+  <script src="data.js?v=20260308e"></script>
+  <script src="script.js?v=20260308e"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.4";
+      const APP_VERSION = "2026-03-08.5";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -126,7 +126,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308d", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308e", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
