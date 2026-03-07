@@ -199,17 +199,34 @@ const factTips = [
 ];
 
 const sectionMeta = {
-  chemistry: { label: "Biochemistry", hint: "Kidney function (U+E), Bone (CMP profile), liver function and pancreas" },
-  endocrinology: { label: "Endocrinology", hint: "Thyroid, reproductive, adrenal, diabetes hormones" },
-  tumour_markers: { label: "Tumour Markers", hint: "PSA, AFP, CEA, CA markers, beta-hCG" },
-  metabolic_genetic: { label: "Metabolic / Genetic Disorders", hint: "Porphyria and inherited disorder screens" },
-  allergy: { label: "Allergy", hint: "IgE and allergy component profiles" },
-  haematology: { label: "Haematology", hint: "General, coagulation, blood grouping" },
-  drugs: { label: "Drugs", hint: "Drugs of abuse and therapeutic drug monitoring" },
-  immunology: { label: "Immunology", hint: "Autoimmune and infectious serology" },
-  micro_virology: { label: "Microbiology / Virology", hint: "MC&S, PCR, virology" },
-  general: { label: "General", hint: "Other routine tests" }
+  chemistry: { label: "Biochemistry" },
+  endocrinology: { label: "Endocrinology" },
+  tumour_markers: { label: "Tumour Markers" },
+  metabolic_genetic: { label: "Metabolic / Genetic Disorders" },
+  allergy: { label: "Allergy" },
+  haematology: { label: "Haematology" },
+  drugs: { label: "Drugs" },
+  immunology: { label: "Immunology" },
+  micro_virology: { label: "Microbiology / Virology" },
+  general: { label: "General" }
 };
+
+const sectionIconById = {
+  chemistry: `<svg viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-4 7a4 4 0 0 0 3.5 6h5a4 4 0 0 0 3.5-6l-4-7V3"/><path d="M8.5 14h7"/></svg>`,
+  endocrinology: `<svg viewBox="0 0 24 24"><circle cx="6" cy="8" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="12" cy="16" r="2"/><path d="M8 8h8"/><path d="M7.7 9.2l2.7 4.6"/><path d="M16.3 9.2l-2.7 4.6"/></svg>`,
+  tumour_markers: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/></svg>`,
+  metabolic_genetic: `<svg viewBox="0 0 24 24"><path d="M8 4c4 0 4 4 8 4"/><path d="M16 4c-4 0-4 4-8 4"/><path d="M8 20c4 0 4-4 8-4"/><path d="M16 20c-4 0-4-4-8-4"/><path d="M9.5 7h5"/><path d="M9.5 12h5"/><path d="M9.5 17h5"/></svg>`,
+  allergy: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><path d="M12 4v3"/><path d="M12 17v3"/><path d="M4 12h3"/><path d="M17 12h3"/><path d="M6.8 6.8l2.1 2.1"/><path d="M15.1 15.1l2.1 2.1"/><path d="M17.2 6.8l-2.1 2.1"/><path d="M8.9 15.1l-2.1 2.1"/></svg>`,
+  haematology: `<svg viewBox="0 0 24 24"><path d="M12 3c-3 4-5 6.7-5 9.5A5 5 0 0 0 12 18a5 5 0 0 0 5-5.5C17 9.7 15 7 12 3z"/><circle cx="12" cy="12" r="1.6"/></svg>`,
+  drugs: `<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" rx="4"/><path d="M9 8l6 8"/></svg>`,
+  immunology: `<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.3 8.4-7 10-3.7-1.6-7-5-7-10V6l7-3z"/><path d="M9.5 12l1.7 1.7L14.8 10"/></svg>`,
+  micro_virology: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4.8 8h14.4"/><path d="M10 8v8"/><path d="M7 14.5h5"/><path d="M14 14.5h3"/></svg>`,
+  general: `<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6"/><path d="M9 12h6"/><path d="M9 15h4"/></svg>`
+};
+
+function getSectionIconMarkup(groupId) {
+  return sectionIconById[groupId] || sectionIconById.general;
+}
 
 const chipGroups = [
   "chemistry",
@@ -1093,10 +1110,8 @@ function renderGroupChips() {
       const group = sectionMeta[groupId];
       return `
         <button class="group-chip" type="button" data-group="${groupId}">
-          <span>
-            <strong>${group.label}</strong>
-            <small>${group.hint}</small>
-          </span>
+          <span class="group-chip-label">${group.label}</span>
+          <span class="group-chip-icon" aria-hidden="true">${getSectionIconMarkup(groupId)}</span>
         </button>
       `;
     })

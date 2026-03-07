@@ -338,11 +338,13 @@ body::after {
   border: 1px solid rgba(140, 116, 82, 0.34);
   border-radius: 12px;
   background: rgba(255, 251, 245, 0.84);
-  padding: 10px 12px;
+  padding: 10px 12px 10px 14px;
   text-align: left;
   color: #243740;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
@@ -353,16 +355,33 @@ body::after {
   background: rgba(255, 253, 249, 0.96);
 }
 
-.group-chip strong {
+.group-chip-label {
   display: block;
   font-size: 0.9rem;
-  margin-bottom: 2px;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
-.group-chip small {
-  display: block;
-  font-size: 0.78rem;
-  color: #60717d;
+.group-chip-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 118, 110, 0.1);
+  color: #0d605a;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  flex-shrink: 0;
+}
+
+.group-chip-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .draw-nav {

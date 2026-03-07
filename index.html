@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260308f" />
+  <link rel="stylesheet" href="style.css?v=20260308i" />
 </head>
 <body>
   <div class="container">
@@ -109,10 +109,10 @@
   </section>
 
   <script src="data.js?v=20260308e"></script>
-  <script src="script.js?v=20260308f"></script>
+  <script src="script.js?v=20260308i"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.8";
+      const APP_VERSION = "2026-03-08.9";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -127,7 +127,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308h", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308j", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
