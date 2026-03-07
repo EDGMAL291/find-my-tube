@@ -73,6 +73,46 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "Serum Iron (Fe)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Iron concentration measured with iron profile interpretation.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Ferritin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Reflects body iron stores.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Transferrin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Iron transport protein measurement.",
+    borderColor: "yellow"
+  },
+  {
+    name: "TIBC",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Total iron binding capacity.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Transferrin Saturation (Calculated)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Calculated from iron and binding capacity.",
+    borderColor: "yellow"
+  },
+  {
     name: "TSH / Thyroid Profile",
     tubeColor: "Gold",
     specimen: "Serum",
