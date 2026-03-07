@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260307h" />
+  <link rel="stylesheet" href="style.css?v=20260307i" />
 </head>
 <body>
   <div class="container">
@@ -33,6 +33,7 @@
         <p id="installHelperText"></p>
         <button type="button" id="installHelperBtn" class="install-helper-btn" hidden>Install App</button>
       </div>
+      <p class="build-label" id="buildLabel">Build: 2026-03-07.2</p>
     </header>
 
     <section class="search-box">
@@ -107,14 +108,14 @@
     </div>
   </section>
 
-  <script src="data.js?v=20260307g"></script>
-  <script src="script.js?v=20260307t"></script>
+  <script src="data.js?v=20260307h"></script>
+  <script src="script.js?v=20260307u"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         navigator.serviceWorker
-          .register("./service-worker.js?v=20260307h", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260307i", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
