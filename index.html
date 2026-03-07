@@ -108,10 +108,10 @@
   </section>
 
   <script src="data.js?v=20260308a"></script>
-  <script src="script.js?v=20260308a"></script>
+  <script src="script.js?v=20260308b"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.1";
+      const APP_VERSION = "2026-03-08.2";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -126,7 +126,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308b", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

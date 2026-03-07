@@ -1094,6 +1094,10 @@ function matchesQuery(test, rawQuery) {
   });
 }
 
+function hasProfileComponents(test) {
+  return (profileComponentsByName[test.name] || []).length > 0;
+}
+
 function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = activeSectionGroup || "";
@@ -1103,7 +1107,7 @@ function getFilteredTests() {
   const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
     .includes(normalizedQuery);
 
-  return enrichedTests.filter((test) => {
+  const filtered = enrichedTests.filter((test) => {
     if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
     if (isInflammatoryShortcut) {
       return test.name === "CRP" || test.name === "Procalcitonin (PCT)";
@@ -1115,6 +1119,15 @@ function getFilteredTests() {
       return test.name === matchedProfileName;
     }
     return matchesQuery(test, query);
+  });
+
+  if (!selectedSection) return filtered;
+
+  return filtered.sort((a, b) => {
+    const aIsProfile = hasProfileComponents(a);
+    const bIsProfile = hasProfileComponents(b);
+    if (aIsProfile !== bIsProfile) return aIsProfile ? -1 : 1;
+    return a.name.localeCompare(b.name);
   });
 }
 
