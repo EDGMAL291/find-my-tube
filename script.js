@@ -112,6 +112,13 @@ const profileComponentsByName = {
     "Partial Thromboplastin Time (PTT)",
     "INR"
   ],
+  "Arthritis Profile": [
+    "ESR",
+    "CRP",
+    "Uric Acid",
+    "Rheumatoid Factor (RF)",
+    "Anti-CCP Antibody"
+  ],
   "Malaria Profile": [
     "Malaria Smear (Thick and Thin)",
     "Malaria Smear and Antigen",
@@ -213,6 +220,7 @@ const aliasByName = {
   Transferrin: ["Iron binding protein"],
   TIBC: ["Total iron binding capacity"],
   "Transferrin Saturation (Calculated)": ["TSAT", "Transferrin sat", "Iron saturation"],
+  "Uric Acid": ["UA", "Urate"],
   "RBC Count": ["RBC", "Red cell count"],
   "WBC and Differential Count": ["WBC", "White cell count", "Differential"],
   "Platelet Count": ["Platelets", "PLT"],
@@ -230,6 +238,7 @@ const aliasByName = {
   "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
+  "Arthritis Profile": ["Arthritis panel", "Arthritis screen", "Arthritis Profile (ESR, CRP, UA, RF, CCP)"],
   "Malaria Profile": ["Malaria panel", "Malaria screen", "Malaria studies"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
@@ -255,6 +264,10 @@ const clinicalProfileByName = {
   "FBC": {
     use: "Baseline screen for anaemia, infection, inflammation, and platelet disorders.",
     keywords: ["anaemia", "anemia", "infection", "platelets", "low hb", "fatigue", "leukemia"]
+  },
+  "Arthritis Profile": {
+    use: "Combined inflammatory and rheumatoid workup profile for suspected inflammatory arthritis.",
+    keywords: ["arthritis", "joint pain", "rheumatoid", "inflammatory arthritis"]
   },
   "Troponin I": {
     use: "Primary marker for suspected acute coronary syndrome / heart attack.",
@@ -841,6 +854,7 @@ function getTestGrouping(testName) {
   ) return { sectionId: "allergy", subsection: "Allergy Profile" };
 
   if (
+    name.includes("arthritis profile") ||
     name.includes("ana") ||
     name.includes("ena") ||
     name.includes("rheumatoid") ||

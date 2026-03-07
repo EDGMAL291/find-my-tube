@@ -1867,11 +1867,11 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Arthritis Profile (ESR, CRP, UA, RF, CCP)",
+    name: "Arthritis Profile",
     tubeColor: "Gold + Purple",
     specimen: "Serum and EDTA blood",
     turnaroundTime: "1-3 days",
-    notes: "Combined autoimmune arthritis profile.",
+    notes: "Profile includes ESR, CRP, uric acid, rheumatoid factor, and anti-CCP.",
     borderColor: "yellow"
   },
   {
