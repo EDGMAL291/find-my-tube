@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260307g" />
+  <link rel="stylesheet" href="style.css?v=20260307h" />
 </head>
 <body>
   <div class="container">
@@ -107,12 +107,33 @@
     </div>
   </section>
 
-  <script src="data.js?v=20260307f"></script>
-  <script src="script.js?v=20260307s"></script>
+  <script src="data.js?v=20260307g"></script>
+  <script src="script.js?v=20260307t"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js");
+        let hasReloadedForNewSw = false;
+        navigator.serviceWorker
+          .register("./service-worker.js?v=20260307h", { updateViaCache: "none" })
+          .then((registration) => {
+            if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
+            registration.addEventListener("updatefound", () => {
+              const newWorker = registration.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                  newWorker.postMessage("SKIP_WAITING");
+                }
+              });
+            });
+            registration.update();
+          });
+
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (hasReloadedForNewSw) return;
+          hasReloadedForNewSw = true;
+          window.location.reload();
+        });
       });
     }
   </script>

@@ -1,13 +1,13 @@
-const CACHE_NAME = "find-my-tube-v27";
+const CACHE_NAME = "find-my-tube-v28";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./style.css",
-  "./style.css?v=20260307g",
+  "./style.css?v=20260307h",
   "./script.js",
-  "./script.js?v=20260307s",
+  "./script.js?v=20260307t",
   "./data.js",
-  "./data.js?v=20260307f",
+  "./data.js?v=20260307g",
   "./lab-bg.svg",
   "./manifest.webmanifest",
   "./icon-192.png",
@@ -19,6 +19,10 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
   );
   self.skipWaiting();
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
