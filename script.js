@@ -1102,6 +1102,29 @@ function renderCards(filteredTests) {
     card.classList.toggle("card-selected", isSelected);
     const profileComponents = profileComponentsByName[test.name] || [];
     const hasProfileComponents = profileComponents.length > 0;
+    const tubeGroups = getTubeGroups(test.tubeColor);
+    const tubeIconSizeClass = tubeGroups.length >= 4
+      ? " tube-icon-mini"
+      : tubeGroups.length >= 3
+        ? " tube-icon-sm"
+        : "";
+    const tubeOptionsMarkup = tubeGroups.length
+      ? `
+      <div class="tube-option-grid${tubeGroups.length >= 3 ? " compact" : ""}${tubeGroups.length >= 4 ? " dense" : ""}">
+        ${tubeGroups.map((group) => `
+          <span class="tube-option">
+            <span class="tube-icon${tubeIconSizeClass}" style="--tube-color: ${getTubeSwatchColor(group)};" aria-hidden="true"></span>
+            <span class="tube-option-label">${group}</span>
+          </span>
+        `).join("")}
+      </div>
+      `
+      : `<span>${test.tubeColor}</span>`;
+    const normalizedTubeText = normalizeForSearch(normalizeTubeColor(test.tubeColor));
+    const normalizedSingleGroup = normalizeForSearch(tubeGroups[0] || "");
+    const showTubeChoiceNote = tubeGroups.length > 1
+      ? /(preferred|acceptable|alternate|alternative|or|\/)/i.test(String(test.tubeColor || ""))
+      : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
     const specimenField = isMicro
       ? `
       <div class="field">
@@ -1112,10 +1135,10 @@ function renderCards(filteredTests) {
       : `
       <div class="field">
         <span class="label">Tube Colour</span>
-        <div class="tube-color-row">
-          <span class="tube-icon" style="--tube-color: ${test.borderColor};" aria-hidden="true"></span>
-          <span>${test.tubeColor}</span>
+        <div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
+          ${tubeOptionsMarkup}
         </div>
+        ${showTubeChoiceNote ? `<span class="tube-choice-note">${test.tubeColor}</span>` : ""}
       </div>
       <div class="field">
         <span class="label">Specimen</span>

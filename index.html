@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260307k" />
+  <link rel="stylesheet" href="style.css?v=20260307l" />
 </head>
 <body>
   <div class="container">
@@ -108,7 +108,7 @@
   </section>
 
   <script src="data.js?v=20260307m"></script>
-  <script src="script.js?v=20260307ad"></script>
+  <script src="script.js?v=20260307ae"></script>
   <script>
     if ("serviceWorker" in navigator) {
       const APP_VERSION = "2026-03-07.3";
@@ -126,7 +126,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260307r", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260307s", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
