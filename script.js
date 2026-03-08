@@ -36,6 +36,7 @@ const selectedTestNames = new Set();
 let stagedSelectedTestNames = new Set();
 let activeSectionGroup = "";
 let drawVisibleCandidateNames = [];
+let hasCalculatedDrawPlan = false;
 
 function setResultsInfo(text) {
   if (!resultsInfo) return;
@@ -594,6 +595,7 @@ function renderDrawSelectionList() {
       collapseProfileSelections(stagedSelectedTestNames);
       renderDrawSelectionList();
       drawSelectionList.scrollTop = currentScrollTop;
+      if (hasCalculatedDrawPlan) refreshDrawPlanFromStaged();
     });
   });
 
@@ -617,6 +619,18 @@ function renderDrawSelectionSummary() {
   const count = stagedSelectedTestNames.size;
   drawSelectionCount.textContent = `${count} test${count !== 1 ? "s" : ""} selected`;
   updateDrawSelectionTools();
+}
+
+function syncSelectedTestsFromStaged() {
+  selectedTestNames.clear();
+  stagedSelectedTestNames.forEach((name) => selectedTestNames.add(name));
+  collapseProfileSelections(selectedTestNames);
+}
+
+function refreshDrawPlanFromStaged() {
+  syncSelectedTestsFromStaged();
+  renderDrawResult();
+  renderCards(getFilteredTests());
 }
 
 function animateDrawResultCard() {
@@ -652,7 +666,10 @@ function openDrawModal() {
   stagedSelectedTestNames = new Set(selectedTestNames);
   drawModal.hidden = false;
   document.body.classList.add("modal-open");
-  if (drawResultCard) drawResultCard.hidden = true;
+  if (drawResultCard) {
+    drawResultCard.hidden = !hasCalculatedDrawPlan;
+    if (hasCalculatedDrawPlan) renderDrawResult();
+  }
   renderDrawSelectionList();
   if (drawSearchInput) drawSearchInput.focus();
   syncModalOpenClass();
@@ -811,7 +828,7 @@ function renderDrawResult() {
     drawPlannerCount.textContent = "0 selected tests";
     drawGroups.innerHTML = `
       <article class="draw-group-card">
-        <p class="draw-group-tests">No tests selected yet. Tick tests above and calculate tubes.</p>
+        <p class="draw-group-tests">No tests selected yet. Select tests above to build a tube plan.</p>
       </article>
     `;
     drawPlannerNote.textContent = "Result card updates after calculation.";
@@ -1484,26 +1501,23 @@ function bindEvents() {
       drawVisibleCandidateNames.forEach((name) => stagedSelectedTestNames.add(name));
       collapseProfileSelections(stagedSelectedTestNames);
       renderDrawSelectionList();
+      if (hasCalculatedDrawPlan) refreshDrawPlanFromStaged();
     });
   }
 
   if (clearDrawSelectionBtn) {
     clearDrawSelectionBtn.addEventListener("click", () => {
       stagedSelectedTestNames.clear();
-      selectedTestNames.clear();
+      hasCalculatedDrawPlan = true;
       renderDrawSelectionList();
-      renderDrawResult();
-      renderCards(getFilteredTests());
+      refreshDrawPlanFromStaged();
     });
   }
 
   if (submitDrawSelectionBtn) {
     submitDrawSelectionBtn.addEventListener("click", () => {
-      selectedTestNames.clear();
-      stagedSelectedTestNames.forEach((name) => selectedTestNames.add(name));
-      collapseProfileSelections(selectedTestNames);
-      renderDrawResult();
-      renderCards(getFilteredTests());
+      hasCalculatedDrawPlan = true;
+      refreshDrawPlanFromStaged();
       const dismissedInput = dismissActiveInputIfNeeded();
       window.setTimeout(() => {
         moveFocusToDrawResult();
