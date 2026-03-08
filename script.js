@@ -1,4 +1,5 @@
 const searchInput = document.getElementById("searchInput");
+const searchClearBtn = document.getElementById("searchClearBtn");
 const cardsContainer = document.getElementById("cardsContainer");
 const resultsInfo = document.getElementById("resultsInfo");
 const preSearchPanel = document.getElementById("preSearchPanel");
@@ -43,6 +44,12 @@ function setResultsInfo(text) {
   const message = String(text || "");
   resultsInfo.textContent = message;
   resultsInfo.hidden = message.length === 0;
+}
+
+function updateSearchClearButton() {
+  if (!searchInput || !searchClearBtn) return;
+  const hasQuery = searchInput.value.trim().length > 0;
+  searchClearBtn.hidden = !hasQuery;
 }
 
 const exactDrawRules = [
@@ -1495,7 +1502,21 @@ function applyFilters() {
 }
 
 function bindEvents() {
-  searchInput.addEventListener("input", applyFilters);
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      updateSearchClearButton();
+      applyFilters();
+    });
+  }
+
+  if (searchInput && searchClearBtn) {
+    searchClearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      updateSearchClearButton();
+      applyFilters();
+      searchInput.focus();
+    });
+  }
 
   if (openDrawPlannerBtn) {
     openDrawPlannerBtn.addEventListener("click", (event) => {
@@ -1656,4 +1677,5 @@ renderGroupChips();
 bindEvents();
 initInstallHelper();
 applyFilters();
+updateSearchClearButton();
 renderDrawSelectionList();
