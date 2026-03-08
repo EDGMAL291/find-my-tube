@@ -630,6 +630,16 @@ function moveFocusToDrawResult() {
   drawResultCard.focus({ preventScroll: true });
 }
 
+function dismissActiveInputIfNeeded() {
+  const activeEl = document.activeElement;
+  if (!activeEl) return false;
+  const tag = String(activeEl.tagName || "").toLowerCase();
+  const isEditable = tag === "input" || tag === "textarea" || activeEl.isContentEditable;
+  if (!isEditable) return false;
+  if (typeof activeEl.blur === "function") activeEl.blur();
+  return true;
+}
+
 function openDrawModal() {
   if (!drawModal) return;
   stagedSelectedTestNames = new Set(selectedTestNames);
@@ -1480,9 +1490,10 @@ function bindEvents() {
       collapseProfileSelections(selectedTestNames);
       renderDrawResult();
       renderCards(getFilteredTests());
+      const dismissedInput = dismissActiveInputIfNeeded();
       window.setTimeout(() => {
         moveFocusToDrawResult();
-      }, 50);
+      }, dismissedInput ? 320 : 60);
     });
   }
 
