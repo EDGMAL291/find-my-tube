@@ -565,10 +565,6 @@ function renderDrawSelectionList() {
       >
         <span class="draw-selection-main">
           <span class="draw-selection-name">${test.name}</span>
-          <span class="draw-selection-tags">
-            <span class="draw-selection-pill">${test.section.label}</span>
-            ${hasProfileComponents(test) ? `<span class="draw-selection-pill profile">Profile</span>` : ""}
-          </span>
         </span>
         <span class="draw-selection-state${stagedSelectedTestNames.has(test.name) ? " active" : ""}">
           ${stagedSelectedTestNames.has(test.name) ? "Included" : "Include"}
@@ -1482,7 +1478,10 @@ function bindEvents() {
   if (clearDrawSelectionBtn) {
     clearDrawSelectionBtn.addEventListener("click", () => {
       stagedSelectedTestNames.clear();
+      selectedTestNames.clear();
       renderDrawSelectionList();
+      renderDrawResult();
+      renderCards(getFilteredTests());
     });
   }
 

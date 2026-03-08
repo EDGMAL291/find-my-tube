@@ -638,8 +638,7 @@ body::after {
 }
 
 .draw-selection-main {
-  display: grid;
-  gap: 5px;
+  display: block;
   min-width: 0;
 }
 
@@ -647,31 +646,6 @@ body::after {
   color: #243740;
   font-weight: 600;
   line-height: 1.25;
-}
-
-.draw-selection-tags {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.draw-selection-pill {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(120, 102, 74, 0.24);
-  border-radius: 999px;
-  padding: 2px 7px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #47606c;
-  background: rgba(255, 252, 247, 0.9);
-}
-
-.draw-selection-pill.profile {
-  border-color: rgba(15, 118, 110, 0.3);
-  background: rgba(235, 251, 248, 0.9);
-  color: #0f5f59;
 }
 
 .draw-selection-state {
