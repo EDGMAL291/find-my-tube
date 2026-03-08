@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260308t" />
+  <link rel="stylesheet" href="style.css?v=20260308u" />
 </head>
 <body>
   <div class="container">
@@ -91,7 +91,7 @@
         placeholder="Search tests to calculate tubes"
       />
       <div class="draw-selection-tools">
-        <button type="button" class="draw-tool-btn" id="selectVisibleDrawBtn">Select visible</button>
+        <button type="button" class="draw-tool-btn" id="selectVisibleDrawBtn">Add visible</button>
         <button type="button" class="draw-tool-btn ghost" id="clearDrawSelectionBtn">Clear selected</button>
       </div>
       <div class="draw-selection-list" id="drawSelectionList"></div>
@@ -119,10 +119,10 @@
   </section>
 
   <script src="data.js?v=20260308e"></script>
-  <script src="script.js?v=20260308t"></script>
+  <script src="script.js?v=20260308u"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.16";
+      const APP_VERSION = "2026-03-08.17";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -137,7 +137,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308t", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308u", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

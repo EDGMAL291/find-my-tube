@@ -554,8 +554,12 @@ function renderDrawSelectionList() {
 
   drawSelectionList.innerHTML = candidates
     .map((test) => `
-      <label class="draw-selection-item">
-        <input type="checkbox" data-draw-test="${test.name}" ${stagedSelectedTestNames.has(test.name) ? "checked" : ""} />
+      <button
+        type="button"
+        class="draw-selection-item${stagedSelectedTestNames.has(test.name) ? " selected" : ""}"
+        data-draw-test="${encodeURIComponent(test.name)}"
+        aria-pressed="${stagedSelectedTestNames.has(test.name) ? "true" : "false"}"
+      >
         <span class="draw-selection-main">
           <span class="draw-selection-name">${test.name}</span>
           <span class="draw-selection-tags">
@@ -563,20 +567,26 @@ function renderDrawSelectionList() {
             ${hasProfileComponents(test) ? `<span class="draw-selection-pill profile">Profile</span>` : ""}
           </span>
         </span>
-      </label>
+        <span class="draw-selection-state${stagedSelectedTestNames.has(test.name) ? " active" : ""}">
+          ${stagedSelectedTestNames.has(test.name) ? "Included" : "Include"}
+        </span>
+      </button>
     `)
     .join("");
 
-  drawSelectionList.querySelectorAll("input[data-draw-test]").forEach((checkbox) => {
-    checkbox.addEventListener("change", () => {
-      const testName = checkbox.getAttribute("data-draw-test");
-      if (checkbox.checked) {
-        stagedSelectedTestNames.add(testName);
-      } else {
+  drawSelectionList.querySelectorAll("button[data-draw-test]").forEach((toggleBtn) => {
+    toggleBtn.addEventListener("click", () => {
+      const testName = decodeURIComponent(toggleBtn.getAttribute("data-draw-test") || "");
+      const currentScrollTop = drawSelectionList.scrollTop;
+      if (!testName) return;
+      if (stagedSelectedTestNames.has(testName)) {
         stagedSelectedTestNames.delete(testName);
+      } else {
+        stagedSelectedTestNames.add(testName);
       }
       collapseProfileSelections(stagedSelectedTestNames);
-      renderDrawSelectionSummary();
+      renderDrawSelectionList();
+      drawSelectionList.scrollTop = currentScrollTop;
     });
   });
 

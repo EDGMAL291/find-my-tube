@@ -610,9 +610,14 @@ body::after {
 
 .draw-selection-item {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
   font-size: 0.85rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
   color: #31444f;
   padding: 9px;
   border-radius: 9px;
@@ -620,14 +625,20 @@ body::after {
   background: rgba(255, 255, 255, 0.74);
 }
 
-.draw-selection-item input[type="checkbox"] {
-  margin-top: 2px;
-  accent-color: #0f766e;
+.draw-selection-item:hover {
+  border-color: rgba(15, 118, 110, 0.46);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.draw-selection-item.selected {
+  border-color: rgba(15, 118, 110, 0.58);
+  background: rgba(230, 249, 245, 0.92);
 }
 
 .draw-selection-main {
   display: grid;
   gap: 5px;
+  min-width: 0;
 }
 
 .draw-selection-name {
@@ -659,6 +670,27 @@ body::after {
   border-color: rgba(15, 118, 110, 0.3);
   background: rgba(235, 251, 248, 0.9);
   color: #0f5f59;
+}
+
+.draw-selection-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(120, 102, 74, 0.28);
+  border-radius: 999px;
+  min-width: 84px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #4a606c;
+  background: rgba(255, 252, 247, 0.94);
+  flex-shrink: 0;
+}
+
+.draw-selection-state.active {
+  border-color: rgba(15, 118, 110, 0.52);
+  background: rgba(214, 245, 239, 0.96);
+  color: #0d605a;
 }
 
 .draw-selection-empty {
