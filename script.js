@@ -21,6 +21,8 @@ const drawPlannerNote = document.getElementById("drawPlannerNote");
 const openDrawPlannerBtn = document.getElementById("openDrawPlannerBtn");
 const closeDrawPlannerBtn = document.getElementById("closeDrawPlannerBtn");
 const drawSearchInput = document.getElementById("drawSearchInput");
+const selectVisibleDrawBtn = document.getElementById("selectVisibleDrawBtn");
+const clearDrawSelectionBtn = document.getElementById("clearDrawSelectionBtn");
 const drawSelectionList = document.getElementById("drawSelectionList");
 const drawSelectionCount = document.getElementById("drawSelectionCount");
 const submitDrawSelectionBtn = document.getElementById("submitDrawSelectionBtn");
@@ -33,6 +35,7 @@ let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
 let stagedSelectedTestNames = new Set();
 let activeSectionGroup = "";
+let drawVisibleCandidateNames = [];
 
 function setResultsInfo(text) {
   if (!resultsInfo) return;
@@ -541,9 +544,11 @@ function renderDrawSelectionList() {
     candidates = enrichedTests.filter((test) => !query || matchesQuery(test, query));
   }
   candidates = candidates.sort((a, b) => a.name.localeCompare(b.name));
+  drawVisibleCandidateNames = candidates.map((test) => test.name);
 
   if (!candidates.length) {
     drawSelectionList.innerHTML = `<p class="draw-selection-empty">No tests match this search.</p>`;
+    renderDrawSelectionSummary();
     return;
   }
 
@@ -551,7 +556,13 @@ function renderDrawSelectionList() {
     .map((test) => `
       <label class="draw-selection-item">
         <input type="checkbox" data-draw-test="${test.name}" ${stagedSelectedTestNames.has(test.name) ? "checked" : ""} />
-        <span>${test.name}</span>
+        <span class="draw-selection-main">
+          <span class="draw-selection-name">${test.name}</span>
+          <span class="draw-selection-tags">
+            <span class="draw-selection-pill">${test.section.label}</span>
+            ${hasProfileComponents(test) ? `<span class="draw-selection-pill profile">Profile</span>` : ""}
+          </span>
+        </span>
       </label>
     `)
     .join("");
@@ -572,10 +583,23 @@ function renderDrawSelectionList() {
   renderDrawSelectionSummary();
 }
 
+function updateDrawSelectionTools() {
+  if (selectVisibleDrawBtn) {
+    const allVisibleSelected = drawVisibleCandidateNames.length > 0
+      && drawVisibleCandidateNames.every((name) => stagedSelectedTestNames.has(name));
+    selectVisibleDrawBtn.disabled = drawVisibleCandidateNames.length === 0 || allVisibleSelected;
+  }
+
+  if (clearDrawSelectionBtn) {
+    clearDrawSelectionBtn.disabled = stagedSelectedTestNames.size === 0;
+  }
+}
+
 function renderDrawSelectionSummary() {
   if (!drawSelectionCount) return;
   const count = stagedSelectedTestNames.size;
   drawSelectionCount.textContent = `${count} test${count !== 1 ? "s" : ""} selected`;
+  updateDrawSelectionTools();
 }
 
 function animateDrawResultCard() {
@@ -1411,6 +1435,21 @@ function bindEvents() {
 
   if (drawSearchInput) {
     drawSearchInput.addEventListener("input", renderDrawSelectionList);
+  }
+
+  if (selectVisibleDrawBtn) {
+    selectVisibleDrawBtn.addEventListener("click", () => {
+      drawVisibleCandidateNames.forEach((name) => stagedSelectedTestNames.add(name));
+      collapseProfileSelections(stagedSelectedTestNames);
+      renderDrawSelectionList();
+    });
+  }
+
+  if (clearDrawSelectionBtn) {
+    clearDrawSelectionBtn.addEventListener("click", () => {
+      stagedSelectedTestNames.clear();
+      renderDrawSelectionList();
+    });
   }
 
   if (submitDrawSelectionBtn) {
