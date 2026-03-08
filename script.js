@@ -164,6 +164,11 @@ const profileComponentsByName = {
     "Triglycerides",
     "Non-HDL Cholesterol (Calculated)"
   ],
+  "Thyroid Function Test (TFT)": [
+    "TSH",
+    "Free T4",
+    "Free T3"
+  ],
   "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
   "Blood Gases": ["pH", "pCO2", "pO2", "HCO3-", "Base Excess", "O2 Saturation", "Lactate"],
   "Liver Function Tests (LFT)": [
@@ -285,7 +290,13 @@ const aliasByName = {
   "INR": ["PT INR", "Clotting ratio", "INR calculated"],
   "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
-  "TSH / Thyroid Profile": ["Thyroid function", "TFT"],
+  "Thyroid Function Test (TFT)": [
+    "Thyroid function",
+    "TFT",
+    "Thyroid profile",
+    "TSH / Thyroid Profile",
+    "Thyroid function test"
+  ],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
   "Antenatal Screen (ANTINV)": ["Antenatal screen", "Antenatal profile", "ANTINV", "Antinv", "Antinatal screen"],
@@ -321,6 +332,10 @@ const clinicalProfileByName = {
   "FBC": {
     use: "Baseline screen for anaemia, infection, inflammation, and platelet disorders.",
     keywords: ["anaemia", "anemia", "infection", "platelets", "low hb", "fatigue", "leukemia"]
+  },
+  "Thyroid Function Test (TFT)": {
+    use: "Core thyroid function profile with TSH and Free T4; add Free T3 when clinically requested.",
+    keywords: ["thyroid function", "tft", "hypothyroidism", "hyperthyroidism", "thyroid profile"]
   },
   "Arthritis Profile": {
     use: "Combined inflammatory and rheumatoid workup profile for suspected inflammatory arthritis.",
@@ -1043,6 +1058,8 @@ function getTestGrouping(testName) {
   ) return { sectionId: "haematology", subsection: "General" };
 
   if (
+    name.includes("thyroid function test") ||
+    /\btft\b/.test(name) ||
     name.includes("tsh") ||
     name.includes("t4") ||
     name.includes("t3") ||

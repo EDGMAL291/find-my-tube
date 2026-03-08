@@ -137,11 +137,11 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "TSH / Thyroid Profile",
+    name: "Thyroid Function Test (TFT)",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "6-12 hours",
-    notes: "Can be combined with FT4/FT3 depending on request.",
+    notes: "Core TFT includes TSH and Free T4; add Free T3 if requested.",
     borderColor: "yellow"
   },
   {
