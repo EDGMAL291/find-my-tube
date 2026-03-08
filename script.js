@@ -1338,7 +1338,8 @@ function matchesQuery(test, rawQuery) {
 
   const tokens = query.split(" ").filter(Boolean);
   return tokens.every((token) => {
-    const pattern = new RegExp(`\\b${escapeRegExp(token)}\\b`);
+    // Prefix match each query token against any word in the search blob.
+    const pattern = new RegExp(`\\b${escapeRegExp(token)}`);
     return pattern.test(test.searchBlob);
   });
 }
