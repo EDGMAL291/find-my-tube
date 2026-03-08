@@ -74,7 +74,7 @@
       </div>
     </section>
 
-    <p class="results-info" id="resultsInfo"></p>
+    <p class="results-info" id="resultsInfo" hidden></p>
     <section class="cards" id="cardsContainer"></section>
   </div>
 
@@ -114,10 +114,10 @@
   </section>
 
   <script src="data.js?v=20260308e"></script>
-  <script src="script.js?v=20260308r"></script>
+  <script src="script.js?v=20260308s"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.14";
+      const APP_VERSION = "2026-03-08.15";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -132,7 +132,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308r", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308s", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

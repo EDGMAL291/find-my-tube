@@ -34,6 +34,13 @@ const selectedTestNames = new Set();
 let stagedSelectedTestNames = new Set();
 let activeSectionGroup = "";
 
+function setResultsInfo(text) {
+  if (!resultsInfo) return;
+  const message = String(text || "");
+  resultsInfo.textContent = message;
+  resultsInfo.hidden = message.length === 0;
+}
+
 const exactDrawRules = [
   {
     id: "full-blood-and-grouping",
@@ -1241,7 +1248,7 @@ function renderCards(filteredTests) {
   cardsContainer.innerHTML = "";
 
   if (filteredTests.length === 0) {
-    resultsInfo.textContent = "0 tests found";
+    setResultsInfo("0 tests found");
     cardsContainer.innerHTML = `
       <div class="no-results">
         No matching test found. Try searching by test, section, alias, or condition (e.g. iron deficiency anaemia, heart attack, prostate cancer).
@@ -1250,7 +1257,7 @@ function renderCards(filteredTests) {
     return;
   }
 
-  resultsInfo.textContent = `${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found`;
+  setResultsInfo(`${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found`);
 
   filteredTests.forEach((test) => {
     const isMicro = test.grouping.sectionId === "micro_virology";
@@ -1375,7 +1382,7 @@ function applyFilters() {
   preSearchPanel.style.display = hasQuery || hasSectionFilter ? "none" : "grid";
 
   if (!hasQuery && !hasSectionFilter) {
-    resultsInfo.textContent = "Start typing a test or use filters to narrow results.";
+    setResultsInfo("");
     cardsContainer.innerHTML = "";
     return;
   }
