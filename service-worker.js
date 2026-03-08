@@ -1,9 +1,9 @@
-const CACHE_NAME = "find-my-tube-v76";
+const CACHE_NAME = "find-my-tube-v77";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./style.css",
-  "./style.css?v=20260308ag",
+  "./style.css?v=20260308aj",
   "./script.js",
   "./script.js?v=20260308ai",
   "./data.js",

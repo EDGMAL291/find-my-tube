@@ -1278,6 +1278,23 @@ body::after {
     max-width: 100%;
   }
 
+  .draw-modal,
+  .profile-modal {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 8px 10px 10px;
+    padding-top: calc(env(safe-area-inset-top) + 8px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+  }
+
+  .draw-modal-card,
+  .profile-modal-card {
+    width: 100%;
+    max-height: calc(100vh - 18px);
+    max-height: calc(100dvh - 18px);
+  }
+
   .draw-selection-head {
     flex-direction: column;
     align-items: flex-start;
