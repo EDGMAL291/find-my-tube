@@ -59,6 +59,19 @@ function updateDrawSearchClearButton() {
   drawSearchClearBtn.hidden = !hasQuery;
 }
 
+function keepDrawSearchFocus(shouldKeepFocus) {
+  if (!shouldKeepFocus || !drawSearchInput) return;
+  window.requestAnimationFrame(() => {
+    if (drawModal?.hidden) return;
+    if (document.activeElement === drawSearchInput) return;
+    const cursorEnd = drawSearchInput.value.length;
+    drawSearchInput.focus({ preventScroll: true });
+    if (typeof drawSearchInput.setSelectionRange === "function") {
+      drawSearchInput.setSelectionRange(cursorEnd, cursorEnd);
+    }
+  });
+}
+
 const exactDrawRules = [
   {
     id: "full-blood-and-grouping",
@@ -616,9 +629,17 @@ function renderDrawSelectionList() {
     .join("");
 
   drawSelectionList.querySelectorAll("button[data-draw-test]").forEach((toggleBtn) => {
+    toggleBtn.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+    });
+    toggleBtn.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
+
     toggleBtn.addEventListener("click", () => {
       const testName = decodeURIComponent(toggleBtn.getAttribute("data-draw-test") || "");
       const currentScrollTop = drawSelectionList.scrollTop;
+      const shouldKeepFocus = document.activeElement === drawSearchInput;
       if (!testName) return;
       if (stagedSelectedTestNames.has(testName)) {
         stagedSelectedTestNames.delete(testName);
@@ -628,6 +649,7 @@ function renderDrawSelectionList() {
       collapseProfileSelections(stagedSelectedTestNames);
       renderDrawSelectionList();
       drawSelectionList.scrollTop = currentScrollTop;
+      keepDrawSearchFocus(shouldKeepFocus);
       if (hasCalculatedDrawPlan) refreshDrawPlanFromStaged();
     });
   });
