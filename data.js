@@ -1883,14 +1883,6 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Autoimmune Profile (FBC, ESR, CRP, RF, CCP, ANA Screen)",
-    tubeColor: "Gold + Purple",
-    specimen: "Serum and EDTA blood",
-    turnaroundTime: "1-3 days",
-    notes: "Broad autoimmune screening profile.",
-    borderColor: "yellow"
-  },
-  {
     name: "RF-IgM and Anti-CCP",
     tubeColor: "Gold",
     specimen: "Serum",

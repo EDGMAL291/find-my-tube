@@ -289,7 +289,13 @@ const aliasByName = {
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
   "Antenatal Screen (ANTINV)": ["Antenatal screen", "Antenatal profile", "ANTINV", "Antinv", "Antinatal screen"],
-  "Arthritis Profile": ["Arthritis panel", "Arthritis screen", "Arthritis Profile (ESR, CRP, UA, RF, CCP)"],
+  "Arthritis Profile": [
+    "Arthritis panel",
+    "Arthritis screen",
+    "Arthritis Profile (ESR, CRP, UA, RF, CCP)",
+    "Autoimmune Profile",
+    "Autoimmune Profile (FBC, ESR, CRP, RF, CCP, ANA Screen)"
+  ],
   "Malaria Profile": ["Malaria panel", "Malaria screen", "Malaria studies"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
@@ -1296,12 +1302,13 @@ function getFilteredTests() {
   const normalizedQuery = normalizeForSearch(query);
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
   const exactNameMatches = getExactNameMatches(normalizedQuery);
+  const shouldBypassSectionFilter = Boolean(matchedProfileName || exactNameMatches.length);
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
     .includes(normalizedQuery);
 
   const filtered = enrichedTests.filter((test) => {
-    if (selectedSection && test.grouping.sectionId !== selectedSection) return false;
+    if (selectedSection && !shouldBypassSectionFilter && test.grouping.sectionId !== selectedSection) return false;
     if (isInflammatoryShortcut) {
       return test.name === "CRP" || test.name === "Procalcitonin (PCT)";
     }
