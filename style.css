@@ -603,10 +603,11 @@ body::after {
 
 .draw-selection-list {
   max-height: 42vh;
-  min-height: 180px;
+  min-height: 0;
   overflow: auto;
   display: grid;
   gap: 8px;
+  align-content: start;
 }
 
 .draw-selection-item {
@@ -692,6 +693,16 @@ body::after {
   border-color: rgba(15, 118, 110, 0.52);
   background: rgba(214, 245, 239, 0.96);
   color: #0d605a;
+}
+
+@media (min-width: 601px) {
+  .draw-selection-list.compact {
+    justify-items: start;
+  }
+
+  .draw-selection-list.compact .draw-selection-item {
+    width: min(560px, 100%);
+  }
 }
 
 .draw-selection-empty {

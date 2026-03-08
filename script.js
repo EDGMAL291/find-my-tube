@@ -545,8 +545,11 @@ function renderDrawSelectionList() {
   }
   candidates = candidates.sort((a, b) => a.name.localeCompare(b.name));
   drawVisibleCandidateNames = candidates.map((test) => test.name);
+  const isCompactDrawList = candidates.length <= 2 && query.trim().length > 0;
+  drawSelectionList.classList.toggle("compact", isCompactDrawList);
 
   if (!candidates.length) {
+    drawSelectionList.classList.remove("compact");
     drawSelectionList.innerHTML = `<p class="draw-selection-empty">No tests match this search.</p>`;
     renderDrawSelectionSummary();
     return;
