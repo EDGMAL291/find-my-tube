@@ -1142,7 +1142,18 @@ function initFactsPanel() {
 
   toggleFactsBtn.addEventListener("click", () => {
     const isCollapsed = factCarouselPanel.classList.contains("is-collapsed");
-    setFactsPanelState(!isCollapsed);
+    const nextCollapsed = !isCollapsed;
+    setFactsPanelState(nextCollapsed);
+
+    if (!nextCollapsed && factCarouselPanel.classList.contains("mobile-facts")) {
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.setTimeout(() => {
+        factCarouselContent.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "start"
+        });
+      }, 40);
+    }
   });
 
   onModeChange();
