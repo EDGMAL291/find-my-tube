@@ -619,6 +619,17 @@ function animateDrawResultCard() {
   drawResultCard.classList.add("draw-result-updated");
 }
 
+function moveFocusToDrawResult() {
+  if (!drawResultCard || drawResultCard.hidden) return;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  drawResultCard.scrollIntoView({
+    behavior: prefersReducedMotion ? "auto" : "smooth",
+    block: "start",
+    inline: "nearest"
+  });
+  drawResultCard.focus({ preventScroll: true });
+}
+
 function openDrawModal() {
   if (!drawModal) return;
   stagedSelectedTestNames = new Set(selectedTestNames);
@@ -1469,6 +1480,9 @@ function bindEvents() {
       collapseProfileSelections(selectedTestNames);
       renderDrawResult();
       renderCards(getFilteredTests());
+      window.setTimeout(() => {
+        moveFocusToDrawResult();
+      }, 50);
     });
   }
 
