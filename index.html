@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="shortcut icon" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260308af" />
+  <link rel="stylesheet" href="style.css?v=20260308ag" />
 </head>
 <body>
   <div class="container">
@@ -85,12 +85,15 @@
         <h3 id="drawModalTitle">Tube Calculator</h3>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn">Close</button>
       </div>
-      <input
-        type="text"
-        id="drawSearchInput"
-        class="draw-search-input"
-        placeholder="Search tests to calculate tubes"
-      />
+      <div class="draw-search-wrap">
+        <input
+          type="text"
+          id="drawSearchInput"
+          class="draw-search-input"
+          placeholder="Search tests to calculate tubes"
+        />
+        <button type="button" class="draw-search-clear-btn" id="drawSearchClearBtn" aria-label="Clear tube calculator search" hidden>&times;</button>
+      </div>
       <div class="draw-selection-tools">
         <button type="button" class="draw-tool-btn" id="selectVisibleDrawBtn">Add visible</button>
         <button type="button" class="draw-tool-btn ghost" id="clearDrawSelectionBtn">Clear selected</button>
@@ -120,10 +123,10 @@
   </section>
 
   <script src="data.js?v=20260308g"></script>
-  <script src="script.js?v=20260308af"></script>
+  <script src="script.js?v=20260308ag"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.28";
+      const APP_VERSION = "2026-03-08.29";
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -138,7 +141,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308af", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260308ag", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

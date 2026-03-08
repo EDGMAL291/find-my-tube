@@ -22,6 +22,7 @@ const drawPlannerNote = document.getElementById("drawPlannerNote");
 const openDrawPlannerBtn = document.getElementById("openDrawPlannerBtn");
 const closeDrawPlannerBtn = document.getElementById("closeDrawPlannerBtn");
 const drawSearchInput = document.getElementById("drawSearchInput");
+const drawSearchClearBtn = document.getElementById("drawSearchClearBtn");
 const selectVisibleDrawBtn = document.getElementById("selectVisibleDrawBtn");
 const clearDrawSelectionBtn = document.getElementById("clearDrawSelectionBtn");
 const drawSelectionList = document.getElementById("drawSelectionList");
@@ -50,6 +51,12 @@ function updateSearchClearButton() {
   if (!searchInput || !searchClearBtn) return;
   const hasQuery = searchInput.value.trim().length > 0;
   searchClearBtn.hidden = !hasQuery;
+}
+
+function updateDrawSearchClearButton() {
+  if (!drawSearchInput || !drawSearchClearBtn) return;
+  const hasQuery = drawSearchInput.value.trim().length > 0;
+  drawSearchClearBtn.hidden = !hasQuery;
 }
 
 const exactDrawRules = [
@@ -568,6 +575,7 @@ function collapseProfileSelections(selectionSet) {
 function renderDrawSelectionList() {
   if (!drawSelectionList) return;
   const query = drawSearchInput?.value || "";
+  updateDrawSearchClearButton();
   const normalizedQuery = normalizeForSearch(query);
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
   const exactNameMatches = getExactNameMatches(normalizedQuery);
@@ -1535,7 +1543,19 @@ function bindEvents() {
   }
 
   if (drawSearchInput) {
-    drawSearchInput.addEventListener("input", renderDrawSelectionList);
+    drawSearchInput.addEventListener("input", () => {
+      updateDrawSearchClearButton();
+      renderDrawSelectionList();
+    });
+  }
+
+  if (drawSearchInput && drawSearchClearBtn) {
+    drawSearchClearBtn.addEventListener("click", () => {
+      drawSearchInput.value = "";
+      updateDrawSearchClearButton();
+      renderDrawSelectionList();
+      drawSearchInput.focus();
+    });
   }
 
   if (selectVisibleDrawBtn) {
@@ -1679,3 +1699,4 @@ initInstallHelper();
 applyFilters();
 updateSearchClearButton();
 renderDrawSelectionList();
+updateDrawSearchClearButton();
