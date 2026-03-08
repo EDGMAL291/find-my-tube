@@ -520,6 +520,11 @@ function getMatchedProfileQuery(normalizedQuery) {
   return "";
 }
 
+function getExactNameMatches(normalizedQuery, testList = enrichedTests) {
+  if (!normalizedQuery) return [];
+  return testList.filter((test) => normalizeForSearch(test.name) === normalizedQuery);
+}
+
 function collapseProfileSelections(selectionSet) {
   profileNames.forEach((profileName) => {
     const components = profileComponentsByName[profileName] || [];
@@ -536,10 +541,13 @@ function renderDrawSelectionList() {
   const query = drawSearchInput?.value || "";
   const normalizedQuery = normalizeForSearch(query);
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
+  const exactNameMatches = getExactNameMatches(normalizedQuery);
 
   let candidates = enrichedTests;
   if (matchedProfileName) {
     candidates = enrichedTests.filter((test) => test.name === matchedProfileName);
+  } else if (exactNameMatches.length) {
+    candidates = exactNameMatches;
   } else {
     candidates = enrichedTests.filter((test) => !query || matchesQuery(test, query));
   }
@@ -1270,6 +1278,7 @@ function getFilteredTests() {
   const selectedSection = activeSectionGroup || "";
   const normalizedQuery = normalizeForSearch(query);
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
+  const exactNameMatches = getExactNameMatches(normalizedQuery);
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const isHeartAttackShortcut = ["heart attack", "myocardial infarction", "acs", "acute coronary syndrome"]
     .includes(normalizedQuery);
@@ -1284,6 +1293,9 @@ function getFilteredTests() {
     }
     if (matchedProfileName) {
       return test.name === matchedProfileName;
+    }
+    if (exactNameMatches.length) {
+      return exactNameMatches.some((match) => match.name === test.name);
     }
     return matchesQuery(test, query);
   });
