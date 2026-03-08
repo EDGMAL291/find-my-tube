@@ -669,16 +669,6 @@ body::after {
   color: #0d605a;
 }
 
-@media (min-width: 601px) {
-  .draw-selection-list.compact {
-    justify-items: start;
-  }
-
-  .draw-selection-list.compact .draw-selection-item {
-    width: min(560px, 100%);
-  }
-}
-
 .draw-selection-empty {
   color: #4d606b;
   font-size: 0.84rem;
