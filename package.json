@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "browser-sync start --server --files \"*.html, *.css, *.js\" --port 3000"
+    "dev": "browser-sync start --server --files \"index.html, assets/**/*.css, assets/**/*.js, assets/**/*.svg, assets/**/*.png, manifest.webmanifest, service-worker.js\" --port 3000"
   },
   "devDependencies": {
     "browser-sync": "^3.0.3"

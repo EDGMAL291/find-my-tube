@@ -20,35 +20,18 @@ npm run dev
 
 - `http://localhost:3000`
 
-## Deploy Online (Netlify)
+## Deploy Online
 
-This project is static (no build step required).
+This project is static with no build step required.
 
-1. Commit and push to GitHub:
-
-```bash
-git add .
-git commit -m "Prepare deployment"
-git push origin main
-```
-
-2. In Netlify:
-- `Add new site` -> `Import an existing project`
-- Choose your GitHub repo
-- Build command: leave empty
-- Publish directory: `.`
-- Deploy
-
-3. After deploy:
-- Share the generated Netlify URL with reviewers
-- Optionally set a custom site name/domain
+The repo already includes a GitHub Pages workflow in [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml), so pushing to `main` is enough to publish if Pages is enabled for the repository.
 
 ## Install As App (PWA)
 
 This project now includes:
 - `manifest.webmanifest`
 - `service-worker.js` (offline caching)
-- app icons (`icon-192.svg`, `icon-512.svg`)
+- app icons (`assets/icons/icon-192.svg`, `assets/icons/icon-512.svg`)
 
 How to install:
 1. Open the deployed site in Chrome/Edge on Android or desktop.
@@ -58,10 +41,12 @@ How to install:
 ## Files
 
 - `index.html` - structure and content
-- `style.css` - UI styles
-- `script.js` - search/filter logic and rendering
-- `data.js` - lab test dataset
-- `lab-bg.svg` - lab-themed background artwork
+- `assets/css/style.css` - UI styles
+- `assets/js/script.js` - search/filter logic and rendering
+- `assets/data/data.js` - lab test dataset
+- `assets/images/lab-bg.svg` - lab-themed background artwork
+- `assets/icons/` - favicons, PWA icons, and source icon artwork
+- `docs/find-my-tube-preview.zip` - packaged preview artifact
 
 ## Clinical Note
 

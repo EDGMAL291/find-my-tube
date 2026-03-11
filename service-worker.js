@@ -1,17 +1,16 @@
-const CACHE_NAME = "find-my-tube-v79";
+const CACHE_NAME = "find-my-tube-v90";
 const CORE_ASSETS = [
   "./",
   "./index.html",
-  "./style.css",
-  "./style.css?v=20260308al",
-  "./script.js",
-  "./script.js?v=20260308ai",
-  "./data.js",
-  "./data.js?v=20260308g",
-  "./lab-bg.svg",
   "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png"
+  "./assets/css/style.css?v=20260311e",
+  "./assets/js/script.js?v=20260311j",
+  "./assets/data/data.js?v=20260311b",
+  "./assets/images/lab-bg.svg",
+  "./assets/icons/favicon-16.png",
+  "./assets/icons/favicon-32.png",
+  "./assets/icons/icon-192.png",
+  "./assets/icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -26,16 +25,16 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  const isLocalPreview = self.location.port === "3000";
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          .filter((key) => isLocalPreview || key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -43,6 +42,18 @@ self.addEventListener("fetch", (event) => {
 
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
+
+  if (requestUrl.port === "3000") {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

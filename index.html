@@ -9,15 +9,41 @@
   <meta name="apple-mobile-web-app-title" content="Find My Tube" />
   <title>Find My Tube</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
-  <link rel="shortcut icon" href="favicon-32.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260308al" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png" />
+  <link rel="shortcut icon" href="assets/icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260311e" />
 </head>
 <body>
   <div class="container">
     <header class="header">
+      <div class="header-toolbar">
+        <button
+          type="button"
+          class="menu-toggle-btn"
+          id="menuToggleBtn"
+          aria-label="Open menu"
+          aria-controls="menuPanel"
+          aria-expanded="false"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+      <div class="menu-panel" id="menuPanel" hidden>
+        <section class="menu-group install-helper" id="installHelper" hidden>
+          <p class="menu-group-label">Install</p>
+          <p id="installHelperText"></p>
+          <button type="button" id="installHelperBtn" class="install-helper-btn" hidden>Install App</button>
+        </section>
+        <section class="menu-group menu-about">
+          <p class="menu-group-label">About</p>
+          <p>Search for a test, confirm the right tube, and check specimen handling before collection.</p>
+          <p>Condition shortcuts show common initial lab requests only. Always confirm against local protocol and senior review.</p>
+        </section>
+      </div>
       <h1 class="brand-title" aria-label="Find my tube">
         <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
         <span class="brand-gap"></span>
@@ -29,41 +55,51 @@
         Search for a laboratory test to see the correct tube, specimen type,
         and special notes.
       </p>
-      <div class="install-helper" id="installHelper" hidden>
-        <p id="installHelperText"></p>
-        <button type="button" id="installHelperBtn" class="install-helper-btn" hidden>Install App</button>
-      </div>
     </header>
 
     <section class="search-box">
       <input
         type="text"
         id="searchInput"
-        placeholder="Search by test, alias, condition, or section (e.g. FBC, heart attack, Cardiac Markers)"
+        placeholder="Search by test, alias, condition, or section (e.g. FBC, diabetes, coeliac disease)"
       />
       <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" hidden>&times;</button>
     </section>
 
-    <section class="draw-nav">
-      <button type="button" class="open-draw-btn" id="openDrawPlannerBtn">Tube Calculator</button>
-      <p class="draw-nav-hint">Need to know how many tubes to draw?</p>
-    </section>
-
     <section class="pre-search" id="preSearchPanel">
-      <button type="button" class="fact-toggle-btn" id="toggleFactsBtn" aria-controls="factCarouselContent" aria-expanded="false" hidden>
-        Show tips & facts
-      </button>
-      <div class="fact-carousel" id="factCarouselPanel">
-        <div class="fact-carousel-content" id="factCarouselContent">
-          <div class="mini-carousel">
-            <p class="fact-kicker">Interesting lab facts</p>
-            <p class="fact-text" id="factText"></p>
-            <div class="fact-dots" id="factDots"></div>
-          </div>
-          <div class="mini-carousel">
-            <p class="fact-kicker">Quick collection tips</p>
-            <p class="fact-text" id="tipText"></p>
-            <div class="fact-dots" id="tipDots"></div>
+      <div class="pre-search-primary">
+        <button
+          type="button"
+          class="quick-tools-toggle-btn"
+          id="toggleQuickToolsBtn"
+          aria-controls="quickToolsPanel"
+          aria-expanded="false"
+          hidden
+        >
+          Show tube calculator
+        </button>
+        <section class="quick-tools-panel" id="quickToolsPanel">
+          <p class="quick-tools-kicker">Quick Tool</p>
+          <h3>Tube Calculator</h3>
+          <p>Build a quick draw plan for multiple tests before you collect.</p>
+          <button type="button" class="quick-tool-launch-btn" id="openDrawPlannerBtn">Open Tube Calculator</button>
+        </section>
+
+        <button type="button" class="fact-toggle-btn" id="toggleFactsBtn" aria-controls="factCarouselContent" aria-expanded="false" hidden>
+          Show tips & facts
+        </button>
+        <div class="fact-carousel" id="factCarouselPanel">
+          <div class="fact-carousel-content" id="factCarouselContent">
+            <div class="mini-carousel">
+              <p class="fact-kicker">Interesting lab facts</p>
+              <p class="fact-text" id="factText"></p>
+              <div class="fact-dots" id="factDots"></div>
+            </div>
+            <div class="mini-carousel">
+              <p class="fact-kicker">Quick collection tips</p>
+              <p class="fact-text" id="tipText"></p>
+              <div class="fact-dots" id="tipDots"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -95,7 +131,6 @@
         <button type="button" class="draw-search-clear-btn" id="drawSearchClearBtn" aria-label="Clear tube calculator search" hidden>&times;</button>
       </div>
       <div class="draw-selection-tools">
-        <button type="button" class="draw-tool-btn" id="selectVisibleDrawBtn">Add visible</button>
         <button type="button" class="draw-tool-btn ghost" id="clearDrawSelectionBtn">Clear selected</button>
       </div>
       <div class="draw-selection-list" id="drawSelectionList"></div>
@@ -122,11 +157,13 @@
     </div>
   </section>
 
-  <script src="data.js?v=20260308g"></script>
-  <script src="script.js?v=20260308ai"></script>
+  <script src="assets/data/data.js?v=20260311b"></script>
+  <script src="assets/js/script.js?v=20260311j"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-08.34";
+      const APP_VERSION = "2026-03-11.11";
+      const isLocalPreview = window.location.port === "3000"
+        || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
         let hasReloadedForNewSw = false;
         const storedVersion = localStorage.getItem("fmt-app-version");
@@ -141,7 +178,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260308al", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260311j", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
@@ -157,6 +194,13 @@
           });
 
         const boot = async () => {
+          if (isLocalPreview) {
+            await resetAppCache();
+            localStorage.removeItem("fmt-app-version");
+            sessionStorage.removeItem("fmt-hard-refresh-done");
+            return;
+          }
+
           if (needsHardRefresh && !sessionStorage.getItem("fmt-hard-refresh-done")) {
             await resetAppCache();
             localStorage.setItem("fmt-app-version", APP_VERSION);
