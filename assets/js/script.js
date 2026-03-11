@@ -230,10 +230,24 @@ const profileComponentsByName = {
     "Triglycerides",
     "Non-HDL Cholesterol (Calculated)"
   ],
-  "Menopausal Screen Profile": [
+  "Menopausal Screen": [
     "FSH",
     "LH",
     "Estradiol"
+  ],
+  "Drugs of Abuse / Overdose Screen": [
+    "Drugs of Abuse Screen (Urine)",
+    "Amphetamine (Urine)",
+    "Barbiturate (Urine)",
+    "Benzodiazepine (Urine)",
+    "Cannabis (Urine)",
+    "Cocaine (Urine)",
+    "Mandrax (Urine)",
+    "Methcathinone CAT (Urine)",
+    "Opiates (Urine)",
+    "Ethanol (Blood)",
+    "Paracetamol (Blood)",
+    "Salicylate (Blood)"
   ],
   "Thyroid Function Test (TFT)": [
     "TSH",
@@ -399,13 +413,27 @@ const aliasByName = {
     "24 hour urine metanephrines",
     "24hr urine metanephrines"
   ],
-  "Menopausal Screen Profile": [
+  "Menopausal Screen": [
+    "Menopausal Screen Profile",
     "Menopause profile",
     "Menopausal profile",
     "Menopause screen",
     "Menopausal screen",
     "Monopausal screen profile",
     "Monopausal profile"
+  ],
+  "Drugs of Abuse / Overdose Screen": [
+    "Drugs of Abuse / Overdose Profile",
+    "Drug abuse profile",
+    "Drug abuse screen",
+    "Drugs of abuse profile",
+    "Drugs of abuse screen",
+    "Overdose profile",
+    "Overdose screen",
+    "Toxicology profile",
+    "Toxicology screen",
+    "Tox screen",
+    "Urine drug screen"
   ],
   "Thyroid Function Test (TFT)": [
     "Thyroid function",
@@ -450,9 +478,13 @@ const clinicalProfileByName = {
     use: "Baseline screen for anaemia, infection, inflammation, and platelet disorders.",
     keywords: ["anaemia", "anemia", "infection", "platelets", "low hb", "fatigue", "leukemia"]
   },
-  "Menopausal Screen Profile": {
+  "Menopausal Screen": {
     use: "Menopausal endocrine profile combining FSH, LH, and estradiol for ovarian function / menopausal status assessment.",
     keywords: ["menopause", "menopausal", "perimenopause", "hot flushes", "amenorrhoea", "amenorrhea"]
+  },
+  "Drugs of Abuse / Overdose Screen": {
+    use: "Combined toxicology screen pairing urine drugs-of-abuse testing with common overdose blood levels.",
+    keywords: ["drug abuse", "drugs of abuse", "overdose", "toxicology", "tox screen", "poisoning"]
   },
   "Thyroid Function Test (TFT)": {
     use: "Core thyroid function profile with TSH and Free T4; add Free T3 when clinically requested.",
@@ -1248,7 +1280,15 @@ function getTestGrouping(testName) {
     name.includes("cannabis") ||
     name.includes("opiates") ||
     name.includes("amphetamine") ||
+    name.includes("barbiturate") ||
+    name.includes("benzodiazepine") ||
     name.includes("cocaine") ||
+    name.includes("mandrax") ||
+    name.includes("methcathinone") ||
+    name.includes("paracetamol") ||
+    name.includes("salicylate") ||
+    name.includes("overdose") ||
+    name.includes("toxicology") ||
     name.includes("drug screen") ||
     name.includes("drugs of abuse")
   ) return { sectionId: "drugs", subsection: "Drugs Of Abuse" };

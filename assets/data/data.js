@@ -145,11 +145,11 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Menopausal Screen Profile",
+    name: "Menopausal Screen",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "6-24 hours",
-    notes: "Profile includes FSH, LH, and Estradiol (E2) for menopausal endocrine assessment.",
+    notes: "Screen includes FSH, LH, and Estradiol (E2) for menopausal endocrine assessment.",
     borderColor: "yellow"
   },
   {
@@ -1661,11 +1661,19 @@ const tests = [
     borderColor: "#89CFF0"
   },
   {
+    name: "Drugs of Abuse / Overdose Screen",
+    tubeColor: "Urine container + Gold + Gray",
+    specimen: "Urine, serum, and fluoride plasma",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Screen combines urine drugs-of-abuse testing with common overdose blood levels. Drugs of abuse testing is done on urine.",
+    borderColor: "#64748b"
+  },
+  {
     name: "Drugs of Abuse Screen (Urine)",
     tubeColor: "Urine container",
     specimen: "Urine",
     turnaroundTime: "Same day to 1 day",
-    notes: "Multi-drug screening panel.",
+    notes: "Multi-drug screening panel performed on urine.",
     borderColor: "#64748b"
   },
   {
