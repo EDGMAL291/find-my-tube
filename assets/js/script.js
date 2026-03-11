@@ -189,6 +189,7 @@ const profileComponentsByName = {
     "Transferrin Saturation (Calculated)"
   ],
   "DIC Screen": [
+    "FBC",
     "Prothrombin Time (PT)",
     "Partial Thromboplastin Time (PTT)",
     "Fibrinogen",

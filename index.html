@@ -158,10 +158,10 @@
   </section>
 
   <script src="assets/data/data.js?v=20260311b"></script>
-  <script src="assets/js/script.js?v=20260311j"></script>
+  <script src="assets/js/script.js?v=20260311k"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-11.11";
+      const APP_VERSION = "2026-03-11.12";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -178,7 +178,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260311j", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260311k", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

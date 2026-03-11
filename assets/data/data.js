@@ -314,10 +314,10 @@ const tests = [
   },
   {
     name: "DIC Screen",
-    tubeColor: "Light Blue",
-    specimen: "Citrate plasma",
+    tubeColor: "Purple + Light Blue",
+    specimen: "EDTA whole blood + citrate plasma",
     turnaroundTime: "Same day",
-    notes: "Profile includes PT/PTT/fibrinogen and related markers.",
+    notes: "Profile includes FBC/platelets, PT/PTT, fibrinogen, and D-dimer/XDP.",
     borderColor: "#89CFF0"
   },
   {
