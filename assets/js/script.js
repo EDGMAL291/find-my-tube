@@ -3,17 +3,14 @@ const searchClearBtn = document.getElementById("searchClearBtn");
 const cardsContainer = document.getElementById("cardsContainer");
 const resultsInfo = document.getElementById("resultsInfo");
 const preSearchPanel = document.getElementById("preSearchPanel");
+const brandHomeBtn = document.getElementById("brandHomeBtn");
 const menuToggleBtn = document.getElementById("menuToggleBtn");
 const menuPanel = document.getElementById("menuPanel");
-const quickToolsPanel = document.getElementById("quickToolsPanel");
 const toggleQuickToolsBtn = document.getElementById("toggleQuickToolsBtn");
 const factCarouselPanel = document.getElementById("factCarouselPanel");
 const factCarouselContent = document.getElementById("factCarouselContent");
 const toggleFactsBtn = document.getElementById("toggleFactsBtn");
-const factText = document.getElementById("factText");
-const factDots = document.getElementById("factDots");
 const tipText = document.getElementById("tipText");
-const tipDots = document.getElementById("tipDots");
 const groupChips = document.getElementById("groupChips");
 const installHelper = document.getElementById("installHelper");
 const installHelperText = document.getElementById("installHelperText");
@@ -21,16 +18,17 @@ const installHelperBtn = document.getElementById("installHelperBtn");
 const drawModal = document.getElementById("drawModal");
 const drawResultCard = document.getElementById("drawResultCard");
 const drawPlannerCount = document.getElementById("drawPlannerCount");
+const drawPlannerAlerts = document.getElementById("drawPlannerAlerts");
 const drawGroups = document.getElementById("drawGroups");
 const drawPlannerNote = document.getElementById("drawPlannerNote");
 const openDrawPlannerBtn = document.getElementById("openDrawPlannerBtn");
 const closeDrawPlannerBtn = document.getElementById("closeDrawPlannerBtn");
-const drawSearchInput = document.getElementById("drawSearchInput");
-const drawSearchClearBtn = document.getElementById("drawSearchClearBtn");
 const clearDrawSelectionBtn = document.getElementById("clearDrawSelectionBtn");
-const drawSelectionList = document.getElementById("drawSelectionList");
 const drawSelectionCount = document.getElementById("drawSelectionCount");
-const submitDrawSelectionBtn = document.getElementById("submitDrawSelectionBtn");
+const drawSelectedList = document.getElementById("drawSelectedList");
+const returnToSearchBtn = document.getElementById("returnToSearchBtn");
+const selectionCartBar = document.getElementById("selectionCartBar");
+const selectionCartCount = document.getElementById("selectionCartCount");
 const profileModal = document.getElementById("profileModal");
 const profileModalTitle = document.getElementById("profileModalTitle");
 const profileModalList = document.getElementById("profileModalList");
@@ -38,9 +36,7 @@ const closeProfileModalBtn = document.getElementById("closeProfileModalBtn");
 
 let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
-let stagedSelectedTestNames = new Set();
 let activeSectionGroup = "";
-let hasCalculatedDrawPlan = false;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
 
 function setResultsInfo(text) {
@@ -76,12 +72,6 @@ function updateSearchClearButton() {
   searchClearBtn.hidden = !hasQuery;
 }
 
-function updateDrawSearchClearButton() {
-  if (!drawSearchInput || !drawSearchClearBtn) return;
-  const hasQuery = drawSearchInput.value.trim().length > 0;
-  drawSearchClearBtn.hidden = !hasQuery;
-}
-
 function isMenuOpen() {
   return Boolean(menuPanel && !menuPanel.hidden);
 }
@@ -96,15 +86,28 @@ function closeMenu() {
   setMenuOpen(false);
 }
 
-function keepDrawSearchFocus(shouldKeepFocus) {
-  if (!shouldKeepFocus || !drawSearchInput) return;
+function goHome() {
+  closeMenu();
+  closeDrawModal();
+  closeProfileModal();
+
+  setSectionView("", { historyMode: "push", scrollToTop: true, clearSearch: true });
+}
+
+function focusMainSearchField() {
+  if (!searchInput) return;
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const target = searchInput.closest(".search-box") || searchInput;
   window.requestAnimationFrame(() => {
-    if (drawModal?.hidden) return;
-    if (document.activeElement === drawSearchInput) return;
-    const cursorEnd = drawSearchInput.value.length;
-    drawSearchInput.focus({ preventScroll: true });
-    if (typeof drawSearchInput.setSelectionRange === "function") {
-      drawSearchInput.setSelectionRange(cursorEnd, cursorEnd);
+    target.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start"
+    });
+    const cursorEnd = searchInput.value.length;
+    searchInput.focus({ preventScroll: true });
+    if (typeof searchInput.setSelectionRange === "function") {
+      searchInput.setSelectionRange(cursorEnd, cursorEnd);
     }
   });
 }
@@ -214,14 +217,21 @@ const profileComponentsByName = {
     "ESR",
     "CRP",
     "Uric Acid",
-    "ANA (Antinuclear Antibody)",
     "Rheumatoid Factor (RF)",
     "Anti-CCP Antibody"
+  ],
+  "Autoimmune Profile": [
+    "ESR",
+    "FBC",
+    "CRP",
+    "Rheumatoid Factor (RF)",
+    "Anti-CCP Antibody",
+    "ANA Screen and Reflex ENA Antibodies"
   ],
   "Malaria Profile": [
     "Malaria Smear (Thick and Thin)",
     "Malaria Smear and Antigen",
-    "Malaria PCR (with ID if Positive)"
+    "Malaria PCR"
   ],
   "Lipid Profile / Lipogram": [
     "Cholesterol Total",
@@ -278,18 +288,6 @@ const profileComponentsByName = {
   ]
 };
 
-const facts = [
-  "Biochemistry profiles like U&E and LFT are commonly serum-based (gold-top) in routine workflows.",
-  "Haematology tests often use EDTA tubes, while coagulation studies generally use citrate tubes.",
-  "Microbiology and molecular tests are usually specimen-specific and not tied to one blood tube.",
-  "Selecting by lab area first can reduce request form errors before sample collection.",
-  "Pre-analytical errors (labeling, timing, and transport) can affect results more than analyzer performance.",
-  "Cardiac markers are most useful when interpreted with symptom timing and serial sampling.",
-  "In suspected sepsis, blood cultures are ideally collected before antibiotics where clinically feasible.",
-  "Specimen handling quality has a major impact on result reliability.",
-  "A focused test request often reduces redraws and speeds up clinical decision-making."
-];
-
 const factTips = [
   "Label each sample immediately at bedside to reduce ID errors.",
   "Gently invert anticoagulant tubes after collection; do not shake.",
@@ -310,7 +308,7 @@ const sectionMeta = {
   allergy: { label: "Allergy" },
   haematology: { label: "Haematology" },
   drugs: { label: "Drugs" },
-  immunology: { label: "Immunology" },
+  immunology: { label: "Immunology / Serology" },
   micro_virology: { label: "Microbiology / Virology" },
   general: { label: "General" }
 };
@@ -372,6 +370,8 @@ const aliasByName = {
   "Magnesium": ["Mg"],
   "Phosphate": ["PO4", "PO4-3", "Phos"],
   "Liver Function Tests (LFT)": ["LFT", "Liver profile", "Hepatic profile"],
+  Haptoglobin: ["Haptoglobin level"],
+  "Malaria PCR": ["Malaria PCR (with ID if Positive)"],
   "INR": ["PT INR", "Clotting ratio", "INR calculated"],
   "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
@@ -448,10 +448,16 @@ const aliasByName = {
   "Arthritis Profile": [
     "Arthritis panel",
     "Arthritis screen",
-    "Arthritis Profile (ESR, CRP, UA, ANA, RF, CCP)",
-    "Autoimmune Profile",
+    "Arthritis Profile (ESR, CRP, UA, RF, CCP)"
+  ],
+  "Autoimmune Profile": [
+    "Autoimmune panel",
+    "Autoimmune screen",
+    "Autoimmune Profile (ESR, FBC, CRP, RF, CCP, ANA Screen)",
     "Autoimmune Profile (FBC, ESR, CRP, RF, CCP, ANA Screen)"
   ],
+  "ANA Screen and Reflex ENA Antibodies": ["ANA Screen", "ANA Reflex ENA", "ANA Screen and Reflex ENA"],
+  "Anti-CCP Antibody": ["CCP", "ACCP", "Anti CCP"],
   "Malaria Profile": ["Malaria panel", "Malaria screen", "Malaria studies"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
@@ -493,6 +499,14 @@ const clinicalProfileByName = {
   "Arthritis Profile": {
     use: "Combined inflammatory and rheumatoid workup profile for suspected inflammatory arthritis.",
     keywords: ["arthritis", "joint pain", "rheumatoid", "inflammatory arthritis"]
+  },
+  "Autoimmune Profile": {
+    use: "Broad autoimmune screening profile combining inflammation markers, blood count, rheumatoid serology, and ANA screening.",
+    keywords: ["autoimmune", "autoimmune screen", "connective tissue disease", "rheumatology", "ana screen"]
+  },
+  Haptoglobin: {
+    use: "Supports haemolysis workup alongside LDH, bilirubin, reticulocytes, and direct antiglobulin testing.",
+    keywords: ["haemolysis", "hemolysis", "hemolytic anaemia", "hemolytic anemia"]
   },
   "Antenatal Screen (ANTINV)": {
     use: "Booking antenatal profile for blood group, antibodies, key infections, and baseline screening.",
@@ -893,100 +907,153 @@ function collapseProfileSelections(selectionSet) {
   });
 }
 
-function renderDrawSelectionList() {
-  if (!drawSelectionList) return;
-  const query = drawSearchInput?.value || "";
-  updateDrawSearchClearButton();
-  const normalizedQuery = normalizeForSearch(query);
-  const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
-  const exactNameMatches = getExactNameMatches(normalizedQuery);
-
-  let candidates = enrichedTests;
-  if (matchedProfileName) {
-    candidates = enrichedTests.filter((test) => test.name === matchedProfileName);
-  } else if (exactNameMatches.length) {
-    candidates = exactNameMatches;
-  } else {
-    candidates = enrichedTests.filter((test) => !query || matchesQuery(test, query));
-  }
-  candidates = [...candidates].sort((a, b) => a.name.localeCompare(b.name));
-
-  if (!candidates.length) {
-    drawSelectionList.innerHTML = `<p class="draw-selection-empty">No tests match this search.</p>`;
-    renderDrawSelectionSummary();
-    return;
-  }
-
-  drawSelectionList.innerHTML = candidates
-    .map((test) => `
-      <button
-        type="button"
-        class="draw-selection-item${stagedSelectedTestNames.has(test.name) ? " selected" : ""}"
-        data-draw-test="${encodeURIComponent(test.name)}"
-        aria-pressed="${stagedSelectedTestNames.has(test.name) ? "true" : "false"}"
-      >
-        <span class="draw-selection-main">
-          <span class="draw-selection-name">${test.name}</span>
-        </span>
-        <span class="draw-selection-state${stagedSelectedTestNames.has(test.name) ? " active" : ""}">
-          ${stagedSelectedTestNames.has(test.name) ? "Included" : "Include"}
-        </span>
-      </button>
-    `)
-    .join("");
-
-  drawSelectionList.querySelectorAll("button[data-draw-test]").forEach((toggleBtn) => {
-    toggleBtn.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
-    });
-    toggleBtn.addEventListener("mousedown", (event) => {
-      event.preventDefault();
-    });
-
-    toggleBtn.addEventListener("click", () => {
-      const testName = decodeURIComponent(toggleBtn.getAttribute("data-draw-test") || "");
-      const currentScrollTop = drawSelectionList.scrollTop;
-      const shouldKeepFocus = document.activeElement === drawSearchInput;
-      if (!testName) return;
-      if (stagedSelectedTestNames.has(testName)) {
-        stagedSelectedTestNames.delete(testName);
-      } else {
-        stagedSelectedTestNames.add(testName);
-      }
-      collapseProfileSelections(stagedSelectedTestNames);
-      renderDrawSelectionList();
-      drawSelectionList.scrollTop = currentScrollTop;
-      keepDrawSearchFocus(shouldKeepFocus);
-      if (hasCalculatedDrawPlan) refreshDrawPlanFromStaged();
-    });
-  });
-
-  renderDrawSelectionSummary();
-}
-
 function updateDrawSelectionTools() {
   if (clearDrawSelectionBtn) {
-    clearDrawSelectionBtn.disabled = stagedSelectedTestNames.size === 0;
+    clearDrawSelectionBtn.disabled = selectedTestNames.size === 0;
   }
 }
 
 function renderDrawSelectionSummary() {
   if (!drawSelectionCount) return;
-  const count = stagedSelectedTestNames.size;
-  drawSelectionCount.textContent = `${count} test${count !== 1 ? "s" : ""} selected`;
+  const count = selectedTestNames.size;
+  drawSelectionCount.textContent = count
+    ? `${count} test${count !== 1 ? "s" : ""} selected`
+    : "No tests selected yet";
   updateDrawSelectionTools();
 }
 
-function syncSelectedTestsFromStaged() {
-  selectedTestNames.clear();
-  stagedSelectedTestNames.forEach((name) => selectedTestNames.add(name));
-  collapseProfileSelections(selectedTestNames);
+function renderSelectedTestsCart() {
+  if (!drawSelectedList) return;
+  const selectedTests = getSelectedTests();
+
+  if (!selectedTests.length) {
+    drawSelectedList.innerHTML = `
+      <p class="draw-selected-empty">
+        Your selected tests will appear here. Use the main search to add more tests.
+      </p>
+    `;
+    return;
+  }
+
+  drawSelectedList.innerHTML = selectedTests
+    .map((test) => `
+      <div class="draw-selected-chip">
+        <span class="draw-selected-chip-name">${test.name}</span>
+        <button
+          type="button"
+          class="draw-selected-chip-remove"
+          data-remove-selected="${encodeURIComponent(test.name)}"
+          aria-label="Remove ${test.name} from rack"
+        >
+          Remove
+        </button>
+      </div>
+    `)
+    .join("");
+
+  drawSelectedList.querySelectorAll("button[data-remove-selected]").forEach((removeBtn) => {
+    removeBtn.addEventListener("click", () => {
+      const testName = decodeURIComponent(removeBtn.getAttribute("data-remove-selected") || "");
+      if (!testName) return;
+      removeSelectedTest(testName);
+    });
+  });
 }
 
-function refreshDrawPlanFromStaged() {
-  syncSelectedTestsFromStaged();
+function updateSelectionCartBar() {
+  if (!selectionCartBar || !selectionCartCount) return;
+
+  const count = selectedTestNames.size;
+  if (!count) {
+    selectionCartBar.hidden = true;
+    document.body.classList.remove("has-selection-cart");
+    return;
+  }
+
+  const selectedTests = getSelectedTests();
+  const { plan } = getResolvedDrawPlan(selectedTests);
+  const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
+  const badgeCount = count > 99 ? "99+" : String(count);
+
+  selectionCartBar.hidden = false;
+  selectionCartCount.textContent = badgeCount;
+  selectionCartBar.setAttribute(
+    "aria-label",
+    `Rack. ${count} selected test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.`
+  );
+  selectionCartBar.title = `${count} selected test${count !== 1 ? "s" : ""}`;
+  document.body.classList.add("has-selection-cart");
+}
+
+function updateSelectionCartViewportPosition() {
+  if (!selectionCartBar) return;
+
+  const isMobile = window.matchMedia("(max-width: 600px)").matches;
+  const baseOffset = isMobile ? 10 : 18;
+  let keyboardOffset = 0;
+
+  if (isMobile && window.visualViewport) {
+    const activeEl = document.activeElement;
+    const tag = String(activeEl?.tagName || "").toLowerCase();
+    const isEditable = tag === "input" || tag === "textarea" || activeEl?.isContentEditable;
+    const viewportOverlap = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+
+    if (isEditable && viewportOverlap > 80) {
+      keyboardOffset = viewportOverlap;
+    }
+  }
+
+  selectionCartBar.style.bottom = `calc(env(safe-area-inset-bottom) + ${baseOffset + keyboardOffset}px)`;
+}
+
+function initSelectionCartViewportSync() {
+  updateSelectionCartViewportPosition();
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateSelectionCartViewportPosition);
+    window.visualViewport.addEventListener("scroll", updateSelectionCartViewportPosition);
+  }
+
+  window.addEventListener("resize", updateSelectionCartViewportPosition);
+  document.addEventListener("focusin", () => {
+    window.setTimeout(updateSelectionCartViewportPosition, 40);
+  });
+  document.addEventListener("focusout", () => {
+    window.setTimeout(updateSelectionCartViewportPosition, 120);
+  });
+}
+
+function refreshSelectionUi({ rerenderCards = true } = {}) {
+  renderDrawSelectionSummary();
+  renderSelectedTestsCart();
   renderDrawResult();
-  renderCards(getFilteredTests());
+  updateSelectionCartBar();
+  updateDrawPlannerToggleState();
+  if (rerenderCards) applyFilters();
+}
+
+function setSelectedTests(nextSelection, options = {}) {
+  selectedTestNames.clear();
+  nextSelection.forEach((name) => selectedTestNames.add(name));
+  collapseProfileSelections(selectedTestNames);
+  refreshSelectionUi(options);
+}
+
+function toggleSelectedTest(testName, options = {}) {
+  const nextSelection = new Set(selectedTestNames);
+  if (nextSelection.has(testName)) {
+    nextSelection.delete(testName);
+  } else {
+    nextSelection.add(testName);
+  }
+  setSelectedTests(nextSelection, options);
+}
+
+function removeSelectedTest(testName, options = {}) {
+  if (!selectedTestNames.has(testName)) return;
+  const nextSelection = new Set(selectedTestNames);
+  nextSelection.delete(testName);
+  setSelectedTests(nextSelection, options);
 }
 
 function animateDrawResultCard() {
@@ -996,45 +1063,59 @@ function animateDrawResultCard() {
   drawResultCard.classList.add("draw-result-updated");
 }
 
-function moveFocusToDrawResult() {
-  if (!drawResultCard || drawResultCard.hidden) return;
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  drawResultCard.scrollIntoView({
-    behavior: prefersReducedMotion ? "auto" : "smooth",
-    block: "start",
-    inline: "nearest"
-  });
-  drawResultCard.focus({ preventScroll: true });
+function isDrawPlannerOpen() {
+  return Boolean(drawModal && !drawModal.hidden);
 }
 
-function dismissActiveInputIfNeeded() {
-  const activeEl = document.activeElement;
-  if (!activeEl) return false;
-  const tag = String(activeEl.tagName || "").toLowerCase();
-  const isEditable = tag === "input" || tag === "textarea" || activeEl.isContentEditable;
-  if (!isEditable) return false;
-  if (typeof activeEl.blur === "function") activeEl.blur();
-  return true;
+function updateQuickToolsToggleState() {
+  if (!toggleQuickToolsBtn) return;
+  const isMobile = window.matchMedia("(max-width: 600px)").matches;
+  if (!isMobile) {
+    toggleQuickToolsBtn.setAttribute("aria-expanded", "false");
+    return;
+  }
+
+  const isOpen = isDrawPlannerOpen();
+  const count = selectedTestNames.size;
+  toggleQuickToolsBtn.textContent = isOpen
+    ? "Hide rack"
+    : count
+      ? `View rack (${count})`
+      : "Show rack";
+  toggleQuickToolsBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+}
+
+function updateDrawPlannerToggleState() {
+  if (!openDrawPlannerBtn) return;
+  const isOpen = isDrawPlannerOpen();
+  const count = selectedTestNames.size;
+  openDrawPlannerBtn.textContent = isOpen
+    ? "Hide Rack"
+    : count
+      ? `Rack (${count})`
+      : "Rack";
+  openDrawPlannerBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  updateQuickToolsToggleState();
 }
 
 function openDrawModal() {
   if (!drawModal) return;
   closeMenu();
-  stagedSelectedTestNames = new Set(selectedTestNames);
   drawModal.hidden = false;
-  document.body.classList.add("modal-open");
-  if (drawResultCard) {
-    drawResultCard.hidden = !hasCalculatedDrawPlan;
-    if (hasCalculatedDrawPlan) renderDrawResult();
+  updateDrawPlannerToggleState();
+  refreshSelectionUi({ rerenderCards: false });
+  if (closeDrawPlannerBtn) {
+    window.requestAnimationFrame(() => {
+      closeDrawPlannerBtn.focus({ preventScroll: true });
+    });
   }
-  renderDrawSelectionList();
-  if (drawSearchInput) drawSearchInput.focus();
   syncModalOpenClass();
 }
 
 function closeDrawModal() {
   if (!drawModal) return;
   drawModal.hidden = true;
+  updateDrawPlannerToggleState();
   syncModalOpenClass();
 }
 
@@ -1120,17 +1201,26 @@ function isDedicatedGoldTubeTest(test) {
   );
 }
 
+function getRequiredSharedGoldTubeCount(selectedTests) {
+  const sharedGoldTests = selectedTests.filter((test) => {
+    const tubeGroups = getTubeGroups(test.tubeColor);
+    return tubeGroups.includes("Gold/Yellow") && !isDedicatedGoldTubeTest(test);
+  });
+
+  if (!sharedGoldTests.length) return 0;
+
+  const goldProfileCount = sharedGoldTests.filter((test) =>
+    Object.prototype.hasOwnProperty.call(profileComponentsByName, test.name)
+  ).length;
+
+  return goldProfileCount >= 4 ? 2 : 1;
+}
+
 function applyDedicatedGoldTubeRule(plan, selectedTests) {
   const dedicatedTests = selectedTests.filter((test) => isDedicatedGoldTubeTest(test));
   if (!dedicatedTests.length) return "";
 
-  const dedicatedNames = new Set(dedicatedTests.map((test) => test.name));
-  const hasOtherGoldTests = selectedTests.some((test) => {
-    const tubeGroups = getTubeGroups(test.tubeColor);
-    return tubeGroups.includes("Gold/Yellow") && !dedicatedNames.has(test.name);
-  });
-
-  const requiredGoldCount = dedicatedTests.length + (hasOtherGoldTests ? 1 : 0);
+  const requiredGoldCount = dedicatedTests.length + getRequiredSharedGoldTubeCount(selectedTests);
   let goldItem = plan.items.find((item) => item.key === "Gold/Yellow");
   if (!goldItem) {
     goldItem = { key: "Gold/Yellow", label: "Gold/Yellow", count: requiredGoldCount, tests: [] };
@@ -1141,6 +1231,22 @@ function applyDedicatedGoldTubeRule(plan, selectedTests) {
 
   plan.items.sort((a, b) => a.label.localeCompare(b.label));
   return "RF/RPR/HIV rule applied: each needs its own Gold/Yellow tube.";
+}
+
+function applyGoldProfileVolumeRule(plan, selectedTests) {
+  const requiredGoldCount = getRequiredSharedGoldTubeCount(selectedTests);
+  if (requiredGoldCount < 2) return "";
+
+  let goldItem = plan.items.find((item) => item.key === "Gold/Yellow");
+  if (!goldItem) {
+    goldItem = { key: "Gold/Yellow", label: "Gold/Yellow", count: requiredGoldCount, tests: [] };
+    plan.items.push(goldItem);
+  } else {
+    goldItem.count = Math.max(goldItem.count, requiredGoldCount);
+  }
+
+  plan.items.sort((a, b) => a.label.localeCompare(b.label));
+  return "Gold rule applied: 4 or more gold-top profiles require 2 x Gold/Yellow tubes.";
 }
 
 function applyPurpleVolumeRule(plan, selectedTests) {
@@ -1176,28 +1282,70 @@ function getLabDrawPlan(selectedTests) {
   return getDefaultPlanItems(selectedTests);
 }
 
+function getResolvedDrawPlan(selectedTests) {
+  const plan = getLabDrawPlan(selectedTests);
+  const guidanceNotes = [
+    applyDedicatedGoldTubeRule(plan, selectedTests),
+    applyGoldProfileVolumeRule(plan, selectedTests),
+    applyPurpleVolumeRule(plan, selectedTests)
+  ].filter(Boolean);
+
+  return { plan, guidanceNotes };
+}
+
+function getDrawPlannerAlerts(selectedTests) {
+  return selectedTests.flatMap((test) => {
+    if (test.name !== "Ammonia") return [];
+
+    return [{
+      id: "ammonia-handling",
+      tone: "urgent",
+      title: "Important guidelines for Ammonia",
+      items: [
+        "Use a Green (Heparin) tube for heparin plasma.",
+        "Call PathCare courier first.",
+        "Draw the sample only when the courier is on-site waiting.",
+        "Separate plasma immediately after collection.",
+        "Dispatch without delay."
+      ]
+    }];
+  });
+}
+
 function renderDrawResult() {
-  if (!drawResultCard || !drawPlannerCount || !drawGroups || !drawPlannerNote) return;
+  if (!drawResultCard || !drawPlannerCount || !drawPlannerAlerts || !drawGroups || !drawPlannerNote) return;
 
   const selectedTests = getSelectedTests();
   if (!selectedTests.length) {
     drawResultCard.hidden = false;
     drawPlannerCount.textContent = "0 selected tests";
+    drawPlannerAlerts.hidden = true;
+    drawPlannerAlerts.innerHTML = "";
     drawGroups.innerHTML = `
       <article class="draw-group-card">
-        <p class="draw-group-tests">No tests selected yet. Select tests above to build a tube plan.</p>
+        <p class="draw-group-tests">No tests selected yet. Add tests to build a tube plan.</p>
       </article>
     `;
-    drawPlannerNote.textContent = "Result card updates after calculation.";
+    drawPlannerNote.textContent = "Your tube estimate updates as you add or remove tests.";
     animateDrawResultCard();
     return;
   }
 
-  const plan = getLabDrawPlan(selectedTests);
-  const dedicatedTubeNote = applyDedicatedGoldTubeRule(plan, selectedTests);
-  const purpleRuleNote = applyPurpleVolumeRule(plan, selectedTests);
+  const { plan, guidanceNotes } = getResolvedDrawPlan(selectedTests);
+  const plannerAlerts = getDrawPlannerAlerts(selectedTests);
   drawResultCard.hidden = false;
   drawPlannerCount.textContent = `${selectedTests.length} selected test${selectedTests.length > 1 ? "s" : ""}`;
+  drawPlannerAlerts.hidden = plannerAlerts.length === 0;
+  drawPlannerAlerts.innerHTML = plannerAlerts
+    .map((alert) => `
+      <article class="draw-planner-alert draw-planner-alert-${alert.tone}">
+        <h4>${alert.title}</h4>
+        <ul>
+          ${alert.items.map((item) => `<li>${item}</li>`).join("")}
+        </ul>
+      </article>
+    `)
+    .join("");
 
   drawGroups.innerHTML = plan.items
     .map((item) => `
@@ -1214,7 +1362,6 @@ function renderDrawResult() {
     `)
     .join("");
 
-  const guidanceNotes = [dedicatedTubeNote, purpleRuleNote].filter(Boolean);
   if (plan.manual.length) {
     const manualNote = `Manual review needed for: ${plan.manual.join(", ")}.`;
     drawPlannerNote.textContent = guidanceNotes.length
@@ -1356,6 +1503,7 @@ function getTestGrouping(testName) {
   ) return { sectionId: "allergy", subsection: "Allergy Profile" };
 
   if (
+    name.includes("autoimmune") ||
     name.includes("arthritis profile") ||
     name.includes("ana") ||
     name.includes("ena") ||
@@ -1395,6 +1543,7 @@ function getTestGrouping(testName) {
 
   if (
     name.includes("fbc") ||
+    name.includes("haptoglobin") ||
     name.includes("retic") ||
     name.includes("malaria") ||
     name.includes("hb electrophoresis") ||
@@ -1548,74 +1697,48 @@ if (sourceTests.length !== tests.length) {
 const enrichedTests = sourceTests.map(enrichTest);
 
 function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
-  if (!textElement || !dotsElement || !items.length) return;
+  if (!textElement || !items.length) return;
 
   let current = 0;
   textElement.textContent = items[current];
-  dotsElement.innerHTML = items
-    .map((_, index) => `<span class="fact-dot${index === 0 ? " active" : ""}"></span>`)
-    .join("");
+  if (dotsElement) {
+    dotsElement.innerHTML = items
+      .map((_, index) => `<span class="fact-dot${index === 0 ? " active" : ""}"></span>`)
+      .join("");
+  }
 
   setInterval(() => {
     current = (current + 1) % items.length;
     textElement.textContent = items[current];
-    [...dotsElement.children].forEach((dot, index) => {
-      dot.classList.toggle("active", index === current);
-    });
+    if (dotsElement) {
+      [...dotsElement.children].forEach((dot, index) => {
+        dot.classList.toggle("active", index === current);
+      });
+    }
   }, intervalMs);
 }
 
 function renderFactsCarousel() {
-  startCarousel(facts, factText, factDots, 7600);
-  startCarousel(factTips, tipText, tipDots, 8200);
-}
-
-function setQuickToolsPanelState(isCollapsed) {
-  if (!quickToolsPanel || !toggleQuickToolsBtn) return;
-  quickToolsPanel.hidden = isCollapsed;
-  toggleQuickToolsBtn.textContent = isCollapsed ? "Show tube calculator" : "Hide tube calculator";
-  toggleQuickToolsBtn.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+  startCarousel(factTips, tipText, null, 8200);
 }
 
 function applyQuickToolsPanelMode(isMobile) {
-  if (!quickToolsPanel || !toggleQuickToolsBtn) return;
-
-  if (isMobile) {
-    toggleQuickToolsBtn.hidden = false;
-    if (!quickToolsPanel.dataset.mobileInit) {
-      setQuickToolsPanelState(true);
-      quickToolsPanel.dataset.mobileInit = "1";
-    } else {
-      setQuickToolsPanelState(quickToolsPanel.hidden);
-    }
-    return;
-  }
-
-  delete quickToolsPanel.dataset.mobileInit;
-  quickToolsPanel.hidden = false;
+  if (!toggleQuickToolsBtn) return;
   toggleQuickToolsBtn.hidden = true;
-  toggleQuickToolsBtn.setAttribute("aria-expanded", "true");
 }
 
 function initQuickToolsPanel() {
-  if (!quickToolsPanel || !toggleQuickToolsBtn) return;
+  if (!toggleQuickToolsBtn) return;
 
   const mediaQuery = window.matchMedia("(max-width: 600px)");
   const onModeChange = () => applyQuickToolsPanelMode(mediaQuery.matches);
 
   toggleQuickToolsBtn.addEventListener("click", () => {
-    const nextCollapsed = !quickToolsPanel.hidden;
-    setQuickToolsPanelState(nextCollapsed);
-
-    if (!nextCollapsed) {
-      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      window.setTimeout(() => {
-        quickToolsPanel.scrollIntoView({
-          behavior: prefersReducedMotion ? "auto" : "smooth",
-          block: "start"
-        });
-      }, 40);
+    if (isDrawPlannerOpen()) {
+      closeDrawModal();
+      return;
     }
+    openDrawModal();
   });
 
   onModeChange();
@@ -1630,7 +1753,7 @@ function initQuickToolsPanel() {
 function setFactsPanelState(isCollapsed) {
   if (!factCarouselPanel || !toggleFactsBtn) return;
   factCarouselPanel.classList.toggle("is-collapsed", isCollapsed);
-  toggleFactsBtn.textContent = isCollapsed ? "Show tips & facts" : "Hide tips & facts";
+  toggleFactsBtn.textContent = isCollapsed ? "Show tips" : "Hide tips";
   toggleFactsBtn.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
 }
 
@@ -1833,7 +1956,7 @@ function renderCards(filteredTests) {
     );
     cardsContainer.innerHTML = `
       <div class="no-results">
-        No matching test found. Try searching by test, section, alias, or condition (e.g. iron deficiency anaemia, heart attack, prostate cancer).
+        No matching test found. Try searching by test, department, alias, or condition (e.g. iron deficiency anaemia, heart attack, prostate cancer).
       </div>
     `;
     return;
@@ -1881,40 +2004,53 @@ function renderCards(filteredTests) {
     const isNonBloodSpecimen = /(urine|stool|faec|swab|csf|sputum|respiratory|semen|fluid|tissue|bone marrow|aspirate|saliva|synovial|pleural|ascitic|vaginal|nasopharyngeal|throat)/i
       .test(specimenValue);
     const showSpecimenField = isMicro || isNonBloodSpecimen || !hasTubeOptions;
-    const specimenField = isMicro
+    const summaryFields = isMicro
       ? `
-      <div class="field">
+      <div class="field card-summary-field">
         <span class="label">Specimen</span>
-        <span>${specimenValue}</span>
+        <span class="card-summary-value">${specimenValue}</span>
       </div>
       `
       : `
       ${hasTubeOptions ? `
-      <div class="field">
-        <span class="label">Tube Colour</span>
+      <div class="field card-summary-field">
+        <span class="label">Tube</span>
         <div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
           ${tubeOptionsMarkup}
         </div>
-        ${showTubeChoiceNote ? `<span class="tube-choice-note">${test.tubeColor}</span>` : ""}
       </div>
       ` : ""}
       ${showSpecimenField ? `
-      <div class="field">
+      <div class="field card-summary-field">
         <span class="label">Specimen</span>
-        <span>${specimenValue}</span>
+        <span class="card-summary-value">${specimenValue}</span>
       </div>
       ` : ""}
       `;
+    const summaryFieldCount = isMicro
+      ? 1
+      : Number(hasTubeOptions) + Number(showSpecimenField);
 
     card.innerHTML = `
-      <h2>${test.name}</h2>
+      <div class="card-head">
+        <h2>${test.name}</h2>
+        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Added to Rack" : "Add to Rack"}</button>
+      </div>
       <div class="card-meta-row">
         <div class="test-group-badge">${test.section.label}</div>
         ${hasProfileComponents ? `<button class="profile-tests-btn" type="button" data-profile-name="${test.name}">Tests</button>` : ""}
       </div>
-      ${specimenField}
+      <div class="card-summary-grid${summaryFieldCount <= 1 ? " single" : ""}">
+        ${summaryFields}
+      </div>
       <div class="card-extra">
         <div class="test-subgroup-badge">${test.grouping.subsection}</div>
+        ${showTubeChoiceNote ? `
+        <div class="field">
+          <span class="label">Tube Note</span>
+          <span>${test.tubeColor}</span>
+        </div>
+        ` : ""}
         <div class="field critical-prep-field">
           <span class="label">Critical Preparation</span>
           <span>${test.criticalPrep}</span>
@@ -1926,7 +2062,6 @@ function renderCards(filteredTests) {
       </div>
       <div class="card-actions">
         <button class="card-toggle-btn" type="button" aria-expanded="false">See more</button>
-        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Included in Tube Count" : "Include in Tube Count"}</button>
       </div>
     `;
 
@@ -1940,15 +2075,7 @@ function renderCards(filteredTests) {
     });
 
     drawSelectBtn.addEventListener("click", () => {
-      if (selectedTestNames.has(test.name)) {
-        selectedTestNames.delete(test.name);
-      } else {
-        selectedTestNames.add(test.name);
-      }
-      collapseProfileSelections(selectedTestNames);
-
-      renderDrawSelectionList();
-      renderCards(getFilteredTests());
+      toggleSelectedTest(test.name);
     });
 
     if (profileTestsBtn) {
@@ -1999,10 +2126,29 @@ function bindEvents() {
     });
   }
 
+  if (brandHomeBtn) {
+    brandHomeBtn.addEventListener("click", () => {
+      goHome();
+    });
+  }
+
   if (openDrawPlannerBtn) {
     openDrawPlannerBtn.addEventListener("click", (event) => {
       event.preventDefault();
-      if (drawModal && !drawModal.hidden) return;
+      if (isDrawPlannerOpen()) {
+        closeDrawModal();
+        return;
+      }
+      openDrawModal();
+    });
+  }
+
+  if (selectionCartBar) {
+    selectionCartBar.addEventListener("click", () => {
+      if (isDrawPlannerOpen()) {
+        closeDrawModal();
+        return;
+      }
       openDrawModal();
     });
   }
@@ -2015,39 +2161,16 @@ function bindEvents() {
     });
   }
 
-  if (drawSearchInput) {
-    drawSearchInput.addEventListener("input", () => {
-      updateDrawSearchClearButton();
-      renderDrawSelectionList();
-    });
-  }
-
-  if (drawSearchInput && drawSearchClearBtn) {
-    drawSearchClearBtn.addEventListener("click", () => {
-      drawSearchInput.value = "";
-      updateDrawSearchClearButton();
-      renderDrawSelectionList();
-      drawSearchInput.focus();
-    });
-  }
-
   if (clearDrawSelectionBtn) {
     clearDrawSelectionBtn.addEventListener("click", () => {
-      stagedSelectedTestNames.clear();
-      hasCalculatedDrawPlan = true;
-      renderDrawSelectionList();
-      refreshDrawPlanFromStaged();
+      setSelectedTests(new Set());
     });
   }
 
-  if (submitDrawSelectionBtn) {
-    submitDrawSelectionBtn.addEventListener("click", () => {
-      hasCalculatedDrawPlan = true;
-      refreshDrawPlanFromStaged();
-      const dismissedInput = dismissActiveInputIfNeeded();
-      window.setTimeout(() => {
-        moveFocusToDrawResult();
-      }, dismissedInput ? 320 : 60);
+  if (returnToSearchBtn) {
+    returnToSearchBtn.addEventListener("click", () => {
+      closeDrawModal();
+      focusMainSearchField();
     });
   }
 
@@ -2172,8 +2295,8 @@ initFactsPanel();
 initSectionNavigation();
 renderGroupChips();
 bindEvents();
+initSelectionCartViewportSync();
 initInstallHelper();
 applyFilters();
 updateSearchClearButton();
-renderDrawSelectionList();
-updateDrawSearchClearButton();
+refreshSelectionUi({ rerenderCards: false });

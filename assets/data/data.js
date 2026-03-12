@@ -730,6 +730,14 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "Haptoglobin",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Haemolysis workup marker. Most official lab guides prefer serum/serum-gel; some labs also accept heparin plasma or EDTA.",
+    borderColor: "yellow"
+  },
+  {
     name: "CK Total",
     tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
     specimen: "Heparinised plasma (preferred) or serum",
@@ -1565,11 +1573,11 @@ const tests = [
     borderColor: "purple"
   },
   {
-    name: "Malaria PCR (with ID if Positive)",
+    name: "Malaria PCR",
     tubeColor: "Purple",
     specimen: "EDTA whole blood",
     turnaroundTime: "1-3 days",
-    notes: "Molecular malaria test with species ID.",
+    notes: "Molecular malaria test.",
     borderColor: "purple"
   },
   {
@@ -1897,7 +1905,15 @@ const tests = [
     tubeColor: "Gold + Purple",
     specimen: "Serum and EDTA blood",
     turnaroundTime: "1-3 days",
-    notes: "Profile includes ESR, CRP, uric acid, ANA, rheumatoid factor, and anti-CCP.",
+    notes: "Profile includes ESR, CRP, uric acid, rheumatoid factor, and anti-CCP.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Autoimmune Profile",
+    tubeColor: "Gold + Purple",
+    specimen: "Serum and EDTA blood",
+    turnaroundTime: "1-3 days",
+    notes: "Profile includes ESR, FBC, CRP, rheumatoid factor, anti-CCP/ACCP, and ANA screen.",
     borderColor: "yellow"
   },
   {

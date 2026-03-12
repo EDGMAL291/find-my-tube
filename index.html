@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png" />
   <link rel="shortcut icon" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260311e" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260312l" />
 </head>
 <body>
   <div class="container">
@@ -44,12 +44,14 @@
           <p>Condition shortcuts show common initial lab requests only. Always confirm against local protocol and senior review.</p>
         </section>
       </div>
-      <h1 class="brand-title" aria-label="Find my tube">
-        <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-        <span class="brand-gap"></span>
-        <span>my</span>
-        <span class="brand-gap"></span>
-        <span>tube</span>
+      <h1>
+        <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
+          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
+          <span class="brand-gap"></span>
+          <span>my</span>
+          <span class="brand-gap"></span>
+          <span>tube</span>
+        </button>
       </h1>
       <p>
         Search for a laboratory test to see the correct tube, specimen type,
@@ -61,53 +63,59 @@
       <input
         type="text"
         id="searchInput"
-        placeholder="Search by test, alias, condition, or section (e.g. FBC, diabetes, coeliac disease)"
+        placeholder="Search by test, alias, condition, or department (e.g. FBC, diabetes, coeliac disease)"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        enterkeyhint="search"
       />
       <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" hidden>&times;</button>
     </section>
 
     <section class="pre-search" id="preSearchPanel">
+      <div class="group-hints">
+        <h3>Browse by Department</h3>
+        <div class="group-chips" id="groupChips"></div>
+      </div>
+
       <div class="pre-search-primary">
         <button
           type="button"
           class="quick-tools-toggle-btn"
           id="toggleQuickToolsBtn"
-          aria-controls="quickToolsPanel"
+          aria-controls="drawModal"
           aria-expanded="false"
           hidden
         >
-          Show tube calculator
+          Show selected tests
         </button>
-        <section class="quick-tools-panel" id="quickToolsPanel">
-          <p class="quick-tools-kicker">Quick Tool</p>
-          <h3>Tube Calculator</h3>
-          <p>Build a quick draw plan for multiple tests before you collect.</p>
-          <button type="button" class="quick-tool-launch-btn" id="openDrawPlannerBtn">Open Tube Calculator</button>
+        <section class="quick-tools-panel" id="quickToolsPanel" hidden>
+          <p class="quick-tools-kicker">Selection Cart</p>
+          <h3>Selected Tests</h3>
+          <p>Add tests as you browse and keep a tube plan ready while you change your mind.</p>
+          <button
+            type="button"
+            class="quick-tool-launch-btn"
+            id="openDrawPlannerBtn"
+            aria-controls="drawModal"
+            aria-expanded="false"
+          >
+            Open Selected Tests
+          </button>
         </section>
 
         <button type="button" class="fact-toggle-btn" id="toggleFactsBtn" aria-controls="factCarouselContent" aria-expanded="false" hidden>
-          Show tips & facts
+          Show tips
         </button>
         <div class="fact-carousel" id="factCarouselPanel">
           <div class="fact-carousel-content" id="factCarouselContent">
             <div class="mini-carousel">
-              <p class="fact-kicker">Interesting lab facts</p>
-              <p class="fact-text" id="factText"></p>
-              <div class="fact-dots" id="factDots"></div>
-            </div>
-            <div class="mini-carousel">
-              <p class="fact-kicker">Quick collection tips</p>
+              <p class="fact-kicker">Collection Tips</p>
               <p class="fact-text" id="tipText"></p>
-              <div class="fact-dots" id="tipDots"></div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="group-hints">
-        <h3>Find Tests by Lab Area</h3>
-        <p>Pick a lab area to surface the right profiles and tests faster.</p>
-        <div class="group-chips" id="groupChips"></div>
       </div>
     </section>
 
@@ -115,35 +123,36 @@
     <section class="cards" id="cardsContainer"></section>
   </div>
 
+  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Rack" hidden>
+    <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0</span>
+    <span class="selection-cart-copy">
+      <span class="selection-cart-kicker">Selected</span>
+      <span class="selection-cart-label">Rack</span>
+    </span>
+  </button>
+
   <section class="draw-modal" id="drawModal" hidden>
     <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
       <div class="draw-selection-head">
-        <h3 id="drawModalTitle">Tube Calculator</h3>
+        <div>
+          <p class="draw-cart-kicker">Selected Tests</p>
+          <h3 id="drawModalTitle">Tube Plan</h3>
+        </div>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn">Close</button>
       </div>
-      <div class="draw-search-wrap">
-        <input
-          type="text"
-          id="drawSearchInput"
-          class="draw-search-input"
-          placeholder="Search tests to calculate tubes"
-        />
-        <button type="button" class="draw-search-clear-btn" id="drawSearchClearBtn" aria-label="Clear tube calculator search" hidden>&times;</button>
-      </div>
-      <div class="draw-selection-tools">
-        <button type="button" class="draw-tool-btn ghost" id="clearDrawSelectionBtn">Clear selected</button>
-      </div>
-      <div class="draw-selection-list" id="drawSelectionList"></div>
       <div class="draw-selection-actions">
         <p class="draw-selection-count" id="drawSelectionCount">0 tests selected</p>
-        <button type="button" class="draw-submit-btn" id="submitDrawSelectionBtn">Calculate Tubes</button>
+        <button type="button" class="draw-tool-btn ghost" id="clearDrawSelectionBtn">Clear all</button>
       </div>
-      <div class="draw-result-card" id="drawResultCard" hidden tabindex="-1">
+      <div class="draw-selected-list" id="drawSelectedList"></div>
+      <div class="draw-result-card" id="drawResultCard" tabindex="-1">
         <p class="draw-planner-sub">Tube plan</p>
         <p class="draw-planner-count" id="drawPlannerCount"></p>
+        <div class="draw-planner-alerts" id="drawPlannerAlerts" hidden></div>
         <div class="draw-groups" id="drawGroups"></div>
         <p class="draw-planner-note" id="drawPlannerNote"></p>
       </div>
+      <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add More Tests</button>
     </div>
   </section>
 
@@ -157,11 +166,11 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260311c"></script>
-  <script src="assets/js/script.js?v=20260311m"></script>
+  <script src="assets/data/data.js?v=20260312b"></script>
+  <script src="assets/js/script.js?v=20260312l"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-11.14";
+      const APP_VERSION = "2026-03-12.32";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -178,7 +187,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260311m", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260312l", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
