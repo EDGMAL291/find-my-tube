@@ -713,6 +713,22 @@ function getTubeSwatchColor(tubeGroup) {
   return swatch[tubeGroup] || "#94a3b8";
 }
 
+function getTubeAdditiveLabel(tubeGroup) {
+  const additiveByGroup = {
+    Purple: "EDTA",
+    Pink: "EDTA",
+    Blue: "Sodium citrate",
+    "Gold/Yellow": "SST / clot activator",
+    Green: "Heparin",
+    Gray: "Fluoride / oxalate",
+    Red: "Plain",
+    Black: "Sodium citrate",
+    "Blood Culture Bottles": "Culture media"
+  };
+
+  return additiveByGroup[tubeGroup] || "";
+}
+
 function getSelectedTests() {
   return enrichedTests.filter((test) => selectedTestNames.has(test.name));
 }
@@ -1988,7 +2004,10 @@ function renderCards(filteredTests) {
         ${tubeGroups.map((group) => `
           <span class="tube-option">
             <span class="tube-icon${tubeIconSizeClass}" style="--tube-color: ${getTubeSwatchColor(group)};" aria-hidden="true"></span>
-            <span class="tube-option-label">${group}</span>
+            <span class="tube-option-copy">
+              <span class="tube-option-label">${group}</span>
+              ${getTubeAdditiveLabel(group) ? `<span class="tube-option-additive">${getTubeAdditiveLabel(group)}</span>` : ""}
+            </span>
           </span>
         `).join("")}
       </div>
@@ -2030,16 +2049,20 @@ function renderCards(filteredTests) {
     const summaryFieldCount = isMicro
       ? 1
       : Number(hasTubeOptions) + Number(showSpecimenField);
+    const cardMetaRow = hasProfileComponents
+      ? `
+      <div class="card-meta-row">
+        <button class="profile-tests-btn" type="button" data-profile-name="${test.name}">Tests</button>
+      </div>
+      `
+      : "";
 
     card.innerHTML = `
       <div class="card-head">
         <h2>${test.name}</h2>
         <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Added to Rack" : "Add to Rack"}</button>
       </div>
-      <div class="card-meta-row">
-        <div class="test-group-badge">${test.section.label}</div>
-        ${hasProfileComponents ? `<button class="profile-tests-btn" type="button" data-profile-name="${test.name}">Tests</button>` : ""}
-      </div>
+      ${cardMetaRow}
       <div class="card-summary-grid${summaryFieldCount <= 1 ? " single" : ""}">
         ${summaryFields}
       </div>

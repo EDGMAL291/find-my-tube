@@ -1201,29 +1201,13 @@ body::after {
   border-radius: 8px;
 }
 
-.test-group-badge {
-  display: inline-flex;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 5px 9px;
-  margin-bottom: 10px;
-  color: var(--accent-strong);
-  background: rgba(237, 252, 250, 0.8);
-  border: 1px solid rgba(15, 118, 110, 0.28);
-}
-
 .card-meta-row {
   display: flex;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: flex-end;
   gap: 8px;
-  margin-bottom: 7px;
+  margin-bottom: 6px;
   flex-wrap: wrap;
-}
-
-.card-meta-row .test-group-badge {
-  margin-bottom: 0;
 }
 
 .profile-components {
@@ -1368,10 +1352,23 @@ body::after {
   min-width: 0;
 }
 
+.tube-option-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
 .tube-option-label {
   font-size: 0.74rem;
   color: #35505d;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.tube-option-additive {
+  font-size: 0.64rem;
+  color: #617684;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
@@ -1381,6 +1378,11 @@ body::after {
 
 .tube-option-grid.dense .tube-option-label {
   font-size: 0.7rem;
+}
+
+.tube-option-grid.compact .tube-option-additive,
+.tube-option-grid.dense .tube-option-additive {
+  font-size: 0.6rem;
 }
 
 .tube-choice-note {
@@ -1725,9 +1727,7 @@ body::after {
   }
 
   .card-meta-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+    justify-content: flex-start;
     margin-bottom: 8px;
   }
 
@@ -1757,12 +1757,6 @@ body::after {
 
   .label {
     font-size: 0.72rem;
-  }
-
-  .test-group-badge {
-    font-size: 0.66rem;
-    padding: 3px 7px;
-    margin-bottom: 7px;
   }
 
   .test-subgroup-badge {
