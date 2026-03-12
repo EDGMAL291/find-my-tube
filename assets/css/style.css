@@ -1140,17 +1140,11 @@ body::after {
 }
 
 .card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
   margin-bottom: 8px;
 }
 
 .card-head h2 {
   margin-bottom: 0;
-  flex: 1;
-  min-width: 0;
 }
 
 .card-summary-grid {
@@ -1172,6 +1166,66 @@ body::after {
   border-radius: 12px;
   padding: 8px 9px;
   background: rgba(255, 255, 255, 0.7);
+}
+
+.card-summary-action {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-summary-action:hover,
+.card-summary-action:focus-visible {
+  border-color: rgba(15, 118, 110, 0.44);
+  background: rgba(244, 252, 250, 0.88);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(15, 118, 110, 0.08);
+}
+
+.card-summary-action.selected {
+  border-color: rgba(15, 118, 110, 0.52);
+  background: rgba(228, 248, 244, 0.92);
+}
+
+.card-summary-action-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.card-summary-action-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 118, 110, 0.32);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0d605a;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.card-summary-action.selected .card-summary-action-indicator {
+  border-color: rgba(15, 118, 110, 0.58);
+  background: rgba(15, 118, 110, 0.92);
+  color: #f7fffd;
+}
+
+.card-summary-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #0d605a;
 }
 
 .card-summary-field .label {
@@ -1291,26 +1345,6 @@ body::after {
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-}
-
-.draw-select-btn {
-  border: 1px solid rgba(15, 118, 110, 0.34);
-  background: rgba(255, 255, 255, 0.9);
-  color: #0f5f59;
-  border-radius: 10px;
-  padding: 7px 10px;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  flex-shrink: 0;
-  align-self: flex-start;
-  white-space: nowrap;
-}
-
-.draw-select-btn.active {
-  background: rgba(220, 245, 240, 0.98);
-  border-color: rgba(15, 118, 110, 0.62);
 }
 
 .label {
@@ -1718,12 +1752,7 @@ body::after {
   }
 
   .card-head {
-    gap: 8px;
     margin-bottom: 8px;
-  }
-
-  .card-head h2 {
-    margin-bottom: 0;
   }
 
   .card-meta-row {
@@ -1738,6 +1767,16 @@ body::after {
 
   .card-summary-field {
     padding: 7px 8px;
+  }
+
+  .card-summary-action-indicator {
+    width: 22px;
+    height: 22px;
+    font-size: 0.92rem;
+  }
+
+  .card-summary-hint {
+    font-size: 0.64rem;
   }
 
   .card-summary-field .label {
@@ -1778,11 +1817,6 @@ body::after {
     justify-content: space-between;
     flex-wrap: wrap;
     margin-top: 8px;
-  }
-
-  .draw-select-btn {
-    font-size: 0.76rem;
-    padding: 6px 9px;
   }
 
   .critical-prep-field {

@@ -38,12 +38,30 @@ let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
 let activeSectionGroup = "";
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
+const RACK_HINT_STORAGE_KEY = "fmt-rack-hint-dismissed";
+let hasDismissedRackHint = false;
+
+try {
+  hasDismissedRackHint = localStorage.getItem(RACK_HINT_STORAGE_KEY) === "1";
+} catch {
+  hasDismissedRackHint = false;
+}
 
 function setResultsInfo(text) {
   if (!resultsInfo) return;
   const message = String(text || "");
   resultsInfo.textContent = message;
   resultsInfo.hidden = message.length === 0;
+}
+
+function dismissRackHint() {
+  if (hasDismissedRackHint) return;
+  hasDismissedRackHint = true;
+  try {
+    localStorage.setItem(RACK_HINT_STORAGE_KEY, "1");
+  } catch {
+    // Ignore storage failures and continue without persistence.
+  }
 }
 
 function getHistoryStateForSection(sectionId = "") {
@@ -1056,6 +1074,7 @@ function setSelectedTests(nextSelection, options = {}) {
 }
 
 function toggleSelectedTest(testName, options = {}) {
+  dismissRackHint();
   const nextSelection = new Set(selectedTestNames);
   if (nextSelection.has(testName)) {
     nextSelection.delete(testName);
@@ -2023,27 +2042,56 @@ function renderCards(filteredTests) {
     const isNonBloodSpecimen = /(urine|stool|faec|swab|csf|sputum|respiratory|semen|fluid|tissue|bone marrow|aspirate|saliva|synovial|pleural|ascitic|vaginal|nasopharyngeal|throat)/i
       .test(specimenValue);
     const showSpecimenField = isMicro || isNonBloodSpecimen || !hasTubeOptions;
+    const showRackHint = !hasDismissedRackHint && !isSelected && filteredTests[0]?.name === test.name;
+    const renderSummaryField = ({ label, content, isAction = false }) => {
+      if (!isAction) {
+        return `
+        <div class="field card-summary-field">
+          <span class="label">${label}</span>
+          ${content}
+        </div>
+        `;
+      }
+
+      return `
+      <button
+        type="button"
+        class="field card-summary-field card-summary-action${isSelected ? " selected" : ""}${showRackHint ? " hinted" : ""}"
+        data-card-select="${encodeURIComponent(test.name)}"
+        aria-pressed="${isSelected ? "true" : "false"}"
+        aria-label="${isSelected ? `Remove ${test.name} from Rack` : `Add ${test.name} to Rack`}"
+      >
+        <span class="card-summary-action-head">
+          <span class="label">${label}</span>
+          <span class="card-summary-action-indicator" aria-hidden="true">${isSelected ? "\u2713" : "+"}</span>
+        </span>
+        ${content}
+        ${showRackHint ? `<span class="card-summary-hint">Tap to add to Rack</span>` : ""}
+      </button>
+      `;
+    };
     const summaryFields = isMicro
-      ? `
-      <div class="field card-summary-field">
-        <span class="label">Specimen</span>
-        <span class="card-summary-value">${specimenValue}</span>
-      </div>
-      `
+      ? renderSummaryField({
+          label: "Specimen",
+          content: `<span class="card-summary-value">${specimenValue}</span>`,
+          isAction: true
+        })
       : `
       ${hasTubeOptions ? `
-      <div class="field card-summary-field">
-        <span class="label">Tube</span>
-        <div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
+      ${renderSummaryField({
+        label: "Tube",
+        content: `<div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
           ${tubeOptionsMarkup}
-        </div>
-      </div>
+        </div>`,
+        isAction: true
+      })}
       ` : ""}
       ${showSpecimenField ? `
-      <div class="field card-summary-field">
-        <span class="label">Specimen</span>
-        <span class="card-summary-value">${specimenValue}</span>
-      </div>
+      ${renderSummaryField({
+        label: "Specimen",
+        content: `<span class="card-summary-value">${specimenValue}</span>`,
+        isAction: !hasTubeOptions
+      })}
       ` : ""}
       `;
     const summaryFieldCount = isMicro
@@ -2060,7 +2108,6 @@ function renderCards(filteredTests) {
     card.innerHTML = `
       <div class="card-head">
         <h2>${test.name}</h2>
-        <button class="draw-select-btn${isSelected ? " active" : ""}" type="button">${isSelected ? "Added to Rack" : "Add to Rack"}</button>
       </div>
       ${cardMetaRow}
       <div class="card-summary-grid${summaryFieldCount <= 1 ? " single" : ""}">
@@ -2089,7 +2136,7 @@ function renderCards(filteredTests) {
     `;
 
     const toggleBtn = card.querySelector(".card-toggle-btn");
-    const drawSelectBtn = card.querySelector(".draw-select-btn");
+    const summaryActionBtn = card.querySelector("button[data-card-select]");
     const profileTestsBtn = card.querySelector(".profile-tests-btn");
     toggleBtn.addEventListener("click", () => {
       const expanded = card.classList.toggle("expanded");
@@ -2097,7 +2144,7 @@ function renderCards(filteredTests) {
       toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
     });
 
-    drawSelectBtn.addEventListener("click", () => {
+    summaryActionBtn?.addEventListener("click", () => {
       toggleSelectedTest(test.name);
     });
 
