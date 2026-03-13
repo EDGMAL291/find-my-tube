@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="Find My Tube" />
   <title>Find My Tube</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg?v=20260313b" />
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=20260313b" />
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=20260313b" />
-  <link rel="shortcut icon" href="assets/icons/favicon-32.png?v=20260313b" />
+  <link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg?v=20260313c" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=20260313c" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260313c" />
+  <link rel="shortcut icon" href="./favicon-32.png?v=20260313c" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260313a" />
 </head>
@@ -206,7 +206,7 @@
   <script src="assets/js/script.js?v=20260313a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-13.1";
+      const APP_VERSION = "2026-03-13.2";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -223,7 +223,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260313a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260313c", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
