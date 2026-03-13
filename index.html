@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png" />
   <link rel="shortcut icon" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260312o" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260313a" />
 </head>
 <body>
   <div class="container">
@@ -88,11 +88,11 @@
           aria-expanded="false"
           hidden
         >
-          Show selected tests
+          Show Rack
         </button>
         <section class="quick-tools-panel" id="quickToolsPanel" hidden>
-          <p class="quick-tools-kicker">Selection Cart</p>
-          <h3>Selected Tests</h3>
+          <p class="quick-tools-kicker">Added to Rack</p>
+          <h3>Added Tests</h3>
           <p>Add tests as you browse and keep a tube plan ready while you change your mind.</p>
           <button
             type="button"
@@ -101,13 +101,10 @@
             aria-controls="drawModal"
             aria-expanded="false"
           >
-            Open Selected Tests
+            Open Rack
           </button>
         </section>
 
-        <button type="button" class="fact-toggle-btn" id="toggleFactsBtn" aria-controls="factCarouselContent" aria-expanded="false" hidden>
-          Show tips
-        </button>
         <div class="fact-carousel" id="factCarouselPanel">
           <div class="fact-carousel-content" id="factCarouselContent">
             <div class="mini-carousel">
@@ -120,13 +117,38 @@
     </section>
 
     <p class="results-info" id="resultsInfo" hidden></p>
+    <div class="selection-notice" id="selectionNoticeToast" role="status" aria-live="polite" hidden></div>
     <section class="cards" id="cardsContainer"></section>
+
+    <footer class="site-footer" id="siteFooter">
+      <div class="site-footer-copy">
+        <p class="site-footer-title">Find My Tube</p>
+        <p class="site-footer-note">Reference tool only. Always confirm collection details against local lab policy, senior review, and urgent clinical context.</p>
+      </div>
+      <div class="site-footer-links">
+        <button type="button" class="footer-link-btn" data-legal-doc="privacy">Privacy Policy</button>
+        <button type="button" class="footer-link-btn" data-legal-doc="terms">Terms of Use</button>
+        <button type="button" class="footer-link-btn" data-legal-doc="disclaimer">Disclaimer</button>
+      </div>
+    </footer>
   </div>
 
   <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Rack" hidden>
     <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0</span>
+    <span class="selection-cart-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 18h16" />
+        <path d="M6 18v-4h12v4" />
+        <path d="M8 6v8" />
+        <path d="M12 5v9" />
+        <path d="M16 7v7" />
+        <path d="M7 6h2" />
+        <path d="M11 5h2" />
+        <path d="M15 7h2" />
+      </svg>
+    </span>
     <span class="selection-cart-copy">
-      <span class="selection-cart-kicker">Selected</span>
+      <span class="selection-cart-kicker">Added to</span>
       <span class="selection-cart-label">Rack</span>
     </span>
   </button>
@@ -135,13 +157,13 @@
     <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
       <div class="draw-selection-head">
         <div>
-          <p class="draw-cart-kicker">Selected Tests</p>
+          <p class="draw-cart-kicker">Added to Rack</p>
           <h3 id="drawModalTitle">Tube Plan</h3>
         </div>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn">Close</button>
       </div>
       <div class="draw-selection-actions">
-        <p class="draw-selection-count" id="drawSelectionCount">0 tests selected</p>
+        <p class="draw-selection-count" id="drawSelectionCount">0 tests added</p>
         <button type="button" class="draw-tool-btn ghost" id="clearDrawSelectionBtn">Clear all</button>
       </div>
       <div class="draw-selected-list" id="drawSelectedList"></div>
@@ -166,11 +188,24 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260312b"></script>
-  <script src="assets/js/script.js?v=20260312o"></script>
+  <section class="profile-modal legal-modal" id="legalModal" hidden>
+    <div class="profile-modal-card legal-modal-card" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
+      <div class="profile-modal-head legal-modal-head">
+        <div>
+          <p class="draw-cart-kicker">Legal</p>
+          <h3 id="legalModalTitle">Privacy Policy</h3>
+        </div>
+        <button type="button" class="profile-modal-close-btn" id="closeLegalModalBtn">Close</button>
+      </div>
+      <div class="legal-modal-body" id="legalModalBody"></div>
+    </div>
+  </section>
+
+  <script src="assets/data/data.js?v=20260313a"></script>
+  <script src="assets/js/script.js?v=20260313a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-12.35";
+      const APP_VERSION = "2026-03-13.1";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -187,7 +222,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260312o", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260313a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

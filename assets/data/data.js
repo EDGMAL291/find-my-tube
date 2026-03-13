@@ -177,12 +177,13 @@ const tests = [
     borderColor: "purple"
   },
   {
-    name: "Glucose",
-    tubeColor: "Grey",
-    specimen: "Fluoride plasma",
-    turnaroundTime: "2-4 hours",
-    notes: "Useful when delayed processing is expected.",
-    borderColor: "gray"
+    name: "Blood Bank / Transfusion",
+    tubeColor: "Pink",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Urgent / same day",
+    notes: "Pink tube request for blood bank / transfusion processing.",
+    criticalPrep: "The requesting healthcare professional (HCP) should complete the Western Cape blood bank form and call the driver to courier the tube and form to blood bank in GSH.",
+    borderColor: "#ec4899"
   },
   {
     name: "ESR",
@@ -459,9 +460,41 @@ const tests = [
   {
     name: "STD PCR",
     tubeColor: "N/A (Swab or urine)",
-    specimen: "Genital swab or urine",
+    specimen: "Vaginal swab or urine",
     turnaroundTime: "1-3 days",
     notes: "Molecular STI screen panel.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Chlamydia trachomatis PCR",
+    tubeColor: "N/A (Swab or urine)",
+    specimen: "Vaginal swab or urine",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular chlamydia test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Neisseria gonorrhoeae PCR",
+    tubeColor: "N/A (Swab or urine)",
+    specimen: "Vaginal swab or urine",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular gonorrhoea test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Trichomonas vaginalis PCR",
+    tubeColor: "N/A (Swab or urine)",
+    specimen: "Vaginal swab or urine",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular trichomonas test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Mycoplasma genitalium PCR",
+    tubeColor: "N/A (Swab or urine)",
+    specimen: "Vaginal swab or urine",
+    turnaroundTime: "1-3 days",
+    notes: "Molecular Mycoplasma genitalium test.",
     borderColor: "#64748b"
   },
   {
@@ -497,12 +530,119 @@ const tests = [
     borderColor: "#64748b"
   },
   {
+    name: "CSF Profile",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tubes)",
+    turnaroundTime: "Same day to 3 days",
+    notes: "CSF profile combining MCS, cell count, and chemistry.",
+    criticalPrep: "Send urgently and clearly state if the patient was already on antimicrobials when the sample was taken.",
+    specimenGuide: "CSF in appropriately labelled tan/CSF tubes as per local protocol.",
+    borderColor: "#64748b"
+  },
+  {
     name: "CSF MCS",
     tubeColor: "Tan",
     specimen: "CSF (Tan tube)",
     turnaroundTime: "24-72 hours",
     notes: "Microbiology culture and sensitivity of CSF.",
+    criticalPrep: "Clearly state if the patient was already on antimicrobials when the sample was taken.",
     specimenGuide: "CSF in tan tube (per lab protocol).",
+    borderColor: "#64748b"
+  },
+  {
+    name: "CSF Cell Count and Chemistry",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tubes)",
+    turnaroundTime: "Same day",
+    notes: "CSF request combining cell count and chemistry.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "CSF Cell Count and Differential",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "Same day",
+    notes: "CSF microscopy with cell count and differential.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "CSF Glucose",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "Same day",
+    notes: "CSF glucose measurement.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "CSF Protein",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "Same day",
+    notes: "CSF protein measurement.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Cryptococcal Antigen (CSF)",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "Same day to 1 day",
+    notes: "CSF cryptococcal antigen test.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Enterovirus PCR (CSF)",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF enterovirus PCR.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Mumps PCR (CSF)",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF mumps PCR.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "CSF IgG Index",
+    tubeColor: "Tan",
+    specimen: "CSF (paired serum may be required)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF IgG index assessment. Paired serum may be required per lab protocol.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "CSF Oligoclonal Bands",
+    tubeColor: "Tan",
+    specimen: "CSF (paired serum may be required)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF oligoclonal bands. Paired serum may be required per lab protocol.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "CSF ADA",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF adenosine deaminase (ADA).",
+    borderColor: "#64748b"
+  },
+  {
+    name: "HSV-1 PCR (CSF)",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF HSV-1 PCR.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "HSV-2 PCR (CSF)",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF HSV-2 PCR.",
     borderColor: "#64748b"
   },
   {
@@ -559,6 +699,14 @@ const tests = [
     specimen: "Stool",
     turnaroundTime: "1-3 days",
     notes: "Gut inflammation marker listed on form.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Faecal Occult Blood",
+    tubeColor: "Stool container",
+    specimen: "Stool",
+    turnaroundTime: "1-3 days",
+    notes: "Occult blood screening test performed on a stool sample.",
     borderColor: "#64748b"
   },
   {
@@ -752,6 +900,14 @@ const tests = [
     turnaroundTime: "1-4 hours",
     notes: "Primary biomarker for suspected acute myocardial injury.",
     borderColor: "green"
+  },
+  {
+    name: "Cardiac Profile",
+    tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
+    specimen: "Heparinised plasma (preferred) or serum",
+    turnaroundTime: "1-4 hours",
+    notes: "Profile includes CK Total, CK-MB Mass, and Troponin I.",
+    borderColor: "yellow"
   },
   {
     name: "NT-proBNP",
@@ -957,17 +1113,26 @@ const tests = [
   {
     name: "Protein:Creatinine Ratio (Random Urine)",
     tubeColor: "Sterile urine container",
-    specimen: "Random urine",
+    specimen: "Random urine sample",
     turnaroundTime: "Same day to 1 day",
-    notes: "Urine protein quantification ratio.",
+    notes: "Urine protein:creatinine ratio on a random urine sample.",
     borderColor: "#64748b"
   },
   {
     name: "Albumin:Creatinine Ratio (Random Urine)",
     tubeColor: "Sterile urine container",
-    specimen: "Random urine",
+    specimen: "Random urine sample",
     turnaroundTime: "Same day to 1 day",
-    notes: "Urine albumin quantification ratio.",
+    notes: "Urine albumin:creatinine ratio on a random urine sample.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Daily Urine Protein (24hr Urine)",
+    tubeColor: "24hr urine bottle",
+    specimen: "24hr urine",
+    turnaroundTime: "1 day",
+    notes: "Timed 24-hour urine protein quantification.",
+    criticalPrep: "Collect the full 24-hour urine sample in the correct lab-issued 24-hour urine bottle and follow local collection and storage instructions.",
     borderColor: "#64748b"
   },
   {
@@ -1107,15 +1272,7 @@ const tests = [
     borderColor: "purple"
   },
   {
-    name: "hs-CRP",
-    tubeColor: "Gold",
-    specimen: "Serum",
-    turnaroundTime: "Same day",
-    notes: "High-sensitivity inflammatory marker.",
-    borderColor: "yellow"
-  },
-  {
-    name: "Glucose Fasting",
+    name: "Fasting Glucose",
     tubeColor: "Grey",
     specimen: "Fluoride plasma",
     turnaroundTime: "Same day",
@@ -1123,7 +1280,7 @@ const tests = [
     borderColor: "gray"
   },
   {
-    name: "Glucose Random",
+    name: "Random Glucose",
     tubeColor: "Grey",
     specimen: "Fluoride plasma",
     turnaroundTime: "Same day",
@@ -1276,10 +1433,11 @@ const tests = [
   },
   {
     name: "Cortisol (24hr Urine)",
-    tubeColor: "24hr urine container",
+    tubeColor: "24hr urine bottle",
     specimen: "24hr urine",
     turnaroundTime: "1-3 days",
-    notes: "Timed urinary cortisol.",
+    notes: "Timed 24-hour urinary cortisol collection.",
+    criticalPrep: "Collect the full 24-hour urine sample in the correct lab-issued 24-hour urine bottle and follow local collection and storage instructions.",
     borderColor: "#64748b"
   },
   {
@@ -1300,20 +1458,20 @@ const tests = [
   },
   {
     name: "5-HIAA (24hr Urine)",
-    tubeColor: "24hr urine container (acid preservative)",
+    tubeColor: "24hr urine bottle (acid preservative)",
     specimen: "24hr urine",
     turnaroundTime: "2-5 days",
-    notes: "Carcinoid syndrome marker collected as a 24-hour urine with acid preservative.",
-    criticalPrep: "Use the correct 24-hour urine container with acid preservative supplied by the lab. Follow local dietary/collection instructions and keep handling per lab protocol.",
+    notes: "Carcinoid syndrome marker collected as a 24-hour urine using the correct preservative bottle from the lab.",
+    criticalPrep: "Patient must come to the lab before starting collection to collect the correct 24-hour urine bottle with acid preservative. Follow local dietary and collection instructions, then keep handling per lab protocol.",
     borderColor: "#64748b"
   },
   {
     name: "Metanephrines (24hr Urine)",
-    tubeColor: "24hr urine container",
+    tubeColor: "24hr urine bottle (preservative supplied by lab)",
     specimen: "24hr urine",
     turnaroundTime: "2-5 days",
-    notes: "Pheochromocytoma workup marker collected as a 24-hour urine specimen.",
-    criticalPrep: "Collect a full 24-hour urine sample in the correct lab-issued container. Preservative and handling requirements vary by lab, so follow local protocol.",
+    notes: "Pheochromocytoma workup marker collected as a 24-hour urine using the correct preservative bottle from the lab.",
+    criticalPrep: "Patient must come to the lab before starting collection to collect the correct 24-hour urine bottle with preservative. Preservative and handling requirements vary by lab, so follow local protocol.",
     borderColor: "#64748b"
   },
   {
@@ -1415,9 +1573,9 @@ const tests = [
   {
     name: "Acute Porphyria Attack Screen (Urine)",
     tubeColor: "Urine container",
-    specimen: "Urine",
+    specimen: "Urine sample",
     turnaroundTime: "2-7 days",
-    notes: "Porphyria screening assay.",
+    notes: "Acute porphyria attack screen performed on a urine sample.",
     borderColor: "#64748b"
   },
   {
@@ -1429,11 +1587,11 @@ const tests = [
     borderColor: "#64748b"
   },
   {
-    name: "Full Porphyria Screen (Urine, Blood, Stool)",
-    tubeColor: "Mixed specimen containers",
-    specimen: "Urine, blood, stool",
+    name: "Full Porphyria Screen (Blood, Urine, Stool)",
+    tubeColor: "Blood tube + urine container + stool container",
+    specimen: "Blood, urine, and stool",
     turnaroundTime: "2-7 days",
-    notes: "Comprehensive porphyria panel.",
+    notes: "Comprehensive porphyria panel using blood, urine, and stool specimens.",
     borderColor: "#64748b"
   },
   {
@@ -2029,11 +2187,19 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "ASOT and Anti-DNase B",
+    name: "ASOT",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
-    notes: "Recent streptococcal infection serology.",
+    notes: "Antistreptolysin O titre serology for recent streptococcal infection.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Anti-DNase B",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Anti-DNase B serology for recent streptococcal infection.",
     borderColor: "yellow"
   },
   {
@@ -2085,11 +2251,19 @@ const tests = [
     borderColor: "#64748b"
   },
   {
-    name: "Brucella IgM/IgG",
+    name: "Brucella IgM",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
-    notes: "Brucella serology.",
+    notes: "Brucella IgM serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Brucella IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Brucella IgG serology.",
     borderColor: "yellow"
   },
   {
@@ -2181,11 +2355,19 @@ const tests = [
     borderColor: "#64748b"
   },
   {
-    name: "Rickettsia IgM/IgG",
+    name: "Rickettsia IgM",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
-    notes: "Rickettsial serology.",
+    notes: "Rickettsia IgM serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Rickettsia IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Rickettsia IgG serology.",
     borderColor: "yellow"
   },
   {
@@ -2213,15 +2395,7 @@ const tests = [
     borderColor: "purple"
   },
   {
-    name: "Rubella IgM/IgG",
-    tubeColor: "Gold",
-    specimen: "Serum",
-    turnaroundTime: "1-3 days",
-    notes: "Rubella serology.",
-    borderColor: "yellow"
-  },
-  {
-    name: "Rubella IgM only",
+    name: "Rubella IgM",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
@@ -2229,7 +2403,7 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Rubella IgG only",
+    name: "Rubella IgG",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
@@ -2245,11 +2419,19 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Toxoplasma IgM/IgG",
+    name: "Toxoplasma IgM",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
-    notes: "Toxoplasma serology.",
+    notes: "Toxoplasma IgM serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Toxoplasma IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Toxoplasma IgG serology.",
     borderColor: "yellow"
   },
   {

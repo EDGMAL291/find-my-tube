@@ -2,6 +2,7 @@ const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
 const cardsContainer = document.getElementById("cardsContainer");
 const resultsInfo = document.getElementById("resultsInfo");
+const selectionNoticeToast = document.getElementById("selectionNoticeToast");
 const preSearchPanel = document.getElementById("preSearchPanel");
 const brandHomeBtn = document.getElementById("brandHomeBtn");
 const menuToggleBtn = document.getElementById("menuToggleBtn");
@@ -9,7 +10,6 @@ const menuPanel = document.getElementById("menuPanel");
 const toggleQuickToolsBtn = document.getElementById("toggleQuickToolsBtn");
 const factCarouselPanel = document.getElementById("factCarouselPanel");
 const factCarouselContent = document.getElementById("factCarouselContent");
-const toggleFactsBtn = document.getElementById("toggleFactsBtn");
 const tipText = document.getElementById("tipText");
 const groupChips = document.getElementById("groupChips");
 const installHelper = document.getElementById("installHelper");
@@ -29,17 +29,27 @@ const drawSelectedList = document.getElementById("drawSelectedList");
 const returnToSearchBtn = document.getElementById("returnToSearchBtn");
 const selectionCartBar = document.getElementById("selectionCartBar");
 const selectionCartCount = document.getElementById("selectionCartCount");
+const siteFooter = document.getElementById("siteFooter");
 const profileModal = document.getElementById("profileModal");
 const profileModalTitle = document.getElementById("profileModalTitle");
 const profileModalList = document.getElementById("profileModalList");
 const closeProfileModalBtn = document.getElementById("closeProfileModalBtn");
+const legalModal = document.getElementById("legalModal");
+const legalModalTitle = document.getElementById("legalModalTitle");
+const legalModalBody = document.getElementById("legalModalBody");
+const closeLegalModalBtn = document.getElementById("closeLegalModalBtn");
+const legalDocButtons = document.querySelectorAll("[data-legal-doc]");
 
 let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
 let activeSectionGroup = "";
+let selectionNoticeTimeoutId = 0;
+let selectionNoticeHideTimeoutId = 0;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
 const RACK_HINT_STORAGE_KEY = "fmt-rack-hint-dismissed";
+const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transfusion"]);
 let hasDismissedRackHint = false;
+let lastLegalModalTrigger = null;
 
 try {
   hasDismissedRackHint = localStorage.getItem(RACK_HINT_STORAGE_KEY) === "1";
@@ -47,11 +57,103 @@ try {
   hasDismissedRackHint = false;
 }
 
+const legalContentById = {
+  privacy: {
+    title: "Privacy Policy",
+    html: `
+      <article class="legal-copy">
+        <p>Find My Tube is designed as a laboratory reference aid. It should be used without entering patient names, file numbers, ID numbers, or other patient-identifiable information.</p>
+      </article>
+      <article class="legal-copy">
+        <h4>Local Device Data</h4>
+        <ul>
+          <li>This app may store small on-device items such as cached files for offline use and simple interface preferences.</li>
+          <li>These local items are used to help the app load quickly and remember basic UI behavior.</li>
+        </ul>
+      </article>
+      <article class="legal-copy">
+        <h4>Operational Data</h4>
+        <ul>
+          <li>If this site is hosted by a third party, standard technical logs such as IP address, browser type, and access times may be processed by that hosting provider.</li>
+          <li>Do not use this app to store or transmit confidential patient data unless a clinic-specific privacy workflow has been formally added.</li>
+        </ul>
+      </article>
+      <p class="legal-copy-note">If you later add analytics, forms, logins, or contact features, update this policy so it matches the real data flow.</p>
+    `
+  },
+  terms: {
+    title: "Terms of Use",
+    html: `
+      <article class="legal-copy">
+        <p>By using Find My Tube, you agree that this site is provided as an informational support tool for specimen collection guidance and quick test lookup.</p>
+      </article>
+      <article class="legal-copy">
+        <h4>Use Of Content</h4>
+        <ul>
+          <li>Local laboratory protocols, clinician judgment, and direct confirmation from the performing laboratory always take precedence.</li>
+          <li>Test availability, accepted specimens, additive requirements, and turnaround times may differ between laboratories and may change without notice.</li>
+          <li>You are responsible for confirming unusual, urgent, or high-risk requests before collection.</li>
+        </ul>
+      </article>
+      <article class="legal-copy">
+        <h4>Scope</h4>
+        <ul>
+          <li>This site may be updated, corrected, expanded, or withdrawn at any time.</li>
+          <li>No right to rely on the site as a sole clinical instruction source is created by using it.</li>
+        </ul>
+      </article>
+    `
+  },
+  disclaimer: {
+    title: "Disclaimer",
+    html: `
+      <article class="legal-copy">
+        <p>Find My Tube does not provide medical advice, emergency advice, blood bank authorization, or a substitute for accredited laboratory instructions.</p>
+      </article>
+      <article class="legal-copy">
+        <h4>Important Limits</h4>
+        <ul>
+          <li>The content is a practical reference only and may not cover every exception, profile variation, or site-specific workflow.</li>
+          <li>Urgent, unusual, transfusion-related, neonatal, and time-critical requests should be confirmed directly with the relevant laboratory or blood bank.</li>
+          <li>Clinical decisions must be made by appropriately qualified professionals using full patient context.</li>
+        </ul>
+      </article>
+      <article class="legal-copy">
+        <h4>Safety Reminder</h4>
+        <p>If a collection requirement, preservative bottle, or handling step is uncertain, pause and verify with the local lab before drawing the sample.</p>
+      </article>
+    `
+  }
+};
+
 function setResultsInfo(text) {
   if (!resultsInfo) return;
   const message = String(text || "");
   resultsInfo.textContent = message;
   resultsInfo.hidden = message.length === 0;
+}
+
+function showSelectionNotice(message) {
+  if (!selectionNoticeToast) return;
+
+  const text = String(message || "").trim();
+  if (!text) return;
+
+  window.clearTimeout(selectionNoticeTimeoutId);
+  window.clearTimeout(selectionNoticeHideTimeoutId);
+
+  selectionNoticeToast.textContent = text;
+  selectionNoticeToast.hidden = false;
+  window.requestAnimationFrame(() => {
+    selectionNoticeToast.classList.add("visible");
+  });
+
+  selectionNoticeTimeoutId = window.setTimeout(() => {
+    selectionNoticeToast.classList.remove("visible");
+    selectionNoticeHideTimeoutId = window.setTimeout(() => {
+      selectionNoticeToast.hidden = true;
+    }, 200);
+  }, 2600);
 }
 
 function dismissRackHint() {
@@ -104,12 +206,25 @@ function closeMenu() {
   setMenuOpen(false);
 }
 
+function scrollHomeViewportToTop() {
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.requestAnimationFrame(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? "auto" : "smooth"
+    });
+    brandHomeBtn?.focus({ preventScroll: true });
+  });
+}
+
 function goHome() {
   closeMenu();
   closeDrawModal();
   closeProfileModal();
+  closeLegalModal({ restoreFocus: false });
 
-  setSectionView("", { historyMode: "push", scrollToTop: true, clearSearch: true });
+  setSectionView("", { historyMode: "push", scrollToTop: false, clearSearch: true });
+  scrollHomeViewportToTop();
 }
 
 function focusMainSearchField() {
@@ -128,6 +243,23 @@ function focusMainSearchField() {
       searchInput.setSelectionRange(cursorEnd, cursorEnd);
     }
   });
+}
+
+function shouldPreserveSearchFocusOnMobile() {
+  return Boolean(
+    searchInput &&
+    document.activeElement === searchInput &&
+    window.matchMedia("(max-width: 600px)").matches
+  );
+}
+
+function restoreSearchFocusWithoutScroll() {
+  if (!searchInput) return;
+  const cursorEnd = searchInput.value.length;
+  searchInput.focus({ preventScroll: true });
+  if (typeof searchInput.setSelectionRange === "function") {
+    searchInput.setSelectionRange(cursorEnd, cursorEnd);
+  }
 }
 
 const exactDrawRules = [
@@ -155,13 +287,12 @@ const exactDrawRules = [
     id: "cardiac-panel",
     tests: ["Troponin I", "CK Total", "LDH", "NT-proBNP"],
     items: [
-      { key: "Green", label: "Green", count: 1, detail: "Preferred tube for most urgent cardiac marker workflows." },
-      { key: "Gold/Yellow", label: "Gold/Yellow", count: 1, detail: "Acceptable alternative if local policy uses serum collection." }
+      { key: "Green", label: "Green", count: 1, detail: "Preferred tube for this cardiac marker set. Gold/Yellow remains an acceptable alternative if local policy uses serum collection." }
     ]
   },
   {
     id: "glucose-ogtt-panel",
-    tests: ["Glucose Fasting", "Insulin (Fasting)", "OGTT (2hr)", "HbA1c"],
+    tests: ["Fasting Glucose", "Insulin (Fasting)", "OGTT (2hr)", "HbA1c"],
     items: [
       { key: "Gray", label: "Gray", count: 2, detail: "Second gray tube at 2 hours for OGTT." },
       { key: "Purple", label: "Purple", count: 1 }
@@ -228,8 +359,8 @@ const profileComponentsByName = {
     "HIV ELISA",
     "RPR (Syphilis Screen)",
     "Hepatitis B Surface Antigen (HBsAg)",
-    "Rubella IgG only",
-    "Glucose"
+    "Rubella IgG",
+    "Random Glucose"
   ],
   "Arthritis Profile": [
     "ESR",
@@ -263,8 +394,34 @@ const profileComponentsByName = {
     "LH",
     "Estradiol"
   ],
-  "Drugs of Abuse / Overdose Screen": [
-    "Drugs of Abuse Screen (Urine)",
+  "Hirsutism Screen (Full)": [
+    "Total Testosterone (+SHBG if Female)",
+    "DHEAS",
+    "17-OH Progesterone",
+    "Prolactin",
+    "FSH",
+    "LH"
+  ],
+  "Infertility Screen (Female)": [
+    "FSH",
+    "LH",
+    "Prolactin",
+    "Progesterone",
+    "Estradiol"
+  ],
+  "Infertility Screen (Male)": [
+    "FSH",
+    "LH",
+    "Prolactin",
+    "Total Testosterone (+SHBG if Female)",
+    "Free Testosterone (Calculated, Male)"
+  ],
+  "Cardiac Profile": [
+    "CK Total",
+    "CK-MB Mass",
+    "Troponin I"
+  ],
+  "Drugs of Abuse Screen (Urine)": [
     "Amphetamine (Urine)",
     "Barbiturate (Urine)",
     "Benzodiazepine (Urine)",
@@ -272,7 +429,10 @@ const profileComponentsByName = {
     "Cocaine (Urine)",
     "Mandrax (Urine)",
     "Methcathinone CAT (Urine)",
-    "Opiates (Urine)",
+    "Opiates (Urine)"
+  ],
+  "Drugs of Abuse / Overdose Screen": [
+    "Drugs of Abuse Screen (Urine)",
     "Ethanol (Blood)",
     "Paracetamol (Blood)",
     "Salicylate (Blood)"
@@ -282,8 +442,23 @@ const profileComponentsByName = {
     "Free T4",
     "Free T3"
   ],
+  "CSF Profile": [
+    "CSF MCS",
+    "CSF Cell Count and Chemistry"
+  ],
+  "CSF Cell Count and Chemistry": [
+    "CSF Cell Count and Differential",
+    "CSF Glucose",
+    "CSF Protein"
+  ],
   "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
   "Blood Gases": ["pH", "pCO2", "pO2", "HCO3-", "Base Excess", "O2 Saturation", "Lactate"],
+  "STD PCR": [
+    "Chlamydia trachomatis PCR",
+    "Neisseria gonorrhoeae PCR",
+    "Trichomonas vaginalis PCR",
+    "Mycoplasma genitalium PCR"
+  ],
   "Liver Function Tests (LFT)": [
     "ALT",
     "AST",
@@ -389,10 +564,63 @@ const aliasByName = {
   "Phosphate": ["PO4", "PO4-3", "Phos"],
   "Liver Function Tests (LFT)": ["LFT", "Liver profile", "Hepatic profile"],
   Haptoglobin: ["Haptoglobin level"],
+  "Fasting Glucose": [
+    "Glucose Fasting",
+    "Glucose",
+    "Fasting",
+    "Fasting sugar",
+    "Blood sugar fasting"
+  ],
+  "Random Glucose": [
+    "Glucose Random",
+    "Glucose",
+    "Random",
+    "Random sugar",
+    "Blood sugar random"
+  ],
   "Malaria PCR": ["Malaria PCR (with ID if Positive)"],
   "INR": ["PT INR", "Clotting ratio", "INR calculated"],
   "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
+  "Blood Bank / Transfusion": ["Blood bank", "Blood transfusion", "Transfusion", "Transfusion request"],
+  "STD PCR": [
+    "STI PCR",
+    "STD panel",
+    "STI panel",
+    "STD screen",
+    "STI screen",
+    "STD PCR panel",
+    "STI PCR panel",
+    "Vaginal swab STI PCR",
+    "Urine STI PCR"
+  ],
+  "Chlamydia trachomatis PCR": [
+    "Chlamydia PCR",
+    "Chlamydia",
+    "CT PCR",
+    "CT"
+  ],
+  "Neisseria gonorrhoeae PCR": [
+    "Gonorrhoea PCR",
+    "Gonorrhea PCR",
+    "Gonorrhoea",
+    "Gonorrhea",
+    "GC PCR",
+    "GC"
+  ],
+  "Trichomonas vaginalis PCR": [
+    "Trichomonas PCR",
+    "Trichomonas",
+    "Trich PCR",
+    "Trichomoniasis PCR"
+  ],
+  "Mycoplasma genitalium PCR": [
+    "Mycoplasma genitalium",
+    "Mycoplasma PCR",
+    "Mgen",
+    "Mgen PCR",
+    "M genitalium PCR"
+  ],
   "Protein Electrophoresis with Immunofixation": [
     "Protein electrophoresis",
     "Serum protein electrophoresis",
@@ -413,6 +641,53 @@ const aliasByName = {
     "Bence jones protein",
     "Bence-Jones"
   ],
+  "Protein:Creatinine Ratio (Random Urine)": [
+    "Urine protein creatinine ratio",
+    "Urine protein:creatinine ratio",
+    "Protein creatinine ratio",
+    "UPCR",
+    "PCR urine"
+  ],
+  "Albumin:Creatinine Ratio (Random Urine)": [
+    "Urine albumin creatinine ratio",
+    "Urine albumin:creatinine ratio",
+    "Albumin creat ratio",
+    "Urine ACR",
+    "ACR"
+  ],
+  "Daily Urine Protein (24hr Urine)": [
+    "Daily urine protein",
+    "24 hour urine protein",
+    "24hr urine protein",
+    "24-hour urine protein"
+  ],
+  "Haemochromatosis PCR": [
+    "Hemochromatosis PCR",
+    "Hereditary haemochromatosis",
+    "Hereditary hemochromatosis",
+    "HFE",
+    "HFE mutation",
+    "HFE gene"
+  ],
+  "Cardiac Profile": [
+    "Cardiac marker profile",
+    "Cardiac markers",
+    "Cardiac marker",
+    "Cardiac enzymes"
+  ],
+  "Acute Porphyria Attack Screen (Urine)": [
+    "Acute porphyria attack screen",
+    "Acute porphyria screen",
+    "Urine porphyria screen",
+    "Urine porphobilinogen",
+    "Acute pophyria attack screen"
+  ],
+  "Full Porphyria Screen (Blood, Urine, Stool)": [
+    "Full porphyria screen",
+    "Porphyria screen",
+    "Full Porphyria Screen (Urine, Blood, Stool)",
+    "Blood urine stool porphyria"
+  ],
   "Beta-2 Microglobulin": [
     "B2 microglobulin",
     "Beta 2 microglobulin",
@@ -430,6 +705,101 @@ const aliasByName = {
     "Urine metanephrines",
     "24 hour urine metanephrines",
     "24hr urine metanephrines"
+  ],
+  "Cortisol (24hr Urine)": [
+    "Urine cortisol",
+    "24 hour urine cortisol",
+    "24hr urine cortisol",
+    "24-hour urine cortisol"
+  ],
+  "Aldosterone:Renin Ratio": [
+    "Aldosterone renin ratio",
+    "Aldo renin ratio",
+    "ARR"
+  ],
+  "Faecal Occult Blood": [
+    "Occult blood",
+    "Faecal occult",
+    "Fecal occult blood",
+    "Fecal occult",
+    "FOB",
+    "FOBT",
+    "FIT",
+    "Stool occult blood",
+    "Stool blood test"
+  ],
+  "ASOT": [
+    "ASO",
+    "ASO titre",
+    "Antistreptolysin O",
+    "Antistreptolysin O titre"
+  ],
+  "Anti-DNase B": [
+    "Anti DNase B",
+    "Anti-DNase",
+    "ADNase",
+    "Anti streptococcal DNase"
+  ],
+  "Brucella IgM": [
+    "Brucella IgM/IgG",
+    "Brucella serology"
+  ],
+  "Brucella IgG": [
+    "Brucella IgM/IgG",
+    "Brucella serology"
+  ],
+  "Rickettsia IgM": [
+    "Rickettsia IgM/IgG",
+    "Rickettsial serology"
+  ],
+  "Rickettsia IgG": [
+    "Rickettsia IgM/IgG",
+    "Rickettsial serology"
+  ],
+  "Rubella IgM": [
+    "Rubella IgM only",
+    "Rubella IgM/IgG",
+    "Rubella serology"
+  ],
+  "Rubella IgG": [
+    "Rubella IgG only",
+    "Rubella IgM/IgG",
+    "Rubella immunity",
+    "Rubella serology"
+  ],
+  "Toxoplasma IgM": [
+    "Toxoplasma IgM/IgG",
+    "Toxoplasma serology"
+  ],
+  "Toxoplasma IgG": [
+    "Toxoplasma IgM/IgG",
+    "Toxoplasma serology"
+  ],
+  "Hirsutism Screen (Full)": [
+    "Hirsutism profile",
+    "Hirsutism screen",
+    "Full hirsutism screen",
+    "Androgen excess profile"
+  ],
+  "Infertility Screen (Female)": [
+    "Female infertility",
+    "Female infertility profile",
+    "Female infertility screen",
+    "Infertility female",
+    "Infertility (Female)"
+  ],
+  "Infertility Screen (Male)": [
+    "Male infertility",
+    "Male infertility profile",
+    "Male infertility screen",
+    "Infertility male",
+    "Infertility (Male)"
+  ],
+  "Hepatitis B (Acute)": [
+    "Hepatitis B acute",
+    "Acute hepatitis B",
+    "Acute hep B",
+    "Acute HBV"
   ],
   "Menopausal Screen": [
     "Menopausal Screen Profile",
@@ -452,6 +822,12 @@ const aliasByName = {
     "Toxicology screen",
     "Tox screen",
     "Urine drug screen"
+  ],
+  "Drugs of Abuse Screen (Urine)": [
+    "Drugs of abuse urine screen",
+    "Drugs of abuse screen",
+    "Urine drug screen profile",
+    "DOA screen"
   ],
   "Thyroid Function Test (TFT)": [
     "Thyroid function",
@@ -481,6 +857,12 @@ const aliasByName = {
   "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
   "Ammonia": ["NH3", "Ammonia plasma"],
   "TB PCR (GeneXpert)": ["Xpert", "GeneXpert"],
+  "CSF Profile": [
+    "LP profile",
+    "Lumbar puncture profile",
+    "CSF screen",
+    "CSF workup"
+  ],
   "Urine MCS": ["Urine culture", "MC&S"],
   "Sputum MCS": ["Sputum culture", "MC&S"],
   "faeces MCS": ["Stool culture", "MC&S"],
@@ -488,12 +870,118 @@ const aliasByName = {
   "fluid MCS": ["Fluid culture", "MC&S"],
   "tissue MCS": ["Tissue culture", "MC&S"],
   "CSF MCS": ["CSF culture", "MC&S"],
+  "CSF Cell Count and Chemistry": [
+    "Cell count and chemistry",
+    "CSF cell count and chemistry",
+    "CSF chemistry",
+    "CSF cell count chemistry"
+  ],
+  "CSF Cell Count and Differential": [
+    "CSF cell count",
+    "CSF differential",
+    "CSF microscopy"
+  ],
+  "CSF Glucose": [
+    "Glucose CSF",
+    "CSF sugar"
+  ],
+  "CSF Protein": [
+    "Protein CSF"
+  ],
+  "Cryptococcal Antigen (CSF)": [
+    "Cryptococcal antigen",
+    "Cryptococcal Ag",
+    "CrAg",
+    "CSF cryptococcal antigen"
+  ],
+  "Enterovirus PCR (CSF)": [
+    "Enterovirus PCR",
+    "CSF enterovirus PCR",
+    "Enterovirus"
+  ],
+  "Mumps PCR (CSF)": [
+    "Mumps PCR",
+    "CSF mumps PCR"
+  ],
+  "CSF IgG Index": [
+    "IgG index",
+    "CSF IgG",
+    "CSF immunoglobulin g index"
+  ],
+  "CSF Oligoclonal Bands": [
+    "Oligoclonal bands",
+    "OCB",
+    "CSF OCB"
+  ],
+  "CSF ADA": [
+    "ADA",
+    "Adenosine deaminase",
+    "CSF adenosine deaminase"
+  ],
+  "HSV-1 PCR (CSF)": [
+    "HSV-1 PCR",
+    "HSV 1 PCR",
+    "HSV-1",
+    "HSV 1",
+    "CSF HSV-1 PCR"
+  ],
+  "HSV-2 PCR (CSF)": [
+    "HSV-2 PCR",
+    "HSV 2 PCR",
+    "HSV-2",
+    "HSV 2",
+    "CSF HSV-2 PCR"
+  ],
   "D-Dimer": ["D dimer"],
   "Prothrombin Time (PT)": ["PT"],
   "Partial Thromboplastin Time (PTT)": ["APTT", "aPTT"]
 };
 
 const clinicalProfileByName = {
+  "CSF Profile": {
+    use: "Combined CSF profile including microbiology, cell count, and chemistry for lumbar puncture workup.",
+    keywords: ["csf", "lumbar puncture", "meningitis", "encephalitis", "antimicrobials"]
+  },
+  "CSF Cell Count and Chemistry": {
+    use: "CSF cell count with core chemistry assessment using glucose and protein.",
+    keywords: ["csf chemistry", "csf cell count", "lumbar puncture", "meningitis"]
+  },
+  "CSF MCS": {
+    use: "CSF microbiology culture request; note clearly if antimicrobials were already started before sampling.",
+    keywords: ["csf culture", "meningitis", "antimicrobials", "lumbar puncture"]
+  },
+  "Cryptococcal Antigen (CSF)": {
+    use: "CSF cryptococcal antigen test used in suspected cryptococcal meningitis.",
+    keywords: ["cryptococcal antigen", "crag", "cryptococcal meningitis", "csf"]
+  },
+  "Enterovirus PCR (CSF)": {
+    use: "CSF enterovirus PCR used in suspected viral meningitis or encephalitis.",
+    keywords: ["enterovirus", "viral meningitis", "csf", "encephalitis"]
+  },
+  "Mumps PCR (CSF)": {
+    use: "CSF mumps PCR used in suspected mumps meningitis or encephalitis.",
+    keywords: ["mumps", "mumps pcr", "csf", "meningitis", "encephalitis"]
+  },
+  "CSF IgG Index": {
+    use: "CSF IgG index used in inflammatory and demyelinating CNS workup.",
+    keywords: ["igg index", "multiple sclerosis", "demyelination", "csf"]
+  },
+  "CSF Oligoclonal Bands": {
+    use: "CSF oligoclonal bands used in demyelinating and inflammatory CNS workup.",
+    keywords: ["oligoclonal bands", "ocb", "multiple sclerosis", "csf"]
+  },
+  "CSF ADA": {
+    use: "CSF ADA used as an adjunct test in selected CNS infection workup such as TB meningitis.",
+    keywords: ["ada", "csf ada", "tb meningitis", "tuberculous meningitis"]
+  },
+  "HSV-1 PCR (CSF)": {
+    use: "CSF HSV-1 PCR used in suspected herpes simplex encephalitis or meningitis.",
+    keywords: ["hsv 1", "hsv-1", "herpes simplex", "encephalitis", "csf"]
+  },
+  "HSV-2 PCR (CSF)": {
+    use: "CSF HSV-2 PCR used in suspected herpes simplex meningitis or encephalitis.",
+    keywords: ["hsv 2", "hsv-2", "herpes simplex", "meningitis", "csf"]
+  },
   "Fe Studies": {
     use: "Workup for iron deficiency anaemia and microcytic anaemia.",
     keywords: ["iron deficiency anaemia", "iron deficiency anemia", "microcytic anaemia", "low iron", "fatigue"]
@@ -505,6 +993,30 @@ const clinicalProfileByName = {
   "Menopausal Screen": {
     use: "Menopausal endocrine profile combining FSH, LH, and estradiol for ovarian function / menopausal status assessment.",
     keywords: ["menopause", "menopausal", "perimenopause", "hot flushes", "amenorrhoea", "amenorrhea"]
+  },
+  "Hirsutism Screen (Full)": {
+    use: "Reproductive endocrine profile for hirsutism and androgen excess workup.",
+    keywords: ["hirsutism", "androgen excess", "hyperandrogenism", "facial hair", "pcos"]
+  },
+  "Infertility Screen (Female)": {
+    use: "Female reproductive hormone profile for infertility and subfertility assessment.",
+    keywords: ["female infertility", "subfertility", "ovulation", "amenorrhoea", "amenorrhea"]
+  },
+  "Infertility Screen (Male)": {
+    use: "Male reproductive hormone profile for infertility and subfertility assessment.",
+    keywords: ["male infertility", "subfertility", "fertility workup", "hypogonadism", "low testosterone"]
+  },
+  "Hepatitis B (Acute)": {
+    use: "Acute hepatitis B serology request for suspected recent HBV infection.",
+    keywords: ["acute hepatitis b", "hepatitis b acute", "hbv", "jaundice", "viral hepatitis"]
+  },
+  "Cardiac Profile": {
+    use: "Cardiac marker profile including CK Total, CK-MB Mass, and Troponin I.",
+    keywords: ["cardiac profile", "cardiac markers", "cardiac marker", "cardiac enzymes", "myocardial injury", "chest pain"]
+  },
+  "Drugs of Abuse Screen (Urine)": {
+    use: "Urine profile screen for common drugs of abuse.",
+    keywords: ["drugs of abuse", "urine drug screen", "doa screen", "toxicology screen", "substance screen"]
   },
   "Drugs of Abuse / Overdose Screen": {
     use: "Combined toxicology screen pairing urine drugs-of-abuse testing with common overdose blood levels.",
@@ -558,9 +1070,65 @@ const clinicalProfileByName = {
     use: "Diagnosis and long-term monitoring of diabetes mellitus.",
     keywords: ["diabetes", "high sugar", "hyperglycaemia", "hyperglycemia"]
   },
+  "Fasting Glucose": {
+    use: "Fasting plasma glucose test for diabetes screening and glucose regulation assessment.",
+    keywords: ["fasting glucose", "fasting sugar", "diabetes", "prediabetes", "high sugar"]
+  },
+  "Random Glucose": {
+    use: "Random plasma glucose test for symptomatic hyperglycaemia and diabetes screening.",
+    keywords: ["random glucose", "random sugar", "diabetes", "high sugar", "hyperglycaemia", "hyperglycemia"]
+  },
+  "Protein:Creatinine Ratio (Random Urine)": {
+    use: "Random urine proteinuria assessment and monitoring.",
+    keywords: ["proteinuria", "upcr", "kidney disease", "nephrotic syndrome", "renal disease"]
+  },
+  "Albumin:Creatinine Ratio (Random Urine)": {
+    use: "Random urine albuminuria screening and kidney disease monitoring, especially in diabetes.",
+    keywords: ["albuminuria", "microalbuminuria", "acr", "diabetic kidney disease", "renal disease"]
+  },
+  "Daily Urine Protein (24hr Urine)": {
+    use: "24-hour urine protein quantification for significant proteinuria assessment.",
+    keywords: ["daily urine protein", "24 hour urine protein", "proteinuria", "nephrotic syndrome"]
+  },
+  "Haemochromatosis PCR": {
+    use: "Genetic test supporting hereditary haemochromatosis / iron overload assessment.",
+    keywords: ["haemochromatosis", "hemochromatosis", "iron overload", "hfe mutation", "hereditary haemochromatosis"]
+  },
+  "Acute Porphyria Attack Screen (Urine)": {
+    use: "Urine-based screen used in suspected acute porphyria attacks.",
+    keywords: ["acute porphyria", "porphobilinogen", "urine porphyria", "neurovisceral attack", "acute pophyria"]
+  },
+  "Full Porphyria Screen (Blood, Urine, Stool)": {
+    use: "Comprehensive porphyria workup using blood, urine, and stool specimens.",
+    keywords: ["porphyria", "acute porphyria", "porphobilinogen", "porphyrin screen", "metabolic disorder"]
+  },
   "Ammonia": {
     use: "Urgent evaluation of hyperammonaemia and hepatic encephalopathy risk.",
     keywords: ["hepatic encephalopathy", "liver failure", "confusion", "hyperammonaemia", "hyperammonemia"]
+  },
+  "Blood Bank / Transfusion": {
+    use: "Pre-transfusion blood bank request requiring a pink EDTA sample plus the dedicated request form and urgent courier handling.",
+    keywords: ["blood bank", "transfusion", "crossmatch", "blood products", "group and screen"]
+  },
+  "STD PCR": {
+    use: "Molecular STI screen using a vaginal swab or urine specimen.",
+    keywords: ["std pcr", "sti pcr", "chlamydia", "gonorrhoea", "gonorrhea", "trichomonas", "mycoplasma genitalium"]
+  },
+  "Chlamydia trachomatis PCR": {
+    use: "Molecular test for Chlamydia trachomatis from a vaginal swab or urine specimen.",
+    keywords: ["chlamydia", "ct pcr", "sti", "std"]
+  },
+  "Neisseria gonorrhoeae PCR": {
+    use: "Molecular test for Neisseria gonorrhoeae from a vaginal swab or urine specimen.",
+    keywords: ["gonorrhoea", "gonorrhea", "gc pcr", "sti", "std"]
+  },
+  "Trichomonas vaginalis PCR": {
+    use: "Molecular test for Trichomonas vaginalis from a vaginal swab or urine specimen.",
+    keywords: ["trichomonas", "trich", "sti", "std"]
+  },
+  "Mycoplasma genitalium PCR": {
+    use: "Molecular test for Mycoplasma genitalium from a vaginal swab or urine specimen.",
+    keywords: ["mycoplasma genitalium", "mgen", "sti", "std"]
   },
   "Protein Electrophoresis with Immunofixation": {
     use: "Monoclonal protein / paraprotein screen used in myeloma and plasma-cell dyscrasia workup.",
@@ -585,6 +1153,26 @@ const clinicalProfileByName = {
   "Metanephrines (24hr Urine)": {
     use: "24-hour urine catecholamine metabolite test used in pheochromocytoma / paraganglioma workup.",
     keywords: ["metanephrines", "pheochromocytoma", "paraganglioma", "catecholamine tumour", "catecholamine tumor"]
+  },
+  "Cortisol (24hr Urine)": {
+    use: "24-hour urine cortisol measurement used in endocrine workup such as hypercortisolism assessment.",
+    keywords: ["urine cortisol", "24 hour urine cortisol", "cushing syndrome", "hypercortisolism"]
+  },
+  "Aldosterone:Renin Ratio": {
+    use: "Endocrine hypertension screen used in suspected primary aldosteronism.",
+    keywords: ["aldosterone renin ratio", "aldo renin ratio", "arr", "primary aldosteronism", "resistant hypertension"]
+  },
+  "Faecal Occult Blood": {
+    use: "Stool-based screen for occult gastrointestinal bleeding.",
+    keywords: ["occult blood", "fecal occult blood", "faecal occult blood", "fobt", "fit", "gastrointestinal bleeding"]
+  },
+  "ASOT": {
+    use: "Serology marker for recent streptococcal infection.",
+    keywords: ["asot", "aso titre", "antistreptolysin o", "streptococcal infection", "post streptococcal disease"]
+  },
+  "Anti-DNase B": {
+    use: "Serology marker for recent streptococcal infection, often paired with ASOT.",
+    keywords: ["anti dnase b", "adnase", "streptococcal infection", "post streptococcal disease", "strep serology"]
   }
 };
 
@@ -694,25 +1282,30 @@ function normalizeTubeColor(value) {
   return map[key] || raw;
 }
 
+const tubeGroupPatternEntries = [
+  { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
+  { key: "Pink", pattern: /\bpink\b/ },
+  { key: "Blue", pattern: /\blight blue\b|\bblue\b|citrate/ },
+  { key: "Gold/Yellow", pattern: /\bgold\b|\byellow\b|sst|serum separator/ },
+  { key: "Green", pattern: /\bgreen\b|heparin/ },
+  { key: "Gray", pattern: /\bgray\b|\bgrey\b|fluoride/ },
+  { key: "Red", pattern: /\bred\b|plain serum/ },
+  { key: "Black", pattern: /\bblack\b/ }
+];
+
 function getTubeGroups(tubeColorValue) {
   const text = String(tubeColorValue || "").toLowerCase();
-  const groups = [];
-  const colorPatterns = [
-    { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
-    { key: "Pink", pattern: /\bpink\b/ },
-    { key: "Blue", pattern: /\blight blue\b|\bblue\b|citrate/ },
-    { key: "Gold/Yellow", pattern: /\bgold\b|\byellow\b|sst|serum separator/ },
-    { key: "Green", pattern: /\bgreen\b|heparin/ },
-    { key: "Gray", pattern: /\bgray\b|\bgrey\b|fluoride/ },
-    { key: "Red", pattern: /\bred\b|plain serum/ },
-    { key: "Black", pattern: /\bblack\b/ }
-  ];
+  const orderedMatches = tubeGroupPatternEntries
+    .map((entry) => {
+      const matchIndex = text.search(entry.pattern);
+      return matchIndex === -1
+        ? null
+        : { key: entry.key, index: matchIndex };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.index - b.index);
 
-  colorPatterns.forEach((entry) => {
-    if (entry.pattern.test(text)) groups.push(entry.key);
-  });
-
-  return [...new Set(groups)];
+  return [...new Set(orderedMatches.map((entry) => entry.key))];
 }
 
 function getTubeSwatchColor(tubeGroup) {
@@ -736,7 +1329,7 @@ function getTubeAdditiveLabel(tubeGroup) {
     Purple: "EDTA",
     Pink: "EDTA",
     Blue: "Sodium citrate",
-    "Gold/Yellow": "SST / clot activator",
+    "Gold/Yellow": "SST",
     Green: "Heparin",
     Gray: "Fluoride / oxalate",
     Red: "Plain",
@@ -745,6 +1338,15 @@ function getTubeAdditiveLabel(tubeGroup) {
   };
 
   return additiveByGroup[tubeGroup] || "";
+}
+
+function isAlternativeTubeChoice(tubeColorValue, tubeGroups = []) {
+  if (tubeGroups.length < 2) return false;
+
+  const text = String(tubeColorValue || "");
+  if (/\+/.test(text)) return false;
+
+  return /(preferred|acceptable|alternate|alternative|\bor\b|\/)/i.test(text);
 }
 
 function getSelectedTests() {
@@ -758,6 +1360,57 @@ const profileQueryTermsByName = Object.fromEntries(
     return [profileName, new Set(terms.map((term) => normalizeForSearch(term)).filter(Boolean))];
   })
 );
+const bloodGasComponentQueryTerms = new Set(
+  (profileComponentsByName["Blood Gases"] || [])
+    .flatMap((componentName) => [componentName, ...(aliasByName[componentName] || [])])
+    .map((term) => normalizeForSearch(term))
+    .filter(Boolean)
+);
+
+function getExpandedProfileMembers(profileName, seen = new Set()) {
+  if (seen.has(profileName)) return new Set();
+  seen.add(profileName);
+
+  const members = new Set();
+  const components = profileComponentsByName[profileName] || [];
+  components.forEach((componentName) => {
+    members.add(componentName);
+    if (profileComponentsByName[componentName]) {
+      getExpandedProfileMembers(componentName, seen).forEach((nestedName) => members.add(nestedName));
+    }
+  });
+
+  return members;
+}
+
+const expandedProfileMembersByName = Object.fromEntries(
+  profileNames.map((profileName) => [profileName, getExpandedProfileMembers(profileName)])
+);
+
+function getSelectedProfilesContainingTest(testName, selectionSet = selectedTestNames) {
+  const matchingProfiles = [];
+
+  selectionSet.forEach((selectedName) => {
+    if (selectedName === testName) return;
+    const coveredNames = expandedProfileMembersByName[selectedName];
+    if (!coveredNames || !coveredNames.has(testName)) return;
+    matchingProfiles.push(selectedName);
+  });
+
+  return matchingProfiles;
+}
+
+function getAlreadyCoveredSelectionMessage(testName, selectionSet = selectedTestNames) {
+  const coveringProfiles = getSelectedProfilesContainingTest(testName, selectionSet);
+  if (!coveringProfiles.length) return "";
+
+  const itemType = Object.prototype.hasOwnProperty.call(profileComponentsByName, testName) ? "profile" : "test";
+  const profileList = coveringProfiles.length > 2
+    ? `${coveringProfiles.slice(0, 2).join(", ")} +${coveringProfiles.length - 2} more`
+    : coveringProfiles.join(", ");
+
+  return `This ${itemType} is already included in selected profile${coveringProfiles.length === 1 ? "" : "s"}: ${profileList}.`;
+}
 
 // Keep these shortcuts conservative: they should point to common initial lab requests,
 // not attempt to replace local pathways or diagnostic reasoning.
@@ -799,7 +1452,7 @@ const conditionShortcutDefinitions = [
     id: "diabetes",
     label: "suspected diabetes mellitus",
     terms: ["diabetes", "diabetes mellitus", "prediabetes", "hyperglycaemia", "hyperglycemia", "high blood sugar"],
-    tests: ["HbA1c", "Glucose Fasting", "OGTT (2hr)"]
+    tests: ["HbA1c", "Fasting Glucose", "OGTT (2hr)", "Albumin:Creatinine Ratio (Random Urine)"]
   },
   {
     id: "thyroid-dysfunction",
@@ -921,7 +1574,22 @@ function getMatchedConditionShortcut(normalizedQuery) {
 
 function getExactNameMatches(normalizedQuery, testList = enrichedTests) {
   if (!normalizedQuery) return [];
-  return testList.filter((test) => normalizeForSearch(test.name) === normalizedQuery);
+  return testList.filter((test) => {
+    const exactTerms = [test.name, ...(aliasByName[test.name] || [])]
+      .map((term) => normalizeForSearch(term))
+      .filter(Boolean);
+    return exactTerms.includes(normalizedQuery);
+  });
+}
+
+function getSupplementaryProfileMatches(normalizedQuery) {
+  if (!normalizedQuery) return [];
+
+  if (bloodGasComponentQueryTerms.has(normalizedQuery)) {
+    return ["Blood Gases"];
+  }
+
+  return [];
 }
 
 function getTestsByNames(testNames = []) {
@@ -931,14 +1599,28 @@ function getTestsByNames(testNames = []) {
 }
 
 function collapseProfileSelections(selectionSet) {
-  profileNames.forEach((profileName) => {
-    const components = profileComponentsByName[profileName] || [];
-    const hasProfile = selectionSet.has(profileName);
-    const hasAllComponents = components.length > 0 && components.every((name) => selectionSet.has(name));
-    if (!hasProfile && !hasAllComponents) return;
-    selectionSet.add(profileName);
-    components.forEach((name) => selectionSet.delete(name));
-  });
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+
+    profileNames.forEach((profileName) => {
+      const components = profileComponentsByName[profileName] || [];
+      if (!components.length) return;
+
+      const hasProfile = selectionSet.has(profileName);
+      const hasAllComponents = components.every((name) => selectionSet.has(name));
+      if (!hasProfile && !hasAllComponents) return;
+
+      const hasSelectedComponents = components.some((name) => selectionSet.has(name));
+      if (!hasProfile || hasSelectedComponents) {
+        changed = true;
+      }
+
+      selectionSet.add(profileName);
+      components.forEach((name) => selectionSet.delete(name));
+    });
+  }
 }
 
 function updateDrawSelectionTools() {
@@ -951,8 +1633,8 @@ function renderDrawSelectionSummary() {
   if (!drawSelectionCount) return;
   const count = selectedTestNames.size;
   drawSelectionCount.textContent = count
-    ? `${count} test${count !== 1 ? "s" : ""} selected`
-    : "No tests selected yet";
+    ? `${count} test${count !== 1 ? "s" : ""} added`
+    : "No tests added yet";
   updateDrawSelectionTools();
 }
 
@@ -963,7 +1645,7 @@ function renderSelectedTestsCart() {
   if (!selectedTests.length) {
     drawSelectedList.innerHTML = `
       <p class="draw-selected-empty">
-        Your selected tests will appear here. Use the main search to add more tests.
+        Your added tests will appear here. Use the main search to add more tests.
       </p>
     `;
     return;
@@ -997,14 +1679,17 @@ function renderSelectedTestsCart() {
 function updateSelectionCartBar() {
   if (!selectionCartBar || !selectionCartCount) return;
 
-  const count = selectedTestNames.size;
+  const selectedTests = getSelectedTests();
+  const count = selectedTests.length;
   if (!count) {
+    selectionCartCount.textContent = "0";
+    selectionCartBar.setAttribute("aria-label", "Rack");
+    selectionCartBar.title = "Rack";
     selectionCartBar.hidden = true;
     document.body.classList.remove("has-selection-cart");
     return;
   }
 
-  const selectedTests = getSelectedTests();
   const { plan } = getResolvedDrawPlan(selectedTests);
   const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
   const badgeCount = count > 99 ? "99+" : String(count);
@@ -1013,9 +1698,9 @@ function updateSelectionCartBar() {
   selectionCartCount.textContent = badgeCount;
   selectionCartBar.setAttribute(
     "aria-label",
-    `Rack. ${count} selected test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.`
+    `Rack. ${count} added test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.`
   );
-  selectionCartBar.title = `${count} selected test${count !== 1 ? "s" : ""}`;
+  selectionCartBar.title = `${count} added test${count !== 1 ? "s" : ""}`;
   document.body.classList.add("has-selection-cart");
 }
 
@@ -1079,6 +1764,11 @@ function toggleSelectedTest(testName, options = {}) {
   if (nextSelection.has(testName)) {
     nextSelection.delete(testName);
   } else {
+    const alreadyCoveredMessage = getAlreadyCoveredSelectionMessage(testName, selectedTestNames);
+    if (alreadyCoveredMessage) {
+      showSelectionNotice(alreadyCoveredMessage);
+      return;
+    }
     nextSelection.add(testName);
   }
   setSelectedTests(nextSelection, options);
@@ -1171,10 +1861,44 @@ function closeProfileModal() {
   syncModalOpenClass();
 }
 
+function openLegalModal(docId, trigger = null) {
+  if (!legalModal || !legalModalTitle || !legalModalBody) return;
+  const documentContent = legalContentById[docId];
+  if (!documentContent) return;
+
+  closeMenu();
+  lastLegalModalTrigger = trigger || document.activeElement;
+  legalModalTitle.textContent = documentContent.title;
+  legalModalBody.innerHTML = documentContent.html;
+  legalModal.hidden = false;
+  syncModalOpenClass();
+
+  if (closeLegalModalBtn) {
+    window.requestAnimationFrame(() => {
+      closeLegalModalBtn.focus({ preventScroll: true });
+    });
+  }
+}
+
+function closeLegalModal({ restoreFocus = true } = {}) {
+  if (!legalModal) return;
+  legalModal.hidden = true;
+  syncModalOpenClass();
+
+  if (restoreFocus && lastLegalModalTrigger && typeof lastLegalModalTrigger.focus === "function") {
+    window.requestAnimationFrame(() => {
+      lastLegalModalTrigger.focus({ preventScroll: true });
+    });
+  }
+
+  lastLegalModalTrigger = null;
+}
+
 function syncModalOpenClass() {
   const drawOpen = Boolean(drawModal && !drawModal.hidden);
   const profileOpen = Boolean(profileModal && !profileModal.hidden);
-  document.body.classList.toggle("modal-open", drawOpen || profileOpen);
+  const legalOpen = Boolean(legalModal && !legalModal.hidden);
+  document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen);
 }
 
 function normalizeNameKey(value) {
@@ -1185,6 +1909,42 @@ function canonicalDrawRuleName(value) {
   const key = normalizeNameKey(value);
   if (key === "xdp (d-dimer)" || key === "xdp d dimer" || key === "xdp") return "d-dimer";
   return key;
+}
+
+function addPlanTubeGroup(grouped, group, testName) {
+  if (!grouped.has(group)) {
+    grouped.set(group, { key: group, label: group, count: 1, tests: new Set() });
+  }
+  grouped.get(group).tests.add(testName);
+}
+
+function getAlternativeTubeSupportCounts(alternativeTests) {
+  const supportCounts = new Map();
+
+  alternativeTests.forEach(({ groups }) => {
+    groups.forEach((group) => {
+      supportCounts.set(group, (supportCounts.get(group) || 0) + 1);
+    });
+  });
+
+  return supportCounts;
+}
+
+function chooseAlternativeTubeGroup(groups, grouped, supportCounts) {
+  const candidateGroups = groups.filter((group) => grouped.has(group));
+  const groupsToRank = candidateGroups.length ? candidateGroups : groups;
+
+  return groupsToRank
+    .slice()
+    .sort((a, b) => {
+      const existingCountDiff = (grouped.get(b)?.tests.size || 0) - (grouped.get(a)?.tests.size || 0);
+      if (existingCountDiff) return existingCountDiff;
+
+      const supportDiff = (supportCounts.get(b) || 0) - (supportCounts.get(a) || 0);
+      if (supportDiff) return supportDiff;
+
+      return groups.indexOf(a) - groups.indexOf(b);
+    })[0];
 }
 
 function findExactDrawRule(selectedTests) {
@@ -1199,6 +1959,7 @@ function findExactDrawRule(selectedTests) {
 function getDefaultPlanItems(selectedTests) {
   const grouped = new Map();
   const manual = [];
+  const alternativeTests = [];
 
   selectedTests.forEach((test) => {
     const groups = getTubeGroups(test.tubeColor);
@@ -1207,12 +1968,35 @@ function getDefaultPlanItems(selectedTests) {
       return;
     }
 
+    if (isAlternativeTubeChoice(test.tubeColor, groups)) {
+      alternativeTests.push({ test, groups });
+      return;
+    }
+
     groups.forEach((group) => {
-      if (!grouped.has(group)) {
-        grouped.set(group, { key: group, label: group, count: 1, tests: new Set() });
-      }
-      grouped.get(group).tests.add(test.name);
+      addPlanTubeGroup(grouped, group, test.name);
     });
+  });
+
+  if (selectedTests.length === 1 && alternativeTests.length === 1 && grouped.size === 0) {
+    const [{ test, groups }] = alternativeTests;
+    return {
+      items: [{
+        key: `choice:${groups.join("|")}`,
+        label: groups.join(" or "),
+        count: 1,
+        tests: [test.name],
+        detail: "Either tube is acceptable for this request."
+      }],
+      manual,
+      ruleId: null
+    };
+  }
+
+  const supportCounts = getAlternativeTubeSupportCounts(alternativeTests);
+  alternativeTests.forEach(({ test, groups }) => {
+    const chosenGroup = chooseAlternativeTubeGroup(groups, grouped, supportCounts);
+    addPlanTubeGroup(grouped, chosenGroup, test.name);
   });
 
   const items = [...grouped.values()]
@@ -1353,12 +2137,12 @@ function renderDrawResult() {
   const selectedTests = getSelectedTests();
   if (!selectedTests.length) {
     drawResultCard.hidden = false;
-    drawPlannerCount.textContent = "0 selected tests";
+    drawPlannerCount.textContent = "0 added tests";
     drawPlannerAlerts.hidden = true;
     drawPlannerAlerts.innerHTML = "";
     drawGroups.innerHTML = `
       <article class="draw-group-card">
-        <p class="draw-group-tests">No tests selected yet. Add tests to build a tube plan.</p>
+        <p class="draw-group-tests">No tests added yet. Add tests to build a tube plan.</p>
       </article>
     `;
     drawPlannerNote.textContent = "Your tube estimate updates as you add or remove tests.";
@@ -1369,7 +2153,7 @@ function renderDrawResult() {
   const { plan, guidanceNotes } = getResolvedDrawPlan(selectedTests);
   const plannerAlerts = getDrawPlannerAlerts(selectedTests);
   drawResultCard.hidden = false;
-  drawPlannerCount.textContent = `${selectedTests.length} selected test${selectedTests.length > 1 ? "s" : ""}`;
+  drawPlannerCount.textContent = `${selectedTests.length} added test${selectedTests.length > 1 ? "s" : ""}`;
   drawPlannerAlerts.hidden = plannerAlerts.length === 0;
   drawPlannerAlerts.innerHTML = plannerAlerts
     .map((alert) => `
@@ -1457,6 +2241,33 @@ function getTestGrouping(testName) {
   if (name.includes("blood gases")) return { sectionId: "chemistry", subsection: "Blood Gases" };
 
   if (
+    name.includes("creatinine clearance") ||
+    (name.includes("protein") && name.includes("creatinine ratio")) ||
+    (name.includes("albumin") && name.includes("creatinine ratio")) ||
+    name.includes("daily urine protein")
+  ) return { sectionId: "chemistry", subsection: "Kidney Function (U+E)" };
+
+  if (name.includes("cortisol") && name.includes("urine")) {
+    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
+  }
+
+  if (name.includes("aldosterone") || name.includes("renin")) {
+    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
+  }
+
+  if (name.includes("hirsutism") || name.includes("infertility")) {
+    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
+  }
+
+  if (name.includes("haemochromatosis") || name.includes("hemochromatosis")) {
+    return { sectionId: "metabolic_genetic", subsection: "Inherited Disorder Screen" };
+  }
+
+  if (name.includes("porphyria") || name.includes("porphobilinogen")) {
+    return { sectionId: "metabolic_genetic", subsection: "Inherited Disorder Screen" };
+  }
+
+  if (
     name.includes("alcohol") ||
     name.includes("ethanol") ||
     name.includes("cannabis") ||
@@ -1541,6 +2352,9 @@ function getTestGrouping(testName) {
     name.includes("autoimmune") ||
     name.includes("arthritis profile") ||
     name.includes("ana") ||
+    name.includes("asot") ||
+    name.includes("dnase") ||
+    name.includes("streptolysin") ||
     name.includes("ena") ||
     name.includes("rheumatoid") ||
     name.includes("anti-ccp") ||
@@ -1550,11 +2364,21 @@ function getTestGrouping(testName) {
     name.includes("celiac") ||
     name.includes("hepatitis") ||
     name.includes("hiv elisa") ||
+    name.includes("brucella") ||
+    name.includes("rickettsia") ||
+    name.includes("rubella") ||
+    name.includes("toxoplasma") ||
+    name.includes("ebv") ||
+    name.includes("cmv") ||
+    name.includes("measles") ||
+    name.includes("mumps") ||
+    name.includes("parvovirus") ||
+    name.includes("varicella") ||
     name.includes("rpr") ||
     name.includes("treponema")
   ) return { sectionId: "immunology", subsection: "Autoimmune / Serology" };
 
-  if (name.includes("blood group") || name.includes("crossmatch") || name.includes("coombs")) {
+  if (name.includes("blood group") || name.includes("crossmatch") || name.includes("coombs") || name.includes("blood bank") || name.includes("transfusion")) {
     return { sectionId: "haematology", subsection: "Blood Grouping" };
   }
 
@@ -1648,7 +2472,14 @@ function getTestGrouping(testName) {
     name.includes("lipase")
   ) return { sectionId: "chemistry", subsection: "Liver Function And Pancreas" };
 
-  if (name.includes("troponin") || name.includes("nt-probnp") || name.includes("ck") || name.includes("ldh")) {
+  if (
+    name.includes("cardiac profile") ||
+    name.includes("cardiac marker") ||
+    name.includes("troponin") ||
+    name.includes("nt-probnp") ||
+    name.includes("ck") ||
+    name.includes("ldh")
+  ) {
     return { sectionId: "chemistry", subsection: "Cardiac Markers" };
   }
 
@@ -1785,56 +2616,22 @@ function initQuickToolsPanel() {
   }
 }
 
-function setFactsPanelState(isCollapsed) {
-  if (!factCarouselPanel || !toggleFactsBtn) return;
-  factCarouselPanel.classList.toggle("is-collapsed", isCollapsed);
-  toggleFactsBtn.textContent = isCollapsed ? "Show tips" : "Hide tips";
-  toggleFactsBtn.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
-}
-
 function applyFactsPanelMode(isMobile) {
-  if (!factCarouselPanel || !toggleFactsBtn || !factCarouselContent) return;
+  if (!factCarouselPanel || !factCarouselContent) return;
 
   if (isMobile) {
     factCarouselPanel.classList.add("mobile-facts");
-    toggleFactsBtn.hidden = false;
-    if (!factCarouselPanel.dataset.mobileInit) {
-      setFactsPanelState(true);
-      factCarouselPanel.dataset.mobileInit = "1";
-    } else {
-      const collapsed = factCarouselPanel.classList.contains("is-collapsed");
-      setFactsPanelState(collapsed);
-    }
     return;
   }
 
-  delete factCarouselPanel.dataset.mobileInit;
-  factCarouselPanel.classList.remove("mobile-facts", "is-collapsed");
-  toggleFactsBtn.hidden = true;
-  toggleFactsBtn.setAttribute("aria-expanded", "true");
+  factCarouselPanel.classList.remove("mobile-facts");
 }
 
 function initFactsPanel() {
-  if (!factCarouselPanel || !toggleFactsBtn || !factCarouselContent) return;
+  if (!factCarouselPanel || !factCarouselContent) return;
 
   const mediaQuery = window.matchMedia("(max-width: 600px)");
   const onModeChange = () => applyFactsPanelMode(mediaQuery.matches);
-
-  toggleFactsBtn.addEventListener("click", () => {
-    const isCollapsed = factCarouselPanel.classList.contains("is-collapsed");
-    const nextCollapsed = !isCollapsed;
-    setFactsPanelState(nextCollapsed);
-
-    if (!nextCollapsed && factCarouselPanel.classList.contains("mobile-facts")) {
-      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      window.setTimeout(() => {
-        factCarouselContent.scrollIntoView({
-          behavior: prefersReducedMotion ? "auto" : "smooth",
-          block: "start"
-        });
-      }, 40);
-    }
-  });
 
   onModeChange();
 
@@ -1938,6 +2735,10 @@ function hasProfileComponents(test) {
   return (profileComponentsByName[test.name] || []).length > 0;
 }
 
+function shouldAutoExpandCriticalNote(testName, isSelected) {
+  return isSelected && AUTO_EXPAND_CRITICAL_NOTE_TESTS.has(testName);
+}
+
 function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = activeSectionGroup || "";
@@ -1945,9 +2746,15 @@ function getFilteredTests() {
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
   const exactNameMatches = getExactNameMatches(normalizedQuery);
+  const supplementaryProfileMatches = getSupplementaryProfileMatches(normalizedQuery);
+  const supplementaryProfileMatchSet = new Set(supplementaryProfileMatches);
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const shouldBypassSectionFilter = Boolean(
-    matchedProfileName || matchedConditionShortcut || exactNameMatches.length || isInflammatoryShortcut
+    matchedProfileName
+    || matchedConditionShortcut
+    || exactNameMatches.length
+    || supplementaryProfileMatches.length
+    || isInflammatoryShortcut
   );
 
   if (matchedConditionShortcut) {
@@ -1962,8 +2769,9 @@ function getFilteredTests() {
     if (matchedProfileName) {
       return test.name === matchedProfileName;
     }
-    if (exactNameMatches.length) {
-      return exactNameMatches.some((match) => match.name === test.name);
+    if (exactNameMatches.length || supplementaryProfileMatches.length) {
+      return exactNameMatches.some((match) => match.name === test.name)
+        || supplementaryProfileMatchSet.has(test.name);
     }
     return matchesQuery(test, query);
   });
@@ -2008,7 +2816,10 @@ function renderCards(filteredTests) {
     const card = document.createElement("div");
     card.className = "card";
     const isSelected = selectedTestNames.has(test.name);
+    const shouldShowCriticalAlert = shouldAutoExpandCriticalNote(test.name, isSelected);
     card.classList.toggle("card-selected", isSelected);
+    card.classList.toggle("expanded", shouldShowCriticalAlert);
+    card.classList.toggle("card-critical-alert", shouldShowCriticalAlert);
     const profileComponents = profileComponentsByName[test.name] || [];
     const hasProfileComponents = profileComponents.length > 0;
     const tubeGroups = getTubeGroups(test.tubeColor);
@@ -2017,11 +2828,13 @@ function renderCards(filteredTests) {
       : tubeGroups.length >= 3
         ? " tube-icon-sm"
         : "";
+    const useOrBetweenTubeOptions = isAlternativeTubeChoice(test.tubeColor, tubeGroups);
     const tubeOptionsMarkup = tubeGroups.length
       ? `
       <div class="tube-option-grid${tubeGroups.length >= 3 ? " compact" : ""}${tubeGroups.length >= 4 ? " dense" : ""}">
-        ${tubeGroups.map((group) => `
-          <span class="tube-option">
+        ${tubeGroups.map((group, index) => `
+          ${index > 0 && useOrBetweenTubeOptions ? `<span class="tube-option-separator">or</span>` : ""}
+          <span class="tube-option${useOrBetweenTubeOptions ? " alternative" : ""}">
             <span class="tube-icon${tubeIconSizeClass}" style="--tube-color: ${getTubeSwatchColor(group)};" aria-hidden="true"></span>
             <span class="tube-option-copy">
               <span class="tube-option-label">${group}</span>
@@ -2035,7 +2848,7 @@ function renderCards(filteredTests) {
     const normalizedTubeText = normalizeForSearch(normalizeTubeColor(test.tubeColor));
     const normalizedSingleGroup = normalizeForSearch(tubeGroups[0] || "");
     const showTubeChoiceNote = tubeGroups.length > 1
-      ? /(preferred|acceptable|alternate|alternative|or|\/)/i.test(String(test.tubeColor || ""))
+      ? useOrBetweenTubeOptions
       : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
     const hasTubeOptions = tubeGroups.length > 0;
     const specimenValue = String(isMicro ? test.specimenGuide : test.specimen || "").trim();
@@ -2063,7 +2876,7 @@ function renderCards(filteredTests) {
       >
         <span class="card-summary-action-head">
           <span class="label">${label}</span>
-          <span class="card-summary-action-indicator" aria-hidden="true">${isSelected ? "\u2713" : "+"}</span>
+          <span class="card-summary-action-indicator${isSelected ? "" : " is-add"}" aria-hidden="true">${isSelected ? "\u2713" : "+"}</span>
         </span>
         ${content}
         ${showRackHint ? `<span class="card-summary-hint">Tap to add to Rack</span>` : ""}
@@ -2121,7 +2934,7 @@ function renderCards(filteredTests) {
           <span>${test.tubeColor}</span>
         </div>
         ` : ""}
-        <div class="field critical-prep-field">
+        <div class="field critical-prep-field${shouldShowCriticalAlert ? " critical-prep-field-alert" : ""}">
           <span class="label">Critical Preparation</span>
           <span>${test.criticalPrep}</span>
         </div>
@@ -2131,7 +2944,7 @@ function renderCards(filteredTests) {
         </div>
       </div>
       <div class="card-actions">
-        <button class="card-toggle-btn" type="button" aria-expanded="false">See more</button>
+        <button class="card-toggle-btn" type="button" aria-expanded="${shouldShowCriticalAlert ? "true" : "false"}">${shouldShowCriticalAlert ? "See less" : "See more"}</button>
       </div>
     `;
 
@@ -2144,8 +2957,19 @@ function renderCards(filteredTests) {
       toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
     });
 
+    const preserveSearchFocusOnPress = (event) => {
+      if (!shouldPreserveSearchFocusOnMobile()) return;
+      event.preventDefault();
+    };
+
+    summaryActionBtn?.addEventListener("pointerdown", preserveSearchFocusOnPress);
+    summaryActionBtn?.addEventListener("mousedown", preserveSearchFocusOnPress);
     summaryActionBtn?.addEventListener("click", () => {
+      const shouldRestoreSearchFocus = shouldPreserveSearchFocusOnMobile();
       toggleSelectedTest(test.name);
+      if (shouldRestoreSearchFocus) {
+        restoreSearchFocusWithoutScroll();
+      }
     });
 
     if (profileTestsBtn) {
@@ -2163,6 +2987,9 @@ function applyFilters() {
   const hasQuery = (searchInput?.value || "").trim().length > 0;
   const hasSectionFilter = Boolean(activeSectionGroup);
   preSearchPanel.style.display = hasQuery || hasSectionFilter ? "none" : "grid";
+  if (siteFooter) {
+    siteFooter.hidden = hasQuery || hasSectionFilter;
+  }
 
   if (!hasQuery && !hasSectionFilter) {
     setResultsInfo("");
@@ -2266,10 +3093,38 @@ function bindEvents() {
     });
   }
 
+  if (legalDocButtons.length) {
+    legalDocButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const docId = button.getAttribute("data-legal-doc") || "";
+        openLegalModal(docId, button);
+      });
+    });
+  }
+
+  if (closeLegalModalBtn) {
+    closeLegalModalBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeLegalModal();
+    });
+  }
+
+  if (legalModal) {
+    legalModal.addEventListener("click", (event) => {
+      if (event.target !== legalModal) return;
+      closeLegalModal();
+    });
+  }
+
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     if (isMenuOpen()) {
       closeMenu();
+      return;
+    }
+    if (legalModal && !legalModal.hidden) {
+      closeLegalModal();
       return;
     }
     if (profileModal && !profileModal.hidden) {
