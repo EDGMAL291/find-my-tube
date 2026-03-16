@@ -551,10 +551,9 @@ const tests = [
   },
   {
     name: "CSF Cell Count and Chemistry",
-    tubeColor: "Tan",
-    specimen: "CSF (Sterile tan tube) + paired fluoride tube for glucose",
+    tubeColor: "Tan + Gray",
     turnaroundTime: "Same day",
-    notes: "CSF chemistry profile including cell count and differential, glucose, protein, IgG index, ADA, and oligoclonal bands. Use a sterile tan tube for CSF; pair glucose with a fluoride tube. Paired serum is also needed for IgG index and usually for oligoclonal bands.",
+    notes: "CSF chemistry profile including cell count and differential, glucose, protein, IgG index, ADA, and oligoclonal bands. Fill both the tan tube and the gray top fluoride tube with CSF, not blood. Paired serum is also needed for IgG index and usually for oligoclonal bands.",
     borderColor: "#64748b"
   },
   {
@@ -567,11 +566,10 @@ const tests = [
   },
   {
     name: "CSF Glucose",
-    tubeColor: "Tan",
-    specimen: "CSF (Sterile tan tube) + paired fluoride tube",
+    tubeColor: "Gray",
     turnaroundTime: "Same day",
-    notes: "CSF glucose measurement with paired fluoride tube.",
-    borderColor: "#64748b"
+    notes: "CSF glucose measurement on a gray top tube with fluoride additive.",
+    borderColor: "#9ca3af"
   },
   {
     name: "CSF Protein",
@@ -615,10 +613,10 @@ const tests = [
   },
   {
     name: "CSF IgG Index",
-    tubeColor: "Tan",
-    specimen: "CSF (Sterile tan tube) + paired serum (Gold/Yellow)",
+    tubeColor: "Tan + Gold/Yellow",
+    specimen: "CSF + paired blood (Gold/Yellow)",
     turnaroundTime: "1-3 days",
-    notes: "CSF IgG index assessment. Collect paired serum in a Gold/Yellow tube.",
+    notes: "CSF IgG index assessment. Collect CSF in a tan tube and paired blood in a Gold/Yellow tube.",
     borderColor: "#64748b"
   },
   {

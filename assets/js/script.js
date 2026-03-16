@@ -99,7 +99,6 @@ const legalContentById = {
           <li>Do not use this app to store or transmit confidential patient data unless a clinic-specific privacy workflow has been formally added.</li>
         </ul>
       </article>
-      <p class="legal-copy-note">If you later add analytics, forms, logins, or contact features, update this policy so it matches the real data flow.</p>
     `
   },
   terms: {
@@ -3068,6 +3067,10 @@ function shouldAutoExpandCriticalNote(testName, isSelected) {
   return isSelected && AUTO_EXPAND_CRITICAL_NOTE_TESTS.has(testName);
 }
 
+function shouldPrioritizeProfilesFirst(selectedSection, normalizedQuery) {
+  return Boolean(selectedSection) || normalizedQuery === "csf";
+}
+
 function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = activeSectionGroup || "";
@@ -3105,7 +3108,7 @@ function getFilteredTests() {
     return matchesQuery(test, query);
   });
 
-  if (!selectedSection) return filtered;
+  if (!shouldPrioritizeProfilesFirst(selectedSection, normalizedQuery)) return filtered;
 
   return filtered.sort((a, b) => {
     const aIsProfile = hasProfileComponents(a);
@@ -3185,7 +3188,8 @@ function renderCards(filteredTests) {
     const useSpecimenOnlySummary = isMicro && !isCsfSpecimenCard;
     const isNonBloodSpecimen = /(urine|stool|faec|swab|csf|sputum|respiratory|semen|fluid|tissue|bone marrow|aspirate|saliva|synovial|pleural|ascitic|vaginal|nasopharyngeal|throat)/i
       .test(specimenValue);
-    const showSpecimenField = isMicro || isNonBloodSpecimen || !hasTubeOptions;
+    const hasGenericCsfSpecimen = isCsfSpecimenCard && specimenValue === "CSF";
+    const showSpecimenField = !hasGenericCsfSpecimen && (isMicro || isNonBloodSpecimen || !hasTubeOptions);
     const showRackHint = !hasDismissedRackHint && !isSelected && filteredTests[0]?.name === test.name;
     const renderSummaryField = ({ label, content, isAction = false }) => {
       if (!isAction) {
