@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260313c" />
   <link rel="shortcut icon" href="./favicon-32.png?v=20260313c" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260313a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260316a" />
 </head>
 <body>
   <div class="container">
@@ -61,17 +61,19 @@
     </header>
 
     <section class="search-box">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search by test, alias, condition, or department (e.g. FBC, diabetes, coeliac disease)"
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        spellcheck="false"
-        enterkeyhint="search"
-      />
-      <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" hidden>&times;</button>
+      <div class="search-input-wrap">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by test or clinical question (e.g. Iron studies or anaemia)"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          enterkeyhint="search"
+        />
+        <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" hidden>&times;</button>
+      </div>
     </section>
 
     <section class="pre-search" id="preSearchPanel">
@@ -89,27 +91,25 @@
           aria-expanded="false"
           hidden
         >
-          Show Rack
+          Start Tube Plan
         </button>
-        <section class="quick-tools-panel" id="quickToolsPanel" hidden>
-          <p class="quick-tools-kicker">Added to Rack</p>
-          <h3>Added Tests</h3>
-          <p>Add tests as you browse and keep a tube plan ready while you change your mind.</p>
+        <section class="quick-tools-panel" id="quickToolsPanel">
+          <h3>Tube Plan</h3>
+          <p>Add tests as you search to estimate how many tubes you need to draw.</p>
           <button
             type="button"
             class="quick-tool-launch-btn"
             id="openDrawPlannerBtn"
-            aria-controls="drawModal"
-            aria-expanded="false"
+            aria-controls="searchInput"
           >
-            Open Rack
+            Search Tests
           </button>
         </section>
 
         <div class="fact-carousel" id="factCarouselPanel">
           <div class="fact-carousel-content" id="factCarouselContent">
             <div class="mini-carousel">
-              <p class="fact-kicker">Collection Tips</p>
+              <h3 class="fact-kicker">Collection Tips</h3>
               <p class="fact-text" id="tipText"></p>
             </div>
           </div>
@@ -134,7 +134,7 @@
     </footer>
   </div>
 
-  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Rack" hidden>
+  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Tube Plan" hidden>
     <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0</span>
     <span class="selection-cart-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -149,8 +149,8 @@
       </svg>
     </span>
     <span class="selection-cart-copy">
-      <span class="selection-cart-kicker">Added to</span>
-      <span class="selection-cart-label">Rack</span>
+      <span class="selection-cart-kicker">Open</span>
+      <span class="selection-cart-label">Tube Plan</span>
     </span>
   </button>
 
@@ -158,7 +158,7 @@
     <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
       <div class="draw-selection-head">
         <div>
-          <p class="draw-cart-kicker">Added to Rack</p>
+          <p class="draw-cart-kicker">Tube Planning</p>
           <h3 id="drawModalTitle">Tube Plan</h3>
         </div>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn">Close</button>
@@ -169,7 +169,6 @@
       </div>
       <div class="draw-selected-list" id="drawSelectedList"></div>
       <div class="draw-result-card" id="drawResultCard" tabindex="-1">
-        <p class="draw-planner-sub">Tube plan</p>
         <p class="draw-planner-count" id="drawPlannerCount"></p>
         <div class="draw-planner-alerts" id="drawPlannerAlerts" hidden></div>
         <div class="draw-groups" id="drawGroups"></div>
@@ -202,11 +201,11 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260313a"></script>
-  <script src="assets/js/script.js?v=20260313a"></script>
+  <script src="assets/data/data.js?v=20260316a"></script>
+  <script src="assets/js/script.js?v=20260316a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-13.2";
+      const APP_VERSION = "2026-03-16.1";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -223,7 +222,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260313c", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260316a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

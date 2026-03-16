@@ -12,6 +12,7 @@ const factCarouselPanel = document.getElementById("factCarouselPanel");
 const factCarouselContent = document.getElementById("factCarouselContent");
 const tipText = document.getElementById("tipText");
 const groupChips = document.getElementById("groupChips");
+const groupHintsPanel = document.querySelector(".group-hints");
 const installHelper = document.getElementById("installHelper");
 const installHelperText = document.getElementById("installHelperText");
 const installHelperBtn = document.getElementById("installHelperBtn");
@@ -39,6 +40,20 @@ const legalModalTitle = document.getElementById("legalModalTitle");
 const legalModalBody = document.getElementById("legalModalBody");
 const closeLegalModalBtn = document.getElementById("closeLegalModalBtn");
 const legalDocButtons = document.querySelectorAll("[data-legal-doc]");
+const SEARCH_PLACEHOLDER_BASE = "Search by test or clinical question";
+const SEARCH_PLACEHOLDER_HINT = `${SEARCH_PLACEHOLDER_BASE} (e.g. Iron studies or anaemia)`;
+const GOLD_VOLUME_PROFILE_NAMES = new Set([
+  "U&E", // 1
+  "Liver Function Tests (LFT)", // 2
+  "CMP", // 3
+  "CRP", // 4
+  "Cardiac Profile", // 5
+  "Lipid Profile / Lipogram", // 6
+  "Fe Studies" // 9
+]);
+const PURPLE_VOLUME_TRIGGER_TESTS = new Set([
+  "HbA1c" // 8
+]);
 
 let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
@@ -190,6 +205,14 @@ function updateSearchClearButton() {
   if (!searchInput || !searchClearBtn) return;
   const hasQuery = searchInput.value.trim().length > 0;
   searchClearBtn.hidden = !hasQuery;
+}
+
+function refreshSearchPlaceholder() {
+  if (!searchInput) return;
+  if (searchInput.value.trim()) return;
+  searchInput.placeholder = document.activeElement === searchInput
+    ? SEARCH_PLACEHOLDER_BASE
+    : SEARCH_PLACEHOLDER_HINT;
 }
 
 function isMenuOpen() {
@@ -352,6 +375,13 @@ const profileComponentsByName = {
     "Partial Thromboplastin Time (PTT)",
     "INR"
   ],
+  "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)": [
+    "PR3 Antibody",
+    "MPO Antibody",
+    "p-ANCA",
+    "c-ANCA",
+    "GBM IIF"
+  ],
   "Antenatal Screen (ANTINV)": [
     "Blood Group & Rh",
     "RBC Antibody Screen (Antenatal)",
@@ -444,12 +474,16 @@ const profileComponentsByName = {
   ],
   "CSF Profile": [
     "CSF MCS",
-    "CSF Cell Count and Chemistry"
+    "CSF Cell Count and Chemistry",
+    "CSF Cytology"
   ],
   "CSF Cell Count and Chemistry": [
     "CSF Cell Count and Differential",
     "CSF Glucose",
-    "CSF Protein"
+    "CSF Protein",
+    "CSF IgG Index",
+    "CSF ADA",
+    "CSF Oligoclonal Bands"
   ],
   "U&E": ["Urea", "Chloride", "Potassium", "Sodium", "Creatinine", "eGFR (Calculated)"],
   "Blood Gases": ["pH", "pCO2", "pO2", "HCO3-", "Base Excess", "O2 Saturation", "Lactate"],
@@ -740,6 +774,75 @@ const aliasByName = {
     "ADNase",
     "Anti streptococcal DNase"
   ],
+  "Anti-Smooth Muscle Antibody": [
+    "Smooth muscle antibody",
+    "Anti smooth muscle antibody",
+    "ASMA",
+    "Actin smooth muscle antibody"
+  ],
+  "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)": [
+    "ANCA",
+    "ANCA profile",
+    "ANCA vasculitis profile",
+    "PR3 MPO p ANCA c ANCA GBM"
+  ],
+  "p-ANCA": [
+    "P ANCA",
+    "pANCA",
+    "Perinuclear ANCA",
+    "Perinuclear anti-neutrophil cytoplasmic antibody"
+  ],
+  "c-ANCA": [
+    "C ANCA",
+    "cANCA",
+    "Cytoplasmic ANCA",
+    "Cytoplasmic anti-neutrophil cytoplasmic antibody"
+  ],
+  "PR3 Antibody": [
+    "PR3",
+    "Proteinase 3 antibody",
+    "Anti-PR3",
+    "PR3 antibody"
+  ],
+  "MPO Antibody": [
+    "MPO",
+    "Myeloperoxidase antibody",
+    "Anti-MPO",
+    "MPO antibody"
+  ],
+  "GBM IIF": [
+    "GBM",
+    "Anti-GBM",
+    "GBM antibody",
+    "GBM IIF",
+    "Anti-GBM IIF"
+  ],
+  "CMV IgG": [
+    "Cytomegalovirus IgG",
+    "CMV antibody IgG",
+    "CMV serology IgG"
+  ],
+  "CMV IgM": [
+    "Cytomegalovirus IgM",
+    "CMV antibody IgM",
+    "CMV serology IgM"
+  ],
+  "Anti-LKM1 Antibody": [
+    "LKM1",
+    "LKM-1",
+    "Anti LKM1 antibody",
+    "Liver kidney microsomal type 1 antibody",
+    "Liver-kidney microsomal antibody"
+  ],
+  "Anti-SLA/LP Antibody": [
+    "SLA",
+    "LP antibody",
+    "SLA/LP",
+    "Anti SLA LP antibody",
+    "Anti SLA/LP antibody",
+    "Soluble liver antigen antibody",
+    "Liver pancreas antibody"
+  ],
   "Brucella IgM": [
     "Brucella IgM/IgG",
     "Brucella serology"
@@ -874,7 +977,8 @@ const aliasByName = {
     "Cell count and chemistry",
     "CSF cell count and chemistry",
     "CSF chemistry",
-    "CSF cell count chemistry"
+    "CSF cell count chemistry",
+    "CSF chemistry profile"
   ],
   "CSF Cell Count and Differential": [
     "CSF cell count",
@@ -887,6 +991,11 @@ const aliasByName = {
   ],
   "CSF Protein": [
     "Protein CSF"
+  ],
+  "CSF Cytology": [
+    "Cytology CSF",
+    "CSF malignant cells",
+    "CSF cytospin"
   ],
   "Cryptococcal Antigen (CSF)": [
     "Cryptococcal antigen",
@@ -918,6 +1027,12 @@ const aliasByName = {
     "Adenosine deaminase",
     "CSF adenosine deaminase"
   ],
+  "FTA (CSF)": [
+    "CSF FTA",
+    "FTA CSF",
+    "FTA-ABS CSF",
+    "CSF treponemal antibody"
+  ],
   "HSV-1 PCR (CSF)": [
     "HSV-1 PCR",
     "HSV 1 PCR",
@@ -939,16 +1054,20 @@ const aliasByName = {
 
 const clinicalProfileByName = {
   "CSF Profile": {
-    use: "Combined CSF profile including microbiology, cell count, and chemistry for lumbar puncture workup.",
+    use: "Combined CSF profile including microbiology, cell count, chemistry, and cytology for lumbar puncture workup.",
     keywords: ["csf", "lumbar puncture", "meningitis", "encephalitis", "antimicrobials"]
   },
   "CSF Cell Count and Chemistry": {
-    use: "CSF cell count with core chemistry assessment using glucose and protein.",
-    keywords: ["csf chemistry", "csf cell count", "lumbar puncture", "meningitis"]
+    use: "CSF chemistry profile including cell count and differential, glucose, protein, IgG index, ADA, and oligoclonal bands.",
+    keywords: ["csf chemistry", "csf cell count", "lumbar puncture", "meningitis", "igg index", "oligoclonal bands", "ada"]
   },
   "CSF MCS": {
-    use: "CSF microbiology culture request; note clearly if antimicrobials were already started before sampling.",
-    keywords: ["csf culture", "meningitis", "antimicrobials", "lumbar puncture"]
+    use: "CSF microbiology culture request; local workflow includes cryptococcal antigen and may reflex it when lymphocytes are above 5/uL or protein is abnormal.",
+    keywords: ["csf culture", "meningitis", "antimicrobials", "lumbar puncture", "cryptococcal antigen", "crag"]
+  },
+  "CSF Cytology": {
+    use: "CSF cytology used to assess for malignant or abnormal cells in selected CNS workup.",
+    keywords: ["csf cytology", "malignant cells", "leptomeningeal disease", "csf"]
   },
   "Cryptococcal Antigen (CSF)": {
     use: "CSF cryptococcal antigen test used in suspected cryptococcal meningitis.",
@@ -967,12 +1086,16 @@ const clinicalProfileByName = {
     keywords: ["igg index", "multiple sclerosis", "demyelination", "csf"]
   },
   "CSF Oligoclonal Bands": {
-    use: "CSF oligoclonal bands used in demyelinating and inflammatory CNS workup.",
-    keywords: ["oligoclonal bands", "ocb", "multiple sclerosis", "csf"]
+    use: "CSF oligoclonal bands used mainly in demyelinating and inflammatory CNS workup, especially multiple sclerosis.",
+    keywords: ["oligoclonal bands", "ocb", "multiple sclerosis", "csf", "demyelination"]
   },
   "CSF ADA": {
     use: "CSF ADA used as an adjunct test in selected CNS infection workup such as TB meningitis.",
     keywords: ["ada", "csf ada", "tb meningitis", "tuberculous meningitis"]
+  },
+  "FTA (CSF)": {
+    use: "CSF treponemal antibody test used in selected neurosyphilis workup.",
+    keywords: ["fta csf", "csf fta", "treponemal antibody", "neurosyphilis", "csf"]
   },
   "HSV-1 PCR (CSF)": {
     use: "CSF HSV-1 PCR used in suspected herpes simplex encephalitis or meningitis.",
@@ -1013,6 +1136,50 @@ const clinicalProfileByName = {
   "Cardiac Profile": {
     use: "Cardiac marker profile including CK Total, CK-MB Mass, and Troponin I.",
     keywords: ["cardiac profile", "cardiac markers", "cardiac marker", "cardiac enzymes", "myocardial injury", "chest pain"]
+  },
+  "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)": {
+    use: "ANCA-associated vasculitis profile combining PR3, MPO, p-ANCA, c-ANCA, and GBM IIF.",
+    keywords: ["anca", "vasculitis", "pr3", "mpo", "p anca", "c anca", "gbm"]
+  },
+  "Anti-Smooth Muscle Antibody": {
+    use: "Autoimmune hepatitis serology marker used in autoimmune liver disease workup.",
+    keywords: ["smooth muscle antibody", "asma", "autoimmune hepatitis", "autoimmune liver disease"]
+  },
+  "p-ANCA": {
+    use: "Perinuclear ANCA pattern marker used in vasculitis and selected autoimmune workup.",
+    keywords: ["p anca", "perinuclear anca", "vasculitis", "mpo antibody"]
+  },
+  "c-ANCA": {
+    use: "Cytoplasmic ANCA pattern marker used in vasculitis workup.",
+    keywords: ["c anca", "cytoplasmic anca", "vasculitis", "pr3 antibody"]
+  },
+  "PR3 Antibody": {
+    use: "Proteinase 3 antibody used in ANCA-associated vasculitis workup.",
+    keywords: ["pr3", "proteinase 3", "anca", "vasculitis"]
+  },
+  "MPO Antibody": {
+    use: "Myeloperoxidase antibody used in ANCA-associated vasculitis workup.",
+    keywords: ["mpo", "myeloperoxidase", "anca", "vasculitis"]
+  },
+  "GBM IIF": {
+    use: "GBM indirect immunofluorescence test used in selected vasculitis and anti-GBM workup.",
+    keywords: ["gbm", "anti gbm", "glomerular basement membrane", "vasculitis"]
+  },
+  "CMV IgG": {
+    use: "CMV IgG serology used for prior exposure and immune status assessment.",
+    keywords: ["cmv igg", "cytomegalovirus igg", "cmv exposure", "cmv immunity"]
+  },
+  "CMV IgM": {
+    use: "CMV IgM serology used in recent or acute infection assessment.",
+    keywords: ["cmv igm", "cytomegalovirus igm", "acute cmv", "recent cmv infection"]
+  },
+  "Anti-LKM1 Antibody": {
+    use: "Autoimmune hepatitis type 2 serology marker used in autoimmune liver disease workup.",
+    keywords: ["lkm1", "lkm 1", "anti lkm1", "autoimmune hepatitis type 2", "autoimmune liver disease"]
+  },
+  "Anti-SLA/LP Antibody": {
+    use: "Soluble liver antigen/liver-pancreas antibody used in autoimmune hepatitis workup.",
+    keywords: ["sla", "sla lp", "anti sla lp", "soluble liver antigen", "autoimmune hepatitis"]
   },
   "Drugs of Abuse Screen (Urine)": {
     use: "Urine profile screen for common drugs of abuse.",
@@ -1270,6 +1437,11 @@ function normalizeTubeColor(value) {
     yellow: "Gold/Yellow",
     "yellow/gold": "Gold/Yellow",
     "gold/yellow": "Gold/Yellow",
+    pear: "Pearl/White",
+    pearl: "Pearl/White",
+    white: "Pearl/White",
+    "pearl/white": "Pearl/White",
+    "white/pearl": "Pearl/White",
     lavender: "Lavender",
     purple: "Purple",
     pink: "Pink",
@@ -1287,6 +1459,7 @@ const tubeGroupPatternEntries = [
   { key: "Pink", pattern: /\bpink\b/ },
   { key: "Blue", pattern: /\blight blue\b|\bblue\b|citrate/ },
   { key: "Gold/Yellow", pattern: /\bgold\b|\byellow\b|sst|serum separator/ },
+  { key: "Pearl/White", pattern: /\bpear\b|\bpearl\b|\bwhite\b|\bppt\b|plasma preparation tube/ },
   { key: "Green", pattern: /\bgreen\b|heparin/ },
   { key: "Gray", pattern: /\bgray\b|\bgrey\b|fluoride/ },
   { key: "Red", pattern: /\bred\b|plain serum/ },
@@ -1314,6 +1487,7 @@ function getTubeSwatchColor(tubeGroup) {
     Pink: "#ec4899",
     Blue: "#89CFF0",
     "Gold/Yellow": "#facc15",
+    "Pearl/White": "#e5e7eb",
     Green: "#22c55e",
     Gray: "#9ca3af",
     Red: "#ef4444",
@@ -1330,6 +1504,7 @@ function getTubeAdditiveLabel(tubeGroup) {
     Pink: "EDTA",
     Blue: "Sodium citrate",
     "Gold/Yellow": "SST",
+    "Pearl/White": "EDTA + gel",
     Green: "Heparin",
     Gray: "Fluoride / oxalate",
     Red: "Plain",
@@ -1645,7 +1820,7 @@ function renderSelectedTestsCart() {
   if (!selectedTests.length) {
     drawSelectedList.innerHTML = `
       <p class="draw-selected-empty">
-        Your added tests will appear here. Use the main search to add more tests.
+        Your selected tests will appear here. Add tests from the results to build your Tube Plan.
       </p>
     `;
     return;
@@ -1659,7 +1834,7 @@ function renderSelectedTestsCart() {
           type="button"
           class="draw-selected-chip-remove"
           data-remove-selected="${encodeURIComponent(test.name)}"
-          aria-label="Remove ${test.name} from rack"
+          aria-label="Remove ${test.name} from Tube Plan"
         >
           Remove
         </button>
@@ -1683,10 +1858,13 @@ function updateSelectionCartBar() {
   const count = selectedTests.length;
   if (!count) {
     selectionCartCount.textContent = "0";
-    selectionCartBar.setAttribute("aria-label", "Rack");
-    selectionCartBar.title = "Rack";
+    selectionCartBar.setAttribute("aria-label", "Tube Plan");
+    selectionCartBar.title = "Tube Plan";
     selectionCartBar.hidden = true;
     document.body.classList.remove("has-selection-cart");
+    document.body.classList.remove("selection-cart-inline");
+    selectionCartBar.style.top = "auto";
+    selectionCartBar.style.bottom = "";
     return;
   }
 
@@ -1698,18 +1876,24 @@ function updateSelectionCartBar() {
   selectionCartCount.textContent = badgeCount;
   selectionCartBar.setAttribute(
     "aria-label",
-    `Rack. ${count} added test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.`
+    `Tube Plan. ${count} added test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.`
   );
-  selectionCartBar.title = `${count} added test${count !== 1 ? "s" : ""}`;
+  selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}`;
   document.body.classList.add("has-selection-cart");
+  updateSelectionCartViewportPosition();
 }
 
 function updateSelectionCartViewportPosition() {
   if (!selectionCartBar) return;
 
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
+  const isPreSearchVisible = Boolean(
+    preSearchPanel &&
+    window.getComputedStyle(preSearchPanel).display !== "none"
+  );
   const baseOffset = isMobile ? 10 : 18;
   let keyboardOffset = 0;
+  let useInlineDesktopPosition = false;
 
   if (isMobile && window.visualViewport) {
     const activeEl = document.activeElement;
@@ -1722,7 +1906,24 @@ function updateSelectionCartViewportPosition() {
     }
   }
 
-  selectionCartBar.style.bottom = `calc(env(safe-area-inset-bottom) + ${baseOffset + keyboardOffset}px)`;
+  if (!isMobile && !selectionCartBar.hidden && isPreSearchVisible && groupHintsPanel) {
+    const hintsRect = groupHintsPanel.getBoundingClientRect();
+    const cartRect = selectionCartBar.getBoundingClientRect();
+
+    if (hintsRect.height > 0 && cartRect.height > 0) {
+      const topOffset = Math.max(18, Math.round(hintsRect.bottom - cartRect.height));
+      selectionCartBar.style.top = `${topOffset}px`;
+      selectionCartBar.style.bottom = "auto";
+      useInlineDesktopPosition = true;
+    }
+  }
+
+  if (!useInlineDesktopPosition) {
+    selectionCartBar.style.top = "auto";
+    selectionCartBar.style.bottom = `calc(env(safe-area-inset-bottom) + ${baseOffset + keyboardOffset}px)`;
+  }
+
+  document.body.classList.toggle("selection-cart-inline", useInlineDesktopPosition);
 }
 
 function initSelectionCartViewportSync() {
@@ -1734,6 +1935,7 @@ function initSelectionCartViewportSync() {
   }
 
   window.addEventListener("resize", updateSelectionCartViewportPosition);
+  window.addEventListener("scroll", updateSelectionCartViewportPosition, { passive: true });
   document.addEventListener("focusin", () => {
     window.setTimeout(updateSelectionCartViewportPosition, 40);
   });
@@ -1803,23 +2005,16 @@ function updateQuickToolsToggleState() {
   const isOpen = isDrawPlannerOpen();
   const count = selectedTestNames.size;
   toggleQuickToolsBtn.textContent = isOpen
-    ? "Hide rack"
+    ? "Hide Tube Plan"
     : count
-      ? `View rack (${count})`
-      : "Show rack";
+      ? `Open Tube Plan (${count})`
+      : "Start Tube Plan";
   toggleQuickToolsBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
 }
 
 function updateDrawPlannerToggleState() {
   if (!openDrawPlannerBtn) return;
-  const isOpen = isDrawPlannerOpen();
-  const count = selectedTestNames.size;
-  openDrawPlannerBtn.textContent = isOpen
-    ? "Hide Rack"
-    : count
-      ? `Rack (${count})`
-      : "Rack";
-  openDrawPlannerBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  openDrawPlannerBtn.textContent = "Search Tests";
   updateQuickToolsToggleState();
 }
 
@@ -2020,19 +2215,19 @@ function isDedicatedGoldTubeTest(test) {
   );
 }
 
+function isSharedGoldTubeTest(test) {
+  const tubeGroups = getTubeGroups(test.tubeColor);
+  return tubeGroups.includes("Gold/Yellow") && !isDedicatedGoldTubeTest(test);
+}
+
 function getRequiredSharedGoldTubeCount(selectedTests) {
-  const sharedGoldTests = selectedTests.filter((test) => {
-    const tubeGroups = getTubeGroups(test.tubeColor);
-    return tubeGroups.includes("Gold/Yellow") && !isDedicatedGoldTubeTest(test);
-  });
+  const sharedGoldTests = selectedTests.filter((test) => isSharedGoldTubeTest(test));
 
   if (!sharedGoldTests.length) return 0;
 
-  const goldProfileCount = sharedGoldTests.filter((test) =>
-    Object.prototype.hasOwnProperty.call(profileComponentsByName, test.name)
-  ).length;
+  const listedGoldProfileCount = sharedGoldTests.filter((test) => GOLD_VOLUME_PROFILE_NAMES.has(test.name)).length;
 
-  return goldProfileCount >= 4 ? 2 : 1;
+  return listedGoldProfileCount >= 3 && sharedGoldTests.length > 3 ? 2 : 1;
 }
 
 function applyDedicatedGoldTubeRule(plan, selectedTests) {
@@ -2065,16 +2260,17 @@ function applyGoldProfileVolumeRule(plan, selectedTests) {
   }
 
   plan.items.sort((a, b) => a.label.localeCompare(b.label));
-  return "Gold rule applied: 4 or more gold-top profiles require 2 x Gold/Yellow tubes.";
+  return "Gold rule applied: 3 listed profiles fit in 1 Gold/Yellow tube; add any other shared yellow-top test and use 2 x Gold/Yellow tubes.";
 }
 
 function applyPurpleVolumeRule(plan, selectedTests) {
-  const purpleTestCount = selectedTests.filter((test) => {
+  const purpleTests = selectedTests.filter((test) => {
     const tubeGroups = getTubeGroups(test.tubeColor);
     return tubeGroups.includes("Purple");
-  }).length;
+  });
+  const hasPurpleTriggerTest = purpleTests.some((test) => PURPLE_VOLUME_TRIGGER_TESTS.has(test.name));
 
-  if (purpleTestCount < 3) return "";
+  if (!hasPurpleTriggerTest || purpleTests.length < 3) return "";
 
   let purpleItem = plan.items.find((item) => item.key === "Purple");
   if (!purpleItem) {
@@ -2085,7 +2281,7 @@ function applyPurpleVolumeRule(plan, selectedTests) {
   }
 
   plan.items.sort((a, b) => a.label.localeCompare(b.label));
-  return "Purple rule applied: 3 or more purple-top tests require 2 x Purple tubes.";
+  return "Purple rule applied: HbA1c plus 2 more purple-top tests require 2 x Purple tubes.";
 }
 
 function getLabDrawPlan(selectedTests) {
@@ -2131,13 +2327,24 @@ function getDrawPlannerAlerts(selectedTests) {
   });
 }
 
+function getDrawPlannerReminders() {
+  return [{
+    id: "tube-fill",
+    tone: "info",
+    title: "Collection reminder",
+    items: [
+      "Make sure tubes are properly filled."
+    ]
+  }];
+}
+
 function renderDrawResult() {
   if (!drawResultCard || !drawPlannerCount || !drawPlannerAlerts || !drawGroups || !drawPlannerNote) return;
 
   const selectedTests = getSelectedTests();
   if (!selectedTests.length) {
     drawResultCard.hidden = false;
-    drawPlannerCount.textContent = "0 added tests";
+    drawPlannerCount.textContent = "0 tests • 0 tubes";
     drawPlannerAlerts.hidden = true;
     drawPlannerAlerts.innerHTML = "";
     drawGroups.innerHTML = `
@@ -2145,23 +2352,28 @@ function renderDrawResult() {
         <p class="draw-group-tests">No tests added yet. Add tests to build a tube plan.</p>
       </article>
     `;
-    drawPlannerNote.textContent = "Your tube estimate updates as you add or remove tests.";
+    drawPlannerNote.hidden = true;
+    drawPlannerNote.textContent = "";
     animateDrawResultCard();
     return;
   }
 
-  const { plan, guidanceNotes } = getResolvedDrawPlan(selectedTests);
-  const plannerAlerts = getDrawPlannerAlerts(selectedTests);
+  const { plan } = getResolvedDrawPlan(selectedTests);
+  const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
+  const plannerAlerts = [
+    ...getDrawPlannerReminders(),
+    ...getDrawPlannerAlerts(selectedTests)
+  ];
   drawResultCard.hidden = false;
-  drawPlannerCount.textContent = `${selectedTests.length} added test${selectedTests.length > 1 ? "s" : ""}`;
+  drawPlannerCount.textContent = `${selectedTests.length} test${selectedTests.length > 1 ? "s" : ""} • ${totalTubes} tube${totalTubes !== 1 ? "s" : ""}`;
   drawPlannerAlerts.hidden = plannerAlerts.length === 0;
   drawPlannerAlerts.innerHTML = plannerAlerts
     .map((alert) => `
       <article class="draw-planner-alert draw-planner-alert-${alert.tone}">
         <h4>${alert.title}</h4>
-        <ul>
-          ${alert.items.map((item) => `<li>${item}</li>`).join("")}
-        </ul>
+        ${alert.items.length === 1
+          ? `<p>${alert.items[0]}</p>`
+          : `<ul>${alert.items.map((item) => `<li>${item}</li>`).join("")}</ul>`}
       </article>
     `)
     .join("");
@@ -2170,10 +2382,10 @@ function renderDrawResult() {
     .map((item) => `
       <article class="draw-group-card">
         <div class="draw-group-top">
-          <span class="tube-icon" style="--tube-color: ${getTubeSwatchColor(item.key)};" aria-hidden="true"></span>
-          <div>
+          <div class="draw-group-main">
+            <span class="tube-icon" style="--tube-color: ${getTubeSwatchColor(item.key)};" aria-hidden="true"></span>
             <h3>${item.label}</h3>
-            <p>Draw ${item.count} x ${item.label}</p>
+            <span class="draw-group-count-badge">${item.count}x</span>
           </div>
         </div>
         ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
@@ -2181,18 +2393,12 @@ function renderDrawResult() {
     `)
     .join("");
 
-  if (plan.manual.length) {
-    const manualNote = `Manual review needed for: ${plan.manual.join(", ")}.`;
-    drawPlannerNote.textContent = guidanceNotes.length
-      ? `${manualNote} ${guidanceNotes.join(" ")}`
-      : manualNote;
-  } else if (guidanceNotes.length) {
-    drawPlannerNote.textContent = guidanceNotes.join(" ");
-  } else if (plan.ruleId) {
-    drawPlannerNote.textContent = "Lab draw rule matched for this exact set.";
-  } else {
-    drawPlannerNote.textContent = "Default estimate applied.";
-  }
+  const plannerNoteText = plan.manual.length
+    ? `Manual review needed for: ${plan.manual.join(", ")}.`
+    : "";
+
+  drawPlannerNote.hidden = !plannerNoteText;
+  drawPlannerNote.textContent = plannerNoteText;
 
   animateDrawResultCard();
 }
@@ -2359,6 +2565,10 @@ function getTestGrouping(testName) {
     name.includes("rheumatoid") ||
     name.includes("anti-ccp") ||
     name.includes("anca") ||
+    name.includes("smooth muscle") ||
+    name.includes("lkm") ||
+    name.includes("sla/lp") ||
+    name.includes("soluble liver antigen") ||
     name.includes("dsdna") ||
     name.includes("complement") ||
     name.includes("celiac") ||
@@ -2799,7 +3009,7 @@ function renderCards(filteredTests) {
     );
     cardsContainer.innerHTML = `
       <div class="no-results">
-        No matching test found. Try searching by test, department, alias, or condition (e.g. iron deficiency anaemia, heart attack, prostate cancer).
+        No matching test found. Try searching by test or clinical question (e.g. Iron studies or anaemia).
       </div>
     `;
     return;
@@ -2872,14 +3082,14 @@ function renderCards(filteredTests) {
         class="field card-summary-field card-summary-action${isSelected ? " selected" : ""}${showRackHint ? " hinted" : ""}"
         data-card-select="${encodeURIComponent(test.name)}"
         aria-pressed="${isSelected ? "true" : "false"}"
-        aria-label="${isSelected ? `Remove ${test.name} from Rack` : `Add ${test.name} to Rack`}"
+        aria-label="${isSelected ? `Remove ${test.name} from Tube Plan` : `Add ${test.name} to Tube Plan`}"
       >
         <span class="card-summary-action-head">
           <span class="label">${label}</span>
           <span class="card-summary-action-indicator${isSelected ? "" : " is-add"}" aria-hidden="true">${isSelected ? "\u2713" : "+"}</span>
         </span>
         ${content}
-        ${showRackHint ? `<span class="card-summary-hint">Tap to add to Rack</span>` : ""}
+        ${showRackHint ? `<span class="card-summary-hint">Tap to add to Tube Plan</span>` : ""}
       </button>
       `;
     };
@@ -2920,7 +3130,15 @@ function renderCards(filteredTests) {
 
     card.innerHTML = `
       <div class="card-head">
-        <h2>${test.name}</h2>
+        <button
+          type="button"
+          class="card-title-select-btn${isSelected ? " selected" : ""}"
+          data-card-select-title="${encodeURIComponent(test.name)}"
+          aria-pressed="${isSelected ? "true" : "false"}"
+          aria-label="${isSelected ? `Remove ${test.name} from Tube Plan` : `Add ${test.name} to Tube Plan`}"
+        >
+          <span class="card-title-select-copy">${test.name}</span>
+        </button>
       </div>
       ${cardMetaRow}
       <div class="card-summary-grid${summaryFieldCount <= 1 ? " single" : ""}">
@@ -2949,6 +3167,7 @@ function renderCards(filteredTests) {
     `;
 
     const toggleBtn = card.querySelector(".card-toggle-btn");
+    const titleActionBtn = card.querySelector("button[data-card-select-title]");
     const summaryActionBtn = card.querySelector("button[data-card-select]");
     const profileTestsBtn = card.querySelector(".profile-tests-btn");
     toggleBtn.addEventListener("click", () => {
@@ -2962,14 +3181,18 @@ function renderCards(filteredTests) {
       event.preventDefault();
     };
 
-    summaryActionBtn?.addEventListener("pointerdown", preserveSearchFocusOnPress);
-    summaryActionBtn?.addEventListener("mousedown", preserveSearchFocusOnPress);
-    summaryActionBtn?.addEventListener("click", () => {
+    const handleSelect = () => {
       const shouldRestoreSearchFocus = shouldPreserveSearchFocusOnMobile();
       toggleSelectedTest(test.name);
       if (shouldRestoreSearchFocus) {
         restoreSearchFocusWithoutScroll();
       }
+    };
+
+    [titleActionBtn, summaryActionBtn].forEach((trigger) => {
+      trigger?.addEventListener("pointerdown", preserveSearchFocusOnPress);
+      trigger?.addEventListener("mousedown", preserveSearchFocusOnPress);
+      trigger?.addEventListener("click", handleSelect);
     });
 
     if (profileTestsBtn) {
@@ -2990,6 +3213,7 @@ function applyFilters() {
   if (siteFooter) {
     siteFooter.hidden = hasQuery || hasSectionFilter;
   }
+  updateSelectionCartViewportPosition();
 
   if (!hasQuery && !hasSectionFilter) {
     setResultsInfo("");
@@ -3002,8 +3226,21 @@ function applyFilters() {
 
 function bindEvents() {
   if (searchInput) {
+    searchInput.addEventListener("focus", () => {
+      if (!searchInput.value.trim()) {
+        searchInput.placeholder = SEARCH_PLACEHOLDER_BASE;
+      }
+    });
+
+    searchInput.addEventListener("blur", () => {
+      if (!searchInput.value.trim()) {
+        refreshSearchPlaceholder();
+      }
+    });
+
     searchInput.addEventListener("input", () => {
       updateSearchClearButton();
+      refreshSearchPlaceholder();
       applyFilters();
     });
   }
@@ -3032,11 +3269,7 @@ function bindEvents() {
   if (openDrawPlannerBtn) {
     openDrawPlannerBtn.addEventListener("click", (event) => {
       event.preventDefault();
-      if (isDrawPlannerOpen()) {
-        closeDrawModal();
-        return;
-      }
-      openDrawModal();
+      focusMainSearchField();
     });
   }
 
@@ -3219,6 +3452,7 @@ initQuickToolsPanel();
 initFactsPanel();
 initSectionNavigation();
 renderGroupChips();
+refreshSearchPlaceholder();
 bindEvents();
 initSelectionCartViewportSync();
 initInstallHelper();

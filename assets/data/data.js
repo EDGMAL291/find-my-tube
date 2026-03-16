@@ -403,11 +403,11 @@ const tests = [
   },
   {
     name: "HIV Viral Load (PCR)",
-    tubeColor: "Purple",
+    tubeColor: "Pearl/White",
     specimen: "EDTA plasma",
     turnaroundTime: "1-3 days",
-    notes: "Molecular HIV quantification test.",
-    borderColor: "purple"
+    notes: "Molecular HIV quantification test. Local protocol uses a pearl tube, sometimes called white, with EDTA additive and gel separator.",
+    borderColor: "#e5e7eb"
   },
   {
     name: "RPR (Syphilis Screen)",
@@ -534,7 +534,7 @@ const tests = [
     tubeColor: "Tan",
     specimen: "CSF (Tan tubes)",
     turnaroundTime: "Same day to 3 days",
-    notes: "CSF profile combining MCS, cell count, and chemistry.",
+    notes: "CSF profile combining MCS, cell count, chemistry, and cytology.",
     criticalPrep: "Send urgently and clearly state if the patient was already on antimicrobials when the sample was taken.",
     specimenGuide: "CSF in appropriately labelled tan/CSF tubes as per local protocol.",
     borderColor: "#64748b"
@@ -544,7 +544,7 @@ const tests = [
     tubeColor: "Tan",
     specimen: "CSF (Tan tube)",
     turnaroundTime: "24-72 hours",
-    notes: "Microbiology culture and sensitivity of CSF.",
+    notes: "Microbiology culture and sensitivity of CSF. Local workflow includes cryptococcal antigen; this may also be reflexed if lymphocytes are >5/uL or protein is abnormal.",
     criticalPrep: "Clearly state if the patient was already on antimicrobials when the sample was taken.",
     specimenGuide: "CSF in tan tube (per lab protocol).",
     borderColor: "#64748b"
@@ -552,9 +552,9 @@ const tests = [
   {
     name: "CSF Cell Count and Chemistry",
     tubeColor: "Tan",
-    specimen: "CSF (Tan tubes)",
+    specimen: "CSF (Sterile tan tube) + paired fluoride tube for glucose",
     turnaroundTime: "Same day",
-    notes: "CSF request combining cell count and chemistry.",
+    notes: "CSF chemistry profile including cell count and differential, glucose, protein, IgG index, ADA, and oligoclonal bands. Use a sterile tan tube for CSF; pair glucose with a fluoride tube. Paired serum is also needed for IgG index and usually for oligoclonal bands.",
     borderColor: "#64748b"
   },
   {
@@ -568,9 +568,9 @@ const tests = [
   {
     name: "CSF Glucose",
     tubeColor: "Tan",
-    specimen: "CSF (Tan tube)",
+    specimen: "CSF (Sterile tan tube) + paired fluoride tube",
     turnaroundTime: "Same day",
-    notes: "CSF glucose measurement.",
+    notes: "CSF glucose measurement with paired fluoride tube.",
     borderColor: "#64748b"
   },
   {
@@ -582,11 +582,19 @@ const tests = [
     borderColor: "#64748b"
   },
   {
+    name: "CSF Cytology",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF cytology for malignant or abnormal cells.",
+    borderColor: "#64748b"
+  },
+  {
     name: "Cryptococcal Antigen (CSF)",
     tubeColor: "Tan",
     specimen: "CSF (Tan tube)",
     turnaroundTime: "Same day to 1 day",
-    notes: "CSF cryptococcal antigen test.",
+    notes: "CSF cryptococcal antigen test. Also covered in local CSF MCS workflow.",
     borderColor: "#64748b"
   },
   {
@@ -608,17 +616,17 @@ const tests = [
   {
     name: "CSF IgG Index",
     tubeColor: "Tan",
-    specimen: "CSF (paired serum may be required)",
+    specimen: "CSF (Sterile tan tube) + paired serum (Gold/Yellow)",
     turnaroundTime: "1-3 days",
-    notes: "CSF IgG index assessment. Paired serum may be required per lab protocol.",
+    notes: "CSF IgG index assessment. Collect paired serum in a Gold/Yellow tube.",
     borderColor: "#64748b"
   },
   {
     name: "CSF Oligoclonal Bands",
     tubeColor: "Tan",
-    specimen: "CSF (paired serum may be required)",
+    specimen: "CSF (Sterile tan tube) + paired serum",
     turnaroundTime: "1-3 days",
-    notes: "CSF oligoclonal bands. Paired serum may be required per lab protocol.",
+    notes: "CSF oligoclonal bands used mainly in demyelinating or inflammatory CNS workup, such as multiple sclerosis. Paired serum is usually required.",
     borderColor: "#64748b"
   },
   {
@@ -627,6 +635,14 @@ const tests = [
     specimen: "CSF (Tan tube)",
     turnaroundTime: "1-3 days",
     notes: "CSF adenosine deaminase (ADA).",
+    borderColor: "#64748b"
+  },
+  {
+    name: "FTA (CSF)",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
+    turnaroundTime: "1-3 days",
+    notes: "CSF treponemal antibody test used in neurosyphilis workup.",
     borderColor: "#64748b"
   },
   {
@@ -990,11 +1006,43 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "ANCA",
+    name: "p-ANCA",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
-    notes: "Autoimmune vasculitis screen.",
+    notes: "Perinuclear ANCA-associated autoimmune vasculitis marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "c-ANCA",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Cytoplasmic ANCA-associated autoimmune vasculitis marker.",
+    borderColor: "yellow"
+  },
+  {
+    name: "PR3 Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Proteinase 3 autoantibody used in ANCA-associated vasculitis workup.",
+    borderColor: "yellow"
+  },
+  {
+    name: "MPO Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Myeloperoxidase autoantibody used in ANCA-associated vasculitis workup.",
+    borderColor: "yellow"
+  },
+  {
+    name: "GBM IIF",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Glomerular basement membrane indirect immunofluorescence test.",
     borderColor: "yellow"
   },
   {
@@ -2139,6 +2187,30 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "Anti-Smooth Muscle Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "2-7 days",
+    notes: "Autoimmune hepatitis serology marker. Serum gel tube is standard; red-top serum is also acceptable.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Anti-LKM1 Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "2-7 days",
+    notes: "Autoimmune hepatitis type 2 serology marker. Serum gel tube is standard; red-top serum is also acceptable.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Anti-SLA/LP Antibody",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "2-7 days",
+    notes: "Soluble liver antigen / liver-pancreas autoimmune hepatitis serology marker. Serum gel tube is standard; red-top serum is also acceptable.",
+    borderColor: "yellow"
+  },
+  {
     name: "Systemic Sclerosis Profile",
     tubeColor: "Gold",
     specimen: "Serum",
@@ -2376,6 +2448,22 @@ const tests = [
     specimen: "Serum",
     turnaroundTime: "1-3 days",
     notes: "Cytomegalovirus serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CMV IgG",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Cytomegalovirus IgG serology.",
+    borderColor: "yellow"
+  },
+  {
+    name: "CMV IgM",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Cytomegalovirus IgM serology.",
     borderColor: "yellow"
   },
   {
