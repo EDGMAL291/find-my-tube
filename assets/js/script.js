@@ -1,7 +1,9 @@
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
 const cardsContainer = document.getElementById("cardsContainer");
+const resultsToolbar = document.getElementById("resultsToolbar");
 const resultsInfo = document.getElementById("resultsInfo");
+const resultsBackToTopBtn = document.getElementById("resultsBackToTopBtn");
 const selectionNoticeToast = document.getElementById("selectionNoticeToast");
 const preSearchPanel = document.getElementById("preSearchPanel");
 const brandHomeBtn = document.getElementById("brandHomeBtn");
@@ -50,6 +52,10 @@ const GOLD_VOLUME_PROFILE_NAMES = new Set([
   "Cardiac Profile", // 5
   "Lipid Profile / Lipogram", // 6
   "Fe Studies" // 9
+]);
+const OGTT_MULTI_DRAW_TESTS = new Set([
+  "OGTT (2hr)",
+  "OGTT Pregnancy (75g, 2hr)"
 ]);
 const PURPLE_VOLUME_TRIGGER_TESTS = new Set([
   "HbA1c" // 8
@@ -146,6 +152,29 @@ function setResultsInfo(text) {
   const message = String(text || "");
   resultsInfo.textContent = message;
   resultsInfo.hidden = message.length === 0;
+  updateResultsToolbar();
+}
+
+function updateResultsToolbar() {
+  if (!resultsToolbar) return;
+
+  const hasMessage = Boolean(resultsInfo && !resultsInfo.hidden);
+  resultsToolbar.hidden = !hasMessage;
+  updateBackToTopVisibility();
+}
+
+function updateBackToTopVisibility() {
+  if (!resultsBackToTopBtn) return;
+
+  const hasResultsView = Boolean(activeSectionGroup || String(searchInput?.value || "").trim());
+  const hasModalOpen = document.body.classList.contains("modal-open");
+  const hasScrolledDown = window.scrollY > 40;
+  const isVisible = hasResultsView && hasScrolledDown && !hasModalOpen;
+
+  resultsBackToTopBtn.hidden = !hasResultsView;
+  resultsBackToTopBtn.classList.toggle("is-visible", isVisible);
+  resultsBackToTopBtn.tabIndex = isVisible ? 0 : -1;
+  resultsBackToTopBtn.setAttribute("aria-hidden", isVisible ? "false" : "true");
 }
 
 function showSelectionNotice(message) {
@@ -254,17 +283,36 @@ function focusMainSearchField() {
   if (!searchInput) return;
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const isMobile = window.matchMedia("(max-width: 600px)").matches;
   const target = searchInput.closest(".search-box") || searchInput;
-  window.requestAnimationFrame(() => {
-    target.scrollIntoView({
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-      block: "start"
-    });
+  const focusInput = () => {
     const cursorEnd = searchInput.value.length;
     searchInput.focus({ preventScroll: true });
     if (typeof searchInput.setSelectionRange === "function") {
       searchInput.setSelectionRange(cursorEnd, cursorEnd);
     }
+  };
+
+  if (isMobile) {
+    focusInput();
+  }
+
+  window.requestAnimationFrame(() => {
+    target.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start"
+    });
+    focusInput();
+  });
+}
+
+function scrollToResultsTop() {
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.requestAnimationFrame(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? "auto" : "smooth"
+    });
   });
 }
 
@@ -311,14 +359,6 @@ const exactDrawRules = [
     tests: ["Troponin I", "CK Total", "LDH", "NT-proBNP"],
     items: [
       { key: "Green", label: "Green", count: 1, detail: "Preferred tube for this cardiac marker set. Gold/Yellow remains an acceptable alternative if local policy uses serum collection." }
-    ]
-  },
-  {
-    id: "glucose-ogtt-panel",
-    tests: ["Fasting Glucose", "Insulin (Fasting)", "OGTT (2hr)", "HbA1c"],
-    items: [
-      { key: "Gray", label: "Gray", count: 2, detail: "Second gray tube at 2 hours for OGTT." },
-      { key: "Purple", label: "Purple", count: 1 }
     ]
   },
   {
@@ -391,6 +431,10 @@ const profileComponentsByName = {
     "Hepatitis B Surface Antigen (HBsAg)",
     "Rubella IgG",
     "Random Glucose"
+  ],
+  "Cord Blood": [
+    "TSH",
+    "RPR (Syphilis Screen)"
   ],
   "Arthritis Profile": [
     "ESR",
@@ -604,6 +648,26 @@ const aliasByName = {
     "Fasting",
     "Fasting sugar",
     "Blood sugar fasting"
+  ],
+  "Cord Blood": [
+    "Cord blood profile",
+    "Cord blood tsh rpr",
+    "Neonatal cord blood",
+    "Cord blood screening"
+  ],
+  "OGTT (2hr)": [
+    "OGTT",
+    "GTT",
+    "Oral glucose tolerance test",
+    "75 g OGTT",
+    "Glucose tolerance test"
+  ],
+  "OGTT Pregnancy (75g, 2hr)": [
+    "Pregnancy OGTT",
+    "Gestational OGTT",
+    "75 g pregnancy OGTT",
+    "Pregnancy glucose tolerance test",
+    "GTT pregnancy"
   ],
   "Random Glucose": [
     "Glucose Random",
@@ -1209,6 +1273,10 @@ const clinicalProfileByName = {
     use: "Booking antenatal profile for blood group, antibodies, key infections, and baseline screening.",
     keywords: ["antenatal", "pregnancy booking", "antinv", "maternal screen", "prenatal profile"]
   },
+  "Cord Blood": {
+    use: "Cord blood profile including TSH and RPR for newborn screening workflow.",
+    keywords: ["cord blood", "newborn screening", "neonatal screening", "tsh cord blood", "rpr cord blood"]
+  },
   "Troponin I": {
     use: "Primary marker for suspected acute coronary syndrome / heart attack.",
     keywords: ["heart attack", "myocardial infarction", "chest pain", "acs", "coronary syndrome"]
@@ -1240,6 +1308,14 @@ const clinicalProfileByName = {
   "Fasting Glucose": {
     use: "Fasting plasma glucose test for diabetes screening and glucose regulation assessment.",
     keywords: ["fasting glucose", "fasting sugar", "diabetes", "prediabetes", "high sugar"]
+  },
+  "OGTT (2hr)": {
+    use: "75 g oral glucose tolerance test using fasting, 1 hour, and 2 hour fluoride samples.",
+    keywords: ["ogtt", "gtt", "glucose tolerance test", "prediabetes", "diabetes", "fasting 1 hour 2 hour"]
+  },
+  "OGTT Pregnancy (75g, 2hr)": {
+    use: "Pregnancy 75 g oral glucose tolerance test using fasting, 1 hour, and 2 hour fluoride samples.",
+    keywords: ["pregnancy ogtt", "gestational diabetes", "gtt pregnancy", "fasting 1 hour 2 hour", "75 g ogtt"]
   },
   "Random Glucose": {
     use: "Random plasma glucose test for symptomatic hyperglycaemia and diabetes screening.",
@@ -1434,6 +1510,7 @@ function normalizeTubeColor(value) {
   const map = {
     grey: "Gray",
     gray: "Gray",
+    tan: "Tan",
     yellow: "Gold/Yellow",
     "yellow/gold": "Gold/Yellow",
     "gold/yellow": "Gold/Yellow",
@@ -1455,6 +1532,7 @@ function normalizeTubeColor(value) {
 }
 
 const tubeGroupPatternEntries = [
+  { key: "Tan", pattern: /\btan\b/ },
   { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
   { key: "Pink", pattern: /\bpink\b/ },
   { key: "Blue", pattern: /\blight blue\b|\bblue\b|citrate/ },
@@ -1483,6 +1561,7 @@ function getTubeGroups(tubeColorValue) {
 
 function getTubeSwatchColor(tubeGroup) {
   const swatch = {
+    Tan: "#c8a37a",
     Purple: "#8b5cf6",
     Pink: "#ec4899",
     Blue: "#89CFF0",
@@ -1500,6 +1579,7 @@ function getTubeSwatchColor(tubeGroup) {
 
 function getTubeAdditiveLabel(tubeGroup) {
   const additiveByGroup = {
+    Tan: "Sterile",
     Purple: "EDTA",
     Pink: "EDTA",
     Blue: "Sodium citrate",
@@ -2094,6 +2174,7 @@ function syncModalOpenClass() {
   const profileOpen = Boolean(profileModal && !profileModal.hidden);
   const legalOpen = Boolean(legalModal && !legalModal.hidden);
   document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen);
+  updateBackToTopVisibility();
 }
 
 function normalizeNameKey(value) {
@@ -2208,6 +2289,7 @@ function isDedicatedGoldTubeTest(test) {
   if (!isGold) return false;
 
   return (
+    name.includes("cord blood") ||
     name.includes("rheumatoid factor") ||
     /\brf\b/.test(name) ||
     name.includes("rpr") ||
@@ -2222,12 +2304,14 @@ function isSharedGoldTubeTest(test) {
 
 function getRequiredSharedGoldTubeCount(selectedTests) {
   const sharedGoldTests = selectedTests.filter((test) => isSharedGoldTubeTest(test));
+  const hasCordBloodProfile = selectedTests.some((test) => normalizeNameKey(test.name) === "cord blood");
+  const sharedGoldRequestCount = sharedGoldTests.length + (hasCordBloodProfile ? 1 : 0);
 
-  if (!sharedGoldTests.length) return 0;
+  if (!sharedGoldRequestCount) return 0;
 
   const listedGoldProfileCount = sharedGoldTests.filter((test) => GOLD_VOLUME_PROFILE_NAMES.has(test.name)).length;
 
-  return listedGoldProfileCount >= 3 && sharedGoldTests.length > 3 ? 2 : 1;
+  return listedGoldProfileCount >= 3 && sharedGoldRequestCount > 3 ? 2 : 1;
 }
 
 function applyDedicatedGoldTubeRule(plan, selectedTests) {
@@ -2284,6 +2368,23 @@ function applyPurpleVolumeRule(plan, selectedTests) {
   return "Purple rule applied: HbA1c plus 2 more purple-top tests require 2 x Purple tubes.";
 }
 
+function applyOgttGrayTubeRule(plan, selectedTests) {
+  const hasOgtt = selectedTests.some((test) => OGTT_MULTI_DRAW_TESTS.has(test.name));
+  if (!hasOgtt) return "";
+
+  let grayItem = plan.items.find((item) => item.key === "Gray");
+  if (!grayItem) {
+    grayItem = { key: "Gray", label: "Gray", count: 3, tests: [] };
+    plan.items.push(grayItem);
+  } else {
+    grayItem.count = Math.max(grayItem.count, 3);
+  }
+
+  grayItem.detail = "Fasting, 1 hour, and 2 hour fluoride samples for OGTT.";
+  plan.items.sort((a, b) => a.label.localeCompare(b.label));
+  return "OGTT rule applied: use 3 x Gray tubes for fasting, 1 hour, and 2 hour samples.";
+}
+
 function getLabDrawPlan(selectedTests) {
   const exactRule = findExactDrawRule(selectedTests);
   if (exactRule) {
@@ -2302,7 +2403,8 @@ function getResolvedDrawPlan(selectedTests) {
   const guidanceNotes = [
     applyDedicatedGoldTubeRule(plan, selectedTests),
     applyGoldProfileVolumeRule(plan, selectedTests),
-    applyPurpleVolumeRule(plan, selectedTests)
+    applyPurpleVolumeRule(plan, selectedTests),
+    applyOgttGrayTubeRule(plan, selectedTests)
   ].filter(Boolean);
 
   return { plan, guidanceNotes };
@@ -2424,11 +2526,24 @@ function inferSpecimenGuide(test) {
   if (text.includes("urine")) return "Urine specimen (sterile container or urine swab/collection protocol as required).";
   if (text.includes("stool") || text.includes("fecal")) return "Stool specimen (clean stool container).";
   if (text.includes("swab")) return "Swab specimen (site-specific swab: nasal, throat, vaginal, ulcer, or wound as indicated).";
-  if (text.includes("csf")) return "CSF specimen (sterile CSF container).";
+  if (text.includes("csf")) return "CSF specimen (sterile tan tube).";
   if (text.includes("sputum") || text.includes("respiratory")) return "Respiratory specimen (e.g., sputum, NP swab, or lower respiratory sample).";
   if (text.includes("blood culture")) return "Blood culture bottles (aseptic blood specimen collection).";
   if (text.includes("blood")) return "Blood specimen (container depends on requested microbiology/virology test).";
   return "Specimen-specific collection required (confirm exact sample type with lab protocol).";
+}
+
+function getCardSpecimenValue(test, { isMicro = false } = {}) {
+  const baseValue = String(isMicro ? test.specimenGuide : test.specimen || "").trim();
+  const isCsf = /\bcsf\b/i.test(`${test.name} ${test.specimen} ${test.specimenGuide} ${test.tubeColor}`);
+  if (!isCsf) return baseValue;
+
+  const conciseValue = String(test.specimen || baseValue)
+    .replace(/\s*\((?:sterile\s+)?tan tubes?\)\s*/gi, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return conciseValue || baseValue || "CSF";
 }
 
 function getClinicalProfile(testName, grouping) {
@@ -2462,6 +2577,10 @@ function getTestGrouping(testName) {
   }
 
   if (name.includes("hirsutism") || name.includes("infertility")) {
+    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
+  }
+
+  if (name.includes("cord blood")) {
     return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
   }
 
@@ -3061,7 +3180,9 @@ function renderCards(filteredTests) {
       ? useOrBetweenTubeOptions
       : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
     const hasTubeOptions = tubeGroups.length > 0;
-    const specimenValue = String(isMicro ? test.specimenGuide : test.specimen || "").trim();
+    const specimenValue = getCardSpecimenValue(test, { isMicro });
+    const isCsfSpecimenCard = /\bcsf\b/i.test(`${test.name} ${specimenValue} ${test.tubeColor}`);
+    const useSpecimenOnlySummary = isMicro && !isCsfSpecimenCard;
     const isNonBloodSpecimen = /(urine|stool|faec|swab|csf|sputum|respiratory|semen|fluid|tissue|bone marrow|aspirate|saliva|synovial|pleural|ascitic|vaginal|nasopharyngeal|throat)/i
       .test(specimenValue);
     const showSpecimenField = isMicro || isNonBloodSpecimen || !hasTubeOptions;
@@ -3093,7 +3214,7 @@ function renderCards(filteredTests) {
       </button>
       `;
     };
-    const summaryFields = isMicro
+    const summaryFields = useSpecimenOnlySummary
       ? renderSummaryField({
           label: "Specimen",
           content: `<span class="card-summary-value">${specimenValue}</span>`,
@@ -3117,7 +3238,7 @@ function renderCards(filteredTests) {
       })}
       ` : ""}
       `;
-    const summaryFieldCount = isMicro
+    const summaryFieldCount = useSpecimenOnlySummary
       ? 1
       : Number(hasTubeOptions) + Number(showSpecimenField);
     const cardMetaRow = hasProfileComponents
@@ -3213,6 +3334,7 @@ function applyFilters() {
   if (siteFooter) {
     siteFooter.hidden = hasQuery || hasSectionFilter;
   }
+  updateBackToTopVisibility();
   updateSelectionCartViewportPosition();
 
   if (!hasQuery && !hasSectionFilter) {
@@ -3265,6 +3387,15 @@ function bindEvents() {
       goHome();
     });
   }
+
+  if (resultsBackToTopBtn) {
+    resultsBackToTopBtn.addEventListener("click", () => {
+      scrollToResultsTop();
+    });
+  }
+
+  window.addEventListener("scroll", updateBackToTopVisibility, { passive: true });
+  window.addEventListener("resize", updateBackToTopVisibility);
 
   if (openDrawPlannerBtn) {
     openDrawPlannerBtn.addEventListener("click", (event) => {

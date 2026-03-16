@@ -443,10 +443,10 @@ const tests = [
   },
   {
     name: "Meningitis/Encephalitis PCR Panel",
-    tubeColor: "N/A (CSF container)",
-    specimen: "CSF",
+    tubeColor: "Tan",
+    specimen: "CSF (Tan tube)",
     turnaroundTime: "Same day to 1 day",
-    notes: "Multiplex PCR panel for CNS pathogens.",
+    notes: "Multiplex PCR panel for CNS pathogens on CSF.",
     borderColor: "#64748b"
   },
   {
@@ -1338,17 +1338,19 @@ const tests = [
   {
     name: "OGTT (2hr)",
     tubeColor: "Grey",
-    specimen: "Fluoride plasma",
+    specimen: "Fluoride plasma (fasting, 1 hour, 2 hour)",
     turnaroundTime: "Same day",
-    notes: "Oral glucose tolerance test.",
+    notes: "75 g oral glucose tolerance test with fasting, 1 hour, and 2 hour fluoride samples.",
+    criticalPrep: "Fast overnight. Draw the fasting sample first, then give 75 g glucose to drink within 5 minutes. Keep the patient seated during the test; no food, smoking, or caffeine until the 2 hour sample is taken.",
     borderColor: "gray"
   },
   {
     name: "OGTT Pregnancy (75g, 2hr)",
     tubeColor: "Grey",
-    specimen: "Fluoride plasma",
+    specimen: "Fluoride plasma (fasting, 1 hour, 2 hour)",
     turnaroundTime: "Same day",
-    notes: "Gestational oral glucose tolerance test.",
+    notes: "Pregnancy 75 g oral glucose tolerance test with fasting, 1 hour, and 2 hour fluoride samples.",
+    criticalPrep: "Fast overnight. Draw the fasting sample first, then give 75 g glucose to drink within 5 minutes. Keep the patient seated during the test; no food, smoking, or caffeine until the 2 hour sample is taken.",
     borderColor: "gray"
   },
   {
@@ -1400,11 +1402,11 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "TSH (Cord Blood)",
+    name: "Cord Blood",
     tubeColor: "Gold",
     specimen: "Cord blood serum",
     turnaroundTime: "6-24 hours",
-    notes: "Neonatal thyroid screening request.",
+    notes: "Cord blood profile including TSH and RPR.",
     borderColor: "yellow"
   },
   {

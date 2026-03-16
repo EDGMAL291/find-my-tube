@@ -451,7 +451,7 @@ body::after {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .pre-search-primary {
@@ -1200,11 +1200,65 @@ body::after {
   animation: drawPlannerPulse 0.45s ease;
 }
 
-.results-info {
+.results-toolbar {
+  display: flex;
+  align-items: center;
   margin-bottom: 16px;
+}
+
+.results-info {
+  margin-bottom: 0;
   color: #31444f;
   font-size: 0.96rem;
   font-weight: 500;
+  min-width: 0;
+}
+
+.results-back-to-top-btn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 18px);
+  z-index: 35;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(120, 102, 74, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(53, 80, 93, 0.62);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(65, 53, 38, 0.08);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.results-back-to-top-btn.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.results-back-to-top-btn:hover,
+.results-back-to-top-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(15, 118, 110, 0.22);
+  color: rgba(13, 96, 90, 0.82);
+  box-shadow: 0 12px 24px rgba(65, 53, 38, 0.12);
+}
+
+.results-back-to-top-btn:focus-visible {
+  outline: none;
 }
 
 .selection-notice {
@@ -1250,7 +1304,7 @@ body::after {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin: 16px 0 12px;
+  margin: 8px 0 12px;
   padding: 16px 18px;
   border: 1px solid rgba(120, 102, 74, 0.22);
   border-radius: 22px;
@@ -2083,7 +2137,7 @@ body::after {
   }
 
   .site-footer {
-    margin-top: 16px;
+    margin-top: 10px;
     padding: 14px;
     border-radius: 16px;
   }
@@ -2096,6 +2150,14 @@ body::after {
     flex: 1 1 calc(50% - 6px);
     justify-content: center;
     text-align: center;
+  }
+
+  .results-toolbar {
+    margin-bottom: 14px;
+  }
+
+  .results-back-to-top-btn {
+    bottom: calc(env(safe-area-inset-bottom) + 14px);
   }
 
   .card h2 {
