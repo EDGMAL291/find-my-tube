@@ -1,8 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Find My Tube favicon">
-  <circle cx="256" cy="256" r="228" fill="#0f766e"/>
-  <rect x="168" y="118" width="176" height="48" rx="24" fill="#ffffff"/>
-  <rect x="212" y="158" width="88" height="164" rx="18" fill="#ffffff"/>
-  <circle cx="256" cy="322" r="44" fill="#ffffff"/>
-  <rect x="212" y="220" width="60" height="14" rx="7" fill="#0f766e"/>
-  <rect x="212" y="264" width="60" height="14" rx="7" fill="#0f766e"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Find My Tube icon">
+  <defs>
+    <linearGradient id="fmt-bg" x1="86" y1="54" x2="426" y2="458" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#0b5d57"/>
+    </linearGradient>
+    <linearGradient id="fmt-lens" x1="116" y1="96" x2="326" y2="308" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fffaf0"/>
+      <stop offset="1" stop-color="#f1e5cf"/>
+    </linearGradient>
+    <linearGradient id="fmt-sample" x1="214" y1="184" x2="214" y2="244" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#efba64"/>
+      <stop offset="1" stop-color="#d88d20"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#fmt-bg)"/>
+  <circle cx="214" cy="204" r="124" fill="url(#fmt-lens)"/>
+  <circle cx="214" cy="204" r="98" fill="none" stroke="#17343a" stroke-width="28"/>
+  <path d="M292 282l82 82" fill="none" stroke="#17343a" stroke-linecap="round" stroke-width="34"/>
+  <rect x="194" y="114" width="40" height="140" rx="16" fill="#fffdf8" stroke="#0b5d57" stroke-width="14"/>
+  <rect x="176" y="94" width="76" height="24" rx="12" fill="#0b5d57"/>
+  <rect x="204" y="182" width="20" height="58" rx="10" fill="url(#fmt-sample)"/>
+  <path d="M204 190c5-4 11-6 20 0" fill="none" stroke="#f6cf8c" stroke-linecap="round" stroke-width="6"/>
 </svg>

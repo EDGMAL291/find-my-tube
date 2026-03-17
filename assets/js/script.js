@@ -7,17 +7,19 @@ const resultsBackToTopBtn = document.getElementById("resultsBackToTopBtn");
 const selectionNoticeToast = document.getElementById("selectionNoticeToast");
 const preSearchPanel = document.getElementById("preSearchPanel");
 const brandHomeBtn = document.getElementById("brandHomeBtn");
-const menuToggleBtn = document.getElementById("menuToggleBtn");
-const menuPanel = document.getElementById("menuPanel");
 const toggleQuickToolsBtn = document.getElementById("toggleQuickToolsBtn");
+const quickToolsPanel = document.getElementById("quickToolsPanel");
+const quickToolsTitle = document.getElementById("quickToolsTitle");
+const quickToolsDescription = document.getElementById("quickToolsDescription");
+const quickToolsStats = document.getElementById("quickToolsStats");
+const quickToolsTestsStat = document.getElementById("quickToolsTestsStat");
+const quickToolsTubesStat = document.getElementById("quickToolsTubesStat");
+const quickToolsClearBtn = document.getElementById("quickToolsClearBtn");
 const factCarouselPanel = document.getElementById("factCarouselPanel");
 const factCarouselContent = document.getElementById("factCarouselContent");
 const tipText = document.getElementById("tipText");
 const groupChips = document.getElementById("groupChips");
 const groupHintsPanel = document.querySelector(".group-hints");
-const installHelper = document.getElementById("installHelper");
-const installHelperText = document.getElementById("installHelperText");
-const installHelperBtn = document.getElementById("installHelperBtn");
 const drawModal = document.getElementById("drawModal");
 const drawResultCard = document.getElementById("drawResultCard");
 const drawPlannerCount = document.getElementById("drawPlannerCount");
@@ -57,13 +59,15 @@ const OGTT_MULTI_DRAW_TESTS = new Set([
   "OGTT (2hr)",
   "OGTT Pregnancy (75g, 2hr)"
 ]);
-const PURPLE_VOLUME_TRIGGER_TESTS = new Set([
-  "HbA1c" // 8
-]);
-
-let deferredInstallPrompt = null;
 const selectedTestNames = new Set();
 let activeSectionGroup = "";
+const activeBrowseGroupBySection = {
+  chemistry: "",
+  haematology: "",
+  immunology: ""
+};
+let isClearDrawSelectionConfirming = false;
+let clearDrawSelectionConfirmTimeoutId = 0;
 let selectionNoticeTimeoutId = 0;
 let selectionNoticeHideTimeoutId = 0;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
@@ -165,7 +169,7 @@ function updateResultsToolbar() {
 function updateBackToTopVisibility() {
   if (!resultsBackToTopBtn) return;
 
-  const hasResultsView = Boolean(activeSectionGroup || String(searchInput?.value || "").trim());
+  const hasResultsView = isResultsViewActive(activeSectionGroup, searchInput?.value || "");
   const hasModalOpen = document.body.classList.contains("modal-open");
   const hasScrolledDown = window.scrollY > 40;
   const isVisible = hasResultsView && hasScrolledDown && !hasModalOpen;
@@ -199,6 +203,115 @@ function showSelectionNotice(message) {
   }, 2600);
 }
 
+function isRenderableElement(element) {
+  if (!element || element.hidden) return false;
+  const style = window.getComputedStyle(element);
+  if (style.display === "none" || style.visibility === "hidden") return false;
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
+function getAddToPlanAnimationTarget() {
+  if (isRenderableElement(selectionCartBar)) return selectionCartBar;
+  if (isRenderableElement(openDrawPlannerBtn)) return openDrawPlannerBtn;
+  return null;
+}
+
+function pulsePlanTarget(target) {
+  if (!target) return;
+  target.classList.remove("plan-target-catch");
+  void target.offsetWidth;
+  target.classList.add("plan-target-catch");
+  target.addEventListener("animationend", () => {
+    target.classList.remove("plan-target-catch");
+  }, { once: true });
+}
+
+function getPlanAnimationTubeGroup(tubeColorValue) {
+  return getTubeGroups(tubeColorValue)[0] || "";
+}
+
+function animateAddToPlanFeedback({ sourceRect, tubeColorValue }) {
+  if (!sourceRect) return;
+
+  window.requestAnimationFrame(() => {
+    const target = getAddToPlanAnimationTarget();
+    if (!target) return;
+
+    const targetRect = target.getBoundingClientRect();
+    if (!targetRect.width || !targetRect.height) return;
+
+    const targetFocusRect = isRenderableElement(selectionCartCount)
+      ? selectionCartCount.getBoundingClientRect()
+      : targetRect;
+    const endX = targetFocusRect.left + (targetFocusRect.width / 2);
+    const endY = targetFocusRect.top + (targetFocusRect.height / 2);
+
+    const startX = sourceRect.left + (sourceRect.width / 2);
+    const startY = sourceRect.top + (sourceRect.height / 2);
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      pulsePlanTarget(target);
+      return;
+    }
+
+    const arcLift = Math.max(28, Math.min(88, Math.abs(deltaY) * 0.24 + Math.abs(deltaX) * 0.05));
+    const flyer = document.createElement("div");
+    flyer.className = "plan-fly-token";
+    flyer.style.left = `${startX}px`;
+    flyer.style.top = `${startY}px`;
+
+    const visual = document.createElement("div");
+    visual.className = "plan-fly-token-visual";
+    visual.innerHTML = getTubeVisualMarkup(getPlanAnimationTubeGroup(tubeColorValue), " tube-icon-mini");
+    flyer.appendChild(visual);
+    document.body.appendChild(flyer);
+
+    if (typeof flyer.animate !== "function" || typeof visual.animate !== "function") {
+      pulsePlanTarget(target);
+      flyer.remove();
+      return;
+    }
+
+    const flight = flyer.animate(
+      [
+        { transform: "translate(0px, 0px)" },
+        { transform: `translate(${deltaX * 0.76}px, ${deltaY * 0.68 - arcLift}px)`, offset: 0.72 },
+        { transform: `translate(${deltaX}px, ${deltaY}px)`, offset: 1 }
+      ],
+      {
+        duration: 760,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "forwards"
+      }
+    );
+
+    visual.animate(
+      [
+        { transform: "translate(-50%, -50%) scale(0.72) rotate(-12deg)", opacity: 0 },
+        { transform: "translate(-50%, -50%) scale(1.02) rotate(2deg)", opacity: 1, offset: 0.18 },
+        { transform: "translate(-50%, -50%) scale(0.96) rotate(-4deg)", opacity: 1, offset: 0.72 },
+        { transform: "translate(-50%, -50%) scale(0.4) rotate(10deg)", opacity: 0, offset: 1 }
+      ],
+      {
+        duration: 760,
+        easing: "cubic-bezier(0.18, 0.9, 0.28, 1)",
+        fill: "forwards"
+      }
+    );
+
+    window.setTimeout(() => pulsePlanTarget(target), 470);
+    flight.finished
+      .catch(() => {})
+      .finally(() => {
+        flyer.remove();
+      });
+  });
+}
+
 function dismissRackHint() {
   if (hasDismissedRackHint) return;
   hasDismissedRackHint = true;
@@ -211,7 +324,8 @@ function dismissRackHint() {
 
 function getHistoryStateForSection(sectionId = "") {
   if (sectionId && sectionMeta[sectionId]) {
-    return { view: "section", section: sectionId };
+    const browseId = getActiveBrowseGroup(sectionId);
+    return { view: "section", section: sectionId, browse: browseId };
   }
 
   return { view: "home" };
@@ -222,7 +336,11 @@ function syncHistoryState(sectionId = "", replace = false) {
 
   const nextState = getHistoryStateForSection(sectionId);
   const currentState = window.history.state || {};
-  if (currentState.view === nextState.view && currentState.section === nextState.section) return;
+  if (
+    currentState.view === nextState.view
+    && currentState.section === nextState.section
+    && (currentState.browse || "") === (nextState.browse || "")
+  ) return;
 
   const method = replace ? "replaceState" : "pushState";
   const currentUrl = `${window.location.pathname}${window.location.search}`;
@@ -243,20 +361,6 @@ function refreshSearchPlaceholder() {
     : SEARCH_PLACEHOLDER_HINT;
 }
 
-function isMenuOpen() {
-  return Boolean(menuPanel && !menuPanel.hidden);
-}
-
-function setMenuOpen(isOpen) {
-  if (!menuPanel || !menuToggleBtn) return;
-  menuPanel.hidden = !isOpen;
-  menuToggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
-}
-
-function closeMenu() {
-  setMenuOpen(false);
-}
-
 function scrollHomeViewportToTop() {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.requestAnimationFrame(() => {
@@ -269,7 +373,6 @@ function scrollHomeViewportToTop() {
 }
 
 function goHome() {
-  closeMenu();
   closeDrawModal();
   closeProfileModal();
   closeLegalModal({ restoreFocus: false });
@@ -278,12 +381,26 @@ function goHome() {
   scrollHomeViewportToTop();
 }
 
-function focusMainSearchField() {
+function shouldScrollSearchFieldIntoView(target) {
+  if (!target || typeof target.getBoundingClientRect !== "function") return true;
+
+  const rect = target.getBoundingClientRect();
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  if (!viewportHeight) return true;
+
+  const topMargin = 18;
+  const bottomMargin = 18;
+  return rect.top < topMargin || rect.bottom > viewportHeight - bottomMargin;
+}
+
+function focusMainSearchField({ scroll = "always" } = {}) {
   if (!searchInput) return;
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
   const target = searchInput.closest(".search-box") || searchInput;
+  const shouldScroll = scroll === "always"
+    || (scroll === "if-needed" && shouldScrollSearchFieldIntoView(target));
   const focusInput = () => {
     const cursorEnd = searchInput.value.length;
     searchInput.focus({ preventScroll: true });
@@ -292,8 +409,15 @@ function focusMainSearchField() {
     }
   };
 
+  // Mobile browsers usually require focus to happen during the tap gesture
+  // for the on-screen keyboard to open reliably.
   if (isMobile) {
     focusInput();
+  }
+
+  if (!shouldScroll) {
+    if (!isMobile) focusInput();
+    return;
   }
 
   window.requestAnimationFrame(() => {
@@ -301,7 +425,9 @@ function focusMainSearchField() {
       behavior: prefersReducedMotion ? "auto" : "smooth",
       block: "start"
     });
-    focusInput();
+    if (!isMobile) {
+      focusInput();
+    }
   });
 }
 
@@ -330,6 +456,14 @@ function restoreSearchFocusWithoutScroll() {
   if (typeof searchInput.setSelectionRange === "function") {
     searchInput.setSelectionRange(cursorEnd, cursorEnd);
   }
+}
+
+function clearSearchForNextPlanEntry() {
+  if (!searchInput) return;
+  if (!searchInput.value.trim()) return;
+  searchInput.value = "";
+  updateSearchClearButton();
+  applyFilters();
 }
 
 const exactDrawRules = [
@@ -414,7 +548,7 @@ const profileComponentsByName = {
     "Partial Thromboplastin Time (PTT)",
     "INR"
   ],
-  "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)": [
+  "ANCA Profile": [
     "PR3 Antibody",
     "MPO Antibody",
     "p-ANCA",
@@ -572,44 +706,172 @@ const factTips = [
 
 const sectionMeta = {
   chemistry: { label: "Biochemistry" },
-  endocrinology: { label: "Endocrinology" },
-  tumour_markers: { label: "Tumour Markers" },
-  metabolic_genetic: { label: "Metabolic / Genetic Disorders" },
-  allergy: { label: "Allergy" },
   haematology: { label: "Haematology" },
-  drugs: { label: "Drugs" },
-  immunology: { label: "Immunology / Serology" },
-  micro_virology: { label: "Microbiology / Virology" },
+  micro_virology: { label: "Microbiology" },
+  immunology: { label: "Serology" },
+  cytology: { label: "Cytology" },
+  histology: { label: "Histology" },
+  metabolic_genetic: { label: "Molecular Biology / Genetics" },
   general: { label: "General" }
 };
 
 const sectionIconById = {
   chemistry: `<svg viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-4 7a4 4 0 0 0 3.5 6h5a4 4 0 0 0 3.5-6l-4-7V3"/><path d="M8.5 14h7"/></svg>`,
-  endocrinology: `<svg viewBox="0 0 24 24"><circle cx="6" cy="8" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="12" cy="16" r="2"/><path d="M8 8h8"/><path d="M7.7 9.2l2.7 4.6"/><path d="M16.3 9.2l-2.7 4.6"/></svg>`,
-  tumour_markers: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/></svg>`,
   metabolic_genetic: `<svg viewBox="0 0 24 24"><path d="M8 4c4 0 4 4 8 4"/><path d="M16 4c-4 0-4 4-8 4"/><path d="M8 20c4 0 4-4 8-4"/><path d="M16 20c-4 0-4-4-8-4"/><path d="M9.5 7h5"/><path d="M9.5 12h5"/><path d="M9.5 17h5"/></svg>`,
-  allergy: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><path d="M12 4v3"/><path d="M12 17v3"/><path d="M4 12h3"/><path d="M17 12h3"/><path d="M6.8 6.8l2.1 2.1"/><path d="M15.1 15.1l2.1 2.1"/><path d="M17.2 6.8l-2.1 2.1"/><path d="M8.9 15.1l-2.1 2.1"/></svg>`,
   haematology: `<svg viewBox="0 0 24 24"><path d="M12 3c-3 4-5 6.7-5 9.5A5 5 0 0 0 12 18a5 5 0 0 0 5-5.5C17 9.7 15 7 12 3z"/><circle cx="12" cy="12" r="1.6"/></svg>`,
-  drugs: `<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" rx="4"/><path d="M9 8l6 8"/></svg>`,
   immunology: `<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.3 8.4-7 10-3.7-1.6-7-5-7-10V6l7-3z"/><path d="M9.5 12l1.7 1.7L14.8 10"/></svg>`,
   micro_virology: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4.8 8h14.4"/><path d="M10 8v8"/><path d="M7 14.5h5"/><path d="M14 14.5h3"/></svg>`,
+  cytology: `<svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="10" cy="12" r="2.2"/><circle cx="15" cy="12" r="1.5"/><path d="M7 18v2"/><path d="M17 18v2"/></svg>`,
+  histology: `<svg viewBox="0 0 24 24"><path d="M5 6h14v12H5z"/><path d="M9 6V4h6v2"/><path d="M9 10h6"/><path d="M9 14h6"/></svg>`,
   general: `<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6"/><path d="M9 12h6"/><path d="M9 15h4"/></svg>`
+};
+
+const chemistryBrowseGroups = [
+  {
+    id: "kidney",
+    label: "Kidney",
+    subsections: ["Kidney Function (U+E)"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M9.5 5.5C6.6 5.5 4.5 7.8 4.5 10.9S6.5 16 9.5 16c1.1 0 2-.2 2.5-.6"/><path d="M14.5 5.5c2.9 0 5 2.3 5 5.4S17.5 16 14.5 16c-1.1 0-2-.2-2.5-.6"/><path d="M12 8v8"/></svg>`
+  },
+  {
+    id: "liver",
+    label: "Liver",
+    subsections: ["Liver Function And Pancreas"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M4 11c1.8-4 5.2-6 10.2-6 3.2 0 5.1 1.2 5.8 3.8V14c-1 2-3 3.2-5.9 3.2H10c-3.3 0-6-2.7-6-6.2z"/><path d="M13 7.5c-.2 2.7 1 4.5 3.8 5.5"/><path d="M9.2 12.6h4.6"/></svg>`
+  },
+  {
+    id: "bones-minerals",
+    label: "Bones and Minerals",
+    subsections: ["Bone (CMP Profile)"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M8 4h8l4 4v8l-4 4H8l-4-4V8z"/><circle cx="12" cy="12" r="2.2"/><path d="M12 6.8v1.4"/><path d="M6.8 12H8.2"/><path d="M15.8 12h1.4"/></svg>`
+  },
+  {
+    id: "cardiac",
+    label: "Cardiac",
+    subsections: ["Cardiac Markers"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 20s-6.8-4.4-8.4-8C2.3 9.3 3.9 6.8 6.9 6.8c2 0 3.2 1 4.1 2.2.9-1.2 2.1-2.2 4.1-2.2 3 0 4.6 2.5 3.3 5.2C18.8 15.6 12 20 12 20z"/><path d="M7.8 12h2.2l1.1-2.1 1.6 4 1.1-1.9H16"/></svg>`
+  },
+  {
+    id: "lipids",
+    label: "Lipids",
+    subsections: ["Lipids"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 4c3.1 3.4 5 5.8 5 8.6A5 5 0 1 1 7 12.6C7 9.8 8.9 7.4 12 4z"/><path d="M9.3 11.6h5.4"/><path d="M8.8 14.6c1.2.8 5.2.8 6.4 0"/></svg>`
+  }
+];
+
+const haematologyBrowseGroups = [
+  {
+    id: "haem-general",
+    label: "General",
+    subsections: ["General"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 4c-2.8 3.6-4.5 6-4.5 8.2A4.5 4.5 0 0 0 12 17a4.5 4.5 0 0 0 4.5-4.8C16.5 10 14.8 7.6 12 4z"/><path d="M7 19h10"/><path d="M9.2 14.4h5.6"/></svg>`
+  },
+  {
+    id: "haem-coagulation",
+    label: "Coagulation",
+    subsections: ["Coagulation"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 4c-3 3.9-4.8 6.5-4.8 8.8A4.8 4.8 0 0 0 12 18a4.8 4.8 0 0 0 4.8-5.2C16.8 10.5 15 7.9 12 4z"/><path d="M9 12.4l2 2 4-4"/></svg>`
+  },
+  {
+    id: "haem-blood-grouping",
+    label: "Blood Grouping",
+    subsections: ["Blood Grouping"],
+    icon: `<svg viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 10h6"/><path d="M9 14h3"/><circle cx="16" cy="14" r="2"/></svg>`
+  }
+];
+
+const serologyBrowseGroups = [
+  {
+    id: "serology-general",
+    label: "General",
+    subsections: ["General Serology"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M5 8.5h14"/><path d="M7.5 5.5h9"/><path d="M7 8.5v8a2.5 2.5 0 0 0 2.5 2.5h5A2.5 2.5 0 0 0 17 16.5v-8"/><path d="M10 12h4"/><path d="M12 10v4"/></svg>`
+  },
+  {
+    id: "serology-immunology",
+    label: "Immunology",
+    subsections: ["Immunology"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.3 8.4-7 10-3.7-1.6-7-5-7-10V6l7-3z"/><path d="M9.5 12l1.7 1.7L14.8 10"/></svg>`
+  },
+  {
+    id: "serology-allergy",
+    label: "Allergy",
+    subsections: ["Allergy Profile"],
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 4c3.2 3.4 5.2 6.1 5.2 8.9A5.2 5.2 0 0 1 12 18a5.2 5.2 0 0 1-5.2-5.1C6.8 10.1 8.8 7.4 12 4z"/><path d="M9.6 13.2c.8-1.8 4-1.8 4.8 0"/><path d="M10.1 10.7h.01"/><path d="M13.9 10.7h.01"/></svg>`
+  }
+];
+
+const sectionBrowseGroups = {
+  chemistry: chemistryBrowseGroups,
+  haematology: haematologyBrowseGroups,
+  immunology: serologyBrowseGroups
+};
+
+const sectionBrowseGroupById = Object.fromEntries(
+  Object.entries(sectionBrowseGroups).map(([sectionId, groups]) => [
+    sectionId,
+    Object.fromEntries(groups.map((group) => [group.id, group]))
+  ])
+);
+
+const sectionBrowseTitleById = {
+  chemistry: "Biochemistry Focus Areas",
+  haematology: "Haematology Groups",
+  immunology: "Serology Groups"
 };
 
 function getSectionIconMarkup(groupId) {
   return sectionIconById[groupId] || sectionIconById.general;
 }
 
+function hasSectionBrowseGroups(sectionId = activeSectionGroup) {
+  return Boolean(sectionBrowseGroups[sectionId]?.length);
+}
+
+function getActiveBrowseGroup(sectionId = activeSectionGroup) {
+  return activeBrowseGroupBySection[sectionId] || "";
+}
+
+function getActiveBrowseSubsections(sectionId = activeSectionGroup) {
+  const activeBrowseGroup = getActiveBrowseGroup(sectionId);
+  return sectionBrowseGroupById[sectionId]?.[activeBrowseGroup]?.subsections || [];
+}
+
+function getActiveBrowseGroupLabel(sectionId = activeSectionGroup) {
+  const activeBrowseGroup = getActiveBrowseGroup(sectionId);
+  return sectionBrowseGroupById[sectionId]?.[activeBrowseGroup]?.label || "";
+}
+
+function isBrowseOverviewVisible(sectionId = activeSectionGroup, query = searchInput?.value || "") {
+  return hasSectionBrowseGroups(sectionId) && !String(query || "").trim() && !getActiveBrowseGroup(sectionId);
+}
+
+function shouldKeepPreSearchPanelVisible(sectionId = activeSectionGroup, query = searchInput?.value || "") {
+  return isBrowseOverviewVisible(sectionId, query);
+}
+
+function isResultsViewActive(sectionId = activeSectionGroup, query = searchInput?.value || "") {
+  if (String(query || "").trim()) return true;
+  if (!sectionId) return false;
+  return !isBrowseOverviewVisible(sectionId, query);
+}
+
+function getResultsContextLabel(sectionId = activeSectionGroup) {
+  if (!sectionId || !sectionMeta[sectionId]) return "";
+
+  const sectionLabel = sectionMeta[sectionId].label;
+  const browseLabel = getActiveBrowseGroupLabel(sectionId);
+  return browseLabel ? `${sectionLabel}: ${browseLabel}` : sectionLabel;
+}
+
 const chipGroups = [
   "chemistry",
   "haematology",
-  "endocrinology",
-  "tumour_markers",
-  "metabolic_genetic",
-  "allergy",
-  "drugs",
+  "micro_virology",
   "immunology",
-  "micro_virology"
+  "cytology",
+  "histology",
+  "metabolic_genetic"
 ];
 
 const aliasByName = {
@@ -668,6 +930,7 @@ const aliasByName = {
     "Pregnancy glucose tolerance test",
     "GTT pregnancy"
   ],
+  "HIV Viral Load": ["HIV Viral Load (PCR)", "HIV VL", "viral load hiv"],
   "Random Glucose": [
     "Glucose Random",
     "Glucose",
@@ -843,10 +1106,11 @@ const aliasByName = {
     "ASMA",
     "Actin smooth muscle antibody"
   ],
-  "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)": [
+  "ANCA Profile": [
     "ANCA",
     "ANCA profile",
     "ANCA vasculitis profile",
+    "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)",
     "PR3 MPO p ANCA c ANCA GBM"
   ],
   "p-ANCA": [
@@ -1200,7 +1464,7 @@ const clinicalProfileByName = {
     use: "Cardiac marker profile including CK Total, CK-MB Mass, and Troponin I.",
     keywords: ["cardiac profile", "cardiac markers", "cardiac marker", "cardiac enzymes", "myocardial injury", "chest pain"]
   },
-  "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)": {
+  "ANCA Profile": {
     use: "ANCA-associated vasculitis profile combining PR3, MPO, p-ANCA, c-ANCA, and GBM IIF.",
     keywords: ["anca", "vasculitis", "pr3", "mpo", "p anca", "c anca", "gbm"]
   },
@@ -1296,7 +1560,7 @@ const clinicalProfileByName = {
     use: "Initial serology screen for HIV infection.",
     keywords: ["hiv", "immunodeficiency", "retroviral infection"]
   },
-  "HIV Viral Load (PCR)": {
+  "HIV Viral Load": {
     use: "Quantifies HIV RNA for treatment monitoring and progression tracking.",
     keywords: ["hiv monitoring", "hiv treatment response", "viral suppression"]
   },
@@ -1439,6 +1703,14 @@ const clinicalProfileBySubsection = {
     use: "Evaluation of hepatitis, liver injury, cholestasis, and pancreatic inflammation.",
     keywords: ["hepatitis", "jaundice", "liver disease", "pancreatitis"]
   },
+  "Thyroid / Reproductive / Adrenal": {
+    use: "Hormonal and endocrine assessment for thyroid, fertility, reproductive, and adrenal disorders.",
+    keywords: ["endocrine", "thyroid disease", "fertility", "hormones", "adrenal disorder"]
+  },
+  "Bone (CMP Profile)": {
+    use: "Bone and mineral metabolism assessment using calcium, phosphate, magnesium, vitamin D, and related markers.",
+    keywords: ["bone metabolism", "calcium", "phosphate", "vitamin d", "parathyroid"]
+  },
   "Diabetes": {
     use: "Diagnosis and monitoring of glucose regulation disorders.",
     keywords: ["diabetes", "hyperglycaemia", "hypoglycaemia", "insulin resistance"]
@@ -1446,6 +1718,18 @@ const clinicalProfileBySubsection = {
   "Inflammation / Immune": {
     use: "Inflammatory response and infection-support marker panel.",
     keywords: ["infection", "sepsis", "inflammation", "immune response"]
+  },
+  "General Chemistry": {
+    use: "General chemistry and nutrition-related assessment for protein status, micronutrients, and broad metabolic support.",
+    keywords: ["metabolic assessment", "nutrition", "protein status", "vitamin deficiency", "general chemistry"]
+  },
+  "Drug Monitoring": {
+    use: "Therapeutic drug monitoring used to keep medicine levels effective and non-toxic.",
+    keywords: ["therapeutic drug monitoring", "drug level", "toxicity", "dose adjustment", "trough level"]
+  },
+  "Drugs Of Abuse": {
+    use: "Toxicology screen for recreational, overdose, or non-prescribed drug exposure.",
+    keywords: ["toxicology", "substance exposure", "overdose", "drug screen", "drugs of abuse"]
   },
   "Coagulation": {
     use: "Bleeding/clotting risk assessment and anticoagulation monitoring.",
@@ -1463,6 +1747,18 @@ const clinicalProfileBySubsection = {
     use: "Tumour marker panel for cancer screening support and follow-up.",
     keywords: ["cancer", "tumour", "tumor", "oncology", "malignancy"]
   },
+  "Allergy Profile": {
+    use: "Allergen sensitisation screening using IgE-based testing and profile panels.",
+    keywords: ["allergy", "ige", "allergen", "sensitisation", "allergy screen"]
+  },
+  "General Serology": {
+    use: "Infectious serology, exposure, and immunity screening using antibody-based testing.",
+    keywords: ["serology", "infectious screen", "immunity", "exposure", "antibody testing"]
+  },
+  "Immunology": {
+    use: "Autoimmune, immune-mediated, and immune status assessment using antibody and immune marker testing.",
+    keywords: ["immunology", "autoimmune disease", "immune status", "autoantibodies", "immune mediated"]
+  },
   "Autoimmune / Serology": {
     use: "Autoimmune and infectious serologic screening.",
     keywords: ["autoimmune disease", "connective tissue disease", "serology"]
@@ -1470,6 +1766,18 @@ const clinicalProfileBySubsection = {
   "MC&S / PCR / Virology": {
     use: "Pathogen detection and antimicrobial guidance.",
     keywords: ["infection source", "pathogen", "sepsis workup", "viral infection"]
+  },
+  "Inherited Disorder Screen": {
+    use: "Molecular, genetic, and metabolic screening for inherited disorders and selected genotype-based workups.",
+    keywords: ["genetics", "molecular testing", "inherited disorder", "metabolic disorder", "genotype"]
+  },
+  "Cytology": {
+    use: "Cell-based microscopic assessment for malignant or abnormal cells in selected fluid specimens.",
+    keywords: ["cytology", "malignant cells", "cell morphology", "fluid cytology", "cancer workup"]
+  },
+  "Histology": {
+    use: "Morphologic pathology review of tissue or marrow specimens requiring specialist interpretation.",
+    keywords: ["histology", "pathology", "bone marrow", "morphology", "pathologist review"]
   }
 };
 
@@ -1539,6 +1847,8 @@ const tubeGroupPatternEntries = [
   { key: "Pearl/White", pattern: /\bpear\b|\bpearl\b|\bwhite\b|\bppt\b|plasma preparation tube/ },
   { key: "Green", pattern: /\bgreen\b|heparin/ },
   { key: "Gray", pattern: /\bgray\b|\bgrey\b|fluoride/ },
+  { key: "24hr Urine Container", pattern: /\b24\s*hr\b.*\burine\b|\b24-hour\b.*\burine\b/ },
+  { key: "Urine Container", pattern: /\bsterile urine container\b|\burine container\b/ },
   { key: "Red", pattern: /\bred\b|plain serum/ },
   { key: "Black", pattern: /\bblack\b/ }
 ];
@@ -1555,7 +1865,11 @@ function getTubeGroups(tubeColorValue) {
     .filter(Boolean)
     .sort((a, b) => a.index - b.index);
 
-  return [...new Set(orderedMatches.map((entry) => entry.key))];
+  const groups = [...new Set(orderedMatches.map((entry) => entry.key))];
+  if (groups.includes("24hr Urine Container")) {
+    return groups.filter((group) => group !== "Urine Container");
+  }
+  return groups;
 }
 
 function getTubeSwatchColor(tubeGroup) {
@@ -1568,6 +1882,8 @@ function getTubeSwatchColor(tubeGroup) {
     "Pearl/White": "#e5e7eb",
     Green: "#22c55e",
     Gray: "#9ca3af",
+    "Urine Container": "#f8d66d",
+    "24hr Urine Container": "#f59e0b",
     Red: "#ef4444",
     Black: "#111827",
     "Blood Culture Bottles": "#a16207"
@@ -1583,15 +1899,28 @@ function getTubeAdditiveLabel(tubeGroup) {
     Pink: "EDTA",
     Blue: "Sodium citrate",
     "Gold/Yellow": "SST",
-    "Pearl/White": "EDTA + gel",
+    "Pearl/White": "EDTA with gel",
     Green: "Heparin",
     Gray: "Fluoride / oxalate",
+    "Urine Container": "Sterile container",
+    "24hr Urine Container": "24-hour collection",
     Red: "Plain",
     Black: "Sodium citrate",
     "Blood Culture Bottles": "Culture media"
   };
 
   return additiveByGroup[tubeGroup] || "";
+}
+
+function getTubeIconModifierClass(tubeGroup) {
+  if (tubeGroup === "Pearl/White") return " tube-icon-pearl";
+  if (tubeGroup === "Urine Container") return " tube-icon-urine-container";
+  if (tubeGroup === "24hr Urine Container") return " tube-icon-urine-24hr";
+  return "";
+}
+
+function getTubeVisualMarkup(tubeGroup, sizeClass = "") {
+  return `<span class="tube-icon${sizeClass}${getTubeIconModifierClass(tubeGroup)}" style="--tube-color: ${getTubeSwatchColor(tubeGroup)};" aria-hidden="true"></span>`;
 }
 
 function isAlternativeTubeChoice(tubeColorValue, tubeGroups = []) {
@@ -1878,9 +2207,42 @@ function collapseProfileSelections(selectionSet) {
 }
 
 function updateDrawSelectionTools() {
-  if (clearDrawSelectionBtn) {
-    clearDrawSelectionBtn.disabled = selectedTestNames.size === 0;
+  const hasSelection = selectedTestNames.size > 0;
+  if (!hasSelection) {
+    window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
+    isClearDrawSelectionConfirming = false;
   }
+
+  if (quickToolsClearBtn) {
+    quickToolsClearBtn.hidden = !hasSelection;
+    quickToolsClearBtn.disabled = !hasSelection;
+    quickToolsClearBtn.classList.toggle("confirming", hasSelection && isClearDrawSelectionConfirming);
+    quickToolsClearBtn.textContent = hasSelection && isClearDrawSelectionConfirming
+      ? "Confirm clear"
+      : "Clear all";
+    quickToolsClearBtn.setAttribute(
+      "aria-label",
+      hasSelection && isClearDrawSelectionConfirming
+        ? "Confirm clearing all tests from current draw plan"
+        : "Clear all tests from current draw plan"
+    );
+  }
+}
+
+function resetClearDrawSelectionConfirmation({ update = true } = {}) {
+  window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
+  isClearDrawSelectionConfirming = false;
+  if (update) updateDrawSelectionTools();
+}
+
+function requestClearDrawSelectionConfirmation() {
+  if (!selectedTestNames.size) return;
+  window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
+  isClearDrawSelectionConfirming = true;
+  updateDrawSelectionTools();
+  clearDrawSelectionConfirmTimeoutId = window.setTimeout(() => {
+    resetClearDrawSelectionConfirmation();
+  }, 3200);
 }
 
 function renderDrawSelectionSummary() {
@@ -1890,6 +2252,43 @@ function renderDrawSelectionSummary() {
     ? `${count} test${count !== 1 ? "s" : ""} added`
     : "No tests added yet";
   updateDrawSelectionTools();
+}
+
+function updateQuickToolsPanelState() {
+  if (!quickToolsPanel || !quickToolsTitle || !quickToolsDescription || !openDrawPlannerBtn) return;
+
+  const selectedTests = getSelectedTests();
+  const count = selectedTests.length;
+  if (!count) {
+    quickToolsPanel.classList.add("inactive-plan");
+    quickToolsPanel.classList.remove("active-plan");
+    quickToolsTitle.textContent = "Start a Draw Plan";
+    quickToolsDescription.textContent = "Add tests as you search to combine tubes and save consumables.";
+    if (quickToolsStats) quickToolsStats.hidden = true;
+    if (quickToolsTestsStat) quickToolsTestsStat.textContent = "";
+    if (quickToolsTubesStat) quickToolsTubesStat.textContent = "";
+    if (quickToolsClearBtn) quickToolsClearBtn.hidden = true;
+    openDrawPlannerBtn.textContent = "Plan My Draw";
+    openDrawPlannerBtn.setAttribute("aria-controls", "searchInput");
+    return;
+  }
+
+  const { plan } = getResolvedDrawPlan(selectedTests);
+  const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
+  quickToolsPanel.classList.remove("inactive-plan");
+  quickToolsPanel.classList.add("active-plan");
+  quickToolsTitle.textContent = "Current Draw Plan";
+  quickToolsDescription.textContent = "Keep searching to add more tests, or open your plan to review the current tube count.";
+  if (quickToolsStats) quickToolsStats.hidden = false;
+  if (quickToolsTestsStat) {
+    quickToolsTestsStat.textContent = `${count} test${count !== 1 ? "s" : ""}`;
+  }
+  if (quickToolsTubesStat) {
+    quickToolsTubesStat.textContent = `${totalTubes} tube${totalTubes !== 1 ? "s" : ""}`;
+  }
+  if (quickToolsClearBtn) quickToolsClearBtn.hidden = false;
+  openDrawPlannerBtn.textContent = "View Plan";
+  openDrawPlannerBtn.setAttribute("aria-controls", "drawModal");
 }
 
 function renderSelectedTestsCart() {
@@ -1915,7 +2314,7 @@ function renderSelectedTestsCart() {
           data-remove-selected="${encodeURIComponent(test.name)}"
           aria-label="Remove ${test.name} from Tube Plan"
         >
-          Remove
+          &times;
         </button>
       </div>
     `)
@@ -1935,11 +2334,13 @@ function updateSelectionCartBar() {
 
   const selectedTests = getSelectedTests();
   const count = selectedTests.length;
+  const hasHighAttentionTest = selectedTests.some((test) => AUTO_EXPAND_CRITICAL_NOTE_TESTS.has(test.name));
   if (!count) {
     selectionCartCount.textContent = "0";
     selectionCartBar.setAttribute("aria-label", "Tube Plan");
     selectionCartBar.title = "Tube Plan";
     selectionCartBar.hidden = true;
+    selectionCartBar.classList.remove("requires-attention");
     document.body.classList.remove("has-selection-cart");
     document.body.classList.remove("selection-cart-inline");
     selectionCartBar.style.top = "auto";
@@ -1953,11 +2354,12 @@ function updateSelectionCartBar() {
 
   selectionCartBar.hidden = false;
   selectionCartCount.textContent = badgeCount;
+  selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
-    `Tube Plan. ${count} added test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.`
+    `Tube Plan. ${count} added test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
   );
-  selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}`;
+  selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
   document.body.classList.add("has-selection-cart");
   updateSelectionCartViewportPosition();
 }
@@ -2025,6 +2427,7 @@ function initSelectionCartViewportSync() {
 
 function refreshSelectionUi({ rerenderCards = true } = {}) {
   renderDrawSelectionSummary();
+  updateQuickToolsPanelState();
   renderSelectedTestsCart();
   renderDrawResult();
   updateSelectionCartBar();
@@ -2033,6 +2436,7 @@ function refreshSelectionUi({ rerenderCards = true } = {}) {
 }
 
 function setSelectedTests(nextSelection, options = {}) {
+  resetClearDrawSelectionConfirmation({ update: false });
   selectedTestNames.clear();
   nextSelection.forEach((name) => selectedTestNames.add(name));
   collapseProfileSelections(selectedTestNames);
@@ -2092,14 +2496,13 @@ function updateQuickToolsToggleState() {
 }
 
 function updateDrawPlannerToggleState() {
-  if (!openDrawPlannerBtn) return;
-  openDrawPlannerBtn.textContent = "Search Tests";
+  updateQuickToolsPanelState();
   updateQuickToolsToggleState();
 }
 
 function openDrawModal() {
   if (!drawModal) return;
-  closeMenu();
+  resetClearDrawSelectionConfirmation({ update: false });
   drawModal.hidden = false;
   updateDrawPlannerToggleState();
   refreshSelectionUi({ rerenderCards: false });
@@ -2113,6 +2516,7 @@ function openDrawModal() {
 
 function closeDrawModal() {
   if (!drawModal) return;
+  resetClearDrawSelectionConfirmation({ update: false });
   drawModal.hidden = true;
   updateDrawPlannerToggleState();
   syncModalOpenClass();
@@ -2140,7 +2544,6 @@ function openLegalModal(docId, trigger = null) {
   const documentContent = legalContentById[docId];
   if (!documentContent) return;
 
-  closeMenu();
   lastLegalModalTrigger = trigger || document.activeElement;
   legalModalTitle.textContent = documentContent.title;
   legalModalBody.innerHTML = documentContent.html;
@@ -2351,20 +2754,19 @@ function applyPurpleVolumeRule(plan, selectedTests) {
     const tubeGroups = getTubeGroups(test.tubeColor);
     return tubeGroups.includes("Purple");
   });
-  const hasPurpleTriggerTest = purpleTests.some((test) => PURPLE_VOLUME_TRIGGER_TESTS.has(test.name));
-
-  if (!hasPurpleTriggerTest || purpleTests.length < 3) return "";
+  const requiredPurpleCount = Math.ceil(purpleTests.length / 2);
+  if (requiredPurpleCount <= 1) return "";
 
   let purpleItem = plan.items.find((item) => item.key === "Purple");
   if (!purpleItem) {
-    purpleItem = { key: "Purple", label: "Purple", count: 2, tests: [] };
+    purpleItem = { key: "Purple", label: "Purple", count: requiredPurpleCount, tests: [] };
     plan.items.push(purpleItem);
   } else {
-    purpleItem.count = Math.max(purpleItem.count, 2);
+    purpleItem.count = Math.max(purpleItem.count, requiredPurpleCount);
   }
 
   plan.items.sort((a, b) => a.label.localeCompare(b.label));
-  return "Purple rule applied: HbA1c plus 2 more purple-top tests require 2 x Purple tubes.";
+  return `Purple rule applied: allow up to 2 purple-top tests per tube, so ${purpleTests.length} purple-top tests need ${requiredPurpleCount} x Purple tubes.`;
 }
 
 function applyOgttGrayTubeRule(plan, selectedTests) {
@@ -2484,7 +2886,7 @@ function renderDrawResult() {
       <article class="draw-group-card">
         <div class="draw-group-top">
           <div class="draw-group-main">
-            <span class="tube-icon" style="--tube-color: ${getTubeSwatchColor(item.key)};" aria-hidden="true"></span>
+            ${getTubeVisualMarkup(item.key)}
             <h3>${item.label}</h3>
             <span class="draw-group-count-badge">${item.count}x</span>
           </div>
@@ -2545,6 +2947,10 @@ function getCardSpecimenValue(test, { isMicro = false } = {}) {
   return conciseValue || baseValue || "CSF";
 }
 
+function shouldHideSpecimenOnCard(test) {
+  return test.name === "HIV Viral Load";
+}
+
 function getClinicalProfile(testName, grouping) {
   if (clinicalProfileByName[testName]) return clinicalProfileByName[testName];
   if (clinicalProfileBySubsection[grouping.subsection]) return clinicalProfileBySubsection[grouping.subsection];
@@ -2558,37 +2964,58 @@ function getClinicalProfile(testName, grouping) {
 function getTestGrouping(testName) {
   const name = testName.toLowerCase();
 
-  if (name.includes("blood gases")) return { sectionId: "chemistry", subsection: "Blood Gases" };
+  if (name.includes("cytology")) {
+    return { sectionId: "cytology", subsection: "Cytology" };
+  }
+
+  if (name.includes("bone marrow") || name.includes("trephine") || name.includes("pathologist")) {
+    return { sectionId: "histology", subsection: "Histology" };
+  }
+
+  if (
+    name.includes("factor v leiden") ||
+    name.includes("genotyp") ||
+    name.includes("haemochromatosis") ||
+    name.includes("hemochromatosis") ||
+    name.includes("porphyria") ||
+    name.includes("porphobilinogen") ||
+    name.includes("thal") ||
+    name.includes("genetic") ||
+    name.includes("metabolic")
+  ) return { sectionId: "metabolic_genetic", subsection: "Inherited Disorder Screen" };
+
+  if (name.includes("blood gases") || name.includes("lactate")) {
+    return { sectionId: "chemistry", subsection: "Blood Gases" };
+  }
 
   if (
     name.includes("creatinine clearance") ||
     (name.includes("protein") && name.includes("creatinine ratio")) ||
     (name.includes("albumin") && name.includes("creatinine ratio")) ||
-    name.includes("daily urine protein")
+    name.includes("daily urine protein") ||
+    name.includes("u&e") ||
+    name.includes("creatinine") ||
+    name.includes("urea") ||
+    name.includes("sodium") ||
+    name.includes("potassium") ||
+    name.includes("chloride") ||
+    name.includes("electrolyte")
   ) return { sectionId: "chemistry", subsection: "Kidney Function (U+E)" };
 
   if (name.includes("cortisol") && name.includes("urine")) {
-    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
+    return { sectionId: "chemistry", subsection: "Thyroid / Reproductive / Adrenal" };
   }
 
   if (name.includes("aldosterone") || name.includes("renin")) {
-    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
+    return { sectionId: "chemistry", subsection: "Thyroid / Reproductive / Adrenal" };
   }
 
   if (name.includes("hirsutism") || name.includes("infertility")) {
-    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
+    return { sectionId: "chemistry", subsection: "Thyroid / Reproductive / Adrenal" };
   }
 
   if (name.includes("cord blood")) {
-    return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
-  }
-
-  if (name.includes("haemochromatosis") || name.includes("hemochromatosis")) {
-    return { sectionId: "metabolic_genetic", subsection: "Inherited Disorder Screen" };
-  }
-
-  if (name.includes("porphyria") || name.includes("porphobilinogen")) {
-    return { sectionId: "metabolic_genetic", subsection: "Inherited Disorder Screen" };
+    return { sectionId: "chemistry", subsection: "Thyroid / Reproductive / Adrenal" };
   }
 
   if (
@@ -2608,7 +3035,7 @@ function getTestGrouping(testName) {
     name.includes("toxicology") ||
     name.includes("drug screen") ||
     name.includes("drugs of abuse")
-  ) return { sectionId: "drugs", subsection: "Drugs Of Abuse" };
+  ) return { sectionId: "chemistry", subsection: "Drugs Of Abuse" };
 
   if (
     name.includes("valproate") ||
@@ -2616,10 +3043,20 @@ function getTestGrouping(testName) {
     name.includes("lithium") ||
     name.includes("digoxin") ||
     name.includes("gentamicin") ||
+    name.includes("gentamycin") ||
     name.includes("vancomycin") ||
     name.includes("carbamazepine") ||
+    name.includes("levetiracetam") ||
+    name.includes("phenobarbit") ||
+    name.includes("theophylline") ||
+    name.includes("amikacin") ||
+    name.includes("tobramycin") ||
     name.includes("therapeutic")
-  ) return { sectionId: "drugs", subsection: "Drug Monitoring" };
+  ) return { sectionId: "chemistry", subsection: "Drug Monitoring" };
+
+  if (name.includes("hiv pcr")) {
+    return { sectionId: "immunology", subsection: "General Serology" };
+  }
 
   if (
     name.includes("pcr") ||
@@ -2631,7 +3068,10 @@ function getTestGrouping(testName) {
     name.includes("stool") ||
     name.includes("sputum") ||
     name.includes("csf") ||
-    name.includes("urine")
+    name.includes("urine") ||
+    name.includes("difficile") ||
+    name.includes("mrsa") ||
+    name.includes("glucan")
   ) return { sectionId: "micro_virology", subsection: "MC&S / PCR / Virology" };
 
   if (
@@ -2649,15 +3089,9 @@ function getTestGrouping(testName) {
     name.includes("bence-jones") ||
     name.includes("beta-2 microglobulin") ||
     name.includes("5-hiaa") ||
-    name.includes("metanephrines")
-  ) return { sectionId: "tumour_markers", subsection: "Serum Markers" };
-
-  if (
-    name.includes("porphyria") ||
-    name.includes("thal") ||
-    name.includes("genetic") ||
-    name.includes("metabolic")
-  ) return { sectionId: "metabolic_genetic", subsection: "Inherited Disorder Screen" };
+    name.includes("metanephrines") ||
+    name.includes("ca 72")
+  ) return { sectionId: "chemistry", subsection: "Serum Markers" };
 
   if (
     name.includes("allergy") ||
@@ -2670,15 +3104,12 @@ function getTestGrouping(testName) {
     name.includes("food allergy") ||
     name.includes("food screen") ||
     name.includes("skin prick")
-  ) return { sectionId: "allergy", subsection: "Allergy Profile" };
+  ) return { sectionId: "immunology", subsection: "Allergy Profile" };
 
   if (
     name.includes("autoimmune") ||
     name.includes("arthritis profile") ||
     name.includes("ana") ||
-    name.includes("asot") ||
-    name.includes("dnase") ||
-    name.includes("streptolysin") ||
     name.includes("ena") ||
     name.includes("rheumatoid") ||
     name.includes("anti-ccp") ||
@@ -2688,25 +3119,53 @@ function getTestGrouping(testName) {
     name.includes("sla/lp") ||
     name.includes("soluble liver antigen") ||
     name.includes("dsdna") ||
+    name.includes("pr3") ||
+    name.includes("mpo") ||
+    name.includes("gbm") ||
     name.includes("complement") ||
     name.includes("celiac") ||
+    name.includes("immunoglobulin") ||
+    name.includes("igg subfraction") ||
+    name.includes("systemic sclerosis") ||
+    name.includes("interleukin") ||
+    name.includes("cd4")
+  ) return { sectionId: "immunology", subsection: "Immunology" };
+
+  if (
+    name.includes("asot") ||
+    name.includes("dnase") ||
+    name.includes("streptolysin") ||
     name.includes("hepatitis") ||
     name.includes("hiv elisa") ||
     name.includes("brucella") ||
     name.includes("rickettsia") ||
+    name.includes("schistosoma") ||
     name.includes("rubella") ||
     name.includes("toxoplasma") ||
     name.includes("ebv") ||
     name.includes("cmv") ||
+    name.includes("hsv") ||
     name.includes("measles") ||
     name.includes("mumps") ||
     name.includes("parvovirus") ||
     name.includes("varicella") ||
     name.includes("rpr") ||
-    name.includes("treponema")
-  ) return { sectionId: "immunology", subsection: "Autoimmune / Serology" };
+    name.includes("treponema") ||
+    name.includes("sars-cov-2") ||
+    name.includes("herpes simplex") ||
+    name.includes("widal") ||
+    name.includes("syphilis")
+  ) return { sectionId: "immunology", subsection: "General Serology" };
 
-  if (name.includes("blood group") || name.includes("crossmatch") || name.includes("coombs") || name.includes("blood bank") || name.includes("transfusion")) {
+  if (
+    name.includes("blood group") ||
+    name.includes("crossmatch") ||
+    name.includes("coombs") ||
+    name.includes("blood bank") ||
+    name.includes("transfusion") ||
+    name.includes("antibody identification") ||
+    name.includes("antibody titration")
+  ) {
     return { sectionId: "haematology", subsection: "Blood Grouping" };
   }
 
@@ -2725,7 +3184,9 @@ function getTestGrouping(testName) {
     name.includes("d-dimer") ||
     name.includes("von willebrand") ||
     name.includes("dic") ||
-    name.includes("lupus anticoagulant")
+    name.includes("lupus anticoagulant") ||
+    name.includes("inherited thrombotic") ||
+    name.includes("pfa-200")
   ) return { sectionId: "haematology", subsection: "Coagulation" };
 
   if (
@@ -2741,7 +3202,16 @@ function getTestGrouping(testName) {
     name.includes("serum iron") ||
     name.includes("iron studies") ||
     name.includes("fe studies") ||
-    name.includes("esr")
+    name.includes("esr") ||
+    name.includes("haemoglobin") ||
+    name.includes("rbc count") ||
+    name.includes("haematocrit") ||
+    name.includes("mcv") ||
+    name.includes("mch") ||
+    name.includes("mchc") ||
+    name.includes("platelet count") ||
+    name.includes("wbc and differential") ||
+    name.includes("haemolytic profile")
   ) return { sectionId: "haematology", subsection: "General" };
 
   if (
@@ -2750,6 +3220,7 @@ function getTestGrouping(testName) {
     name.includes("menopausal profile") ||
     name.includes("menopause screen") ||
     name.includes("menopausal screen") ||
+    name.includes("dexamethasone suppression") ||
     name.includes("thyroid function test") ||
     /\btft\b/.test(name) ||
     name.includes("tsh") ||
@@ -2760,15 +3231,15 @@ function getTestGrouping(testName) {
     name.includes("prolactin") ||
     name.includes("progesterone") ||
     name.includes("estradiol") ||
+    /^e2\b/.test(name) ||
     name.includes("dheas") ||
     name.includes("cortisol") ||
+    name.includes("testosterone") ||
+    name.includes("shbg") ||
     name.includes("thyroid antibod") ||
-    name.includes("tsh receptor")
-  ) return { sectionId: "endocrinology", subsection: "Thyroid / Reproductive / Adrenal" };
-
-  if (name.includes("u&e") || name.includes("creatinine") || name.includes("urea")) {
-    return { sectionId: "chemistry", subsection: "Kidney Function (U+E)" };
-  }
+    name.includes("tsh receptor") ||
+    name.includes("thyroglobulin")
+  ) return { sectionId: "chemistry", subsection: "Thyroid / Reproductive / Adrenal" };
 
   if (
     name.includes("cmp") ||
@@ -2781,13 +3252,6 @@ function getTestGrouping(testName) {
   ) return { sectionId: "chemistry", subsection: "Bone (CMP Profile)" };
 
   if (
-    name.includes("sodium") ||
-    name.includes("potassium") ||
-    name.includes("chloride") ||
-    name.includes("electrolyte")
-  ) return { sectionId: "chemistry", subsection: "Kidney Function (U+E)" };
-
-  if (
     name.includes("liver") ||
     name.includes("lft") ||
     name.includes("alt") ||
@@ -2797,7 +3261,8 @@ function getTestGrouping(testName) {
     name.includes("bilirubin") ||
     name.includes("ammonia") ||
     name.includes("amylase") ||
-    name.includes("lipase")
+    name.includes("lipase") ||
+    name.includes("steatocrit")
   ) return { sectionId: "chemistry", subsection: "Liver Function And Pancreas" };
 
   if (
@@ -2806,16 +3271,28 @@ function getTestGrouping(testName) {
     name.includes("troponin") ||
     name.includes("nt-probnp") ||
     name.includes("ck") ||
-    name.includes("ldh")
+    name.includes("ldh") ||
+    name.includes("myoglobin")
   ) {
     return { sectionId: "chemistry", subsection: "Cardiac Markers" };
   }
 
-  if (name.includes("lipid") || name.includes("cholesterol") || name.includes("triglyceride")) {
+  if (
+    name.includes("lipid") ||
+    name.includes("cholesterol") ||
+    name.includes("triglyceride") ||
+    name.includes("lipoprotein") ||
+    name.includes("apolipoprotein")
+  ) {
     return { sectionId: "chemistry", subsection: "Lipids" };
   }
 
-  if (name.includes("glucose") || name.includes("hba1c") || name.includes("c-peptide")) {
+  if (
+    name.includes("glucose") ||
+    name.includes("hba1c") ||
+    name.includes("c-peptide") ||
+    name.includes("ogtt")
+  ) {
     return { sectionId: "chemistry", subsection: "Diabetes" };
   }
 
@@ -2823,7 +3300,19 @@ function getTestGrouping(testName) {
     return { sectionId: "chemistry", subsection: "Inflammation / Immune" };
   }
 
-  return { sectionId: "general", subsection: "General" };
+  if (
+    name.includes("uric acid") ||
+    name === "albumin" ||
+    name.includes("total protein") ||
+    name.includes("pre-albumin") ||
+    name.includes("folate") ||
+    name.includes("vitamin b12") ||
+    name.includes("faecal occult")
+  ) {
+    return { sectionId: "chemistry", subsection: "General Chemistry" };
+  }
+
+  return { sectionId: "chemistry", subsection: "General Chemistry" };
 }
 
 function enrichTest(test) {
@@ -2842,7 +3331,9 @@ function enrichTest(test) {
     notes: String(test.notes || "").trim(),
     criticalPrep: String(test.criticalPrep || "").trim() || inferCriticalPrep(test),
     specimenGuide: grouping.sectionId === "micro_virology"
-      ? (String(test.specimenGuide || "").trim() || inferSpecimenGuide(test))
+      ? (shouldHideSpecimenOnCard(test)
+          ? ""
+          : (String(test.specimenGuide || "").trim() || inferSpecimenGuide(test)))
       : "",
     clinicalUse: clinicalProfile.use,
     clinicalKeywords: clinicalProfile.keywords,
@@ -2981,22 +3472,66 @@ function updateGroupChipState() {
   });
 }
 
+function getSectionBrowsePanelMarkup(sectionId) {
+  const browseGroups = sectionBrowseGroups[sectionId] || [];
+  if (!browseGroups.length) return "";
+
+  const isOpen = activeSectionGroup === sectionId;
+  const activeBrowseGroup = activeBrowseGroupBySection[sectionId] || "";
+  const panelId = `${sectionId}BrowsePanel`;
+  const panelTitle = sectionBrowseTitleById[sectionId] || `${sectionMeta[sectionId]?.label || "Section"} Groups`;
+
+  return `
+    <div
+      class="chemistry-browse-panel${isOpen ? " is-open" : ""}"
+      id="${panelId}"
+      aria-hidden="${isOpen ? "false" : "true"}"
+    >
+      <div class="chemistry-browse-panel-inner">
+        <p class="chemistry-browse-title">${panelTitle}</p>
+        <div class="chemistry-browse-grid">
+          ${browseGroups.map((group) => `
+            <button
+              type="button"
+              class="chemistry-browse-chip${activeBrowseGroup === group.id ? " active" : ""}"
+              data-section-browse="${group.id}"
+              data-section-browse-parent="${sectionId}"
+              aria-pressed="${activeBrowseGroup === group.id ? "true" : "false"}"
+              tabindex="${isOpen ? "0" : "-1"}"
+            >
+              <span class="chemistry-browse-chip-icon" aria-hidden="true">${group.icon}</span>
+              <span class="chemistry-browse-chip-label">${group.label}</span>
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderGroupChips() {
   if (!groupChips) return;
 
   groupChips.innerHTML = chipGroups
     .map((groupId) => {
       const group = sectionMeta[groupId];
+      const isActive = activeSectionGroup === groupId;
+      const hasBrowsePanel = hasSectionBrowseGroups(groupId);
+      const panelId = `${groupId}BrowsePanel`;
       return `
-        <button
-          class="group-chip${activeSectionGroup === groupId ? " active" : ""}"
-          type="button"
-          data-group="${groupId}"
-          aria-pressed="${activeSectionGroup === groupId ? "true" : "false"}"
-        >
-          <span class="group-chip-label">${group.label}</span>
-          <span class="group-chip-icon" aria-hidden="true">${getSectionIconMarkup(groupId)}</span>
-        </button>
+        <div class="group-chip-stack${hasBrowsePanel && isActive ? " browse-open" : ""}">
+          <button
+            class="group-chip${isActive ? " active" : ""}"
+            type="button"
+            data-group="${groupId}"
+            aria-pressed="${isActive ? "true" : "false"}"
+            ${hasBrowsePanel ? `aria-expanded="${isActive ? "true" : "false"}" aria-controls="${panelId}"` : ""}
+          >
+            <span class="group-chip-label">${group.label}</span>
+            <span class="group-chip-icon" aria-hidden="true">${getSectionIconMarkup(groupId)}</span>
+          </button>
+          ${hasBrowsePanel ? getSectionBrowsePanelMarkup(groupId) : ""}
+        </div>
       `;
     })
     .join("");
@@ -3004,21 +3539,54 @@ function renderGroupChips() {
   groupChips.querySelectorAll(".group-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       const groupId = chip.getAttribute("data-group") || "";
-      const nextSectionGroup = activeSectionGroup === groupId ? "" : groupId;
+      const isCurrentSection = activeSectionGroup === groupId;
+      const hasActiveBrowseGroup = Boolean(getActiveBrowseGroup(groupId));
+
+      if (isCurrentSection && hasActiveBrowseGroup) {
+        setSectionView(groupId, { browseGroup: "", historyMode: "push", scrollToTop: true });
+        return;
+      }
+
+      const nextSectionGroup = isCurrentSection ? "" : groupId;
       const replaceHistory = nextSectionGroup === "";
-      setSectionView(nextSectionGroup, { historyMode: replaceHistory ? "replace" : "push", scrollToTop: true });
+      setSectionView(nextSectionGroup, { browseGroup: "", historyMode: replaceHistory ? "replace" : "push", scrollToTop: true });
+    });
+  });
+
+  groupChips.querySelectorAll("button[data-section-browse]").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const browseId = chip.getAttribute("data-section-browse") || "";
+      const parentSectionId = chip.getAttribute("data-section-browse-parent") || "";
+      if (!parentSectionId) return;
+
+      const nextBrowseGroup = getActiveBrowseGroup(parentSectionId) === browseId ? "" : browseId;
+      setSectionView(parentSectionId, {
+        browseGroup: nextBrowseGroup,
+        historyMode: "push",
+        scrollToTop: true
+      });
     });
   });
 
   updateGroupChipState();
 }
 
-function setSectionView(sectionId = "", { historyMode = "none", scrollToTop = false, clearSearch = false } = {}) {
+function setSectionView(sectionId = "", { browseGroup = "", historyMode = "none", scrollToTop = false, clearSearch = false } = {}) {
   activeSectionGroup = sectionMeta[sectionId] ? sectionId : "";
+  Object.keys(activeBrowseGroupBySection).forEach((browseSectionId) => {
+    if (browseSectionId !== activeSectionGroup) {
+      activeBrowseGroupBySection[browseSectionId] = "";
+    }
+  });
+  if (activeSectionGroup && hasSectionBrowseGroups(activeSectionGroup)) {
+    activeBrowseGroupBySection[activeSectionGroup] = sectionBrowseGroupById[activeSectionGroup]?.[browseGroup]
+      ? browseGroup
+      : "";
+  }
 
   if (clearSearch && searchInput) searchInput.value = "";
   updateSearchClearButton();
-  updateGroupChipState();
+  renderGroupChips();
   applyFilters();
 
   if (historyMode === "push") syncHistoryState(activeSectionGroup, false);
@@ -3027,7 +3595,11 @@ function setSectionView(sectionId = "", { historyMode = "none", scrollToTop = fa
   if (!scrollToTop) return;
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const target = activeSectionGroup ? (resultsInfo || cardsContainer) : preSearchPanel;
+  const target = shouldKeepPreSearchPanelVisible(activeSectionGroup, searchInput?.value || "")
+    ? preSearchPanel
+    : activeSectionGroup
+      ? (resultsInfo || cardsContainer)
+      : preSearchPanel;
   window.requestAnimationFrame(() => {
     target?.scrollIntoView({
       behavior: prefersReducedMotion ? "auto" : "smooth",
@@ -3043,7 +3615,14 @@ function initSectionNavigation() {
     const nextSectionGroup = event.state?.view === "section" && sectionMeta[event.state.section]
       ? event.state.section
       : "";
-    setSectionView(nextSectionGroup, { clearSearch: nextSectionGroup === "", scrollToTop: true });
+    const nextBrowseGroup = nextSectionGroup && sectionBrowseGroupById[nextSectionGroup]?.[event.state?.browse || ""]
+      ? event.state.browse
+      : "";
+    setSectionView(nextSectionGroup, {
+      browseGroup: nextBrowseGroup,
+      clearSearch: nextSectionGroup === "",
+      scrollToTop: true
+    });
   });
 }
 
@@ -3075,6 +3654,7 @@ function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = activeSectionGroup || "";
   const normalizedQuery = normalizeForSearch(query);
+  const activeBrowseSubsectionSet = new Set(getActiveBrowseSubsections(selectedSection));
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
   const exactNameMatches = getExactNameMatches(normalizedQuery);
@@ -3095,6 +3675,9 @@ function getFilteredTests() {
 
   const filtered = enrichedTests.filter((test) => {
     if (selectedSection && !shouldBypassSectionFilter && test.grouping.sectionId !== selectedSection) return false;
+    if (activeBrowseSubsectionSet.size && !activeBrowseSubsectionSet.has(test.grouping.subsection)) {
+      return false;
+    }
     if (isInflammatoryShortcut) {
       return test.name === "CRP" || test.name === "Procalcitonin (PCT)";
     }
@@ -3122,12 +3705,16 @@ function renderCards(filteredTests) {
   cardsContainer.innerHTML = "";
   const normalizedQuery = normalizeForSearch(searchInput?.value || "");
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
+  const resultsContextLabel = !normalizedQuery && activeSectionGroup
+    ? getResultsContextLabel(activeSectionGroup)
+    : "";
+  const resultsPrefix = resultsContextLabel ? `${resultsContextLabel}. ` : "";
 
   if (filteredTests.length === 0) {
     setResultsInfo(
       matchedConditionShortcut
-        ? `Condition shortcut: ${matchedConditionShortcut.label}. 0 tests found. ${CONDITION_SHORTCUT_DISCLAIMER}`
-        : "0 tests found"
+        ? `${resultsPrefix}Condition shortcut: ${matchedConditionShortcut.label}. 0 tests found. ${CONDITION_SHORTCUT_DISCLAIMER}`
+        : `${resultsPrefix}0 tests found`
     );
     cardsContainer.innerHTML = `
       <div class="no-results">
@@ -3139,8 +3726,8 @@ function renderCards(filteredTests) {
 
   setResultsInfo(
     matchedConditionShortcut
-      ? `Condition shortcut: ${matchedConditionShortcut.label}. ${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found. ${CONDITION_SHORTCUT_DISCLAIMER}`
-      : `${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found`
+      ? `${resultsPrefix}Condition shortcut: ${matchedConditionShortcut.label}. ${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found. ${CONDITION_SHORTCUT_DISCLAIMER}`
+      : `${resultsPrefix}${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found`
   );
 
   filteredTests.forEach((test) => {
@@ -3167,7 +3754,7 @@ function renderCards(filteredTests) {
         ${tubeGroups.map((group, index) => `
           ${index > 0 && useOrBetweenTubeOptions ? `<span class="tube-option-separator">or</span>` : ""}
           <span class="tube-option${useOrBetweenTubeOptions ? " alternative" : ""}">
-            <span class="tube-icon${tubeIconSizeClass}" style="--tube-color: ${getTubeSwatchColor(group)};" aria-hidden="true"></span>
+            ${getTubeVisualMarkup(group, tubeIconSizeClass)}
             <span class="tube-option-copy">
               <span class="tube-option-label">${group}</span>
               ${getTubeAdditiveLabel(group) ? `<span class="tube-option-additive">${getTubeAdditiveLabel(group)}</span>` : ""}
@@ -3184,12 +3771,13 @@ function renderCards(filteredTests) {
       : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
     const hasTubeOptions = tubeGroups.length > 0;
     const specimenValue = getCardSpecimenValue(test, { isMicro });
+    const hasSpecimenValue = Boolean(specimenValue);
     const isCsfSpecimenCard = /\bcsf\b/i.test(`${test.name} ${specimenValue} ${test.tubeColor}`);
-    const useSpecimenOnlySummary = isMicro && !isCsfSpecimenCard;
+    const useSpecimenOnlySummary = isMicro && hasSpecimenValue && !isCsfSpecimenCard && !hasTubeOptions;
     const isNonBloodSpecimen = /(urine|stool|faec|swab|csf|sputum|respiratory|semen|fluid|tissue|bone marrow|aspirate|saliva|synovial|pleural|ascitic|vaginal|nasopharyngeal|throat)/i
       .test(specimenValue);
     const hasGenericCsfSpecimen = isCsfSpecimenCard && specimenValue === "CSF";
-    const showSpecimenField = !hasGenericCsfSpecimen && (isMicro || isNonBloodSpecimen || !hasTubeOptions);
+    const showSpecimenField = hasSpecimenValue && !hasGenericCsfSpecimen && (isMicro || isNonBloodSpecimen || !hasTubeOptions);
     const showRackHint = !hasDismissedRackHint && !isSelected && filteredTests[0]?.name === test.name;
     const renderSummaryField = ({ label, content, isAction = false }) => {
       if (!isAction) {
@@ -3306,9 +3894,20 @@ function renderCards(filteredTests) {
       event.preventDefault();
     };
 
-    const handleSelect = () => {
+    const handleSelect = (trigger) => {
       const shouldRestoreSearchFocus = shouldPreserveSearchFocusOnMobile();
+      const wasSelected = isSelected;
+      const sourceRect = trigger?.getBoundingClientRect
+        ? trigger.getBoundingClientRect()
+        : null;
       toggleSelectedTest(test.name);
+      const wasAddedToPlan = !wasSelected && selectedTestNames.has(test.name);
+      if (wasAddedToPlan && sourceRect) {
+        animateAddToPlanFeedback({ sourceRect, tubeColorValue: test.tubeColor });
+      }
+      if (shouldRestoreSearchFocus && wasAddedToPlan) {
+        clearSearchForNextPlanEntry();
+      }
       if (shouldRestoreSearchFocus) {
         restoreSearchFocusWithoutScroll();
       }
@@ -3317,7 +3916,7 @@ function renderCards(filteredTests) {
     [titleActionBtn, summaryActionBtn].forEach((trigger) => {
       trigger?.addEventListener("pointerdown", preserveSearchFocusOnPress);
       trigger?.addEventListener("mousedown", preserveSearchFocusOnPress);
-      trigger?.addEventListener("click", handleSelect);
+      trigger?.addEventListener("click", () => handleSelect(trigger));
     });
 
     if (profileTestsBtn) {
@@ -3334,7 +3933,8 @@ function renderCards(filteredTests) {
 function applyFilters() {
   const hasQuery = (searchInput?.value || "").trim().length > 0;
   const hasSectionFilter = Boolean(activeSectionGroup);
-  preSearchPanel.style.display = hasQuery || hasSectionFilter ? "none" : "grid";
+  const keepPreSearchVisible = shouldKeepPreSearchPanelVisible(activeSectionGroup, searchInput?.value || "");
+  preSearchPanel.style.display = hasQuery || (hasSectionFilter && !keepPreSearchVisible) ? "none" : "grid";
   if (siteFooter) {
     siteFooter.hidden = hasQuery || hasSectionFilter;
   }
@@ -3342,6 +3942,12 @@ function applyFilters() {
   updateSelectionCartViewportPosition();
 
   if (!hasQuery && !hasSectionFilter) {
+    setResultsInfo("");
+    cardsContainer.innerHTML = "";
+    return;
+  }
+
+  if (isBrowseOverviewVisible(activeSectionGroup, searchInput?.value || "")) {
     setResultsInfo("");
     cardsContainer.innerHTML = "";
     return;
@@ -3380,12 +3986,6 @@ function bindEvents() {
     });
   }
 
-  if (menuToggleBtn) {
-    menuToggleBtn.addEventListener("click", () => {
-      setMenuOpen(!isMenuOpen());
-    });
-  }
-
   if (brandHomeBtn) {
     brandHomeBtn.addEventListener("click", () => {
       goHome();
@@ -3404,7 +4004,11 @@ function bindEvents() {
   if (openDrawPlannerBtn) {
     openDrawPlannerBtn.addEventListener("click", (event) => {
       event.preventDefault();
-      focusMainSearchField();
+      if (selectedTestNames.size > 0) {
+        openDrawModal();
+        return;
+      }
+      focusMainSearchField({ scroll: "if-needed" });
     });
   }
 
@@ -3426,8 +4030,14 @@ function bindEvents() {
     });
   }
 
-  if (clearDrawSelectionBtn) {
-    clearDrawSelectionBtn.addEventListener("click", () => {
+  if (quickToolsClearBtn) {
+    quickToolsClearBtn.addEventListener("click", () => {
+      if (!selectedTestNames.size) return;
+      if (!isClearDrawSelectionConfirming) {
+        requestClearDrawSelectionConfirmation();
+        return;
+      }
+      resetClearDrawSelectionConfirmation({ update: false });
       setSelectedTests(new Set());
     });
   }
@@ -3487,10 +4097,6 @@ function bindEvents() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (isMenuOpen()) {
-      closeMenu();
-      return;
-    }
     if (legalModal && !legalModal.hidden) {
       closeLegalModal();
       return;
@@ -3503,83 +4109,6 @@ function bindEvents() {
       closeDrawModal();
     }
   });
-
-  document.addEventListener("click", (event) => {
-    if (!isMenuOpen()) return;
-    if (menuPanel?.contains(event.target) || menuToggleBtn?.contains(event.target)) return;
-    closeMenu();
-  });
-}
-
-function detectPlatform() {
-  const ua = navigator.userAgent.toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isAndroid = /android/.test(ua);
-  return { isIOS, isAndroid };
-}
-
-function isStandaloneMode() {
-  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-}
-
-function renderInstallHelper() {
-  if (!installHelper || !installHelperText || !installHelperBtn) return;
-
-  if (isStandaloneMode()) {
-    installHelper.hidden = true;
-    return;
-  }
-
-  const { isIOS, isAndroid } = detectPlatform();
-  installHelper.hidden = false;
-
-  if (isIOS) {
-    installHelperText.textContent = "Install on iPhone: tap Share, then Add to Home Screen.";
-    installHelperBtn.hidden = true;
-    return;
-  }
-
-  if (isAndroid) {
-    if (deferredInstallPrompt) {
-      installHelperText.textContent = "Install this app for faster access and offline use.";
-      installHelperBtn.hidden = false;
-      return;
-    }
-
-    installHelperText.textContent = "On Android, open browser menu and choose Add to Home screen or Install app.";
-    installHelperBtn.hidden = true;
-    return;
-  }
-
-  installHelperText.textContent = "On desktop, use your browser menu and choose Install app.";
-  installHelperBtn.hidden = deferredInstallPrompt ? false : true;
-}
-
-function initInstallHelper() {
-  if (!installHelperBtn) return;
-
-  window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredInstallPrompt = event;
-    renderInstallHelper();
-  });
-
-  window.addEventListener("appinstalled", () => {
-    deferredInstallPrompt = null;
-    renderInstallHelper();
-  });
-
-  installHelperBtn.addEventListener("click", async () => {
-    if (!deferredInstallPrompt) return;
-
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    renderInstallHelper();
-    closeMenu();
-  });
-
-  renderInstallHelper();
 }
 
 renderFactsCarousel();
@@ -3590,7 +4119,6 @@ renderGroupChips();
 refreshSearchPlaceholder();
 bindEvents();
 initSelectionCartViewportSync();
-initInstallHelper();
 applyFilters();
 updateSearchClearButton();
 refreshSelectionUi({ rerenderCards: false });

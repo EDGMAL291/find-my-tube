@@ -8,43 +8,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Find My Tube" />
   <title>Find My Tube</title>
-  <link rel="manifest" href="manifest.webmanifest?v=20260316b" />
-  <link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg?v=20260313c" />
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=20260313c" />
-  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260313c" />
-  <link rel="shortcut icon" href="./favicon-32.png?v=20260313c" />
-  <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260316b" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260316b" />
+  <link rel="manifest" href="manifest.webmanifest?v=20260317a" />
+  <link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg?v=20260317a" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=20260317a" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260317a" />
+  <link rel="shortcut icon" href="./favicon-32.png?v=20260317a" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260317a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260317b" />
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <div class="header-toolbar">
-        <button
-          type="button"
-          class="menu-toggle-btn"
-          id="menuToggleBtn"
-          aria-label="Open menu"
-          aria-controls="menuPanel"
-          aria-expanded="false"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-      </div>
-      <div class="menu-panel" id="menuPanel" hidden>
-        <section class="menu-group install-helper" id="installHelper" hidden>
-          <p class="menu-group-label">Install</p>
-          <p id="installHelperText"></p>
-          <button type="button" id="installHelperBtn" class="install-helper-btn" hidden>Install App</button>
-        </section>
-        <section class="menu-group menu-about">
-          <p class="menu-group-label">About</p>
-          <p>Search for a test, confirm the right tube, and check specimen handling before collection.</p>
-          <p>Condition shortcuts show common initial lab requests only. Always confirm against local protocol and senior review.</p>
-        </section>
-      </div>
       <h1>
         <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
           <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
@@ -55,7 +29,7 @@
         </button>
       </h1>
       <p>
-        Find the right test, the right tube, and the clinical reason for ordering it.
+        Find the right test, the right tube, and why it's ordered.
       </p>
     </header>
 
@@ -93,16 +67,30 @@
           Start Tube Plan
         </button>
         <section class="quick-tools-panel" id="quickToolsPanel">
-          <h3>Tube Plan</h3>
-          <p>Add tests as you search to plan your draw, avoid unnecessary extra tubes, and save on consumables.</p>
-          <button
-            type="button"
-            class="quick-tool-launch-btn"
-            id="openDrawPlannerBtn"
-            aria-controls="searchInput"
-          >
-            Search Tests
-          </button>
+          <h3 id="quickToolsTitle">Tube Plan</h3>
+          <p id="quickToolsDescription">Add tests as you search to plan your draw, avoid unnecessary extra tubes, and save on consumables.</p>
+          <div class="quick-tools-stats" id="quickToolsStats" hidden>
+            <span class="quick-tools-stat" id="quickToolsTestsStat"></span>
+            <span class="quick-tools-stat" id="quickToolsTubesStat"></span>
+          </div>
+          <div class="quick-tools-actions" id="quickToolsActions">
+            <button
+              type="button"
+              class="quick-tool-launch-btn"
+              id="openDrawPlannerBtn"
+              aria-controls="searchInput"
+            >
+              Plan My Draw
+            </button>
+            <button
+              type="button"
+              class="quick-tool-clear-btn"
+              id="quickToolsClearBtn"
+              hidden
+            >
+              Clear all
+            </button>
+          </div>
         </section>
 
         <div class="fact-carousel" id="factCarouselPanel">
@@ -143,7 +131,7 @@
     </footer>
   </div>
 
-  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Tube Plan" hidden>
+  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Draw Plan" hidden>
     <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0</span>
     <span class="selection-cart-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -158,8 +146,8 @@
       </svg>
     </span>
     <span class="selection-cart-copy">
-      <span class="selection-cart-kicker">Open</span>
-      <span class="selection-cart-label">Tube Plan</span>
+      <span class="selection-cart-kicker">Draw</span>
+      <span class="selection-cart-label">Plan</span>
     </span>
   </button>
 
@@ -170,11 +158,10 @@
           <p class="draw-cart-kicker">Tube Planning</p>
           <h3 id="drawModalTitle">Tube Plan</h3>
         </div>
-        <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn">Close</button>
+        <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn" aria-label="Close Tube Plan" title="Close Tube Plan">&times;</button>
       </div>
       <div class="draw-selection-actions">
         <p class="draw-selection-count" id="drawSelectionCount">0 tests added</p>
-        <button type="button" class="draw-tool-btn ghost" id="clearDrawSelectionBtn">Clear all</button>
       </div>
       <div class="draw-selected-list" id="drawSelectedList"></div>
       <div class="draw-result-card" id="drawResultCard" tabindex="-1">

@@ -278,7 +278,7 @@ const tests = [
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-2 days",
-    notes: "Listed in hirsutism/endocrinology profile.",
+    notes: "Listed in the hirsutism/hormone profile.",
     borderColor: "yellow"
   },
   {
@@ -402,11 +402,11 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "HIV Viral Load (PCR)",
+    name: "HIV Viral Load",
     tubeColor: "Pearl/White",
     specimen: "EDTA plasma",
     turnaroundTime: "1-3 days",
-    notes: "Molecular HIV quantification test. Local protocol uses a pearl tube, sometimes called white, with EDTA additive and gel separator.",
+    notes: "Molecular HIV quantification test. Local protocol uses a pearl tube (PPT, sometimes called white) with EDTA and gel separator.",
     borderColor: "#e5e7eb"
   },
   {
@@ -2155,7 +2155,7 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "ANCA (PR3, MPO, p- and c-ANCA, GBM IIF)",
+    name: "ANCA Profile",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
