@@ -1,0 +1,958 @@
+{
+  "version": "2026-03-20.7",
+  "sourceLabel": "Find My Test",
+  "disclaimer": "Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.",
+  "quickPicks": [
+    {
+      "id": "chest-pain",
+      "label": "Chest pain",
+      "field": "symptoms",
+      "related": ["shortness-breath", "palpitations", "acs-concern"],
+      "terms": ["chest pain", "angina", "tight chest", "pressure chest", "radiating chest pain"]
+    },
+    {
+      "id": "shortness-breath",
+      "label": "Shortness of breath",
+      "field": "symptoms",
+      "related": ["chest-pain", "hypoxia-cyanosis", "heart-failure-concern", "resp-distress-concern"],
+      "terms": ["shortness of breath", "dyspnoea", "dyspnea", "orthopnoea", "orthopnea"]
+    },
+    {
+      "id": "palpitations",
+      "label": "Palpitations",
+      "field": "symptoms",
+      "related": ["chest-pain", "temperature-intolerance", "thyroid-concern"],
+      "terms": ["palpitations", "tachycardia", "racing heart"]
+    },
+    {
+      "id": "fever-sepsis",
+      "label": "Fever / sepsis",
+      "field": "symptoms",
+      "related": ["confusion", "sepsis-concern"],
+      "terms": ["fever", "febrile", "sepsis", "septic", "rigors"]
+    },
+    {
+      "id": "fatigue-pallor",
+      "label": "Fatigue / pallor",
+      "field": "symptoms",
+      "related": ["bleeding", "anaemia-concern"],
+      "terms": ["fatigue", "pallor", "anaemia", "anemia", "weakness", "low hb"]
+    },
+    {
+      "id": "bleeding",
+      "label": "Bleeding / bruising",
+      "field": "symptoms",
+      "related": ["fatigue-pallor", "anaemia-concern"],
+      "terms": ["bleeding", "bruising", "epistaxis", "petechiae", "melena"]
+    },
+    {
+      "id": "jaundice",
+      "label": "Jaundice",
+      "field": "signs",
+      "related": ["newborn-jaundice", "dark-urine", "upper-abdominal", "hepatic-concern"],
+      "terms": ["jaundice", "icterus", "yellow eyes", "dark urine"]
+    },
+    {
+      "id": "newborn-jaundice",
+      "label": "Newborn jaundice",
+      "field": "signs",
+      "related": ["jaundice"],
+      "terms": ["newborn jaundice", "neonatal jaundice", "jaundice baby", "yellow baby", "yellow newborn", "tsb"]
+    },
+    {
+      "id": "upper-abdominal",
+      "label": "Upper abdominal pain",
+      "field": "symptoms",
+      "related": ["pancreatitis-concern", "hepatic-concern"],
+      "terms": ["epigastric pain", "upper abdominal pain", "radiates to back", "pancreatitis"]
+    },
+    {
+      "id": "hyperglycaemia",
+      "label": "Polyuria / thirst",
+      "field": "symptoms",
+      "related": ["confusion", "diabetes-concern", "gestational-diabetes-concern"],
+      "terms": ["polyuria", "polydipsia", "high sugar", "hyperglycaemia", "hyperglycemia"]
+    },
+    {
+      "id": "temperature-intolerance",
+      "label": "Heat / cold intolerance",
+      "field": "symptoms",
+      "related": ["palpitations", "goitre", "thyroid-concern"],
+      "terms": ["heat intolerance", "cold intolerance", "thyrotoxicosis", "hyperthyroidism", "hypothyroidism"]
+    },
+    {
+      "id": "hot-flushes",
+      "label": "Hot flushes",
+      "field": "symptoms",
+      "related": ["temperature-intolerance", "menopause-concern"],
+      "terms": ["hot flushes", "hot flashes", "perimenopause", "menopause", "menopausal"]
+    },
+    {
+      "id": "oedema-proteinuria",
+      "label": "Oedema / proteinuria",
+      "field": "signs",
+      "related": ["ckd-concern"],
+      "terms": ["oedema", "edema", "frothy urine", "proteinuria", "albuminuria"]
+    },
+    {
+      "id": "hypoxia-cyanosis",
+      "label": "Hypoxia / cyanosis",
+      "field": "signs",
+      "related": ["shortness-breath", "heart-failure-concern", "resp-distress-concern"],
+      "terms": ["hypoxia", "cyanosis", "respiratory distress", "oxygenation failure"]
+    },
+    {
+      "id": "dark-urine",
+      "label": "Dark urine",
+      "field": "signs",
+      "related": ["jaundice", "hepatic-concern"],
+      "terms": ["dark urine", "tea coloured urine", "tea-colored urine"]
+    },
+    {
+      "id": "goitre",
+      "label": "Goitre",
+      "field": "signs",
+      "related": ["palpitations", "temperature-intolerance", "thyroid-concern"],
+      "terms": ["goitre", "goiter", "thyroid enlargement"]
+    },
+    {
+      "id": "joint-pain",
+      "label": "Joint pain / stiffness",
+      "field": "symptoms",
+      "related": ["malar-rash", "autoimmune-concern"],
+      "terms": ["joint pain", "joint swelling", "morning stiffness", "arthritis"]
+    },
+    {
+      "id": "malar-rash",
+      "label": "Malar rash / photosensitivity",
+      "field": "signs",
+      "related": ["joint-pain", "autoimmune-concern"],
+      "terms": ["malar rash", "photosensitivity", "vasculitis", "connective tissue disease", "ctd"]
+    },
+    {
+      "id": "vaginal-discharge",
+      "label": "STI",
+      "field": "symptoms",
+      "related": ["sti-concern"],
+      "terms": ["sti", "std", "urethral discharge", "chlamydia", "gonorrhoea", "gonorrhea", "cervicitis"]
+    },
+    {
+      "id": "infertility",
+      "label": "Infertility",
+      "field": "concern",
+      "related": ["hirsutism", "pcos-concern"],
+      "terms": ["infertility", "subfertility", "difficulty conceiving", "anovulation"]
+    },
+    {
+      "id": "acs-concern",
+      "label": "ACS",
+      "field": "concern",
+      "related": ["chest-pain", "shortness-breath"],
+      "terms": ["acs", "acute coronary syndrome", "mi", "myocardial infarction", "stemi", "nstemi"]
+    },
+    {
+      "id": "heart-failure-concern",
+      "label": "Heart failure",
+      "field": "concern",
+      "related": ["shortness-breath", "oedema-proteinuria"],
+      "terms": ["heart failure", "cardiac failure", "fluid overload", "pulmonary oedema", "pulmonary edema"]
+    },
+    {
+      "id": "sepsis-concern",
+      "label": "Sepsis",
+      "field": "concern",
+      "related": ["fever-sepsis", "confusion", "resp-distress-concern"],
+      "terms": ["sepsis", "septic shock", "infection", "toxic looking"]
+    },
+    {
+      "id": "anaemia-concern",
+      "label": "Anaemia",
+      "field": "concern",
+      "related": ["fatigue-pallor", "bleeding"],
+      "terms": ["anaemia", "anemia", "iron deficiency", "low hb"]
+    },
+    {
+      "id": "ckd-concern",
+      "label": "CKD",
+      "field": "concern",
+      "related": ["oedema-proteinuria"],
+      "terms": ["ckd", "kidney disease", "renal disease", "nephrotic", "proteinuria"]
+    },
+    {
+      "id": "diabetes-concern",
+      "label": "Diabetes",
+      "field": "concern",
+      "related": ["hyperglycaemia", "gestational-diabetes-concern"],
+      "terms": ["diabetes", "hyperglycaemia", "hyperglycemia", "high sugar", "glycosuria"]
+    },
+    {
+      "id": "pancreatitis-concern",
+      "label": "Pancreatitis",
+      "field": "concern",
+      "related": ["upper-abdominal"],
+      "terms": ["pancreatitis", "epigastric pain", "radiates to back"]
+    },
+    {
+      "id": "resp-distress-concern",
+      "label": "Respiratory distress",
+      "field": "concern",
+      "related": ["shortness-breath", "hypoxia-cyanosis", "sepsis-concern"],
+      "terms": ["respiratory distress", "hypoxia", "cyanosis", "acidosis", "oxygenation failure"]
+    },
+    {
+      "id": "sti-concern",
+      "label": "STI",
+      "field": "concern",
+      "related": ["vaginal-discharge"],
+      "terms": ["sti", "std", "cervicitis", "urethritis"]
+    },
+    {
+      "id": "pcos-concern",
+      "label": "PCOS",
+      "field": "concern",
+      "related": ["hirsutism", "infertility"],
+      "terms": ["pcos", "polycystic ovary syndrome", "androgen excess", "anovulation"]
+    },
+    {
+      "id": "thyroid-concern",
+      "label": "Thyroid disease",
+      "field": "concern",
+      "related": ["palpitations", "temperature-intolerance", "goitre"],
+      "terms": ["thyroid", "goitre", "goiter", "hyperthyroidism", "hypothyroidism", "thyrotoxicosis"]
+    },
+    {
+      "id": "autoimmune-concern",
+      "label": "Autoimmune disease",
+      "field": "concern",
+      "related": ["joint-pain", "malar-rash"],
+      "terms": ["autoimmune disease", "arthritis", "connective tissue disease", "inflammatory disease"]
+    },
+    {
+      "id": "hepatic-concern",
+      "label": "Liver disease",
+      "field": "concern",
+      "related": ["jaundice", "dark-urine", "upper-abdominal"],
+      "terms": ["liver disease", "hepatitis", "cholestasis", "lft"]
+    },
+    {
+      "id": "gestational-diabetes-concern",
+      "label": "Gestational diabetes",
+      "field": "concern",
+      "related": ["hyperglycaemia", "diabetes-concern", "pregnancy-booking"],
+      "terms": ["gestational diabetes", "gdm", "pregnancy glucose", "screening glucose"]
+    },
+    {
+      "id": "hirsutism",
+      "label": "Hirsutism / acne",
+      "field": "signs",
+      "related": ["infertility", "pcos-concern"],
+      "terms": ["hirsutism", "facial hair", "pcos", "androgen excess", "acne"]
+    },
+    {
+      "id": "menopause-concern",
+      "label": "Menopause",
+      "field": "concern",
+      "related": ["hot-flushes", "temperature-intolerance"],
+      "terms": ["menopause", "menopausal", "perimenopause", "hot flushes", "hot flashes"]
+    },
+    {
+      "id": "confusion",
+      "label": "Confusion / encephalopathy",
+      "field": "symptoms",
+      "related": ["fever-sepsis", "hyperglycaemia", "sepsis-concern"],
+      "terms": ["confusion", "altered mental state", "drowsy", "encephalopathy"]
+    },
+    {
+      "id": "pregnancy-booking",
+      "label": "Antenatal booking",
+      "field": "concern",
+      "related": ["gestational-diabetes-concern"],
+      "terms": ["pregnancy", "pregnant", "antenatal", "antenatal booking", "booking", "booking bloods", "prenatal", "gestational", "first antenatal visit", "first antenatal bloods", "first pregnancy bloods"]
+    }
+  ],
+  "presentations": [
+    {
+      "id": "acute-coronary",
+      "label": "Chest pain / myocardial injury support",
+      "summary": "Useful when ACS or myocardial injury is part of the differential.",
+      "match": {
+        "any": ["chest pain", "angina", "tight chest", "pressure chest", "acute coronary syndrome", "acs", "stemi", "nstemi", "radiating chest pain"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Cardiac Profile",
+          "reason": "Current catalogue cardiac markers for suspected myocardial injury.",
+          "tubeHints": ["Green", "Gold/Yellow"]
+        }
+      ],
+      "caution": "Serial timing, ECG findings, and urgent chest-pain pathways still take priority."
+    },
+    {
+      "id": "heart-failure",
+      "label": "Shortness of breath / heart failure support",
+      "summary": "Useful when dyspnoea, orthopnoea, or fluid overload raises heart-failure concern.",
+      "match": {
+        "any": ["heart failure", "cardiac failure", "orthopnoea", "orthopnea", "pnd", "paroxysmal nocturnal dyspnoea", "paroxysmal nocturnal dyspnea", "pulmonary oedema", "pulmonary edema", "raised jvp", "leg swelling"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "NT-proBNP",
+          "reason": "Natriuretic peptide support for suspected heart failure.",
+          "tubeHints": ["Green", "Gold/Yellow"]
+        },
+        {
+          "name": "U&E",
+          "reason": "Baseline chemistry support for fluid balance and renal context.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Interpret with age, renal function, and the local heart-failure pathway."
+    },
+    {
+      "id": "respiratory-distress",
+      "label": "Respiratory distress / acid-base support",
+      "summary": "Useful when oxygenation, ventilation, or perfusion is unstable.",
+      "match": {
+        "any": ["respiratory distress", "hypoxia", "cyanosis", "acidosis", "shock", "oxygenation failure"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Blood Gases",
+          "reason": "Urgent gas and acid-base support from the current catalogue.",
+          "tubeHints": ["Green"]
+        },
+        {
+          "name": "Lactate",
+          "reason": "Perfusion marker often paired with severe respiratory or shock presentations.",
+          "tubeHints": ["Gray"]
+        }
+      ],
+      "caution": "Escalate clinically first if the patient is unstable."
+    },
+    {
+      "id": "sepsis",
+      "label": "Fever / sepsis support",
+      "summary": "Useful when fever, rigors, hypotension, or sepsis is suspected.",
+      "match": {
+        "any": ["fever", "febrile", "sepsis", "septic", "rigors", "hypotension", "tachycardia", "toxic looking"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Blood Culture",
+          "reason": "Culture support before antibiotics where clinically appropriate.",
+          "tubeHints": ["Blood Culture Bottles"]
+        },
+        {
+          "name": "Lactate",
+          "reason": "Perfusion marker commonly paired with suspected sepsis.",
+          "tubeHints": ["Gray"]
+        },
+        {
+          "name": "CRP",
+          "reason": "Inflammatory marker from the existing catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Procalcitonin (PCT)",
+          "reason": "Additional sepsis support where local protocol uses PCT.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "FBC",
+          "reason": "Baseline blood count support for infection severity and cell lines.",
+          "tubeHints": ["Purple"]
+        }
+      ],
+      "caution": "Obtain cultures before antibiotics where possible and follow urgent sepsis protocol."
+    },
+    {
+      "id": "anaemia",
+      "label": "Anaemia / iron deficiency support",
+      "summary": "Useful when fatigue, pallor, or low haemoglobin is suspected.",
+      "match": {
+        "any": ["anaemia", "anemia", "fatigue", "pallor", "low hb", "microcytic", "weakness"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "FBC",
+          "reason": "Baseline blood count support for anaemia workup.",
+          "tubeHints": ["Purple"]
+        },
+        {
+          "name": "Fe Studies",
+          "reason": "Iron-study profile already available in the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Interpret with bleeding history, pregnancy status, and chronic disease."
+    },
+    {
+      "id": "bleeding",
+      "label": "Bleeding / bruising support",
+      "summary": "Useful when abnormal bleeding or bruising suggests a count or clotting problem.",
+      "match": {
+        "any": ["bleeding", "bruising", "epistaxis", "petechiae", "melena", "haematemesis", "hematemesis", "coagulopathy"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "FBC",
+          "reason": "Count support for anaemia or thrombocytopenia context.",
+          "tubeHints": ["Purple"]
+        },
+        {
+          "name": "Coagulation Studies",
+          "reason": "Clotting screen from the existing catalogue.",
+          "tubeHints": ["Blue"]
+        }
+      ],
+      "caution": "Major bleeding is an emergency and needs immediate escalation."
+    },
+    {
+      "id": "renal-proteinuria",
+      "label": "Kidney / proteinuria support",
+      "summary": "Useful when oedema, frothy urine, or kidney disease is suspected.",
+      "match": {
+        "any": ["proteinuria", "albuminuria", "frothy urine", "kidney disease", "renal disease", "ckd", "oedema", "edema"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "U&E",
+          "reason": "Baseline renal chemistry support.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Albumin:Creatinine Ratio (Random Urine)",
+          "reason": "Random urine albumin assessment already in the catalogue.",
+          "tubeHints": ["Urine Container"]
+        },
+        {
+          "name": "Protein:Creatinine Ratio (Random Urine)",
+          "reason": "Random urine protein quantification from the catalogue.",
+          "tubeHints": ["Urine Container"]
+        }
+      ],
+      "caution": "Use local nephrology and hypertension pathways for AKI, nephrotic syndrome, or severe oedema."
+    },
+    {
+      "id": "diabetes",
+      "label": "Hyperglycaemia / diabetes support",
+      "summary": "Useful when symptomatic hyperglycaemia or diabetes is part of the question.",
+      "match": {
+        "any": ["polyuria", "polydipsia", "high sugar", "hyperglycaemia", "hyperglycemia", "diabetes", "glycosuria"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Random Glucose",
+          "reason": "Immediate glucose support from the current catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "HbA1c",
+          "reason": "Longer-term glycaemic support for diabetes assessment.",
+          "tubeHints": ["Purple"]
+        }
+      ],
+      "caution": "If DKA or HHS is possible, use emergency metabolic pathways instead of this tool alone."
+    },
+    {
+      "id": "gestational-diabetes",
+      "label": "Pregnancy glucose screening support",
+      "summary": "Useful when pregnancy glucose screening or gestational diabetes is the concern.",
+      "match": {
+        "any": ["gestational diabetes", "gdm", "pregnancy glucose", "screening glucose", "hyperglycaemia", "hyperglycemia"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": ["female", "other"],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "pregnant"
+      },
+      "tests": [
+        {
+          "name": "OGTT Pregnancy (75g, 2hr)",
+          "reason": "Dedicated pregnancy OGTT already present in the catalogue.",
+          "tubeHints": ["Gray"]
+        }
+      ],
+      "caution": "Timing and eligibility for antenatal OGTT must follow local antenatal protocol."
+    },
+    {
+      "id": "thyroid",
+      "label": "Thyroid dysfunction support",
+      "summary": "Useful when thyroid disease, goitre, or temperature intolerance is suspected.",
+      "match": {
+        "any": ["thyroid", "goitre", "goiter", "thyrotoxicosis", "hypothyroidism", "hyperthyroidism", "heat intolerance", "cold intolerance", "palpitations"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Thyroid Function Test (TFT)",
+          "reason": "Core thyroid profile from the current catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Interpret with pregnancy status, medication history, and local endocrine pathways."
+    },
+    {
+      "id": "liver",
+      "label": "Jaundice / liver injury support",
+      "summary": "Useful when jaundice or hepatitis is suspected, but in infants it should only surface when there are clearer liver or hepatitis clues.",
+      "match": {
+        "any": ["jaundice", "icterus", "dark urine", "hepatitis", "liver disease", "transaminitis", "hepatomegaly"],
+        "ageConditionalAny": [
+          {
+            "maxAgeDays": 365,
+            "terms": ["dark urine", "hepatitis", "liver disease", "transaminitis", "hepatomegaly"]
+          }
+        ],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "minAgeDays": null,
+        "maxAgeDays": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Liver Function Tests (LFT)",
+          "reason": "Liver profile already listed in the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Severe jaundice, confusion, or coagulopathy needs urgent escalation."
+    },
+    {
+      "id": "newborn-bilirubin",
+      "label": "Newborn / infant jaundice bilirubin support",
+      "summary": "Useful when newborn or infant jaundice monitoring or bilirubin follow-up is the main concern.",
+      "match": {
+        "any": ["newborn jaundice", "neonatal jaundice", "infant jaundice", "baby jaundice", "jaundice", "icterus", "yellow baby", "yellow newborn", "bilirubin", "tsb"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "minAgeDays": 0,
+        "maxAgeDays": 365,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Total Serum Bilirubin (TSB)",
+          "reason": "Preferred bilirubin profile for newborn and infant jaundice monitoring, with total bilirubin and conjugated/direct bilirubin; indirect/unconjugated bilirubin is calculated.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "In newborns, interpret by age in hours and follow the local neonatal jaundice pathway. In older infants, use local prolonged-jaundice and cholestasis guidance."
+    },
+    {
+      "id": "hepatitis-b",
+      "label": "Acute hepatitis B support",
+      "summary": "Useful when acute viral hepatitis B exposure or illness is part of the story.",
+      "match": {
+        "any": ["viral hepatitis", "hepatitis exposure", "hepatitis b", "acute hepatitis"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Hepatitis B (Acute)",
+          "reason": "Acute hepatitis B profile from the existing catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Use local infectious-disease or occupational-exposure guidance where relevant."
+    },
+    {
+      "id": "pancreatitis",
+      "label": "Pancreatitis support",
+      "summary": "Useful when epigastric pain or pain radiating to the back suggests pancreatitis.",
+      "match": {
+        "any": ["pancreatitis", "epigastric pain", "radiates to back", "upper abdominal pain"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Lipase",
+          "reason": "Pancreatic enzyme support from the current catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Amylase",
+          "reason": "Additional pancreatic enzyme already available in the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Abdominal emergencies still need direct clinical review and imaging decisions."
+    },
+    {
+      "id": "sti",
+      "label": "STI support",
+      "summary": "Useful when STI is the concern.",
+      "match": {
+        "any": ["sti", "std", "urethral discharge", "gonorrhoea", "gonorrhea", "chlamydia", "cervicitis"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Urine MCS",
+          "reason": "Urine MC&S from the current catalogue.",
+          "tubeHints": ["Sterile urine container"]
+        }
+      ],
+      "caution": "Follow local sexual-health and microbiology collection protocol for the requested specimen."
+    },
+    {
+      "id": "infertility-female",
+      "label": "Female infertility support",
+      "summary": "Useful when infertility or ovulatory dysfunction is being assessed in a female context.",
+      "match": {
+        "any": ["infertility", "subfertility", "difficulty conceiving", "anovulation"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": ["female", "other"],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Infertility Screen (Female)",
+          "reason": "Female reproductive hormone profile from the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Thyroid Function Test (TFT)",
+          "reason": "Thyroid support often paired with infertility assessment.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Cycle timing and local fertility pathways still apply."
+    },
+    {
+      "id": "infertility-male",
+      "label": "Male infertility support",
+      "summary": "Useful when infertility is being assessed in a male context.",
+      "match": {
+        "any": ["infertility", "subfertility", "difficulty conceiving", "low testosterone"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": ["male"],
+        "allowUnspecifiedSex": false,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Infertility Screen (Male)",
+          "reason": "Male fertility hormone profile from the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Local fertility pathways may also require semen analysis and specialist review."
+    },
+    {
+      "id": "hirsutism",
+      "label": "Hirsutism / androgen excess support",
+      "summary": "Useful when androgen excess, acne, or possible PCOS is being assessed.",
+      "match": {
+        "any": ["hirsutism", "facial hair", "pcos", "androgen excess", "acne"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": ["female", "other"],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Hirsutism Screen (Full)",
+          "reason": "Androgen-focused endocrine profile from the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Thyroid Function Test (TFT)",
+          "reason": "Thyroid support often complements endocrine workup.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Interpret with age, menstrual history, and pregnancy context."
+    },
+    {
+      "id": "menopause",
+      "label": "Menopausal hormone support",
+      "summary": "Useful when menopausal symptoms or hot flushes are part of the concern.",
+      "match": {
+        "any": ["menopause", "menopausal", "perimenopause", "hot flushes", "hot flashes"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": ["female", "other"],
+        "allowUnspecifiedSex": true,
+        "minAge": 40,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Menopausal Screen",
+          "reason": "Focused menopausal hormone screen from the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Use medication history and local menopause guidance when interpreting results."
+    },
+    {
+      "id": "arthritis",
+      "label": "Inflammatory joint pain support",
+      "summary": "Useful when joint pain, swelling, or morning stiffness suggests inflammatory arthritis.",
+      "match": {
+        "any": ["joint pain", "joint swelling", "morning stiffness", "arthritis", "polyarthritis", "rheumatoid"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Arthritis Profile",
+          "reason": "Focused inflammatory arthritis screen already in the catalogue.",
+          "tubeHints": ["Purple", "Gold/Yellow"]
+        }
+      ],
+      "caution": "Use broader rheumatology assessment if systemic features are present."
+    },
+    {
+      "id": "autoimmune",
+      "label": "Systemic autoimmune support",
+      "summary": "Useful when vasculitis, CTD, or systemic autoimmune disease is suspected.",
+      "match": {
+        "any": ["autoimmune", "vasculitis", "connective tissue disease", "ctd", "malar rash", "photosensitivity"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Autoimmune Profile",
+          "reason": "Broader autoimmune screen from the current catalogue.",
+          "tubeHints": ["Purple", "Gold/Yellow"]
+        }
+      ],
+      "caution": "Autoimmune workup should still be guided by clinical pattern and specialist advice."
+    },
+    {
+      "id": "pregnancy-hormone",
+      "label": "Pregnancy hormone support",
+      "summary": "Useful when pregnancy context is selected and serum BHCG support may be needed.",
+      "match": {
+        "any": ["pregnancy"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": ["female", "other"],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "pregnant"
+      },
+      "tests": [
+        {
+          "name": "BHCG (Beta-HCG)",
+          "reason": "Serum beta-HCG supports pregnancy confirmation or follow-up when pregnancy context is selected.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Use the local obstetric, ectopic pregnancy, and ultrasound pathway when bleeding, pain, or instability is present."
+    },
+    {
+      "id": "antenatal",
+      "label": "Pregnancy booking support",
+      "summary": "Useful when antenatal booking or first pregnancy bloods are required, usually at the first antenatal visit.",
+      "match": {
+        "any": ["antenatal", "antenatal screen", "antenatal screening", "antenatal booking", "booking", "booking bloods", "prenatal", "first antenatal visit", "first booking visit", "pregnancy booking", "first antenatal bloods", "first pregnancy bloods"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": ["female", "other"],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "pregnant"
+      },
+      "tests": [
+        {
+          "name": "Antenatal Screen (ANTINV)",
+          "reason": "Use for first antenatal booking bloods, ideally early in pregnancy at the first booking visit.",
+          "tubeHints": ["Gold/Yellow", "Purple", "Gray"]
+        }
+      ],
+      "caution": "Usually done at the first antenatal booking visit as early as possible in pregnancy, ideally in the first trimester. If the patient presents later, local protocol still treats it as the first-visit bundle."
+    },
+    {
+      "id": "cord-blood",
+      "label": "Newborn cord blood support",
+      "summary": "Useful in neonatal or delivery context where cord blood testing is requested.",
+      "match": {
+        "any": ["newborn", "neonate", "cord blood", "delivery"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": 0,
+        "maxAge": 1,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Cord Blood",
+          "reason": "Cord blood profile already listed in the catalogue.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Use the local neonatal and obstetric pathway for identification and timing steps."
+    },
+    {
+      "id": "hepatic-encephalopathy",
+      "label": "Hepatic encephalopathy support",
+      "summary": "Useful when confusion occurs together with features of liver failure or cirrhosis.",
+      "match": {
+        "any": [],
+        "allGroups": [
+          ["confusion", "altered mental state", "drowsy", "encephalopathy"],
+          ["jaundice", "liver failure", "cirrhosis", "hepatic"]
+        ]
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Ammonia",
+          "reason": "Time-sensitive ammonia handling support from the current catalogue.",
+          "tubeHints": ["Green"]
+        }
+      ],
+      "caution": "This sample is highly time-sensitive and must follow the critical handling note on the test card."
+    }
+  ]
+}

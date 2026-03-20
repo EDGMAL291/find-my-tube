@@ -133,6 +133,29 @@ body::after {
   margin: 0 auto;
 }
 
+body.find-my-test-page {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(15, 118, 110, 0.08), transparent 34%),
+    radial-gradient(circle at 86% 14%, rgba(180, 83, 9, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(252, 248, 241, 0.98), rgba(244, 237, 226, 0.96));
+}
+
+body.find-my-test-page::before {
+  width: 220px;
+  height: 220px;
+  background: rgba(15, 118, 110, 0.08);
+}
+
+body.find-my-test-page::after {
+  width: 260px;
+  height: 260px;
+  background: rgba(180, 83, 9, 0.08);
+}
+
+body.find-my-test-page .container {
+  max-width: 860px;
+}
+
 .header {
   position: relative;
   margin-bottom: 24px;
@@ -155,7 +178,8 @@ body::after {
   font-weight: 800;
 }
 
-.brand-home-btn {
+.brand-home-btn,
+.find-my-test-header-btn {
   border: 0;
   padding: 0;
   background: transparent;
@@ -164,14 +188,26 @@ body::after {
   cursor: pointer;
 }
 
-.brand-home-btn:hover {
+.brand-home-btn:hover,
+.find-my-test-header-btn:hover {
   color: #0d605a;
 }
 
-.brand-home-btn:focus-visible {
+.brand-home-btn:focus-visible,
+.find-my-test-header-btn:focus-visible {
   outline: 2px solid rgba(13, 96, 90, 0.38);
   outline-offset: 8px;
   border-radius: 12px;
+}
+
+.find-my-test-header-title {
+  display: none;
+  width: 100%;
+  text-align: center;
+  font-size: clamp(1.75rem, 2.6vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #17343a;
 }
 
 .brand-gap {
@@ -226,6 +262,35 @@ body::after {
   margin: 0 auto;
   text-align: center;
   font-size: clamp(0.94rem, 2.5vw, 1rem);
+}
+
+body.find-my-test-page .header {
+  margin-bottom: 14px;
+}
+
+body.find-my-test-page .brand-home-btn {
+  display: none;
+}
+
+body.find-my-test-page .find-my-test-header-title {
+  display: inline-flex;
+}
+
+body.find-my-test-page .search-box {
+  display: none;
+}
+
+body.find-my-test-page .header > p {
+  display: block;
+  margin-bottom: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #556871;
+  max-width: 35rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
 .search-box {
@@ -317,23 +382,789 @@ body::after {
   transform: translateY(-50%);
 }
 
+.find-my-test-page-bar {
+  display: none;
+}
+
+body.find-my-test-page .find-my-test-page-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  background: rgba(255, 252, 247, 0.9);
+  box-shadow: 0 10px 18px rgba(65, 53, 38, 0.08);
+}
+
+.find-my-test-page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #0d605a;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.find-my-test-page-back::before {
+  content: "\2190";
+  font-size: 0.94rem;
+}
+
+.find-my-test-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.find-my-test-page-meta span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  background: rgba(237, 250, 247, 0.92);
+  color: #0d605a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.clinical-workup-panel {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(180, 83, 9, 0.14), transparent 32%),
+    linear-gradient(145deg, rgba(249, 253, 251, 0.98), rgba(244, 236, 223, 0.95));
+  box-shadow: 0 18px 34px rgba(65, 53, 38, 0.14);
+}
+
+body.find-my-test-page .clinical-workup-panel {
+  margin-bottom: 18px;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 24px;
+  border-radius: 28px;
+  border-color: rgba(15, 118, 110, 0.16);
+  background: linear-gradient(180deg, rgba(250, 253, 251, 0.98), rgba(246, 240, 233, 0.94));
+  box-shadow: 0 20px 34px rgba(65, 53, 38, 0.1);
+}
+
+.clinical-workup-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 18px;
+  align-items: start;
+}
+
+body.find-my-test-page .clinical-workup-shell {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.clinical-workup-copy,
+.clinical-workup-form,
+.clinical-workup-results {
+  position: relative;
+  z-index: 1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body.find-my-test-page .clinical-workup-copy {
+  max-width: 58ch;
+}
+
+body.find-my-test-page .clinical-workup-form {
+  width: 100%;
+}
+
+body.find-my-test-page .clinical-workup-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.clinical-workup-context-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  min-width: 0;
+}
+
+body.find-my-test-page .clinical-workup-context-dob {
+  grid-column: 1 / -1;
+}
+
+body.find-my-test-page .clinical-workup-context-pair {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.clinical-workup-kicker {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0b5d57;
+}
+
+.clinical-workup-copy h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: #17343a;
+}
+
+.clinical-workup-description {
+  margin: 0;
+  max-width: 54ch;
+  color: #45616a;
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.clinical-workup-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.clinical-workup-chip-slot {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.clinical-workup-chip-slot-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #607480;
+}
+
+.clinical-workup-chip-list-inline {
+  margin-top: 0;
+}
+
+.clinical-workup-chip {
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #21414d;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.clinical-workup-chip:hover,
+.clinical-workup-chip:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(15, 118, 110, 0.44);
+  background: rgba(245, 253, 251, 0.96);
+  box-shadow: 0 10px 18px rgba(15, 118, 110, 0.1);
+}
+
+.clinical-workup-chip.active {
+  border-color: rgba(15, 118, 110, 0.58);
+  background: linear-gradient(180deg, rgba(222, 247, 242, 0.98), rgba(239, 251, 248, 0.96));
+  color: #0d605a;
+}
+
+.clinical-workup-chip-secondary {
+  border-style: dashed;
+  background: rgba(248, 250, 251, 0.9);
+  color: #607480;
+}
+
+.clinical-workup-chip-secondary:hover,
+.clinical-workup-chip-secondary:focus-visible {
+  border-color: rgba(96, 116, 128, 0.42);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 16px rgba(96, 116, 128, 0.1);
+}
+
+.clinical-workup-form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background: rgba(255, 251, 245, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+body.find-my-test-page .clinical-workup-form {
+  padding: 18px;
+  border-radius: 22px;
+  border-color: rgba(15, 118, 110, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 24px rgba(65, 53, 38, 0.07);
+}
+
+.clinical-workup-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.clinical-workup-field {
+  display: grid;
+  gap: 6px;
+}
+
+.clinical-workup-context-field {
+  align-content: start;
+}
+
+.clinical-workup-dob-control {
+  position: relative;
+}
+
+.clinical-workup-dob-control #clinicalDobInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.clinical-workup-dob-display {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(140, 116, 82, 0.24);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #1f2a30;
+  font-family: inherit;
+  text-align: left;
+  padding: 10px 13px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    0 8px 16px rgba(65, 53, 38, 0.06);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+
+.clinical-workup-dob-display:hover,
+.clinical-workup-dob-display:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(15, 118, 110, 0.46);
+  box-shadow:
+    0 0 0 4px rgba(15, 118, 110, 0.12),
+    0 12px 20px rgba(15, 118, 110, 0.08);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.clinical-workup-dob-control:focus-within .clinical-workup-dob-display {
+  transform: translateY(-1px);
+  border-color: rgba(15, 118, 110, 0.46);
+  box-shadow:
+    0 0 0 4px rgba(15, 118, 110, 0.12),
+    0 12px 20px rgba(15, 118, 110, 0.08);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.clinical-workup-dob-display-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.clinical-workup-dob-age {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: #17343a;
+}
+
+.clinical-workup-dob-control.is-empty .clinical-workup-dob-age {
+  color: #7b8f99;
+  font-weight: 700;
+}
+
+.clinical-workup-dob-date {
+  font-size: 0.76rem;
+  color: #607480;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.clinical-workup-dob-date:empty {
+  display: none;
+}
+
+.clinical-workup-dob-display-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(237, 250, 247, 0.96);
+  color: #0d605a;
+  flex-shrink: 0;
+}
+
+.clinical-workup-dob-display-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.clinical-workup-field-wide {
+  grid-column: 1 / -1;
+}
+
+.clinical-workup-field span,
+.clinical-workup-field-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5a6d79;
+}
+
+.clinical-workup-field input,
+.clinical-workup-field select,
+.clinical-workup-field textarea {
+  width: 100%;
+  border: 1px solid rgba(140, 116, 82, 0.24);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2a30;
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  padding: 12px 13px;
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    0 8px 16px rgba(65, 53, 38, 0.06);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.clinical-workup-select-wrap {
+  position: relative;
+}
+
+.clinical-workup-select-wrap select {
+  padding-right: 52px;
+}
+
+.clinical-workup-select-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(237, 250, 247, 0.96);
+  color: #0d605a;
+  font-size: 1rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.clinical-workup-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;
+  padding-right: 13px;
+}
+
+.clinical-workup-field select::-ms-expand {
+  display: none;
+}
+
+.clinical-workup-field textarea {
+  resize: vertical;
+  min-height: 92px;
+}
+
+.clinical-workup-field input:focus,
+.clinical-workup-field select:focus,
+.clinical-workup-field textarea:focus {
+  border-color: rgba(15, 118, 110, 0.46);
+  box-shadow:
+    0 0 0 4px rgba(15, 118, 110, 0.12),
+    0 12px 20px rgba(15, 118, 110, 0.08);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.clinical-workup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.clinical-workup-submit-btn,
+.clinical-workup-reset-btn,
+.clinical-workup-results-clear-btn {
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.clinical-workup-submit-btn:hover,
+.clinical-workup-submit-btn:focus-visible,
+.clinical-workup-reset-btn:hover,
+.clinical-workup-reset-btn:focus-visible,
+.clinical-workup-results-clear-btn:hover,
+.clinical-workup-results-clear-btn:focus-visible {
+  transform: translateY(-1px);
+}
+
+.clinical-workup-submit-btn:disabled,
+.clinical-workup-reset-btn:disabled,
+.clinical-workup-results-clear-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+  box-shadow: none;
+}
+
+.clinical-workup-submit-btn {
+  border: 1px solid rgba(15, 118, 110, 0.46);
+  background: linear-gradient(180deg, rgba(13, 96, 90, 0.98), rgba(11, 73, 69, 0.96));
+  color: #f7fffd;
+  font-size: 0.88rem;
+  padding: 11px 14px;
+  box-shadow: 0 12px 22px rgba(15, 118, 110, 0.18);
+}
+
+.clinical-workup-reset-btn,
+.clinical-workup-results-clear-btn {
+  border: 1px solid rgba(120, 102, 74, 0.26);
+  background: rgba(255, 255, 255, 0.9);
+  color: #35505d;
+  font-size: 0.82rem;
+  padding: 10px 12px;
+}
+
+.clinical-workup-note {
+  margin: 0;
+  color: #5a6d79;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.clinical-workup-status {
+  min-height: 1.2em;
+  margin: 0;
+  color: #0d605a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.clinical-workup-status:empty {
+  display: none;
+}
+
+.clinical-workup-results {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.14), transparent 30%),
+    linear-gradient(145deg, rgba(249, 253, 251, 0.98), rgba(245, 239, 229, 0.95));
+  box-shadow: 0 16px 30px rgba(65, 53, 38, 0.12);
+}
+
+body.find-my-test-page .clinical-workup-results {
+  margin-bottom: 20px;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px;
+  border-radius: 24px;
+  border-color: rgba(15, 118, 110, 0.16);
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: 0 18px 30px rgba(65, 53, 38, 0.1);
+}
+
+body.find-my-test-page .clinical-workup-rule-list {
+  grid-template-columns: 1fr;
+}
+
+.clinical-workup-results[hidden] {
+  display: none !important;
+}
+
+.clinical-workup-results-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.clinical-workup-results-head h3 {
+  margin: 0;
+  font-size: 1.04rem;
+  color: #17343a;
+}
+
+.clinical-workup-results-copy {
+  margin: 0;
+  color: #45616a;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.clinical-workup-result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clinical-workup-result-tags:empty {
+  display: none;
+}
+
+.clinical-workup-result-tag,
+.clinical-workup-rule-test {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  background: rgba(236, 250, 247, 0.96);
+  color: #0d605a;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 7px 10px;
+}
+
+.clinical-workup-rule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.clinical-workup-rule-card,
+.clinical-workup-empty-state {
+  display: grid;
+  gap: 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 102, 74, 0.18);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56);
+}
+
+.clinical-workup-rule-label {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5a6d79;
+}
+
+.clinical-workup-rule-card h4,
+.clinical-workup-empty-state h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  color: #17343a;
+}
+
+.clinical-workup-rule-card p,
+.clinical-workup-empty-state p {
+  margin: 0;
+  color: #45616a;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.clinical-workup-rule-tests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clinical-workup-rule-caution {
+  padding-left: 10px;
+  border-left: 3px solid rgba(180, 83, 9, 0.42);
+  color: #6f4326 !important;
+}
+
+.clinical-workup-rule-match {
+  color: #5a6d79 !important;
+  font-size: 0.78rem !important;
+}
+
+.clinical-workup-selection-note {
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(120, 102, 74, 0.14);
+  color: #0d605a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.clinical-workup-test-list {
+  display: grid;
+  gap: 10px;
+}
+
+.clinical-workup-test-list:empty {
+  display: none;
+}
+
+.clinical-workup-test-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 102, 74, 0.18);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.clinical-workup-test-option:hover,
+.clinical-workup-test-option:focus-within {
+  transform: translateY(-1px);
+  border-color: rgba(15, 118, 110, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.56),
+    0 10px 18px rgba(15, 118, 110, 0.08);
+}
+
+.clinical-workup-test-option.is-selected {
+  border-color: rgba(15, 118, 110, 0.44);
+  background: linear-gradient(180deg, rgba(236, 250, 247, 0.96), rgba(255, 255, 255, 0.86));
+}
+
+.clinical-workup-test-option input {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  accent-color: #0d605a;
+}
+
+.clinical-workup-test-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.clinical-workup-test-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.clinical-workup-test-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #17343a;
+}
+
+.clinical-workup-test-tube {
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  background: rgba(236, 250, 247, 0.96);
+  color: #0d605a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.clinical-workup-test-summary,
+.clinical-workup-test-reason {
+  margin: 0;
+  color: #45616a;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+body:not(.find-my-test-page) .clinical-workup-panel,
+body:not(.find-my-test-page) .clinical-workup-results {
+  display: none !important;
+}
+
+body.find-my-test-page .pre-search,
+body.find-my-test-page .find-my-test-launch-card {
+  display: none !important;
+}
+
 
 .pre-search {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 16px;
   margin-bottom: 12px;
+  align-items: start;
 }
 
 .pre-search-primary {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .fact-carousel,
 .group-hints,
-.quick-tools-panel {
+.quick-tools-panel,
+.find-my-test-launch-card {
   border-radius: 16px;
   padding: 18px;
   border: 1px solid rgba(140, 116, 82, 0.26);
@@ -345,6 +1176,7 @@ body::after {
 
 .group-hints {
   display: grid;
+  grid-template-rows: auto 1fr;
   gap: 12px;
   padding: 0;
   background: transparent;
@@ -358,16 +1190,109 @@ body::after {
   display: grid;
   gap: 8px;
   align-content: start;
+  padding: 14px 16px;
+  margin-bottom: 1mm;
 }
 
 .quick-tools-panel {
   display: grid;
   gap: 8px;
   align-content: start;
+  padding: 14px 16px;
+  margin-bottom: 1mm;
   background:
     linear-gradient(180deg, rgba(242, 250, 248, 0.96), rgba(231, 244, 240, 0.92));
   border-color: rgba(15, 118, 110, 0.2);
   box-shadow: 0 10px 20px rgba(15, 118, 110, 0.08);
+}
+
+.find-my-test-launch-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 1mm;
+  align-content: start;
+  text-decoration: none;
+  color: inherit;
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(248, 253, 251, 0.98), rgba(238, 246, 243, 0.92));
+  border-color: rgba(15, 118, 110, 0.22);
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.1);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.find-my-test-launch-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.find-my-test-launch-card:hover,
+.find-my-test-launch-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(15, 118, 110, 0.38);
+  box-shadow: 0 16px 28px rgba(15, 118, 110, 0.16);
+}
+
+.find-my-test-launch-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.find-my-test-launch-kicker {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #0b5d57;
+}
+
+.find-my-test-launch-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background: rgba(255, 255, 255, 0.82);
+  color: #0d605a;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.find-my-test-launch-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #17343a;
+}
+
+.find-my-test-launch-card p {
+  margin: 0;
+  color: #45616a;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.find-my-test-launch-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.4);
+  background: linear-gradient(180deg, rgba(255, 254, 250, 0.96), rgba(237, 252, 250, 0.92));
+  color: #0d605a;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.2;
+  box-shadow: 0 10px 18px rgba(15, 118, 110, 0.1);
 }
 
 .quick-tools-panel.active-plan {
@@ -705,7 +1630,8 @@ body::after {
 
 .group-chips {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+  align-content: start;
 }
 
 .group-chip-stack {
@@ -1327,6 +2253,57 @@ body::after {
   margin-bottom: 16px;
 }
 
+.section-context-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(250, 253, 251, 0.96), rgba(244, 249, 247, 0.94));
+}
+
+.section-context-bar[hidden] {
+  display: none !important;
+}
+
+.section-context-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0d605a;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.1;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.section-context-back-btn:hover,
+.section-context-back-btn:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(15, 118, 110, 0.46);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 10px 18px rgba(15, 118, 110, 0.1);
+}
+
+.section-context-label {
+  flex: 1;
+  margin: 0;
+  min-width: 0;
+  color: #3f5761;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: right;
+}
+
 .results-info {
   margin-bottom: 0;
   color: #31444f;
@@ -1706,6 +2683,32 @@ body::after {
   color: #213741;
   font-size: 0.84rem;
   line-height: 1.3;
+}
+
+.card-requested-specimen {
+  margin-top: 10px;
+  margin-bottom: 2px;
+  padding: 9px 10px;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(232, 248, 244, 0.96), rgba(245, 253, 251, 0.94));
+}
+
+.card-requested-specimen .label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0d605a;
+}
+
+.card-requested-specimen-value {
+  display: block;
+  color: #17343a;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .field {
@@ -2203,12 +3206,201 @@ body::after {
     background-attachment: scroll;
   }
 
+  body.find-my-test-page .header {
+    margin-bottom: 12px;
+  }
+
+  body.find-my-test-page .find-my-test-page-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+
   .brand-title {
     font-size: clamp(1.7rem, 8vw, 2rem);
   }
 
+  .clinical-workup-panel {
+    margin-bottom: 16px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  body.find-my-test-page .clinical-workup-panel,
+  body.find-my-test-page .clinical-workup-results {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .clinical-workup-shell {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .clinical-workup-copy h2 {
+    font-size: 1.28rem;
+  }
+
+  .clinical-workup-description,
+  .clinical-workup-results-copy {
+    font-size: 0.88rem;
+  }
+
+  .clinical-workup-chip-list {
+    gap: 7px;
+    margin-top: 14px;
+  }
+
+  .clinical-workup-chip-slot {
+    margin-top: 8px;
+  }
+
+  .clinical-workup-chip-slot-label {
+    font-size: 0.68rem;
+  }
+
+  .clinical-workup-dob-display {
+    padding: 10px 12px;
+  }
+
+  .clinical-workup-dob-age {
+    font-size: 0.9rem;
+  }
+
+  .clinical-workup-dob-date {
+    font-size: 0.74rem;
+  }
+
+  .clinical-workup-chip {
+    width: calc(50% - 4px);
+    justify-content: center;
+    text-align: center;
+    padding: 9px 10px;
+    font-size: 0.72rem;
+  }
+
+  .clinical-workup-form {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .clinical-workup-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 14px;
+    row-gap: 10px;
+  }
+
+  .clinical-workup-context-pair {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: 10px;
+  }
+
+  .clinical-workup-context-dob,
+  .clinical-workup-field-wide {
+    grid-column: 1 / -1;
+  }
+
+  .clinical-workup-context-half {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .clinical-workup-context-field {
+    min-width: 0;
+  }
+
+  .clinical-workup-dob-control {
+    display: grid;
+    min-width: 0;
+  }
+
+  .clinical-workup-field input,
+  .clinical-workup-field select,
+  .clinical-workup-field textarea {
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  .clinical-workup-field span,
+  .clinical-workup-field-label {
+    font-size: 0.66rem;
+    letter-spacing: 0.07em;
+  }
+
+  .clinical-workup-dob-display {
+    min-height: 48px;
+  }
+
+  .clinical-workup-context-half select {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .clinical-workup-select-wrap select {
+    padding-right: 52px;
+  }
+
+  .clinical-workup-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clinical-workup-submit-btn,
+  .clinical-workup-reset-btn,
+  .clinical-workup-results-clear-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .clinical-workup-results {
+    margin-bottom: 16px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .clinical-workup-results-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clinical-workup-rule-list {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-workup-test-option {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .clinical-workup-test-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .clinical-workup-test-tube {
+    align-self: flex-start;
+  }
+
+  .find-my-test-launch-head {
+    gap: 12px;
+  }
+
+  .find-my-test-launch-arrow {
+    display: none;
+  }
+
   .pre-search {
     grid-template-columns: 1fr;
+  }
+
+  .pre-search-primary {
+    display: flex;
+    flex-direction: column;
   }
 
   .quick-tools-toggle-btn {
@@ -2416,6 +3608,24 @@ body::after {
     margin-bottom: 14px;
   }
 
+  .section-context-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .section-context-back-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .section-context-label {
+    width: 100%;
+    text-align: left;
+    font-size: 0.84rem;
+  }
+
   .results-back-to-top-btn {
     bottom: calc(env(safe-area-inset-bottom) + 14px);
   }
@@ -2462,6 +3672,11 @@ body::after {
   .card-summary-field .label {
     font-size: 0.6rem;
     margin-bottom: 3px;
+  }
+
+  .card-requested-specimen {
+    margin-top: 8px;
+    padding: 8px 9px;
   }
 
   .profile-components {

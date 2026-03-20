@@ -36,7 +36,7 @@ const tests = [
     tubeColor: "Gold + Purple + Gray",
     specimen: "Serum, EDTA whole blood, and fluoride plasma",
     turnaroundTime: "1-3 days",
-    notes: "Booking antenatal profile including blood group, antibody screen, infections, rubella immunity, and glucose.",
+    notes: "Booking antenatal profile for the first antenatal visit, ideally early in pregnancy, including blood group, antibody screen, infections, rubella immunity, and glucose.",
     borderColor: "yellow"
   },
   {
@@ -150,6 +150,14 @@ const tests = [
     specimen: "Serum",
     turnaroundTime: "6-24 hours",
     notes: "Screen includes FSH, LH, and Estradiol (E2) for menopausal endocrine assessment.",
+    borderColor: "yellow"
+  },
+  {
+    name: "BHCG (Beta-HCG)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "4-8 hours",
+    notes: "Quantitative serum beta-HCG used for pregnancy assessment, confirmation, and follow-up when clinically indicated.",
     borderColor: "yellow"
   },
   {
@@ -552,6 +560,7 @@ const tests = [
   {
     name: "CSF Cell Count and Chemistry",
     tubeColor: "Tan + Gray",
+    specimen: "CSF",
     turnaroundTime: "Same day",
     notes: "CSF chemistry profile including cell count and differential, glucose, protein, IgG index, ADA, and oligoclonal bands. Fill both the tan tube and the gray top fluoride tube with CSF, not blood. Paired serum is also needed for IgG index and usually for oligoclonal bands.",
     borderColor: "#64748b"
@@ -1208,9 +1217,19 @@ const tests = [
   {
     name: "Bilirubin (Neonatal Screen)",
     tubeColor: "Gold",
+    tubeVariant: "Paeds microtainer",
     specimen: "Serum",
     turnaroundTime: "Urgent / same day",
-    notes: "Neonatal bilirubin assessment.",
+    notes: "Neonatal bilirubin assessment, usually collected in a gold/yellow paeds microtainer.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Total Serum Bilirubin (TSB)",
+    tubeColor: "Gold",
+    tubeVariant: "Paeds microtainer",
+    specimen: "Serum",
+    turnaroundTime: "Urgent / same day",
+    notes: "Preferred bilirubin profile for newborn and infant jaundice monitoring, including total bilirubin and conjugated/direct bilirubin; unconjugated/indirect bilirubin is calculated. Usually collected in a gold/yellow paeds microtainer.",
     borderColor: "yellow"
   },
   {

@@ -1,12 +1,35 @@
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
+const headerIntroText = document.getElementById("headerIntroText");
+const sectionContextBar = document.getElementById("sectionContextBar");
+const sectionContextBackBtn = document.getElementById("sectionContextBackBtn");
+const sectionContextLabel = document.getElementById("sectionContextLabel");
 const cardsContainer = document.getElementById("cardsContainer");
 const resultsToolbar = document.getElementById("resultsToolbar");
 const resultsInfo = document.getElementById("resultsInfo");
 const resultsBackToTopBtn = document.getElementById("resultsBackToTopBtn");
 const selectionNoticeToast = document.getElementById("selectionNoticeToast");
+const clinicalWorkupPanel = document.getElementById("clinicalWorkupPanel");
+const clinicalWorkupForm = document.getElementById("clinicalWorkupForm");
+const clinicalWorkupChipList = document.getElementById("clinicalWorkupChipList");
+const clinicalAgeInput = document.getElementById("clinicalAgeInput");
+const clinicalSexSelect = document.getElementById("clinicalSexSelect");
+const clinicalPregnancySelect = document.getElementById("clinicalPregnancySelect");
+const clinicalSymptomsInput = document.getElementById("clinicalSymptomsInput");
+const clinicalSignsInput = document.getElementById("clinicalSignsInput");
+const clinicalConcernInput = document.getElementById("clinicalConcernInput");
+const clinicalWorkupSubmitBtn = document.getElementById("clinicalWorkupSubmitBtn");
+const clinicalWorkupResetBtn = document.getElementById("clinicalWorkupResetBtn");
+const clinicalWorkupStatus = document.getElementById("clinicalWorkupStatus");
+const clinicalWorkupResults = document.getElementById("clinicalWorkupResults");
+const clinicalWorkupResultsTitle = document.getElementById("clinicalWorkupResultsTitle");
+const clinicalWorkupResultsCopy = document.getElementById("clinicalWorkupResultsCopy");
+const clinicalWorkupResultTags = document.getElementById("clinicalWorkupResultTags");
+const clinicalWorkupRuleList = document.getElementById("clinicalWorkupRuleList");
+const clearClinicalWorkupResultsBtn = document.getElementById("clearClinicalWorkupResultsBtn");
 const preSearchPanel = document.getElementById("preSearchPanel");
 const brandHomeBtn = document.getElementById("brandHomeBtn");
+const findMyTestHeaderTitle = document.getElementById("findMyTestHeaderTitle");
 const toggleQuickToolsBtn = document.getElementById("toggleQuickToolsBtn");
 const quickToolsPanel = document.getElementById("quickToolsPanel");
 const quickToolsTitle = document.getElementById("quickToolsTitle");
@@ -44,8 +67,8 @@ const legalModalTitle = document.getElementById("legalModalTitle");
 const legalModalBody = document.getElementById("legalModalBody");
 const closeLegalModalBtn = document.getElementById("closeLegalModalBtn");
 const legalDocButtons = document.querySelectorAll("[data-legal-doc]");
-const SEARCH_PLACEHOLDER_BASE = "Search by test or clinical question";
-const SEARCH_PLACEHOLDER_HINT = `${SEARCH_PLACEHOLDER_BASE} (e.g. Iron studies or anaemia)`;
+const SEARCH_PLACEHOLDER_BASE = "Search by test or profile";
+const SEARCH_PLACEHOLDER_HINT = `${SEARCH_PLACEHOLDER_BASE} (e.g. CRP or Liver function tests)`;
 const GOLD_VOLUME_PROFILE_NAMES = new Set([
   "U&E", // 1
   "Liver Function Tests (LFT)", // 2
@@ -71,10 +94,33 @@ let clearDrawSelectionConfirmTimeoutId = 0;
 let selectionNoticeTimeoutId = 0;
 let selectionNoticeHideTimeoutId = 0;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
+const CLINICAL_WORKUP_DISCLAIMER = "Reference-only test support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.";
 const RACK_HINT_STORAGE_KEY = "fmt-rack-hint-dismissed";
 const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transfusion"]);
+const selectedClinicalChipIds = new Set();
 let hasDismissedRackHint = false;
 let lastLegalModalTrigger = null;
+let clinicalWorkupOutput = null;
+const currentPageParams = new URLSearchParams(window.location.search);
+const isFindMyTestPage = currentPageParams.get("tool") === "find-my-test";
+const APP_HOME_TITLE = "Find My Tube";
+const FIND_MY_TEST_PAGE_TITLE = "Find My Test";
+const APP_HOME_HEADER_COPY = "Find the right test, the right tube and why it's ordered.";
+const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
+const appleMobileAppTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+
+document.body.classList.toggle("find-my-test-page", isFindMyTestPage);
+document.title = isFindMyTestPage ? FIND_MY_TEST_PAGE_TITLE : APP_HOME_TITLE;
+if (headerIntroText) {
+  headerIntroText.textContent = isFindMyTestPage ? FIND_MY_TEST_HEADER_COPY : APP_HOME_HEADER_COPY;
+}
+if (appleMobileAppTitleMeta) {
+  appleMobileAppTitleMeta.setAttribute("content", isFindMyTestPage ? FIND_MY_TEST_PAGE_TITLE : APP_HOME_TITLE);
+}
+
+function dispatchFindMyTubeEvent(name, detail = {}) {
+  document.dispatchEvent(new CustomEvent(name, { detail }));
+}
 
 try {
   hasDismissedRackHint = localStorage.getItem(RACK_HINT_STORAGE_KEY) === "1";
@@ -373,12 +419,26 @@ function scrollHomeViewportToTop() {
 }
 
 function goHome() {
+  if (isFindMyTestPage) {
+    window.location.assign(window.location.pathname);
+    return;
+  }
+
   closeDrawModal();
   closeProfileModal();
   closeLegalModal({ restoreFocus: false });
+  clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: false, clearStatus: true });
 
   setSectionView("", { historyMode: "push", scrollToTop: false, clearSearch: true });
   scrollHomeViewportToTop();
+}
+
+function handleFindMyTestHeaderAction() {
+  clearClinicalWorkupOutput({ preserveInputs: false, rerenderCards: true, clearStatus: true });
+  clinicalWorkupPanel?.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start"
+  });
 }
 
 function shouldScrollSearchFieldIntoView(target) {
@@ -568,6 +628,11 @@ const profileComponentsByName = {
   "Cord Blood": [
     "TSH",
     "RPR (Syphilis Screen)"
+  ],
+  "Total Serum Bilirubin (TSB)": [
+    "Total Bilirubin",
+    "Conjugated Bilirubin (Direct)",
+    "Unconjugated Bilirubin (Indirect, Calculated)"
   ],
   "Arthritis Profile": [
     "ESR",
@@ -850,8 +915,13 @@ function shouldKeepPreSearchPanelVisible(sectionId = activeSectionGroup, query =
   return isBrowseOverviewVisible(sectionId, query);
 }
 
+function hasClinicalWorkupState() {
+  return Boolean(clinicalWorkupOutput);
+}
+
 function isResultsViewActive(sectionId = activeSectionGroup, query = searchInput?.value || "") {
   if (String(query || "").trim()) return true;
+  if (!sectionId && hasClinicalWorkupState()) return true;
   if (!sectionId) return false;
   return !isBrowseOverviewVisible(sectionId, query);
 }
@@ -862,6 +932,28 @@ function getResultsContextLabel(sectionId = activeSectionGroup) {
   const sectionLabel = sectionMeta[sectionId].label;
   const browseLabel = getActiveBrowseGroupLabel(sectionId);
   return browseLabel ? `${sectionLabel}: ${browseLabel}` : sectionLabel;
+}
+
+function updateSectionContextBar() {
+  if (!sectionContextBar || !sectionContextBackBtn || !sectionContextLabel) return;
+
+  if (!activeSectionGroup || !sectionMeta[activeSectionGroup]) {
+    sectionContextBar.hidden = true;
+    sectionContextLabel.textContent = "";
+    return;
+  }
+
+  const sectionLabel = sectionMeta[activeSectionGroup].label;
+  const browseLabel = getActiveBrowseGroupLabel(activeSectionGroup);
+  const hasBrowseGroup = Boolean(getActiveBrowseGroup(activeSectionGroup));
+
+  sectionContextBackBtn.textContent = hasBrowseGroup
+    ? `Back to ${sectionLabel}`
+    : "Back to departments";
+  sectionContextLabel.textContent = browseLabel
+    ? `${sectionLabel} / ${browseLabel}`
+    : sectionLabel;
+  sectionContextBar.hidden = false;
 }
 
 const chipGroups = [
@@ -916,6 +1008,18 @@ const aliasByName = {
     "Neonatal cord blood",
     "Cord blood screening"
   ],
+  "Total Serum Bilirubin (TSB)": [
+    "TSB",
+    "Total serum bilirubin",
+    "Total bilirubin",
+    "Conjugated bilirubin",
+    "Direct bilirubin",
+    "Unconjugated bilirubin",
+    "Indirect bilirubin",
+    "Newborn bilirubin",
+    "Neonatal bilirubin",
+    "Newborn jaundice bilirubin"
+  ],
   "OGTT (2hr)": [
     "OGTT",
     "GTT",
@@ -929,6 +1033,16 @@ const aliasByName = {
     "75 g pregnancy OGTT",
     "Pregnancy glucose tolerance test",
     "GTT pregnancy"
+  ],
+  "BHCG (Beta-HCG)": [
+    "BHCG",
+    "Beta-HCG",
+    "Beta HCG",
+    "bHCG",
+    "Serum BHCG",
+    "Serum beta hcg",
+    "Pregnancy test",
+    "Quantitative HCG"
   ],
   "HIV Viral Load": ["HIV Viral Load (PCR)", "HIV VL", "viral load hiv"],
   "Random Glucose": [
@@ -1268,7 +1382,7 @@ const aliasByName = {
   ],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
-  "Antenatal Screen (ANTINV)": ["Antenatal screen", "Antenatal profile", "ANTINV", "Antinv", "Antinatal screen"],
+  "Antenatal Screen (ANTINV)": ["Antenatal screen", "Antenatal screening", "Antenatal profile", "Antenatal booking", "Booking bloods", "First antenatal visit", "First antenatal bloods", "First pregnancy bloods", "Pregnancy booking", "Prenatal booking", "ANTINV", "Antinv", "Antinatal screen"],
   "Arthritis Profile": [
     "Arthritis panel",
     "Arthritis screen",
@@ -1293,7 +1407,7 @@ const aliasByName = {
     "CSF screen",
     "CSF workup"
   ],
-  "Urine MCS": ["Urine culture", "MC&S"],
+  "Urine MCS": ["Urine culture", "MC&S", "STI", "STD"],
   "Sputum MCS": ["Sputum culture", "MC&S"],
   "faeces MCS": ["Stool culture", "MC&S"],
   "Swab MCS": ["Swab culture", "MC&S"],
@@ -1533,12 +1647,20 @@ const clinicalProfileByName = {
     keywords: ["haemolysis", "hemolysis", "hemolytic anaemia", "hemolytic anemia"]
   },
   "Antenatal Screen (ANTINV)": {
-    use: "Booking antenatal profile for blood group, antibodies, key infections, and baseline screening.",
-    keywords: ["antenatal", "pregnancy booking", "antinv", "maternal screen", "prenatal profile"]
+    use: "Booking antenatal profile for the first antenatal visit, ideally in the first trimester, covering blood group, antibodies, key infections, and baseline screening.",
+    keywords: ["antenatal", "antenatal screen", "antenatal screening", "antenatal booking", "pregnancy booking", "booking bloods", "first antenatal visit", "first antenatal bloods", "first pregnancy bloods", "antinv", "maternal screen", "prenatal profile"]
+  },
+  "BHCG (Beta-HCG)": {
+    use: "Serum beta-HCG supports pregnancy assessment, confirmation, and follow-up when clinically indicated.",
+    keywords: ["bhcg", "beta-hcg", "beta hcg", "serum hcg", "serum pregnancy test", "pregnancy test", "quantitative hcg"]
   },
   "Cord Blood": {
     use: "Cord blood profile including TSH and RPR for newborn screening workflow.",
     keywords: ["cord blood", "newborn screening", "neonatal screening", "tsh cord blood", "rpr cord blood"]
+  },
+  "Total Serum Bilirubin (TSB)": {
+    use: "Preferred bilirubin profile for newborn and infant jaundice monitoring, with total bilirubin and conjugated/direct bilirubin; unconjugated/indirect bilirubin is calculated. Usually collected in a gold/yellow paeds microtainer.",
+    keywords: ["tsb", "total serum bilirubin", "total bilirubin", "conjugated bilirubin", "direct bilirubin", "unconjugated bilirubin", "indirect bilirubin", "newborn jaundice", "neonatal jaundice", "infant jaundice", "baby jaundice", "bilirubin newborn", "paeds microtainer", "peds microtainer", "microtainer"]
   },
   "Troponin I": {
     use: "Primary marker for suspected acute coronary syndrome / heart attack.",
@@ -1616,6 +1738,10 @@ const clinicalProfileByName = {
     use: "Pre-transfusion blood bank request requiring a pink EDTA sample plus the dedicated request form and urgent courier handling.",
     keywords: ["blood bank", "transfusion", "crossmatch", "blood products", "group and screen"]
   },
+  "Urine MCS": {
+    use: "Urine microbiology culture and sensitivity request using a sterile urine container.",
+    keywords: ["urine mcs", "urine culture", "mc&s", "mcs", "sti", "std"]
+  },
   "STD PCR": {
     use: "Molecular STI screen using a vaginal swab or urine specimen.",
     keywords: ["std pcr", "sti pcr", "chlamydia", "gonorrhoea", "gonorrhea", "trichomonas", "mycoplasma genitalium"]
@@ -1683,6 +1809,10 @@ const clinicalProfileByName = {
 };
 
 const clinicalProfileBySubsection = {
+  "Molecular Biology": {
+    use: "Molecular nucleic-acid based testing for organism detection, quantification, and selected targeted assays.",
+    keywords: ["molecular biology", "pcr", "viral load", "nucleic acid testing", "molecular assay"]
+  },
   "Blood Gases": {
     use: "Acid-base and oxygenation assessment in urgent/critical care contexts.",
     keywords: ["blood gas", "abg", "acid base", "oxygenation", "ventilation"]
@@ -1795,6 +1925,15 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function normalizeTurnaroundTime(value) {
   const raw = String(value || "").trim();
   if (!raw) return "N/A";
@@ -1839,6 +1978,7 @@ function normalizeTubeColor(value) {
 }
 
 const tubeGroupPatternEntries = [
+  { key: "Blood Culture Bottles", pattern: /\bblood culture\b|\bculture bottles?\b/ },
   { key: "Tan", pattern: /\btan\b/ },
   { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
   { key: "Pink", pattern: /\bpink\b/ },
@@ -2130,6 +2270,786 @@ const conditionShortcutById = Object.fromEntries(
     normalizedTerms: new Set(shortcut.terms.map((term) => normalizeForSearch(term)).filter(Boolean))
   }])
 );
+
+const clinicalWorkupChipDefinitions = [
+  { id: "chest-pain", label: "Chest pain", terms: ["chest pain", "angina", "tight chest", "pressure chest"] },
+  { id: "shortness-breath", label: "Shortness of breath", terms: ["shortness of breath", "dyspnoea", "dyspnea"] },
+  { id: "fever-sepsis", label: "Fever / sepsis", terms: ["fever", "febrile", "sepsis", "rigors", "septic"] },
+  { id: "fatigue-pallor", label: "Fatigue / pallor", terms: ["fatigue", "pallor", "anaemia", "anemia", "weakness", "low hb"] },
+  { id: "bleeding", label: "Bleeding / bruising", terms: ["bleeding", "bruising", "epistaxis", "petechiae", "melena"] },
+  { id: "clot", label: "Leg swelling / clot", terms: ["leg swelling", "calf swelling", "dvt", "pulmonary embolism", "pleuritic chest pain"] },
+  { id: "jaundice", label: "Jaundice", terms: ["jaundice", "icterus", "yellow eyes", "dark urine"] },
+  { id: "upper-abdominal", label: "Epigastric / upper abdominal pain", terms: ["epigastric pain", "upper abdominal pain"] },
+  { id: "hyperglycaemia", label: "Polyuria / thirst", terms: ["polyuria", "polydipsia", "hyperglycaemia", "hyperglycemia", "high sugar"] },
+  { id: "oedema-proteinuria", label: "Oedema / proteinuria", terms: ["oedema", "edema", "frothy urine", "proteinuria", "albuminuria"] },
+  { id: "joint-pain", label: "Joint pain / stiffness", terms: ["joint pain", "joint swelling", "morning stiffness", "arthritis"] },
+  { id: "vaginal-discharge", label: "STI", terms: ["sti", "std", "urethral discharge", "chlamydia", "gonorrhoea", "gonorrhea", "cervicitis"] },
+  { id: "amenorrhoea", label: "Amenorrhoea / irregular periods", terms: ["amenorrhoea", "amenorrhea", "irregular periods", "missed periods", "oligomenorrhoea"] },
+  { id: "infertility", label: "Infertility", terms: ["infertility", "subfertility", "difficulty conceiving", "anovulation"] },
+  { id: "hirsutism", label: "Hirsutism / acne", terms: ["hirsutism", "facial hair", "pcos", "androgen excess", "acne"] },
+  { id: "confusion", label: "Confusion / encephalopathy", terms: ["confusion", "altered mental state", "drowsy", "encephalopathy"] },
+  { id: "pregnancy-booking", label: "Pregnancy / booking", terms: ["pregnancy", "antenatal", "booking", "prenatal", "gestational"] }
+];
+
+const clinicalWorkupChipById = Object.fromEntries(
+  clinicalWorkupChipDefinitions.map((chip) => [chip.id, chip])
+);
+
+// Keep these suggestions conservative and tied to tests already present in Find My Tube.
+const clinicalWorkupRuleDefinitions = [
+  {
+    id: "acute-coronary",
+    title: "Chest pain / myocardial injury support",
+    matchAny: ["chest pain", "angina", "tight chest", "pressure chest", "acute coronary syndrome", "acs", "nstemi", "stemi", "radiating chest pain"],
+    tests: ["Cardiac Profile"],
+    rationale: "Chest pain or suspected ACS commonly triggers a cardiac marker workup from the current catalogue.",
+    caution: "Serial sampling timing, ECG interpretation, and emergency pathway decisions must follow local chest pain protocol."
+  },
+  {
+    id: "heart-failure",
+    title: "Heart failure / fluid overload support",
+    matchAny: ["heart failure", "cardiac failure", "orthopnoea", "orthopnea", "pnd", "paroxysmal nocturnal dyspnoea", "paroxysmal nocturnal dyspnea", "pulmonary oedema", "pulmonary edema", "raised jvp", "bilateral leg swelling"],
+    tests: ["NT-proBNP"],
+    rationale: "Volume overload or heart-failure concerns often lead to natriuretic peptide testing.",
+    caution: "Interpret NT-proBNP with age, renal function, and the local heart-failure pathway."
+  },
+  {
+    id: "respiratory-distress",
+    title: "Respiratory distress / acid-base support",
+    matchAny: ["respiratory distress", "hypoxia", "cyanosis", "acidosis", "shock", "oxygenation failure"],
+    tests: ["Blood Gases", "Lactate"],
+    rationale: "Severe respiratory or perfusion concerns commonly need urgent blood gas and lactate support.",
+    caution: "Urgent bedside escalation and local emergency pathways take priority over this reference tool."
+  },
+  {
+    id: "venous-thromboembolism",
+    title: "DVT / PE rule-out support",
+    matchAny: ["dvt", "deep vein thrombosis", "pulmonary embolism", "venous thromboembolism", "pleuritic chest pain", "unilateral leg swelling", "calf swelling"],
+    tests: ["D-Dimer"],
+    rationale: "Possible venous thromboembolism frequently prompts D-dimer as part of a rule-out pathway.",
+    caution: "Use only within the local pretest-probability pathway and escalate immediately if the patient is unstable."
+  },
+  {
+    id: "sepsis",
+    title: "Fever / sepsis support",
+    matchAny: ["fever", "febrile", "sepsis", "septic", "rigors", "hypotension", "tachycardia", "toxic looking"],
+    tests: ["Blood Culture", "Lactate", "CRP", "Procalcitonin (PCT)"],
+    rationale: "Fever, rigors, hypotension, or suspected sepsis commonly trigger culture, perfusion, and inflammatory markers.",
+    caution: "Obtain cultures before antibiotics where possible and follow urgent sepsis protocol."
+  },
+  {
+    id: "anaemia",
+    title: "Anaemia / iron deficiency support",
+    matchAny: ["anaemia", "anemia", "fatigue", "pallor", "low hb", "microcytic", "weakness"],
+    tests: ["FBC", "Fe Studies"],
+    rationale: "Fatigue, pallor, or suspected anaemia often start with a blood count plus iron studies.",
+    caution: "Interpret with bleeding history, chronic disease, pregnancy status, and local referral thresholds."
+  },
+  {
+    id: "bleeding",
+    title: "Bleeding / bruising support",
+    matchAny: ["bleeding", "bruising", "epistaxis", "petechiae", "melena", "haematemesis", "hematemesis", "coagulopathy"],
+    tests: ["FBC", "Coagulation Studies"],
+    rationale: "Active bleeding or unusual bruising commonly triggers blood count and coagulation screening.",
+    caution: "Major bleeding is an emergency; local urgent, theatre, or transfusion pathways take priority."
+  },
+  {
+    id: "renal-proteinuria",
+    title: "Kidney / proteinuria support",
+    matchAny: ["proteinuria", "albuminuria", "frothy urine", "kidney disease", "renal disease", "ckd", "oedema", "edema"],
+    tests: ["U&E", "Albumin:Creatinine Ratio (Random Urine)", "Protein:Creatinine Ratio (Random Urine)"],
+    rationale: "Renal impairment or proteinuria concerns often pair core chemistry with urine protein assessment.",
+    caution: "Use local nephrology and hypertension pathways for significant oedema, AKI, or nephrotic presentations."
+  },
+  {
+    id: "diabetes",
+    title: "Hyperglycaemia / diabetes support",
+    matchAny: ["polyuria", "polydipsia", "high sugar", "hyperglycaemia", "hyperglycemia", "diabetes", "glycosuria"],
+    tests: ["Random Glucose", "HbA1c"],
+    rationale: "Symptomatic hyperglycaemia commonly starts with a plasma glucose test and HbA1c.",
+    caution: "If the patient is acutely ill or in possible DKA/HHS, use emergency metabolic pathways rather than this tool alone."
+  },
+  {
+    id: "gestational-diabetes",
+    title: "Pregnancy glucose screening support",
+    matchAny: ["gestational diabetes", "gdm", "pregnancy glucose", "screening glucose", "high sugar", "hyperglycaemia", "hyperglycemia"],
+    tests: ["OGTT Pregnancy (75g, 2hr)"],
+    requiresPregnancyContext: true,
+    rationale: "Pregnancy glucose concerns may need the dedicated antenatal OGTT listed in the current catalogue.",
+    caution: "Timing and eligibility for OGTT in pregnancy must follow the local antenatal guideline."
+  },
+  {
+    id: "thyroid",
+    title: "Thyroid dysfunction support",
+    matchAny: ["thyroid", "goitre", "goiter", "thyrotoxicosis", "hypothyroidism", "hyperthyroidism", "heat intolerance", "cold intolerance", "palpitations"],
+    tests: ["Thyroid Function Test (TFT)"],
+    rationale: "Possible thyroid dysfunction often begins with a core thyroid function profile.",
+    caution: "Interpret with pregnancy status, medication history, and the local endocrine pathway."
+  },
+  {
+    id: "liver",
+    title: "Jaundice / liver injury support",
+    matchAny: ["jaundice", "icterus", "dark urine", "hepatitis", "liver disease", "transaminitis", "hepatomegaly"],
+    tests: ["Liver Function Tests (LFT)"],
+    rationale: "Jaundice or liver injury concerns commonly start with liver function testing.",
+    caution: "Severe jaundice, confusion, or coagulopathy needs urgent escalation and direct senior review."
+  },
+  {
+    id: "hepatitis-b",
+    title: "Acute hepatitis B support",
+    matchAny: ["viral hepatitis", "hepatitis exposure", "hepatitis b", "acute hepatitis"],
+    tests: ["Hepatitis B (Acute)"],
+    rationale: "Documented hepatitis exposure or acute viral-hepatitis concern may need the acute hepatitis B profile in the catalogue.",
+    caution: "Use the local infectious-disease and occupational-exposure pathway where relevant."
+  },
+  {
+    id: "pancreatitis",
+    title: "Pancreatitis support",
+    matchAny: ["pancreatitis", "epigastric pain", "radiates to back", "upper abdominal pain"],
+    tests: ["Lipase", "Amylase"],
+    rationale: "Pancreatitis-style pain patterns commonly prompt pancreatic enzyme testing.",
+    caution: "Abdominal emergencies still require direct clinical review and imaging decisions outside this tool."
+  },
+  {
+    id: "arthritis",
+    title: "Inflammatory joint pain support",
+    matchAny: ["joint pain", "joint swelling", "morning stiffness", "arthritis", "polyarthritis", "rheumatoid"],
+    tests: ["Arthritis Profile"],
+    rationale: "Inflammatory small-joint symptoms commonly start with a focused arthritis screen.",
+    caution: "Use broader rheumatology assessment if systemic features are present."
+  },
+  {
+    id: "autoimmune",
+    title: "Systemic autoimmune support",
+    matchAny: ["autoimmune", "vasculitis", "connective tissue disease", "ctd", "malar rash", "photosensitivity"],
+    tests: ["Autoimmune Profile"],
+    rationale: "Systemic autoimmune or connective-tissue-disease concerns may justify a broader screening profile.",
+    caution: "Autoimmune workup should be guided by the clinical pattern and local specialist advice."
+  },
+  {
+    id: "sti",
+    title: "STI support",
+    matchAny: ["sti", "std", "urethral discharge", "gonorrhoea", "gonorrhea", "chlamydia", "cervicitis"],
+    tests: ["Urine MCS"],
+    rationale: "STI concerns map to urine MC&S in the current Find My Tube setup.",
+    caution: "Follow local sexual-health and microbiology collection protocol for the requested specimen."
+  },
+  {
+    id: "infertility-female",
+    title: "Female infertility support",
+    matchAny: ["infertility", "subfertility", "difficulty conceiving", "anovulation"],
+    tests: ["Infertility Screen (Female)", "Thyroid Function Test (TFT)"],
+    allowedSexes: ["female", "other"],
+    allowUnspecifiedSex: true,
+    rationale: "Infertility or ovulatory concerns often start with a female reproductive hormone profile and thyroid support.",
+    caution: "Cycle timing and local fertility workup rules still apply."
+  },
+  {
+    id: "infertility-male",
+    title: "Male infertility support",
+    matchAny: ["infertility", "subfertility", "difficulty conceiving", "low testosterone"],
+    tests: ["Infertility Screen (Male)"],
+    allowedSexes: ["male"],
+    allowUnspecifiedSex: false,
+    rationale: "Male fertility concerns often start with the listed male reproductive hormone profile.",
+    caution: "Local fertility pathways may also need semen analysis and targeted endocrine review."
+  },
+  {
+    id: "hirsutism",
+    title: "Hirsutism / androgen excess support",
+    matchAny: ["hirsutism", "facial hair", "pcos", "androgen excess", "acne"],
+    tests: ["Hirsutism Screen (Full)", "Thyroid Function Test (TFT)"],
+    allowedSexes: ["female", "other"],
+    allowUnspecifiedSex: true,
+    rationale: "Hyperandrogen features commonly lead to an androgen-focused hormone profile plus thyroid support.",
+    caution: "Interpret with age, menstrual history, and pregnancy context."
+  },
+  {
+    id: "menopause",
+    title: "Menopausal hormone support",
+    matchAny: ["menopause", "menopausal", "perimenopause", "hot flushes", "hot flashes"],
+    tests: ["Menopausal Screen"],
+    allowedSexes: ["female", "other"],
+    allowUnspecifiedSex: true,
+    minAge: 40,
+    rationale: "Hot flushes or menopausal concerns may justify the focused menopausal hormone screen in the catalogue.",
+    caution: "Use clinical context and medication history when interpreting menopausal labs."
+  },
+  {
+    id: "pregnancy-hormone",
+    title: "Pregnancy hormone support",
+    matchAny: ["pregnancy"],
+    tests: ["BHCG (Beta-HCG)"],
+    requiresPregnancyContext: true,
+    allowedSexes: ["female", "other"],
+    allowUnspecifiedSex: true,
+    rationale: "Pregnancy context can justify a serum beta-HCG request from the current catalogue.",
+    caution: "Use the local obstetric, ectopic pregnancy, and ultrasound pathway when pain, bleeding, or instability is present."
+  },
+  {
+    id: "antenatal",
+    title: "Pregnancy booking support",
+    matchAny: ["antenatal", "antenatal screen", "antenatal screening", "antenatal booking", "booking", "booking bloods", "prenatal", "first antenatal visit", "first booking visit", "pregnancy booking", "first antenatal bloods", "first pregnancy bloods"],
+    tests: ["Antenatal Screen (ANTINV)"],
+    requiresPregnancyContext: true,
+    rationale: "Pregnancy booking or first antenatal bloods usually map to the antenatal profile in Find My Tube.",
+    caution: "This is usually done at the first antenatal booking visit, ideally early in pregnancy; local maternity pathways still decide the bundle and timing."
+  },
+  {
+    id: "cord-blood",
+    title: "Newborn cord blood support",
+    matchAny: ["newborn", "neonate", "cord blood", "delivery"],
+    tests: ["Cord Blood"],
+    maxAge: 1,
+    rationale: "Neonatal or delivery context may map to the cord blood profile already listed in the catalogue.",
+    caution: "Use the local neonatal and obstetric pathway for timing and identification steps."
+  },
+  {
+    id: "hepatic-encephalopathy",
+    title: "Hepatic encephalopathy support",
+    requireAllGroups: [
+      ["confusion", "altered mental state", "drowsy", "encephalopathy"],
+      ["jaundice", "liver failure", "cirrhosis", "hepatic"]
+    ],
+    tests: ["Ammonia"],
+    rationale: "Confusion together with liver-failure features may trigger urgent ammonia handling requirements.",
+    caution: "This sample is highly time-sensitive and must follow the critical handling note shown on the test card."
+  }
+];
+
+const supplementalClinicalShortcutIds = new Set([
+  "coeliac-disease",
+  "myeloma",
+  "pheochromocytoma",
+  "carcinoid-syndrome",
+  "ovarian-cancer",
+  "prostate-cancer"
+]);
+
+function dedupeStrings(values = []) {
+  return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
+}
+
+function joinWithAnd(values = []) {
+  const items = dedupeStrings(values);
+  if (items.length <= 1) return items[0] || "";
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function lowercaseFirstCharacter(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function truncateText(value, maxLength = 96) {
+  const text = String(value || "").trim();
+  if (!text || text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 1).trim()}...`;
+}
+
+function capitalizePhrase(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+}
+
+function hasNormalizedPhrase(haystack, phrase) {
+  const normalizedHaystack = normalizeForSearch(haystack);
+  const normalizedPhrase = normalizeForSearch(phrase);
+  if (!normalizedHaystack || !normalizedPhrase) return false;
+  if (normalizedHaystack === normalizedPhrase) return true;
+  const pattern = new RegExp(`(?:^| )${escapeRegExp(normalizedPhrase)}(?:$| )`);
+  return pattern.test(normalizedHaystack);
+}
+
+function getClinicalWorkupSexLabel(value = "") {
+  if (value === "female") return "Female";
+  if (value === "male") return "Male";
+  if (value === "other") return "Other";
+  return "";
+}
+
+function hasPregnancyContext(input) {
+  if (!input) return false;
+  return input.pregnancy === "pregnant"
+    || hasNormalizedPhrase(input.normalizedBlob, "pregnancy")
+    || hasNormalizedPhrase(input.normalizedBlob, "pregnant")
+    || hasNormalizedPhrase(input.normalizedBlob, "antenatal")
+    || hasNormalizedPhrase(input.normalizedBlob, "prenatal")
+    || hasNormalizedPhrase(input.normalizedBlob, "gestational");
+}
+
+function passesClinicalWorkupRuleDemographics(rule, input) {
+  if (!rule || !input) return false;
+
+  if (rule.minAge != null && input.age != null && input.age < rule.minAge) return false;
+  if (rule.maxAge != null && input.age != null && input.age > rule.maxAge) return false;
+
+  if (rule.allowedSexes?.length) {
+    if (!input.sex || input.sex === "unspecified") {
+      if (rule.allowUnspecifiedSex === false) return false;
+    } else if (!rule.allowedSexes.includes(input.sex)) {
+      return false;
+    }
+  }
+
+  if (rule.requiresPregnancyContext && !hasPregnancyContext(input)) return false;
+
+  return true;
+}
+
+function evaluateClinicalWorkupRule(rule, input) {
+  if (!passesClinicalWorkupRuleDemographics(rule, input)) return null;
+
+  const matchedSignals = [];
+
+  if (rule.matchAny?.length) {
+    rule.matchAny.forEach((term) => {
+      if (hasNormalizedPhrase(input.normalizedBlob, term)) matchedSignals.push(term);
+    });
+  }
+
+  if (rule.requireAllGroups?.length) {
+    for (const group of rule.requireAllGroups) {
+      const matchedTerm = group.find((term) => hasNormalizedPhrase(input.normalizedBlob, term));
+      if (!matchedTerm) return null;
+      matchedSignals.push(matchedTerm);
+    }
+  }
+
+  const uniqueSignals = dedupeStrings(matchedSignals);
+  if (!uniqueSignals.length) return null;
+
+  return {
+    ...rule,
+    matchedSignals: uniqueSignals,
+    score: uniqueSignals.length + (rule.requireAllGroups?.length || 0)
+  };
+}
+
+function getSupplementalClinicalShortcutRules(input) {
+  const rules = [];
+
+  supplementalClinicalShortcutIds.forEach((shortcutId) => {
+    const shortcut = conditionShortcutById[shortcutId];
+    if (!shortcut) return;
+
+    const matchedSignals = [...shortcut.normalizedTerms]
+      .filter((term) => hasNormalizedPhrase(input.normalizedBlob, term))
+      .slice(0, 3);
+
+    if (!matchedSignals.length) return;
+
+    rules.push({
+      id: `shortcut-${shortcut.id}`,
+      title: capitalizePhrase(shortcut.label),
+      tests: shortcut.tests,
+      rationale: "This matches an existing conservative condition shortcut already built into Find My Tube.",
+      caution: CONDITION_SHORTCUT_DISCLAIMER,
+      matchedSignals,
+      score: matchedSignals.length + 1
+    });
+  });
+
+  return rules;
+}
+
+function getClinicalWorkupRecommendedTests(matchedRules = []) {
+  const recommendedSelection = new Set();
+
+  matchedRules.forEach((rule) => {
+    (rule.tests || []).forEach((testName) => recommendedSelection.add(testName));
+  });
+
+  collapseProfileSelections(recommendedSelection);
+
+  const selectedNames = Array.from(recommendedSelection);
+  const selectedProfiles = new Set(selectedNames.filter((testName) => profileComponentsByName[testName]));
+  const coveredComponents = new Set();
+
+  selectedProfiles.forEach((profileName) => {
+    (expandedProfileMembersByName[profileName] || new Set()).forEach((memberName) => {
+      coveredComponents.add(memberName);
+    });
+  });
+
+  const visibleNames = selectedNames.filter((testName) => {
+    if (selectedProfiles.has(testName)) return true;
+    return !coveredComponents.has(testName);
+  });
+
+  return getTestsByNames(visibleNames);
+}
+
+function getClinicalWorkupInput() {
+  const ageValue = Number.parseInt(clinicalAgeInput?.value || "", 10);
+  const age = Number.isFinite(ageValue) && ageValue >= 0 ? ageValue : null;
+  const selectedChipIds = Array.from(selectedClinicalChipIds);
+  const selectedChipLabels = selectedChipIds
+    .map((chipId) => clinicalWorkupChipById[chipId]?.label || "")
+    .filter(Boolean);
+  const selectedChipTerms = selectedChipIds.flatMap((chipId) => clinicalWorkupChipById[chipId]?.terms || []);
+  const symptoms = String(clinicalSymptomsInput?.value || "").trim();
+  const signs = String(clinicalSignsInput?.value || "").trim();
+  const concern = String(clinicalConcernInput?.value || "").trim();
+  const pregnancy = clinicalPregnancySelect?.value || "unknown";
+  const contextTerms = pregnancy === "pregnant" ? ["pregnancy"] : [];
+  const normalizedBlob = normalizeForSearch([
+    symptoms,
+    signs,
+    concern,
+    ...selectedChipTerms,
+    ...contextTerms
+  ].join(" "));
+
+  return {
+    age,
+    sex: clinicalSexSelect?.value || "unspecified",
+    sexLabel: getClinicalWorkupSexLabel(clinicalSexSelect?.value || ""),
+    pregnancy,
+    symptoms,
+    signs,
+    concern,
+    selectedChipIds,
+    selectedChipLabels,
+    normalizedBlob
+  };
+}
+
+function buildClinicalWorkupTags(input) {
+  const tags = [];
+
+  if (input.age != null) tags.push(`Age ${input.age}`);
+  if (input.sexLabel) tags.push(input.sexLabel);
+  if (input.pregnancy === "pregnant") tags.push("Pregnancy context");
+  if (input.selectedChipLabels.length) tags.push(...input.selectedChipLabels);
+
+  if (!input.selectedChipLabels.length && input.symptoms) tags.push("Symptoms entered");
+  if (input.signs) tags.push("Signs noted");
+  if (input.concern) tags.push("Concern entered");
+
+  return dedupeStrings(tags).slice(0, 8);
+}
+
+function buildClinicalWorkupSummary(input, tests = []) {
+  const summaryParts = [];
+
+  if (input.age != null) summaryParts.push(`age ${input.age}`);
+  if (input.sexLabel) summaryParts.push(input.sexLabel.toLowerCase());
+  if (input.pregnancy === "pregnant") summaryParts.push("pregnancy context");
+  if (input.symptoms) summaryParts.push(`symptoms "${truncateText(input.symptoms, 84)}"`);
+  if (input.signs) summaryParts.push(`signs "${truncateText(input.signs, 84)}"`);
+  if (input.concern) summaryParts.push(`concern "${truncateText(input.concern, 64)}"`);
+
+  const intro = summaryParts.length
+    ? `Based on ${joinWithAnd(summaryParts)}, `
+    : "";
+
+  if (tests.length) {
+    return `${intro}these are conservative first-line tests from the current catalogue. Tap any test card below to add it to Tube Plan.`;
+  }
+
+  return `${intro}there is not a strong direct match yet in the current catalogue. Add a more specific symptom, sign, or concern, or switch to the main search by test or condition.`;
+}
+
+function buildClinicalWorkupOutput(input) {
+  const matchedRules = [
+    ...clinicalWorkupRuleDefinitions
+      .map((rule) => evaluateClinicalWorkupRule(rule, input))
+      .filter(Boolean),
+    ...getSupplementalClinicalShortcutRules(input)
+  ].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.title.localeCompare(b.title);
+  });
+
+  const tests = getClinicalWorkupRecommendedTests(matchedRules);
+
+  return {
+    input,
+    matchedRules,
+    tests,
+    tags: buildClinicalWorkupTags(input),
+    summary: buildClinicalWorkupSummary(input, tests)
+  };
+}
+
+function hasClinicalWorkupSuggestions() {
+  return Boolean(clinicalWorkupOutput?.tests?.length);
+}
+
+function setClinicalWorkupStatus(message = "") {
+  if (!clinicalWorkupStatus) return;
+  clinicalWorkupStatus.textContent = String(message || "").trim();
+}
+
+function renderClinicalWorkupChips() {
+  if (!clinicalWorkupChipList) return;
+
+  clinicalWorkupChipList.innerHTML = clinicalWorkupChipDefinitions
+    .map((chip) => `
+      <button
+        type="button"
+        class="clinical-workup-chip${selectedClinicalChipIds.has(chip.id) ? " active" : ""}"
+        data-clinical-chip="${chip.id}"
+        aria-pressed="${selectedClinicalChipIds.has(chip.id) ? "true" : "false"}"
+      >
+        ${chip.label}
+      </button>
+    `)
+    .join("");
+}
+
+function renderClinicalWorkupResults(output = clinicalWorkupOutput) {
+  if (
+    !clinicalWorkupResults
+    || !clinicalWorkupResultsTitle
+    || !clinicalWorkupResultsCopy
+    || !clinicalWorkupResultTags
+    || !clinicalWorkupRuleList
+  ) return;
+
+  if (!output) {
+    clinicalWorkupResults.hidden = true;
+    clinicalWorkupResultsCopy.textContent = "";
+    clinicalWorkupResultTags.innerHTML = "";
+    clinicalWorkupRuleList.innerHTML = "";
+    return;
+  }
+
+  const outputTags = Array.isArray(output.tags) ? output.tags : [];
+  const matchedRules = Array.isArray(output.matchedRules) ? output.matchedRules : [];
+
+  clinicalWorkupResults.hidden = false;
+  clinicalWorkupResultsTitle.textContent = output.tests.length
+    ? (output.resultsTitle || "Suggested tests")
+    : (output.emptyStateTitle || "No strong match yet");
+  clinicalWorkupResultsCopy.textContent = output.summary;
+  clinicalWorkupResultTags.innerHTML = outputTags
+    .map((tag) => `<span class="clinical-workup-result-tag">${escapeHtml(tag)}</span>`)
+    .join("");
+
+  if (!matchedRules.length) {
+    clinicalWorkupRuleList.innerHTML = `
+      <article class="clinical-workup-empty-state">
+        <p class="clinical-workup-rule-label">${escapeHtml(output.emptyStateLabel || "Next Step")}</p>
+        <h4>${escapeHtml(output.emptyStateTitle || "Refine the presentation")}</h4>
+        <p>${escapeHtml(output.emptyStateCopy || "Add a more specific symptom, sign, or clinical concern, or switch to the main search by test or condition.")}</p>
+      </article>
+    `;
+    return;
+  }
+
+  clinicalWorkupRuleList.innerHTML = matchedRules
+    .map((rule) => `
+      <article class="clinical-workup-rule-card">
+        <p class="clinical-workup-rule-label">${escapeHtml(rule.label || "Matched Presentation")}</p>
+        <h4>${escapeHtml(rule.title)}</h4>
+        <p>${escapeHtml(rule.rationale)}</p>
+        <div class="clinical-workup-rule-tests">
+          ${(rule.tests || [])
+            .map((testName) => `<span class="clinical-workup-rule-test">${escapeHtml(testName)}</span>`)
+            .join("")}
+        </div>
+        ${rule.caution ? `<p class="clinical-workup-rule-caution">${escapeHtml(rule.caution)}</p>` : ""}
+        ${rule.matchedSignals?.length ? `<p class="clinical-workup-rule-match">Triggered by: ${escapeHtml(rule.matchedSignals.slice(0, 3).join(", "))}</p>` : ""}
+      </article>
+    `)
+    .join("");
+}
+
+function clearClinicalWorkupInputs() {
+  selectedClinicalChipIds.clear();
+  if (clinicalAgeInput) clinicalAgeInput.value = "";
+  if (clinicalSexSelect) clinicalSexSelect.value = "unspecified";
+  if (clinicalPregnancySelect) clinicalPregnancySelect.value = "unknown";
+  if (clinicalSymptomsInput) clinicalSymptomsInput.value = "";
+  if (clinicalSignsInput) clinicalSignsInput.value = "";
+  if (clinicalConcernInput) clinicalConcernInput.value = "";
+  renderClinicalWorkupChips();
+}
+
+function clearClinicalWorkupOutput({ preserveInputs = true, rerenderCards = true, clearStatus = false } = {}) {
+  clinicalWorkupOutput = null;
+  renderClinicalWorkupResults(null);
+
+  if (!preserveInputs) {
+    clearClinicalWorkupInputs();
+  }
+
+  if (clearStatus) {
+    setClinicalWorkupStatus("");
+  }
+
+  dispatchFindMyTubeEvent("findmytest:clear", {
+    preserveInputs,
+    clearStatus
+  });
+  dispatchFindMyTubeEvent("findmytest:statechange", {
+    output: null
+  });
+
+  if (rerenderCards) {
+    applyFilters();
+  }
+}
+
+function setFindMyTestSuggestions(output, { rerenderCards = true } = {}) {
+  clinicalWorkupOutput = output && Array.isArray(output.tests) ? output : null;
+  renderClinicalWorkupResults(clinicalWorkupOutput);
+  dispatchFindMyTubeEvent("findmytest:statechange", {
+    output: clinicalWorkupOutput
+  });
+
+  if (rerenderCards) {
+    applyFilters();
+  }
+}
+
+function prepareFindMyTestResultsView() {
+  if (activeSectionGroup) {
+    setSectionView("", { historyMode: "replace", scrollToTop: false, clearSearch: true });
+    return;
+  }
+
+  if (searchInput) {
+    searchInput.value = "";
+    updateSearchClearButton();
+    refreshSearchPlaceholder();
+  }
+}
+
+function estimateDrawPlanForTests(testNames = [], { includeExistingSelection = false } = {}) {
+  const nextSelection = includeExistingSelection
+    ? new Set(selectedTestNames)
+    : new Set();
+
+  testNames.forEach((testName) => nextSelection.add(testName));
+  collapseProfileSelections(nextSelection);
+
+  return getResolvedDrawPlan(getTestsByNames(Array.from(nextSelection)));
+}
+
+function addTestsToPlan(testNames = [], { replace = false, openDrawPlan: shouldOpenDrawPlan = false } = {}) {
+  const nextSelection = replace ? new Set() : new Set(selectedTestNames);
+
+  testNames.forEach((testName) => nextSelection.add(testName));
+  collapseProfileSelections(nextSelection);
+  setSelectedTests(nextSelection);
+
+  if (shouldOpenDrawPlan) {
+    openDrawModal();
+  }
+
+  return getResolvedDrawPlan(getSelectedTests());
+}
+
+function removeTestsFromPlan(testNames = [], { openDrawPlan: shouldOpenDrawPlan = false } = {}) {
+  const nextSelection = new Set(selectedTestNames);
+
+  testNames.forEach((testName) => nextSelection.delete(testName));
+  setSelectedTests(nextSelection);
+
+  if (shouldOpenDrawPlan) {
+    openDrawModal();
+  }
+
+  return getResolvedDrawPlan(getSelectedTests());
+}
+
+function runClinicalWorkup() {
+  const input = getClinicalWorkupInput();
+  if (!input.normalizedBlob) {
+    clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: true, clearStatus: false });
+    setClinicalWorkupStatus("Add at least one symptom, sign, quick clue, or clinical concern to suggest tests.");
+    clinicalSymptomsInput?.focus();
+    return;
+  }
+
+  if (activeSectionGroup) {
+    setSectionView("", { historyMode: "replace", scrollToTop: false, clearSearch: true });
+  } else if (searchInput) {
+    searchInput.value = "";
+    updateSearchClearButton();
+    refreshSearchPlaceholder();
+  }
+
+  clinicalWorkupOutput = buildClinicalWorkupOutput(input);
+  renderClinicalWorkupResults();
+  applyFilters();
+
+  setClinicalWorkupStatus(
+    clinicalWorkupOutput.tests.length
+      ? `${clinicalWorkupOutput.tests.length} suggested test${clinicalWorkupOutput.tests.length === 1 ? "" : "s"} shown below.`
+      : "No strong direct match yet. Try adding more specific symptoms, signs, or a clinical concern."
+  );
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const target = clinicalWorkupOutput.tests.length ? clinicalWorkupResults : clinicalWorkupPanel;
+  window.requestAnimationFrame(() => {
+    target?.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start"
+    });
+  });
+}
+
+function initClinicalWorkup() {
+  renderClinicalWorkupChips();
+
+  if (clinicalWorkupChipList) {
+    clinicalWorkupChipList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-clinical-chip]");
+      if (!button) return;
+
+      const chipId = button.getAttribute("data-clinical-chip") || "";
+      if (!chipId || !clinicalWorkupChipById[chipId]) return;
+
+      if (selectedClinicalChipIds.has(chipId)) {
+        selectedClinicalChipIds.delete(chipId);
+      } else {
+        selectedClinicalChipIds.add(chipId);
+      }
+
+      renderClinicalWorkupChips();
+      setClinicalWorkupStatus("");
+    });
+  }
+
+  if (clinicalWorkupForm) {
+    clinicalWorkupForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      runClinicalWorkup();
+    });
+  }
+
+  if (clinicalWorkupResetBtn) {
+    clinicalWorkupResetBtn.addEventListener("click", () => {
+      clearClinicalWorkupOutput({ preserveInputs: false, rerenderCards: true, clearStatus: true });
+    });
+  }
+
+  if (clearClinicalWorkupResultsBtn) {
+    clearClinicalWorkupResultsBtn.addEventListener("click", () => {
+      clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: true, clearStatus: true });
+    });
+  }
+
+  [
+    clinicalAgeInput,
+    clinicalSexSelect,
+    clinicalPregnancySelect,
+    clinicalSymptomsInput,
+    clinicalSignsInput,
+    clinicalConcernInput
+  ].forEach((field) => {
+    field?.addEventListener("input", () => {
+      setClinicalWorkupStatus("");
+    });
+  });
+}
 
 function getMatchedProfileQuery(normalizedQuery) {
   if (!normalizedQuery) return "";
@@ -2435,12 +3355,19 @@ function refreshSelectionUi({ rerenderCards = true } = {}) {
   if (rerenderCards) applyFilters();
 }
 
+function getSelectedTestNamesList() {
+  return Array.from(selectedTestNames);
+}
+
 function setSelectedTests(nextSelection, options = {}) {
   resetClearDrawSelectionConfirmation({ update: false });
   selectedTestNames.clear();
   nextSelection.forEach((name) => selectedTestNames.add(name));
   collapseProfileSelections(selectedTestNames);
   refreshSelectionUi(options);
+  dispatchFindMyTubeEvent("findmytube:selectionchange", {
+    selectedTestNames: getSelectedTestNamesList()
+  });
 }
 
 function toggleSelectedTest(testName, options = {}) {
@@ -2684,6 +3611,22 @@ function getDefaultPlanItems(selectedTests) {
   return { items, manual, ruleId: null };
 }
 
+function appendPlanItemDetail(item, detailText) {
+  if (!item) return;
+
+  const nextDetail = String(detailText || "").trim();
+  if (!nextDetail) return;
+
+  const currentDetail = String(item.detail || "").trim();
+  if (!currentDetail) {
+    item.detail = nextDetail;
+    return;
+  }
+
+  if (currentDetail.includes(nextDetail)) return;
+  item.detail = `${currentDetail} ${nextDetail}`;
+}
+
 function isDedicatedGoldTubeTest(test) {
   const name = String(test.name || "").toLowerCase();
   const tubeGroups = getTubeGroups(test.tubeColor);
@@ -2786,6 +3729,39 @@ function applyOgttGrayTubeRule(plan, selectedTests) {
   return "OGTT rule applied: use 3 x Gray tubes for fasting, 1 hour, and 2 hour samples.";
 }
 
+function applyTubeVariantNotes(plan, selectedTests) {
+  const variantRequests = new Map();
+
+  selectedTests.forEach((test) => {
+    const tubeVariant = String(test.tubeVariant || "").trim();
+    if (!tubeVariant) return;
+
+    const tubeGroups = getTubeGroups(test.tubeColor);
+    tubeGroups.forEach((group) => {
+      const key = `${group}__${tubeVariant}`;
+      if (!variantRequests.has(key)) {
+        variantRequests.set(key, {
+          group,
+          tubeVariant,
+          tests: new Set()
+        });
+      }
+
+      variantRequests.get(key).tests.add(test.name);
+    });
+  });
+
+  variantRequests.forEach(({ group, tubeVariant, tests }) => {
+    const planItem = plan.items.find((item) => item.key === group);
+    if (!planItem) return;
+
+    appendPlanItemDetail(
+      planItem,
+      `Use the ${lowercaseFirstCharacter(tubeVariant)} version of this ${planItem.label} tube for ${joinWithAnd([...tests])}.`
+    );
+  });
+}
+
 function getLabDrawPlan(selectedTests) {
   const exactRule = findExactDrawRule(selectedTests);
   if (exactRule) {
@@ -2807,6 +3783,8 @@ function getResolvedDrawPlan(selectedTests) {
     applyPurpleVolumeRule(plan, selectedTests),
     applyOgttGrayTubeRule(plan, selectedTests)
   ].filter(Boolean);
+
+  applyTubeVariantNotes(plan, selectedTests);
 
   return { plan, guidanceNotes };
 }
@@ -2951,9 +3929,66 @@ function shouldHideSpecimenOnCard(test) {
   return test.name === "HIV Viral Load";
 }
 
+function getMicroSpecimenBucket(test) {
+  const text = normalizeForSearch([
+    test?.name || "",
+    test?.specimen || "",
+    test?.specimenGuide || ""
+  ].join(" "));
+
+  if (text.includes("urine")) return "Urine";
+  if (text.includes("blood culture") || text.includes("blood")) return "Blood";
+  if (text.includes("fluid")) return "Fluid";
+  if (text.includes("sputum") || text.includes("respiratory")) return "Sputum";
+  if (text.includes("stool") || text.includes("fecal") || text.includes("faecal")) return "Stool";
+  if (text.includes("csf")) return "CSF";
+  if (text.includes("tissue")) return "Tissue";
+  if (text.includes("swab")) return "Swabs";
+  return "Specimen";
+}
+
+function getMicroSubsection(test) {
+  const text = normalizeForSearch([
+    test?.name || "",
+    test?.specimen || ""
+  ].join(" "));
+
+  if (text.includes("genexpert")) {
+    return `GeneXpert • ${getMicroSpecimenBucket(test)}`;
+  }
+
+  if (text.includes("mcs") || text.includes("culture")) {
+    return `MC&S • ${getMicroSpecimenBucket(test)}`;
+  }
+
+  return "";
+}
+
+function getMicroClinicalProfile(subsection = "") {
+  if (subsection.startsWith("MC&S • ")) {
+    return {
+      use: "Microbiology culture and sensitivity request for organism detection and antimicrobial guidance on the specified specimen.",
+      keywords: ["culture", "mcs", "sensitivity", "microbiology", "infection source"]
+    };
+  }
+
+  if (subsection.startsWith("GeneXpert • ")) {
+    return {
+      use: "Rapid molecular pathogen detection request using a GeneXpert workflow on the specified specimen.",
+      keywords: ["genexpert", "xpert", "rapid molecular test", "pathogen detection", "microbiology"]
+    };
+  }
+
+  return null;
+}
+
 function getClinicalProfile(testName, grouping) {
   if (clinicalProfileByName[testName]) return clinicalProfileByName[testName];
   if (clinicalProfileBySubsection[grouping.subsection]) return clinicalProfileBySubsection[grouping.subsection];
+  if (grouping.sectionId === "micro_virology") {
+    const microClinicalProfile = getMicroClinicalProfile(grouping.subsection);
+    if (microClinicalProfile) return microClinicalProfile;
+  }
 
   return {
     use: "General diagnostic support test interpreted with clinical context.",
@@ -2961,8 +3996,13 @@ function getClinicalProfile(testName, grouping) {
   };
 }
 
-function getTestGrouping(testName) {
+function getTestGrouping(testOrName) {
+  const test = typeof testOrName === "string"
+    ? { name: testOrName }
+    : (testOrName || {});
+  const testName = String(test.name || "");
   const name = testName.toLowerCase();
+  const microSubsection = getMicroSubsection(test);
 
   if (name.includes("cytology")) {
     return { sectionId: "cytology", subsection: "Cytology" };
@@ -3054,25 +4094,60 @@ function getTestGrouping(testName) {
     name.includes("therapeutic")
   ) return { sectionId: "chemistry", subsection: "Drug Monitoring" };
 
-  if (name.includes("hiv pcr")) {
-    return { sectionId: "immunology", subsection: "General Serology" };
+  if (name.includes("hiv viral load")) {
+    return { sectionId: "metabolic_genetic", subsection: "Molecular Biology" };
+  }
+
+  if (name.includes("pcr")) {
+    return { sectionId: "metabolic_genetic", subsection: "Molecular Biology" };
   }
 
   if (
-    name.includes("pcr") ||
+    name.includes("csf cell count and chemistry") ||
+    name.includes("csf glucose") ||
+    name.includes("csf protein") ||
+    name.includes("csf igg index") ||
+    name.includes("csf ada") ||
+    name.includes("csf oligoclonal")
+  ) {
+    return { sectionId: "chemistry", subsection: "General Chemistry" };
+  }
+
+  if (name.includes("hepatitis c viral load")) {
+    return { sectionId: "chemistry", subsection: "General Chemistry" };
+  }
+
+  if (
+    name.includes("5-hiaa") ||
+    name.includes("bence-jones") ||
+    name.includes("metanephrines")
+  ) {
+    return { sectionId: "chemistry", subsection: "Serum Markers" };
+  }
+
+  if (name.includes("calcium/phosphate")) {
+    return { sectionId: "chemistry", subsection: "Bone (CMP Profile)" };
+  }
+
+  if (
+    name.includes("b-d-glucan") ||
+    name.includes("bd glucan") ||
+    name.includes("beta-d-glucan") ||
+    name.includes("beta d glucan")
+  ) {
+    return { sectionId: "chemistry", subsection: "General Chemistry" };
+  }
+
+  if (microSubsection) {
+    return { sectionId: "micro_virology", subsection: microSubsection };
+  }
+
+  if (
     name.includes("genexpert") ||
     name.includes("viral load") ||
-    name.includes("mcs") ||
-    name.includes("culture") ||
     name.includes("virology") ||
-    name.includes("stool") ||
-    name.includes("sputum") ||
-    name.includes("csf") ||
-    name.includes("urine") ||
-    name.includes("difficile") ||
-    name.includes("mrsa") ||
-    name.includes("glucan")
-  ) return { sectionId: "micro_virology", subsection: "MC&S / PCR / Virology" };
+    name.includes("mrsa")
+  ) return { sectionId: "immunology", subsection: "General Serology" };
 
   if (
     name.includes("tumour") ||
@@ -3082,6 +4157,7 @@ function getTestGrouping(testName) {
     name.includes("ca 125") ||
     name.includes("ca 15") ||
     name.includes("psa") ||
+    name.includes("bhcg") ||
     name.includes("beta-hcg") ||
     name.includes("protein electrophoresis") ||
     name.includes("immunofixation") ||
@@ -3135,6 +4211,10 @@ function getTestGrouping(testName) {
     name.includes("asot") ||
     name.includes("dnase") ||
     name.includes("streptolysin") ||
+    name.includes("cryptococcal") ||
+    name.includes("pylori") ||
+    name.includes("difficile") ||
+    name.includes("fta") ||
     name.includes("hepatitis") ||
     name.includes("hiv elisa") ||
     name.includes("brucella") ||
@@ -3316,7 +4396,7 @@ function getTestGrouping(testName) {
 }
 
 function enrichTest(test) {
-  const grouping = getTestGrouping(test.name);
+  const grouping = getTestGrouping(test);
   const section = sectionMeta[grouping.sectionId] || sectionMeta.general;
   const aliases = aliasByName[test.name] || [];
   const ironFeSynonyms = /\b(iron|fe)\b/i.test(test.name)
@@ -3327,6 +4407,7 @@ function enrichTest(test) {
   const normalized = {
     ...test,
     tubeColor: normalizeTubeColor(test.tubeColor),
+    tubeVariant: String(test.tubeVariant || "").trim(),
     turnaroundTime: normalizeTurnaroundTime(test.turnaroundTime),
     notes: String(test.notes || "").trim(),
     criticalPrep: String(test.criticalPrep || "").trim() || inferCriticalPrep(test),
@@ -3345,6 +4426,7 @@ function enrichTest(test) {
   normalized.searchBlob = normalizeForSearch([
     normalized.name,
     normalized.tubeColor,
+    normalized.tubeVariant,
     normalized.specimen,
     normalized.turnaroundTime,
     normalized.notes,
@@ -3569,10 +4651,14 @@ function renderGroupChips() {
   });
 
   updateGroupChipState();
+  updateSectionContextBar();
 }
 
 function setSectionView(sectionId = "", { browseGroup = "", historyMode = "none", scrollToTop = false, clearSearch = false } = {}) {
   activeSectionGroup = sectionMeta[sectionId] ? sectionId : "";
+  if (activeSectionGroup && clinicalWorkupOutput) {
+    clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: false, clearStatus: true });
+  }
   Object.keys(activeBrowseGroupBySection).forEach((browseSectionId) => {
     if (browseSectionId !== activeSectionGroup) {
       activeBrowseGroupBySection[browseSectionId] = "";
@@ -3654,6 +4740,11 @@ function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = activeSectionGroup || "";
   const normalizedQuery = normalizeForSearch(query);
+  if (!normalizedQuery && !selectedSection && hasClinicalWorkupState()) {
+    return Array.isArray(clinicalWorkupOutput?.tests)
+      ? clinicalWorkupOutput.tests
+      : [];
+  }
   const activeBrowseSubsectionSet = new Set(getActiveBrowseSubsections(selectedSection));
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
@@ -3705,6 +4796,8 @@ function renderCards(filteredTests) {
   cardsContainer.innerHTML = "";
   const normalizedQuery = normalizeForSearch(searchInput?.value || "");
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
+  const isClinicalSuggestionsMode = !normalizedQuery && !activeSectionGroup && hasClinicalWorkupState();
+  const clinicalModeLabel = clinicalWorkupOutput?.modeLabel || "Find My Test";
   const resultsContextLabel = !normalizedQuery && activeSectionGroup
     ? getResultsContextLabel(activeSectionGroup)
     : "";
@@ -3712,20 +4805,26 @@ function renderCards(filteredTests) {
 
   if (filteredTests.length === 0) {
     setResultsInfo(
-      matchedConditionShortcut
+      isClinicalSuggestionsMode
+        ? `${clinicalModeLabel}. 0 tests found. ${CLINICAL_WORKUP_DISCLAIMER}`
+        : matchedConditionShortcut
         ? `${resultsPrefix}Condition shortcut: ${matchedConditionShortcut.label}. 0 tests found. ${CONDITION_SHORTCUT_DISCLAIMER}`
         : `${resultsPrefix}0 tests found`
     );
     cardsContainer.innerHTML = `
       <div class="no-results">
-        No matching test found. Try searching by test or clinical question (e.g. Iron studies or anaemia).
+        ${isClinicalSuggestionsMode
+          ? "No strong direct match yet. Add more specific symptoms or signs, or switch to the main search."
+          : "No matching test found. Try searching by test or profile (e.g. CRP or Liver function tests)."}
       </div>
     `;
     return;
   }
 
   setResultsInfo(
-    matchedConditionShortcut
+    isClinicalSuggestionsMode
+      ? `${clinicalModeLabel}. ${filteredTests.length} suggested test${filteredTests.length > 1 ? "s" : ""} found. ${CLINICAL_WORKUP_DISCLAIMER}`
+      : matchedConditionShortcut
       ? `${resultsPrefix}Condition shortcut: ${matchedConditionShortcut.label}. ${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found. ${CONDITION_SHORTCUT_DISCLAIMER}`
       : `${resultsPrefix}${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found`
   );
@@ -3769,15 +4868,11 @@ function renderCards(filteredTests) {
     const showTubeChoiceNote = tubeGroups.length > 1
       ? useOrBetweenTubeOptions
       : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
+    const tubeVariantValue = String(test.tubeVariant || "").trim();
     const hasTubeOptions = tubeGroups.length > 0;
     const specimenValue = getCardSpecimenValue(test, { isMicro });
     const hasSpecimenValue = Boolean(specimenValue);
-    const isCsfSpecimenCard = /\bcsf\b/i.test(`${test.name} ${specimenValue} ${test.tubeColor}`);
-    const useSpecimenOnlySummary = isMicro && hasSpecimenValue && !isCsfSpecimenCard && !hasTubeOptions;
-    const isNonBloodSpecimen = /(urine|stool|faec|swab|csf|sputum|respiratory|semen|fluid|tissue|bone marrow|aspirate|saliva|synovial|pleural|ascitic|vaginal|nasopharyngeal|throat)/i
-      .test(specimenValue);
-    const hasGenericCsfSpecimen = isCsfSpecimenCard && specimenValue === "CSF";
-    const showSpecimenField = hasSpecimenValue && !hasGenericCsfSpecimen && (isMicro || isNonBloodSpecimen || !hasTubeOptions);
+    const showRequestedSpecimen = isSelected && hasSpecimenValue && !shouldHideSpecimenOnCard(test);
     const showRackHint = !hasDismissedRackHint && !isSelected && filteredTests[0]?.name === test.name;
     const renderSummaryField = ({ label, content, isAction = false }) => {
       if (!isAction) {
@@ -3806,14 +4901,7 @@ function renderCards(filteredTests) {
       </button>
       `;
     };
-    const summaryFields = useSpecimenOnlySummary
-      ? renderSummaryField({
-          label: "Specimen",
-          content: `<span class="card-summary-value">${specimenValue}</span>`,
-          isAction: true
-        })
-      : `
-      ${hasTubeOptions ? `
+    const summaryFields = hasTubeOptions ? `
       ${renderSummaryField({
         label: "Tube",
         content: `<div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
@@ -3821,18 +4909,8 @@ function renderCards(filteredTests) {
         </div>`,
         isAction: true
       })}
-      ` : ""}
-      ${showSpecimenField ? `
-      ${renderSummaryField({
-        label: "Specimen",
-        content: `<span class="card-summary-value">${specimenValue}</span>`,
-        isAction: !hasTubeOptions
-      })}
-      ` : ""}
-      `;
-    const summaryFieldCount = useSpecimenOnlySummary
-      ? 1
-      : Number(hasTubeOptions) + Number(showSpecimenField);
+      ` : "";
+    const summaryFieldCount = Number(hasTubeOptions);
     const cardMetaRow = hasProfileComponents
       ? `
       <div class="card-meta-row">
@@ -3854,15 +4932,29 @@ function renderCards(filteredTests) {
         </button>
       </div>
       ${cardMetaRow}
+      ${summaryFieldCount ? `
       <div class="card-summary-grid${summaryFieldCount <= 1 ? " single" : ""}">
         ${summaryFields}
       </div>
+      ` : ""}
+      ${showRequestedSpecimen ? `
+      <div class="card-requested-specimen">
+        <span class="label">Requested Specimen</span>
+        <span class="card-requested-specimen-value">${specimenValue}</span>
+      </div>
+      ` : ""}
       <div class="card-extra">
         <div class="test-subgroup-badge">${test.grouping.subsection}</div>
         ${showTubeChoiceNote ? `
         <div class="field">
           <span class="label">Tube Note</span>
           <span>${test.tubeColor}</span>
+        </div>
+        ` : ""}
+        ${tubeVariantValue ? `
+        <div class="field">
+          <span class="label">Tube Type</span>
+          <span>${tubeVariantValue}</span>
         </div>
         ` : ""}
         <div class="field critical-prep-field${shouldShowCriticalAlert ? " critical-prep-field-alert" : ""}">
@@ -3933,15 +5025,16 @@ function renderCards(filteredTests) {
 function applyFilters() {
   const hasQuery = (searchInput?.value || "").trim().length > 0;
   const hasSectionFilter = Boolean(activeSectionGroup);
+  const hasClinicalState = hasClinicalWorkupState();
   const keepPreSearchVisible = shouldKeepPreSearchPanelVisible(activeSectionGroup, searchInput?.value || "");
-  preSearchPanel.style.display = hasQuery || (hasSectionFilter && !keepPreSearchVisible) ? "none" : "grid";
+  preSearchPanel.style.display = hasQuery || hasClinicalState || (hasSectionFilter && !keepPreSearchVisible) ? "none" : "grid";
   if (siteFooter) {
-    siteFooter.hidden = hasQuery || hasSectionFilter;
+    siteFooter.hidden = hasQuery || hasSectionFilter || hasClinicalState;
   }
   updateBackToTopVisibility();
   updateSelectionCartViewportPosition();
 
-  if (!hasQuery && !hasSectionFilter) {
+  if (!hasQuery && !hasSectionFilter && !hasClinicalState) {
     setResultsInfo("");
     cardsContainer.innerHTML = "";
     return;
@@ -3971,6 +5064,9 @@ function bindEvents() {
     });
 
     searchInput.addEventListener("input", () => {
+      if (searchInput.value.trim() && clinicalWorkupOutput) {
+        clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: false, clearStatus: true });
+      }
       updateSearchClearButton();
       refreshSearchPlaceholder();
       applyFilters();
@@ -3986,9 +5082,34 @@ function bindEvents() {
     });
   }
 
+  if (sectionContextBackBtn) {
+    sectionContextBackBtn.addEventListener("click", () => {
+      if (getActiveBrowseGroup(activeSectionGroup)) {
+        setSectionView(activeSectionGroup, {
+          browseGroup: "",
+          historyMode: "replace",
+          scrollToTop: true
+        });
+        return;
+      }
+
+      setSectionView("", {
+        browseGroup: "",
+        historyMode: "replace",
+        scrollToTop: true
+      });
+    });
+  }
+
   if (brandHomeBtn) {
     brandHomeBtn.addEventListener("click", () => {
       goHome();
+    });
+  }
+
+  if (findMyTestHeaderTitle) {
+    findMyTestHeaderTitle.addEventListener("click", () => {
+      handleFindMyTestHeaderAction();
     });
   }
 
@@ -4111,6 +5232,27 @@ function bindEvents() {
   });
 }
 
+function updateFindMyTubePublicApi() {
+  window.findMyTubeApp = {
+    version: "2026-03-20.51",
+    assetVersion: "20260320ay",
+    normalizeForSearch,
+    escapeHtml,
+    getTestsByNames,
+    getTubeGroups,
+    getSelectedTestNames: getSelectedTestNamesList,
+    getResolvedDrawPlan,
+    estimateDrawPlanForTests,
+    addTestsToPlan,
+    removeTestsFromPlan,
+    openDrawPlan: openDrawModal,
+    prepareFindMyTestResultsView,
+    setFindMyTestSuggestions,
+    clearFindMyTestSuggestions: clearClinicalWorkupOutput
+  };
+}
+
+updateFindMyTubePublicApi();
 renderFactsCarousel();
 initQuickToolsPanel();
 initFactsPanel();

@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260317a" />
   <link rel="shortcut icon" href="./favicon-32.png?v=20260317a" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260317a" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260317b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260320ay" />
 </head>
 <body>
   <div class="container">
@@ -27,8 +27,15 @@
           <span class="brand-gap"></span>
           <span>tube</span>
         </button>
+        <button type="button" class="brand-title find-my-test-header-title find-my-test-header-btn" id="findMyTestHeaderTitle" aria-label="Clear Find My Test">
+          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
+          <span class="brand-gap"></span>
+          <span>my</span>
+          <span class="brand-gap"></span>
+          <span>test</span>
+        </button>
       </h1>
-      <p>
+      <p id="headerIntroText">
         Find the right test, the right tube and why it's ordered.
       </p>
     </header>
@@ -38,7 +45,7 @@
         <input
           type="text"
           id="searchInput"
-          placeholder="Search by test or clinical question (e.g. Iron studies or anaemia)"
+          placeholder="Search by test or profile (e.g. CRP or Liver function tests)"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
@@ -47,6 +54,141 @@
         />
         <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" hidden>&times;</button>
       </div>
+    </section>
+
+    <div class="section-context-bar" id="sectionContextBar" hidden>
+      <button type="button" class="section-context-back-btn" id="sectionContextBackBtn">Back to departments</button>
+      <p class="section-context-label" id="sectionContextLabel"></p>
+    </div>
+
+    <section class="find-my-test-page-bar" aria-label="Find My Test navigation">
+      <a class="find-my-test-page-back" href="./index.html">Back to Find My Tube</a>
+    </section>
+
+    <section class="clinical-workup-panel" id="clinicalWorkupPanel" aria-labelledby="clinicalWorkupTitle">
+      <div class="clinical-workup-shell">
+        <form class="clinical-workup-form" id="clinicalWorkupForm">
+          <h2 id="clinicalWorkupTitle" class="sr-only">Find My Test form</h2>
+          <div class="clinical-workup-form-grid">
+            <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
+              <span id="clinicalDobLabel">Date of birth</span>
+              <div class="clinical-workup-dob-control" id="clinicalDobControl">
+                <input
+                  type="date"
+                  id="clinicalDobInput"
+                />
+                <button
+                  type="button"
+                  class="clinical-workup-dob-display"
+                  id="clinicalDobDisplayBtn"
+                  aria-label="Change date of birth"
+                  aria-hidden="true"
+                  tabindex="-1"
+                >
+                  <span class="clinical-workup-dob-display-copy">
+                    <span class="clinical-workup-dob-age" id="clinicalDobAgeValue"></span>
+                    <span class="clinical-workup-dob-date" id="clinicalDobDateValue"></span>
+                  </span>
+                  <span class="clinical-workup-dob-display-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm12 7H5v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9ZM6 6a1 1 0 0 0-1 1h14a1 1 0 0 0-1-1H6Z"></path>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </label>
+
+            <div class="clinical-workup-context-pair">
+              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
+                <span>Sex</span>
+                <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
+                  <select id="clinicalSexSelect">
+                    <option value="unspecified">Not specified</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <span class="clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
+                </div>
+              </label>
+
+              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
+                <span>Pregnancy</span>
+                <select id="clinicalPregnancySelect">
+                  <option value="unknown">Unknown / not applicable</option>
+                  <option value="pregnant">Pregnant / possible pregnancy</option>
+                  <option value="not-pregnant">Not pregnant</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="clinical-workup-field clinical-workup-field-wide">
+              <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
+              <textarea
+                id="clinicalSymptomsInput"
+                rows="3"
+                placeholder="e.g. chest pain radiating to the left arm, fever, frothy urine, weight loss"
+              ></textarea>
+              <div class="clinical-workup-chip-slot">
+                <p class="clinical-workup-chip-slot-label">Quick add common symptoms</p>
+                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSymptomsChipList" aria-label="Common symptoms"></div>
+              </div>
+            </div>
+
+            <div class="clinical-workup-field clinical-workup-field-wide">
+              <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs / exam clues</label>
+              <textarea
+                id="clinicalSignsInput"
+                rows="3"
+                placeholder="e.g. pallor, jaundice, oedema, hypotension, tachycardia"
+              ></textarea>
+              <div class="clinical-workup-chip-slot">
+                <p class="clinical-workup-chip-slot-label">Quick add exam clues</p>
+                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSignsChipList" aria-label="Common exam clues"></div>
+              </div>
+            </div>
+
+            <div class="clinical-workup-field clinical-workup-field-wide">
+              <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
+              <input
+                type="text"
+                id="clinicalConcernInput"
+                placeholder="e.g. ACS, heart failure, CKD, infertility, autoimmune disease"
+              />
+              <div class="clinical-workup-chip-slot">
+                <p class="clinical-workup-chip-slot-label">Quick add common concerns</p>
+                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalConcernChipList" aria-label="Common clinical concerns"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="clinical-workup-actions">
+            <button type="submit" class="clinical-workup-submit-btn" id="clinicalWorkupSubmitBtn">Suggest Tests</button>
+            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">Reset</button>
+          </div>
+
+          <p class="clinical-workup-note">
+            Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.
+          </p>
+          <p class="clinical-workup-status" id="clinicalWorkupStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="clinical-workup-results" id="clinicalWorkupResults" aria-labelledby="clinicalWorkupResultsTitle" hidden>
+      <div class="clinical-workup-results-head">
+        <div>
+          <p class="clinical-workup-kicker">Find My Test</p>
+          <h3 id="clinicalWorkupResultsTitle">Suggested tests</h3>
+        </div>
+        <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear suggestions</button>
+      </div>
+      <p class="clinical-workup-results-copy" id="clinicalWorkupResultsCopy"></p>
+      <div class="clinical-workup-result-tags" id="clinicalWorkupResultTags"></div>
+      <div class="clinical-workup-rule-list" id="clinicalWorkupRuleList"></div>
+      <p class="clinical-workup-selection-note">Tick a test to add it to Tube Plan.</p>
+      <div class="clinical-workup-test-list" id="clinicalWorkupTestList"></div>
     </section>
 
     <section class="pre-search" id="preSearchPanel">
@@ -92,6 +234,22 @@
             </button>
           </div>
         </section>
+
+        <a
+          class="find-my-test-launch-card"
+          id="findMyTestLaunchCard"
+          href="./index.html?tool=find-my-test"
+          aria-label="Open Find My Test page"
+        >
+          <div class="find-my-test-launch-head">
+            <div class="find-my-test-launch-copy">
+              <h3>Find My Test</h3>
+              <p>Start with symptoms, signs, date of birth and context. Review suggested tests, then build the draw plan.</p>
+            </div>
+            <span class="find-my-test-launch-arrow" aria-hidden="true">&#8594;</span>
+          </div>
+          <span class="find-my-test-launch-action">Find My Tests</span>
+        </a>
 
         <div class="fact-carousel" id="factCarouselPanel">
           <div class="fact-carousel-content" id="factCarouselContent">
@@ -197,11 +355,12 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260316b"></script>
-  <script src="assets/js/script.js?v=20260316b"></script>
+  <script src="assets/data/data.js?v=20260320ay"></script>
+  <script src="assets/js/script.js?v=20260320ay"></script>
+  <script src="assets/js/find-my-test.js?v=20260320ay"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-16.2";
+      const APP_VERSION = "2026-03-20.51";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -218,7 +377,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260316b", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260320ay", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
