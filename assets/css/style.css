@@ -203,11 +203,32 @@ body.find-my-test-page .container {
 .find-my-test-header-title {
   display: none;
   width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
   text-align: center;
   font-size: clamp(1.75rem, 2.6vw, 2.3rem);
   font-weight: 800;
   letter-spacing: -0.04em;
   color: #17343a;
+}
+
+.find-my-test-beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 0.56rem;
+  border-radius: 999px;
+  border: 1px solid rgba(13, 96, 90, 0.22);
+  background: rgba(15, 118, 110, 0.12);
+  color: #0d605a;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .brand-gap {
@@ -1269,6 +1290,10 @@ body.find-my-test-page .find-my-test-launch-card {
   margin: 0;
   font-size: 1rem;
   color: #17343a;
+}
+
+.find-my-test-launch-card h3 .find-my-test-beta-badge {
+  margin-left: 8px;
 }
 
 .find-my-test-launch-card p {

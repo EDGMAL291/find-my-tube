@@ -1,5 +1,5 @@
 {
-  "version": "2026-03-20.7",
+  "version": "2026-03-21.1",
   "sourceLabel": "Find My Test",
   "disclaimer": "Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.",
   "quickPicks": [
@@ -14,36 +14,55 @@
       "id": "shortness-breath",
       "label": "Shortness of breath",
       "field": "symptoms",
-      "related": ["chest-pain", "hypoxia-cyanosis", "heart-failure-concern", "resp-distress-concern"],
+      "related": ["chest-pain", "hypoxia-cyanosis", "cyanosis", "heart-failure-concern", "resp-distress-concern"],
       "terms": ["shortness of breath", "dyspnoea", "dyspnea", "orthopnoea", "orthopnea"]
     },
     {
       "id": "palpitations",
       "label": "Palpitations",
       "field": "symptoms",
-      "related": ["chest-pain", "temperature-intolerance", "thyroid-concern"],
+      "related": ["chest-pain", "temperature-intolerance", "cold-intolerance", "thyroid-concern"],
       "terms": ["palpitations", "tachycardia", "racing heart"]
     },
     {
       "id": "fever-sepsis",
-      "label": "Fever / sepsis",
+      "label": "Fever",
+      "insertText": "fever",
       "field": "symptoms",
       "related": ["confusion", "sepsis-concern"],
-      "terms": ["fever", "febrile", "sepsis", "septic", "rigors"]
+      "terms": ["fever", "febrile", "rigors"]
     },
     {
       "id": "fatigue-pallor",
-      "label": "Fatigue / pallor",
+      "label": "Fatigue",
+      "insertText": "fatigue",
       "field": "symptoms",
-      "related": ["bleeding", "anaemia-concern"],
-      "terms": ["fatigue", "pallor", "anaemia", "anemia", "weakness", "low hb"]
+      "related": ["pallor", "bleeding", "anaemia-concern"],
+      "terms": ["fatigue", "weakness"]
+    },
+    {
+      "id": "pallor",
+      "label": "Pallor",
+      "insertText": "pallor",
+      "field": "signs",
+      "related": ["fatigue-pallor", "bleeding", "anaemia-concern"],
+      "terms": ["pallor", "anaemia", "anemia", "low hb"]
     },
     {
       "id": "bleeding",
-      "label": "Bleeding / bruising",
+      "label": "Bleeding",
+      "insertText": "bleeding",
       "field": "symptoms",
-      "related": ["fatigue-pallor", "anaemia-concern"],
-      "terms": ["bleeding", "bruising", "epistaxis", "petechiae", "melena"]
+      "related": ["bruising", "fatigue-pallor", "anaemia-concern"],
+      "terms": ["bleeding", "epistaxis", "melena", "haematemesis", "hematemesis"]
+    },
+    {
+      "id": "bruising",
+      "label": "Bruising",
+      "insertText": "bruising",
+      "field": "signs",
+      "related": ["bleeding", "pallor", "anaemia-concern"],
+      "terms": ["bruising", "petechiae", "ecchymosis"]
     },
     {
       "id": "jaundice",
@@ -68,17 +87,35 @@
     },
     {
       "id": "hyperglycaemia",
-      "label": "Polyuria / thirst",
+      "label": "Polyuria",
+      "insertText": "polyuria",
       "field": "symptoms",
-      "related": ["confusion", "diabetes-concern", "gestational-diabetes-concern"],
-      "terms": ["polyuria", "polydipsia", "high sugar", "hyperglycaemia", "hyperglycemia"]
+      "related": ["thirst", "confusion", "diabetes-concern", "gestational-diabetes-concern"],
+      "terms": ["polyuria", "glycosuria", "high sugar", "hyperglycaemia", "hyperglycemia"]
+    },
+    {
+      "id": "thirst",
+      "label": "Thirst",
+      "insertText": "thirst",
+      "field": "symptoms",
+      "related": ["hyperglycaemia", "diabetes-concern", "gestational-diabetes-concern"],
+      "terms": ["thirst", "polydipsia", "dry mouth"]
     },
     {
       "id": "temperature-intolerance",
-      "label": "Heat / cold intolerance",
+      "label": "Heat intolerance",
+      "insertText": "heat intolerance",
       "field": "symptoms",
-      "related": ["palpitations", "goitre", "thyroid-concern"],
-      "terms": ["heat intolerance", "cold intolerance", "thyrotoxicosis", "hyperthyroidism", "hypothyroidism"]
+      "related": ["cold-intolerance", "palpitations", "goitre", "thyroid-concern"],
+      "terms": ["heat intolerance", "thyrotoxicosis", "hyperthyroidism"]
+    },
+    {
+      "id": "cold-intolerance",
+      "label": "Cold intolerance",
+      "insertText": "cold intolerance",
+      "field": "symptoms",
+      "related": ["temperature-intolerance", "goitre", "thyroid-concern"],
+      "terms": ["cold intolerance", "hypothyroidism"]
     },
     {
       "id": "hot-flushes",
@@ -89,17 +126,35 @@
     },
     {
       "id": "oedema-proteinuria",
-      "label": "Oedema / proteinuria",
+      "label": "Oedema",
+      "insertText": "oedema",
       "field": "signs",
-      "related": ["ckd-concern"],
-      "terms": ["oedema", "edema", "frothy urine", "proteinuria", "albuminuria"]
+      "related": ["proteinuria", "ckd-concern"],
+      "terms": ["oedema", "edema", "swelling"]
+    },
+    {
+      "id": "proteinuria",
+      "label": "Proteinuria",
+      "insertText": "proteinuria",
+      "field": "signs",
+      "related": ["oedema-proteinuria", "ckd-concern"],
+      "terms": ["proteinuria", "albuminuria", "frothy urine"]
     },
     {
       "id": "hypoxia-cyanosis",
-      "label": "Hypoxia / cyanosis",
+      "label": "Hypoxia",
+      "insertText": "hypoxia",
       "field": "signs",
-      "related": ["shortness-breath", "heart-failure-concern", "resp-distress-concern"],
-      "terms": ["hypoxia", "cyanosis", "respiratory distress", "oxygenation failure"]
+      "related": ["cyanosis", "shortness-breath", "heart-failure-concern", "resp-distress-concern"],
+      "terms": ["hypoxia", "low oxygen", "respiratory distress", "oxygenation failure"]
+    },
+    {
+      "id": "cyanosis",
+      "label": "Cyanosis",
+      "insertText": "cyanosis",
+      "field": "signs",
+      "related": ["hypoxia-cyanosis", "shortness-breath", "heart-failure-concern", "resp-distress-concern"],
+      "terms": ["cyanosis", "blue lips", "blue fingers"]
     },
     {
       "id": "dark-urine",
@@ -112,22 +167,40 @@
       "id": "goitre",
       "label": "Goitre",
       "field": "signs",
-      "related": ["palpitations", "temperature-intolerance", "thyroid-concern"],
+      "related": ["palpitations", "temperature-intolerance", "cold-intolerance", "thyroid-concern"],
       "terms": ["goitre", "goiter", "thyroid enlargement"]
     },
     {
       "id": "joint-pain",
-      "label": "Joint pain / stiffness",
+      "label": "Joint pain",
+      "insertText": "joint pain",
       "field": "symptoms",
-      "related": ["malar-rash", "autoimmune-concern"],
+      "related": ["joint-stiffness", "malar-rash", "autoimmune-concern"],
       "terms": ["joint pain", "joint swelling", "morning stiffness", "arthritis"]
     },
     {
+      "id": "joint-stiffness",
+      "label": "Joint stiffness",
+      "insertText": "joint stiffness",
+      "field": "symptoms",
+      "related": ["joint-pain", "malar-rash", "autoimmune-concern"],
+      "terms": ["joint stiffness", "morning stiffness", "stiff joints"]
+    },
+    {
       "id": "malar-rash",
-      "label": "Malar rash / photosensitivity",
+      "label": "Malar rash",
+      "insertText": "malar rash",
       "field": "signs",
-      "related": ["joint-pain", "autoimmune-concern"],
-      "terms": ["malar rash", "photosensitivity", "vasculitis", "connective tissue disease", "ctd"]
+      "related": ["photosensitivity", "joint-pain", "autoimmune-concern"],
+      "terms": ["malar rash", "butterfly rash", "vasculitis", "connective tissue disease", "ctd"]
+    },
+    {
+      "id": "photosensitivity",
+      "label": "Photosensitivity",
+      "insertText": "photosensitivity",
+      "field": "symptoms",
+      "related": ["malar-rash", "autoimmune-concern"],
+      "terms": ["photosensitivity", "sun sensitivity", "light sensitivity"]
     },
     {
       "id": "vaginal-discharge",
@@ -140,7 +213,7 @@
       "id": "infertility",
       "label": "Infertility",
       "field": "concern",
-      "related": ["hirsutism", "pcos-concern"],
+      "related": ["hirsutism", "acne", "pcos-concern"],
       "terms": ["infertility", "subfertility", "difficulty conceiving", "anovulation"]
     },
     {
@@ -154,7 +227,7 @@
       "id": "heart-failure-concern",
       "label": "Heart failure",
       "field": "concern",
-      "related": ["shortness-breath", "oedema-proteinuria"],
+      "related": ["shortness-breath", "oedema-proteinuria", "proteinuria", "cyanosis"],
       "terms": ["heart failure", "cardiac failure", "fluid overload", "pulmonary oedema", "pulmonary edema"]
     },
     {
@@ -168,21 +241,21 @@
       "id": "anaemia-concern",
       "label": "Anaemia",
       "field": "concern",
-      "related": ["fatigue-pallor", "bleeding"],
+      "related": ["fatigue-pallor", "pallor", "bleeding", "bruising"],
       "terms": ["anaemia", "anemia", "iron deficiency", "low hb"]
     },
     {
       "id": "ckd-concern",
       "label": "CKD",
       "field": "concern",
-      "related": ["oedema-proteinuria"],
+      "related": ["oedema-proteinuria", "proteinuria"],
       "terms": ["ckd", "kidney disease", "renal disease", "nephrotic", "proteinuria"]
     },
     {
       "id": "diabetes-concern",
       "label": "Diabetes",
       "field": "concern",
-      "related": ["hyperglycaemia", "gestational-diabetes-concern"],
+      "related": ["hyperglycaemia", "thirst", "gestational-diabetes-concern"],
       "terms": ["diabetes", "hyperglycaemia", "hyperglycemia", "high sugar", "glycosuria"]
     },
     {
@@ -196,7 +269,7 @@
       "id": "resp-distress-concern",
       "label": "Respiratory distress",
       "field": "concern",
-      "related": ["shortness-breath", "hypoxia-cyanosis", "sepsis-concern"],
+      "related": ["shortness-breath", "hypoxia-cyanosis", "cyanosis", "sepsis-concern"],
       "terms": ["respiratory distress", "hypoxia", "cyanosis", "acidosis", "oxygenation failure"]
     },
     {
@@ -210,21 +283,21 @@
       "id": "pcos-concern",
       "label": "PCOS",
       "field": "concern",
-      "related": ["hirsutism", "infertility"],
+      "related": ["hirsutism", "acne", "infertility"],
       "terms": ["pcos", "polycystic ovary syndrome", "androgen excess", "anovulation"]
     },
     {
       "id": "thyroid-concern",
       "label": "Thyroid disease",
       "field": "concern",
-      "related": ["palpitations", "temperature-intolerance", "goitre"],
+      "related": ["palpitations", "temperature-intolerance", "cold-intolerance", "goitre"],
       "terms": ["thyroid", "goitre", "goiter", "hyperthyroidism", "hypothyroidism", "thyrotoxicosis"]
     },
     {
       "id": "autoimmune-concern",
       "label": "Autoimmune disease",
       "field": "concern",
-      "related": ["joint-pain", "malar-rash"],
+      "related": ["joint-pain", "joint-stiffness", "malar-rash", "photosensitivity"],
       "terms": ["autoimmune disease", "arthritis", "connective tissue disease", "inflammatory disease"]
     },
     {
@@ -238,15 +311,24 @@
       "id": "gestational-diabetes-concern",
       "label": "Gestational diabetes",
       "field": "concern",
-      "related": ["hyperglycaemia", "diabetes-concern", "pregnancy-booking"],
+      "related": ["hyperglycaemia", "thirst", "diabetes-concern", "pregnancy-booking"],
       "terms": ["gestational diabetes", "gdm", "pregnancy glucose", "screening glucose"]
     },
     {
       "id": "hirsutism",
-      "label": "Hirsutism / acne",
+      "label": "Hirsutism",
+      "insertText": "hirsutism",
       "field": "signs",
-      "related": ["infertility", "pcos-concern"],
-      "terms": ["hirsutism", "facial hair", "pcos", "androgen excess", "acne"]
+      "related": ["acne", "infertility", "pcos-concern"],
+      "terms": ["hirsutism", "facial hair", "pcos", "androgen excess"]
+    },
+    {
+      "id": "acne",
+      "label": "Acne",
+      "insertText": "acne",
+      "field": "signs",
+      "related": ["hirsutism", "infertility", "pcos-concern"],
+      "terms": ["acne", "oily skin", "androgen excess"]
     },
     {
       "id": "menopause-concern",
@@ -257,10 +339,19 @@
     },
     {
       "id": "confusion",
-      "label": "Confusion / encephalopathy",
+      "label": "Confusion",
+      "insertText": "confusion",
       "field": "symptoms",
-      "related": ["fever-sepsis", "hyperglycaemia", "sepsis-concern"],
-      "terms": ["confusion", "altered mental state", "drowsy", "encephalopathy"]
+      "related": ["encephalopathy", "fever-sepsis", "hyperglycaemia", "sepsis-concern"],
+      "terms": ["confusion", "altered mental state", "drowsy"]
+    },
+    {
+      "id": "encephalopathy",
+      "label": "Encephalopathy",
+      "insertText": "encephalopathy",
+      "field": "symptoms",
+      "related": ["confusion", "fever-sepsis", "hyperglycaemia", "sepsis-concern"],
+      "terms": ["encephalopathy", "reduced consciousness", "altered mental state"]
     },
     {
       "id": "pregnancy-booking",

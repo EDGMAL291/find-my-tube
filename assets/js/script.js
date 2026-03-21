@@ -549,9 +549,9 @@ const exactDrawRules = [
   },
   {
     id: "cardiac-panel",
-    tests: ["Troponin I", "CK Total", "LDH", "NT-proBNP"],
+    tests: ["Cardiac Profile"],
     items: [
-      { key: "Green", label: "Green", count: 1, detail: "Preferred tube for this cardiac marker set. Gold/Yellow remains an acceptable alternative if local policy uses serum collection." }
+      { key: "choice:Green|Gold/Yellow", label: "Green or Gold/Yellow", count: 1, detail: "Use 1 x Green tube or 1 x Gold/Yellow tube for Cardiac Profile." }
     ]
   },
   {
@@ -916,7 +916,7 @@ function shouldKeepPreSearchPanelVisible(sectionId = activeSectionGroup, query =
 }
 
 function hasClinicalWorkupState() {
-  return Boolean(clinicalWorkupOutput);
+  return !isFindMyTestPage && Boolean(clinicalWorkupOutput);
 }
 
 function isResultsViewActive(sectionId = activeSectionGroup, query = searchInput?.value || "") {
@@ -2963,7 +2963,7 @@ function runClinicalWorkup() {
   const input = getClinicalWorkupInput();
   if (!input.normalizedBlob) {
     clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: true, clearStatus: false });
-    setClinicalWorkupStatus("Add at least one symptom, sign, quick clue, or clinical concern to suggest tests.");
+    setClinicalWorkupStatus("Add at least one symptom, sign, or clinical concern to suggest tests.");
     clinicalSymptomsInput?.focus();
     return;
   }
@@ -3819,6 +3819,17 @@ function getDrawPlannerReminders() {
   }];
 }
 
+function getPlanItemAlternativeGroups(item) {
+  const key = String(item?.key || "").trim();
+  if (!key.startsWith("choice:")) return [];
+
+  return key
+    .slice("choice:".length)
+    .split("|")
+    .map((group) => String(group || "").trim())
+    .filter(Boolean);
+}
+
 function renderDrawResult() {
   if (!drawResultCard || !drawPlannerCount || !drawPlannerAlerts || !drawGroups || !drawPlannerNote) return;
 
@@ -3860,18 +3871,42 @@ function renderDrawResult() {
     .join("");
 
   drawGroups.innerHTML = plan.items
-    .map((item) => `
-      <article class="draw-group-card">
-        <div class="draw-group-top">
+    .map((item) => {
+      const alternativeGroups = getPlanItemAlternativeGroups(item);
+      const headMarkup = alternativeGroups.length
+        ? `
+          <div class="draw-group-main">
+            <div class="tube-option-grid">
+              ${alternativeGroups.map((group, index) => `
+                ${index > 0 ? `<span class="tube-option-separator">or</span>` : ""}
+                <span class="tube-option alternative">
+                  ${getTubeVisualMarkup(group)}
+                  <span class="tube-option-copy">
+                    <span class="tube-option-label">${item.count} x ${group}</span>
+                    ${getTubeAdditiveLabel(group) ? `<span class="tube-option-additive">${getTubeAdditiveLabel(group)}</span>` : ""}
+                  </span>
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        `
+        : `
           <div class="draw-group-main">
             ${getTubeVisualMarkup(item.key)}
             <h3>${item.label}</h3>
             <span class="draw-group-count-badge">${item.count}x</span>
           </div>
-        </div>
-        ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
-      </article>
-    `)
+        `;
+
+      return `
+        <article class="draw-group-card">
+          <div class="draw-group-top">
+            ${headMarkup}
+          </div>
+          ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
+        </article>
+      `;
+    })
     .join("");
 
   const plannerNoteText = plan.manual.length
@@ -4733,7 +4768,7 @@ function shouldAutoExpandCriticalNote(testName, isSelected) {
 }
 
 function shouldPrioritizeProfilesFirst(selectedSection, normalizedQuery) {
-  return Boolean(selectedSection) || normalizedQuery === "csf";
+  return Boolean(selectedSection) || normalizedQuery === "csf" || /\bcardiac\b/.test(normalizedQuery);
 }
 
 function getFilteredTests() {
@@ -5234,8 +5269,8 @@ function bindEvents() {
 
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
-    version: "2026-03-20.51",
-    assetVersion: "20260320ay",
+    version: "2026-03-21.5",
+    assetVersion: "20260321e",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

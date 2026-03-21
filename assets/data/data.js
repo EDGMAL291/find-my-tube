@@ -934,11 +934,11 @@ const tests = [
   },
   {
     name: "NT-proBNP",
-    tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
-    specimen: "Heparinised plasma (preferred) or serum",
+    tubeColor: "Gray",
+    specimen: "Fluoride plasma",
     turnaroundTime: "4-12 hours",
     notes: "Cardiac strain/heart failure marker.",
-    borderColor: "yellow"
+    borderColor: "gray"
   },
   {
     name: "HDL Cholesterol",

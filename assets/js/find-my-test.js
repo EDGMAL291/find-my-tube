@@ -874,7 +874,7 @@
           clearStatus: false
         });
       }
-      setStatus("Add at least one symptom, sign, quick clue, or clinical concern to suggest tests.");
+      setStatus("Add at least one symptom, sign, or clinical concern to suggest tests.");
       refs.symptomsInput?.focus();
       return;
     }
@@ -1034,8 +1034,7 @@
       if (checkbox.checked) {
         if (typeof app.addTestsToPlan === "function") {
           app.addTestsToPlan([testName], {
-            replace: false,
-            openDrawPlan: true
+            replace: false
           });
         }
         setStatus(`${testName} added to Tube Plan.`);
@@ -1137,8 +1136,7 @@
 
       if (isFindMyTestPage) {
         window.requestAnimationFrame(() => {
-          refs.panel?.scrollIntoView({ behavior: "auto", block: "start" });
-          refs.symptomsInput?.focus({ preventScroll: true });
+          window.scrollTo({ top: 0, behavior: "auto" });
         });
       }
     } catch (error) {

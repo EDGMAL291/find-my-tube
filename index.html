@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260317a" />
   <link rel="shortcut icon" href="./favicon-32.png?v=20260317a" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260317a" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260320ay" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260320az" />
 </head>
 <body>
   <div class="container">
@@ -33,6 +33,7 @@
           <span>my</span>
           <span class="brand-gap"></span>
           <span>test</span>
+          <span class="find-my-test-beta-badge">Beta</span>
         </button>
       </h1>
       <p id="headerIntroText">
@@ -136,15 +137,15 @@
             </div>
 
             <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs / exam clues</label>
+              <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
               <textarea
                 id="clinicalSignsInput"
                 rows="3"
                 placeholder="e.g. pallor, jaundice, oedema, hypotension, tachycardia"
               ></textarea>
               <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add exam clues</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSignsChipList" aria-label="Common exam clues"></div>
+                <p class="clinical-workup-chip-slot-label">Quick add common signs</p>
+                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSignsChipList" aria-label="Common signs"></div>
               </div>
             </div>
 
@@ -243,7 +244,7 @@
         >
           <div class="find-my-test-launch-head">
             <div class="find-my-test-launch-copy">
-              <h3>Find My Test</h3>
+              <h3>Find My Test <span class="find-my-test-beta-badge">Beta</span></h3>
               <p>Start with symptoms, signs, date of birth and context. Review suggested tests, then build the draw plan.</p>
             </div>
             <span class="find-my-test-launch-arrow" aria-hidden="true">&#8594;</span>
@@ -355,12 +356,12 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260320ay"></script>
-  <script src="assets/js/script.js?v=20260320ay"></script>
-  <script src="assets/js/find-my-test.js?v=20260320ay"></script>
+  <script src="assets/data/data.js?v=20260321e"></script>
+  <script src="assets/js/script.js?v=20260321e"></script>
+  <script src="assets/js/find-my-test.js?v=20260321e"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-20.51";
+      const APP_VERSION = "2026-03-21.5";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -377,7 +378,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260320ay", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260321e", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
