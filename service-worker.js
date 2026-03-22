@@ -1,13 +1,13 @@
-const CACHE_NAME = "find-my-tube-v189";
+const CACHE_NAME = "find-my-tube-v190";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest?v=20260316b",
-  "./assets/css/style.css?v=20260322e",
-  "./assets/js/script.js?v=20260322d",
-  "./assets/js/find-my-test.js?v=20260322c",
-  "./assets/data/data.js?v=20260322d",
-  "./assets/data/find-my-test-map.json?v=20260322d",
+  "./assets/css/style.css?v=20260323a",
+  "./assets/js/script.js?v=20260323a",
+  "./assets/js/find-my-test.js?v=20260323a",
+  "./assets/data/data.js?v=20260323a",
+  "./assets/data/find-my-test-map.json?v=20260323a",
   "./favicon.svg",
   "./favicon-16.png",
   "./favicon-32.png",
@@ -18,6 +18,7 @@ const CORE_ASSETS = [
   "./assets/icons/icon-512.png?v=20260316b"
 ];
 
+// Pre-caches the core app shell as soon as the service worker installs.
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
@@ -25,10 +26,12 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
+// Lets the page tell a waiting service worker to activate immediately.
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
+// Clears old caches and takes control of open clients after activation.
 self.addEventListener("activate", (event) => {
   const isLocalPreview = self.location.port === "3000";
   event.waitUntil(
@@ -42,6 +45,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Serves fresh versioned assets when possible and falls back to cache offline.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 

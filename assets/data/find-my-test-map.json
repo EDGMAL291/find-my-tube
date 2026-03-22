@@ -359,6 +359,13 @@
       "field": "concern",
       "related": ["gestational-diabetes-concern"],
       "terms": ["pregnancy", "pregnant", "antenatal", "antenatal booking", "booking", "booking bloods", "prenatal", "gestational", "first antenatal visit", "first antenatal bloods", "first pregnancy bloods"]
+    },
+    {
+      "id": "psychosis-concern",
+      "label": "Psychosis",
+      "field": "concern",
+      "related": ["confusion", "encephalopathy"],
+      "terms": ["psychosis", "acute psychosis", "hallucinations", "delusions", "behavioural disturbance", "behavioral disturbance", "agitation"]
     }
   ],
   "presentations": [
@@ -408,6 +415,11 @@
           "tubeHints": ["Gray"]
         },
         {
+          "name": "Cardiac Profile",
+          "reason": "Cardiac marker support when myocardial strain or injury is part of acute decompensation.",
+          "tubeHints": ["Green", "Gold/Yellow"]
+        },
+        {
           "name": "U&E",
           "reason": "Baseline chemistry support for fluid balance and renal context.",
           "tubeHints": ["Gold/Yellow"]
@@ -443,6 +455,30 @@
         }
       ],
       "caution": "Escalate clinically first if the patient is unstable."
+    },
+    {
+      "id": "psychosis-substance",
+      "label": "Psychosis / substance screen support",
+      "summary": "Useful when psychosis, agitation, or behavioural disturbance raises substance-use concern.",
+      "match": {
+        "any": ["psychosis", "acute psychosis", "hallucinations", "delusions", "behavioural disturbance", "behavioral disturbance", "agitation", "substance-induced psychosis"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Drugs of Abuse Screen (Urine)",
+          "reason": "Toxicology support when substance exposure is part of the psychosis differential.",
+          "tubeHints": ["Urine"]
+        }
+      ],
+      "caution": "Use the local mental-health, intoxication, and emergency pathway when agitation, violence, overdose, or reduced consciousness is present."
     },
     {
       "id": "sepsis",
@@ -487,6 +523,30 @@
         }
       ],
       "caution": "Obtain cultures before antibiotics where possible and follow urgent sepsis protocol."
+    },
+    {
+      "id": "hiv-screening",
+      "label": "HIV screening support",
+      "summary": "Useful when HIV testing or HIV status screening is the main concern.",
+      "match": {
+        "any": ["hiv", "hiv test", "hiv testing", "hiv screening", "aids", "retroviral disease", "retroviral screening"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "HIV ELISA",
+          "reason": "WebMD HIV testing guidance describes blood-based HIV screening, which matches the current HIV ELISA card.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Window periods, consent, and post-exposure pathways still need local protocol."
     },
     {
       "id": "anaemia",
@@ -547,6 +607,30 @@
       "caution": "Major bleeding is an emergency and needs immediate escalation."
     },
     {
+      "id": "dvt-vte",
+      "label": "DVT / clot support",
+      "summary": "Useful when deep-vein thrombosis or venous thromboembolism is being considered.",
+      "match": {
+        "any": ["dvt", "deep vein thrombosis", "venous thromboembolism", "blood clot", "leg clot", "calf swelling", "unilateral leg swelling", "pulmonary embolism", "vte"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "XDP (D-Dimer)",
+          "reason": "WebMD DVT diagnosis guidance highlights D-dimer as a blood test used when clot is being considered.",
+          "tubeHints": ["Blue"]
+        }
+      ],
+      "caution": "High-risk DVT or PE still needs urgent imaging and the local clot pathway."
+    },
+    {
       "id": "renal-proteinuria",
       "label": "Kidney / proteinuria support",
       "summary": "Useful when oedema, frothy urine, or kidney disease is suspected.",
@@ -581,11 +665,35 @@
       "caution": "Use local nephrology and hypertension pathways for AKI, nephrotic syndrome, or severe oedema."
     },
     {
+      "id": "hypertension",
+      "label": "Hypertension support",
+      "summary": "Useful when high blood pressure or hypertension is the main concern.",
+      "match": {
+        "any": ["hypertension", "high blood pressure", "hypertensive", "elevated blood pressure", "uncontrolled blood pressure"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "U&E",
+          "reason": "WebMD high-blood-pressure testing guidance includes blood tests for electrolytes, urea, and creatinine.",
+          "tubeHints": ["Gold/Yellow"]
+        }
+      ],
+      "caution": "Severely elevated blood pressure, end-organ symptoms, or pregnancy hypertension still need urgent clinical assessment."
+    },
+    {
       "id": "diabetes",
       "label": "Hyperglycaemia / diabetes support",
       "summary": "Useful when symptomatic hyperglycaemia or diabetes is part of the question.",
       "match": {
-        "any": ["polyuria", "polydipsia", "high sugar", "hyperglycaemia", "hyperglycemia", "diabetes", "glycosuria"],
+        "any": ["polyuria", "polydipsia", "high sugar", "hyperglycaemia", "hyperglycemia", "diabetes", "prediabetes", "diabetes mellitus", "type 1 diabetes", "type 2 diabetes", "blood sugar", "glycosuria"],
         "allGroups": []
       },
       "demographics": {
@@ -685,6 +793,21 @@
           "name": "Liver Function Tests (LFT)",
           "reason": "Liver profile already listed in the catalogue.",
           "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "FBC",
+          "reason": "Baseline blood count support for infection, anaemia, and thrombocytopenia context.",
+          "tubeHints": ["Purple/Lavender"]
+        },
+        {
+          "name": "Coagulation Studies",
+          "reason": "Clotting support when liver synthetic dysfunction or bleeding risk is a concern.",
+          "tubeHints": ["Blue"]
+        },
+        {
+          "name": "U&E",
+          "reason": "Renal and electrolyte support for broader liver disease and decompensation context.",
+          "tubeHints": ["Gold/Yellow"]
         }
       ],
       "caution": "Severe jaundice, confusion, or coagulopathy needs urgent escalation."
@@ -764,9 +887,68 @@
           "name": "Amylase",
           "reason": "Additional pancreatic enzyme already available in the catalogue.",
           "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Liver Function Tests (LFT)",
+          "reason": "Helpful for biliary obstruction or gallstone-related pancreatitis context.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "FBC",
+          "reason": "Baseline blood count support for inflammatory illness severity and complications.",
+          "tubeHints": ["Purple/Lavender"]
+        },
+        {
+          "name": "CRP",
+          "reason": "Inflammatory marker support when tracking acute pancreatitis severity.",
+          "tubeHints": ["Gold/Yellow"]
         }
       ],
-      "caution": "Abdominal emergencies still need direct clinical review and imaging decisions."
+      "caution": "Abdominal emergencies still need direct clinical review and imaging decisions; escalate beyond this set if sepsis or infected necrosis is suspected."
+    },
+    {
+      "id": "ibd",
+      "label": "Crohn's / ulcerative colitis support",
+      "summary": "Useful when inflammatory bowel disease such as Crohn's disease or ulcerative colitis is being considered.",
+      "match": {
+        "any": ["crohn's disease", "crohns disease", "crohn disease", "ulcerative colitis", "ibd", "inflammatory bowel disease"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "FBC",
+          "reason": "WebMD IBD diagnosis guidance includes blood tests for anaemia and infection support.",
+          "tubeHints": ["Purple"]
+        },
+        {
+          "name": "CRP",
+          "reason": "WebMD Crohn's and ulcerative-colitis diagnosis pages both describe CRP as an inflammation marker.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "ESR",
+          "reason": "WebMD Crohn's diagnosis guidance includes ESR as part of inflammation assessment.",
+          "tubeHints": ["Purple"]
+        },
+        {
+          "name": "U&E",
+          "reason": "WebMD Crohn's diagnosis guidance includes an electrolyte panel when diarrhoea or dehydration is part of the picture.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Calprotectin (Fecal)",
+          "reason": "Added as a stool inflammation marker that fits the inflammatory bowel disease workup already carried in the catalogue.",
+          "tubeHints": ["Stool container"]
+        }
+      ],
+      "caution": "IBD diagnosis still depends on stool studies, imaging, and endoscopy through the local GI pathway."
     },
     {
       "id": "sti",
@@ -903,7 +1085,7 @@
       "label": "Inflammatory joint pain support",
       "summary": "Useful when joint pain, swelling, or morning stiffness suggests inflammatory arthritis.",
       "match": {
-        "any": ["joint pain", "joint swelling", "morning stiffness", "arthritis", "polyarthritis", "rheumatoid"],
+        "any": ["joint pain", "joint swelling", "morning stiffness", "arthritis", "polyarthritis", "rheumatoid", "rheumatoid arthritis", "rheumatoid arthritis flare"],
         "allGroups": []
       },
       "demographics": {
@@ -921,6 +1103,60 @@
         }
       ],
       "caution": "Use broader rheumatology assessment if systemic features are present."
+    },
+    {
+      "id": "lupus",
+      "label": "Lupus / SLE support",
+      "summary": "Useful when lupus or systemic lupus erythematosus is part of the differential.",
+      "match": {
+        "any": ["lupus", "sle", "systemic lupus", "systemic lupus erythematosus"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "FBC",
+          "reason": "WebMD lupus lab guidance includes CBC support when cell lines may be affected.",
+          "tubeHints": ["Purple"]
+        },
+        {
+          "name": "ANA Screen and Reflex ENA Antibodies",
+          "reason": "WebMD lupus guidance highlights ANA testing as a key laboratory entry point.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Anti-dsDNA",
+          "reason": "WebMD lupus guidance specifically lists anti-dsDNA among the core blood tests.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Complement C3",
+          "reason": "WebMD lupus guidance includes complement testing when lupus activity is being assessed.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Complement C4",
+          "reason": "WebMD lupus guidance includes complement testing when lupus activity is being assessed.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "U&E",
+          "reason": "WebMD lupus guidance includes kidney-function blood tests such as urea and creatinine.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "Protein:Creatinine Ratio (Random Urine)",
+          "reason": "WebMD lupus guidance includes urine testing for renal involvement and protein loss.",
+          "tubeHints": ["Urine Container"]
+        }
+      ],
+      "caution": "Lupus workup still needs pattern recognition, renal review, and specialist guidance where disease is systemic or active."
     },
     {
       "id": "autoimmune",

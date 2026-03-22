@@ -13,9 +13,8 @@
     dobControl: document.getElementById("clinicalDobControl"),
     dobLabel: document.getElementById("clinicalDobLabel"),
     dobInput: document.getElementById("clinicalDobInput"),
-    dobDisplayBtn: document.getElementById("clinicalDobDisplayBtn"),
-    dobAgeValue: document.getElementById("clinicalDobAgeValue"),
-    dobDateValue: document.getElementById("clinicalDobDateValue"),
+    dobPickerInput: document.getElementById("clinicalDobPickerInput"),
+    dobAssist: document.getElementById("clinicalDobAssist"),
     sexSelect: document.getElementById("clinicalSexSelect"),
     sexIcon: document.getElementById("clinicalSexIcon"),
     pregnancySelect: document.getElementById("clinicalPregnancySelect"),
@@ -25,6 +24,7 @@
     resetBtn: document.getElementById("clinicalWorkupResetBtn"),
     status: document.getElementById("clinicalWorkupStatus"),
     results: document.getElementById("clinicalWorkupResults"),
+    addAllResultsBtn: document.getElementById("addAllClinicalWorkupResultsBtn"),
     clearResultsBtn: document.getElementById("clearClinicalWorkupResultsBtn"),
     testList: document.getElementById("clinicalWorkupTestList")
   };
@@ -46,7 +46,7 @@
   const isFindMyTestPage = pageParams.get("tool") === "find-my-test";
   const MIN_PREGNANCY_AGE_YEARS = 12;
 
-  const datasetUrl = `assets/data/find-my-test-map.json?v=${app.assetVersion || "20260320n"}`;
+  const datasetUrl = `assets/data/find-my-test-map.json?v=${app.assetVersion || "20260322b"}`;
 
   // Shared text helpers keep dataset matching rules predictable.
   function escapeHtml(value) {
@@ -62,20 +62,24 @@
       .replaceAll("'", "&#39;");
   }
 
+  // Escapes reg exp.
   function escapeRegExp(value) {
     return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
+  // Normalizes this work.
   function normalize(value) {
     return typeof app.normalizeForSearch === "function"
       ? app.normalizeForSearch(value)
       : String(value || "").toLowerCase().trim();
   }
 
+  // Returns unique strings.
   function uniqueStrings(values = []) {
     return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
   }
 
+  // Joins with and.
   function joinWithAnd(values = []) {
     const items = uniqueStrings(values);
     if (!items.length) return "";
@@ -84,12 +88,14 @@
     return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
   }
 
+  // Truncates text.
   function truncateText(value, maxLength = 84) {
     const text = String(value || "").trim();
     if (!text || text.length <= maxLength) return text;
     return `${text.slice(0, maxLength - 1).trim()}...`;
   }
 
+  // Formats count.
   function formatCount(count, noun) {
     return `${count} ${noun}${count === 1 ? "" : "s"}`;
   }
@@ -99,10 +105,25 @@
     const raw = String(value || "").trim();
     if (!raw) return null;
 
-    const parts = raw.split("-").map((part) => Number.parseInt(part, 10));
-    if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return null;
+    let year;
+    let month;
+    let day;
+    const isoMatch = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    const localMatch = raw.match(/^(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{4})$/);
 
-    const [year, month, day] = parts;
+    if (isoMatch) {
+      year = Number.parseInt(isoMatch[1], 10);
+      month = Number.parseInt(isoMatch[2], 10);
+      day = Number.parseInt(isoMatch[3], 10);
+    } else if (localMatch) {
+      day = Number.parseInt(localMatch[1], 10);
+      month = Number.parseInt(localMatch[2], 10);
+      year = Number.parseInt(localMatch[3], 10);
+    } else {
+      return null;
+    }
+
+    if (![year, month, day].every((part) => Number.isFinite(part))) return null;
     const parsed = new Date(year, month - 1, day);
     if (
       parsed.getFullYear() !== year
@@ -116,6 +137,7 @@
     return parsed;
   }
 
+  // Formats date for summary.
   function formatDateForSummary(date) {
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
     return date.toLocaleDateString(undefined, {
@@ -125,6 +147,36 @@
     });
   }
 
+  // Formats date for input.
+  function formatDateForInput(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear());
+    return `${day} / ${month} / ${year}`;
+  }
+
+  // Formats date for picker.
+  function formatDateForPicker(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear());
+    return `${year}-${month}-${day}`;
+  }
+
+  // Auto-inserts DOB separators so mobile users can type digits only.
+  function formatDobDraft(value) {
+    const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+    if (!digits) return "";
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0, 2)} / ${digits.slice(2)}`;
+    return `${digits.slice(0, 2)} / ${digits.slice(2, 4)} / ${digits.slice(4)}`;
+  }
+
+  // Formats age display.
   function formatAgeDisplay(ageDays, ageMonths) {
     if (!Number.isFinite(ageDays) || ageDays < 0) return "";
     if (ageDays <= 28) return formatCount(ageDays, "day");
@@ -134,56 +186,57 @@
     return formatCount(Math.floor(ageMonths / 12), "year");
   }
 
+  // Renders DOB field.
   function renderDobField() {
-    if (!refs.dobControl || !refs.dobInput || !refs.dobDisplayBtn) return;
+    if (!refs.dobControl || !refs.dobInput) return;
 
     const dobDetails = getDobDetails(refs.dobInput.value || "");
+    const hasRawValue = Boolean(String(refs.dobInput.value || "").trim());
     const hasUsableDob = Boolean(dobDetails.value) && !dobDetails.isFuture && Boolean(dobDetails.date);
+    if (refs.dobPickerInput) refs.dobPickerInput.max = formatDateForPicker(new Date());
 
     refs.dobControl.classList.toggle("has-value", hasUsableDob);
     refs.dobControl.classList.toggle("is-empty", !hasUsableDob);
+    refs.dobControl.classList.toggle("is-invalid", hasRawValue && !hasUsableDob);
+    refs.dobInput.setAttribute("aria-invalid", hasRawValue && !hasUsableDob ? "true" : "false");
 
     if (!hasUsableDob) {
       if (refs.dobLabel) refs.dobLabel.textContent = "Date of birth";
-      if (refs.dobAgeValue) refs.dobAgeValue.textContent = "";
-      if (refs.dobAgeValue) refs.dobAgeValue.textContent = "DD / MM / YYYY";
-      if (refs.dobDateValue) refs.dobDateValue.textContent = "Tap to choose date";
+      if (refs.dobPickerInput) refs.dobPickerInput.value = "";
+      if (refs.dobAssist) {
+        refs.dobAssist.textContent = dobDetails.isFuture
+          ? "Date of birth cannot be in the future."
+          : hasRawValue
+            ? "Use DD / MM / YYYY."
+            : "";
+      }
       return;
     }
 
-    if (refs.dobLabel) refs.dobLabel.textContent = "Age";
-    if (refs.dobAgeValue) {
-      refs.dobAgeValue.textContent = dobDetails.ageDisplay
+    if (refs.dobLabel) refs.dobLabel.textContent = "Date of birth";
+    if (refs.dobPickerInput && dobDetails.date) {
+      refs.dobPickerInput.value = formatDateForPicker(dobDetails.date);
+    }
+    if (refs.dobAssist) {
+      refs.dobAssist.textContent = dobDetails.ageDisplay
         ? `${dobDetails.ageDisplay} old`
         : "Age unavailable";
     }
-    if (refs.dobDateValue) {
-      refs.dobDateValue.textContent = "";
-    }
   }
 
-  // Prefer the native date picker when available, but fall back to focus/click for older browsers.
-  function openDobEditor() {
-    if (!refs.dobControl || !refs.dobInput) return;
-
-    if (typeof refs.dobInput.showPicker === "function") {
-      try {
-        refs.dobInput.showPicker();
-        return;
-      } catch (error) {
-        // Ignore unsupported programmatic picker calls and fall through.
-      }
-    }
-
-    refs.dobInput.focus({ preventScroll: true });
-    refs.dobInput.click();
-  }
-
+  // Checks whether pregnancy locked by demographics.
   function isPregnancyLockedByDemographics(dobDetails, sexValue) {
     if (sexValue === "male") return true;
     return Number.isFinite(dobDetails?.ageYears) && dobDetails.ageYears < MIN_PREGNANCY_AGE_YEARS;
   }
 
+  // Synchronizes default select styling.
+  function syncContextSelectStates() {
+    refs.sexSelect?.classList.toggle("clinical-workup-select-default", (refs.sexSelect.value || "unspecified") === "unspecified");
+    refs.pregnancySelect?.classList.toggle("clinical-workup-select-default", (refs.pregnancySelect.value || "unknown") === "unknown");
+  }
+
+  // Synchronizes pregnancy field.
   function syncPregnancyField() {
     if (!refs.pregnancySelect) return;
 
@@ -202,6 +255,7 @@
         ? "Pregnancy is not applicable when sex is male."
         : `Pregnancy is locked to not applicable below age ${MIN_PREGNANCY_AGE_YEARS}.`;
       state.pregnancyWasAutoLocked = true;
+      syncContextSelectStates();
       return;
     }
 
@@ -213,8 +267,10 @@
     }
 
     state.pregnancyWasAutoLocked = false;
+    syncContextSelectStates();
   }
 
+  // Gets DOB details.
   function getDobDetails(value) {
     const dob = parseDateInput(value);
     if (!dob) {
@@ -273,44 +329,52 @@
     return state.dataset?.quickPickById?.[id] || null;
   }
 
+  // Gets selected quick pick labels.
   function getSelectedQuickPickLabels() {
     return Array.from(state.selectedQuickPickIds)
       .map((id) => getQuickPickById(id)?.label || "")
       .filter(Boolean);
   }
 
+  // Gets selected quick pick terms.
   function getSelectedQuickPickTerms() {
     return Array.from(state.selectedQuickPickIds).flatMap((id) => getQuickPickById(id)?.terms || []);
   }
 
+  // Gets quick pick field.
   function getQuickPickField(quickPick) {
     return quickPick?.field === "signs" || quickPick?.field === "concern"
       ? quickPick.field
       : "symptoms";
   }
 
+  // Gets quick pick input.
   function getQuickPickInput(field) {
     if (field === "signs") return refs.signsInput;
     if (field === "concern") return refs.concernInput;
     return refs.symptomsInput;
   }
 
+  // Gets quick pick list.
   function getQuickPickList(field) {
     if (field === "signs") return refs.signsChipList;
     if (field === "concern") return refs.concernChipList;
     return refs.symptomsChipList;
   }
 
+  // Gets quick pick field label.
   function getQuickPickFieldLabel(field) {
     if (field === "signs") return "signs";
     if (field === "concern") return "concerns";
     return "symptoms";
   }
 
+  // Gets quick pick text.
   function getQuickPickText(quickPick) {
     return String(quickPick?.insertText || quickPick?.label || "").trim();
   }
 
+  // Gets quick pick tokens.
   function getQuickPickTokens(value) {
     return uniqueStrings(
       String(value || "")
@@ -496,6 +560,7 @@
     return autoMatchedIds;
   }
 
+  // Appends quick pick text.
   function appendQuickPickText(input, text) {
     if (!input || !text) return;
 
@@ -507,6 +572,7 @@
     input.value = currentParts.join(", ");
   }
 
+  // Removes quick pick text.
   function removeQuickPickText(input, text) {
     if (!input || !text) return;
 
@@ -516,6 +582,7 @@
     input.value = nextParts.join(", ");
   }
 
+  // Synchronizes quick pick selection from inputs.
   function syncQuickPickSelectionFromInputs() {
     const nextSelectedIds = new Set();
 
@@ -537,15 +604,18 @@
     }
   }
 
+  // Sets status.
   function setStatus(message = "") {
     if (!refs.status) return;
     refs.status.textContent = String(message || "").trim();
   }
 
+  // Gets field quick picks.
   function getFieldQuickPicks(field) {
     return (state.dataset?.quickPicks || []).filter((quickPick) => getQuickPickField(quickPick) === field);
   }
 
+  // Gets focused quick picks for field.
   function getFocusedQuickPicksForField(field, fieldQuickPicks) {
     const selectedGlobalIds = Array.from(state.selectedQuickPickIds);
     if (!selectedGlobalIds.length) {
@@ -592,6 +662,7 @@
     };
   }
 
+  // Orders quick picks.
   function orderQuickPicks(fieldQuickPicks, selectedIds = new Set(), relatedIds = new Set()) {
     return fieldQuickPicks
       .slice()
@@ -603,6 +674,7 @@
       });
   }
 
+  // Renders quick picks.
   function renderQuickPicks() {
     ["symptoms", "signs", "concern"].forEach((field) => {
       const list = getQuickPickList(field);
@@ -653,6 +725,7 @@
     });
   }
 
+  // Clears inputs.
   function clearInputs() {
     state.selectedQuickPickIds.clear();
     state.expandedQuickPickFields.clear();
@@ -664,11 +737,14 @@
     if (refs.symptomsInput) refs.symptomsInput.value = "";
     if (refs.signsInput) refs.signsInput.value = "";
     if (refs.concernInput) refs.concernInput.value = "";
+    if (refs.dobPickerInput) refs.dobPickerInput.value = "";
     renderDobField();
     syncPregnancyField();
+    syncContextSelectStates();
     renderQuickPicks();
   }
 
+  // Clears selection UI.
   function clearSelectionUi() {
     if (refs.testList) {
       refs.testList.innerHTML = "";
@@ -712,6 +788,7 @@
     };
   }
 
+  // Formats sex label.
   function formatSexLabel(value) {
     if (value === "female") return "Female";
     if (value === "male") return "Male";
@@ -719,6 +796,7 @@
     return "";
   }
 
+  // Synchronizes sex icon.
   function syncSexIcon() {
     if (!refs.sexIcon) return;
 
@@ -732,6 +810,7 @@
           : "⚥";
   }
 
+  // Checks whether normalized phrase.
   function hasNormalizedPhrase(haystack, phrase) {
     const normalizedHaystack = normalize(haystack);
     const normalizedPhrase = normalize(phrase);
@@ -741,6 +820,7 @@
     return pattern.test(normalizedHaystack);
   }
 
+  // Checks whether pregnancy context.
   function hasPregnancyContext(input) {
     if (!input) return false;
 
@@ -775,6 +855,7 @@
     return true;
   }
 
+  // Evaluates presentation.
   function evaluatePresentation(presentation, input) {
     if (!passesDemographics(presentation, input)) return null;
 
@@ -827,21 +908,7 @@
     };
   }
 
-  // Combine matched presentations with the main catalogue so suggested tests stay real and selectable.
-  function getTubeLabel(test, tubeHints = []) {
-    const tubeGroups = typeof app.getTubeGroups === "function"
-      ? app.getTubeGroups(test?.tubeColor || "")
-      : [];
-    if (tubeGroups.length) return tubeGroups.join(" / ");
-
-    const fallback = uniqueStrings([
-      ...tubeHints,
-      String(test?.tubeColor || "").trim()
-    ]);
-
-    return fallback[0] || "Manual review";
-  }
-
+  // Builds tags.
   function buildTags(input, matchedPresentations, suggestedTests) {
     const tags = [];
 
@@ -849,13 +916,33 @@
     if (formatSexLabel(input.sex)) tags.push(formatSexLabel(input.sex));
     if (input.pregnancy === "pregnant") tags.push("Pregnancy context");
     tags.push(...input.selectedQuickPickLabels);
-    if (matchedPresentations.length) tags.push(formatCount(matchedPresentations.length, "matched presentation"));
-    if (suggestedTests.length) tags.push(formatCount(suggestedTests.length, "suggested test"));
 
     return uniqueStrings(tags).slice(0, 8);
   }
 
+  // Builds summary.
   function buildSummary(input, matchedPresentations, suggestedTests) {
+    if (suggestedTests.length) {
+      const summaryParts = [];
+      const subjectParts = [];
+      const sexLabel = formatSexLabel(input.sex);
+      const suspectedLabel = matchedPresentations[0]?.label || "A matching presentation";
+
+      if (input.ageDisplay) subjectParts.push(`${input.ageDisplay} old`);
+      if (sexLabel) subjectParts.push(sexLabel.toLowerCase());
+      if (input.pregnancy === "pregnant") subjectParts.push("pregnant");
+      if (input.symptoms) summaryParts.push(truncateText(input.symptoms, 48));
+      if (input.signs) summaryParts.push(truncateText(input.signs, 48));
+      if (input.concern) summaryParts.push(truncateText(input.concern, 48));
+
+      const subject = subjectParts.join(" ") || "Patient";
+      if (summaryParts.length) {
+        return `${subject} presenting with ${joinWithAnd(summaryParts)}. ${suspectedLabel} is suspected.`;
+      }
+
+      return `${subject}. ${suspectedLabel} is suspected.`;
+    }
+
     const summaryParts = [];
 
     if (input.dobSummaryLabel) summaryParts.push(input.dobSummaryLabel);
@@ -869,16 +956,10 @@
       ? `Based on ${joinWithAnd(summaryParts)}, `
       : "";
 
-    if (suggestedTests.length) {
-      const matchedCount = matchedPresentations.length
-        ? `${formatCount(matchedPresentations.length, "matched presentation")} found in the dataset. `
-        : "";
-      return `${intro}${matchedCount}Select the most relevant tests below to preview the draw plan and send them into Tube Plan.`;
-    }
-
     return `${intro}there is not a strong direct match in the current catalogue yet. Add a more specific symptom, sign, or concern, or use the main search by test name.`;
   }
 
+  // Builds output.
   function buildOutput(input) {
     const matchedPresentations = (state.dataset?.presentations || [])
       .map((presentation) => evaluatePresentation(presentation, input))
@@ -897,13 +978,11 @@
         const existingEntry = suggestionMap.get(testEntry.name) || {
           name: testEntry.name,
           reasons: [],
-          matchedBy: [],
-          tubeHints: []
+          matchedBy: []
         };
 
         existingEntry.reasons.push(testEntry.reason || presentation.summary || "");
         existingEntry.matchedBy.push(presentation.label);
-        existingEntry.tubeHints.push(...(Array.isArray(testEntry.tubeHints) ? testEntry.tubeHints : []));
         suggestionMap.set(testEntry.name, existingEntry);
       });
     });
@@ -924,9 +1003,7 @@
           name,
           test: resolvedTest,
           reasons: uniqueStrings(suggestion.reasons),
-          matchedBy: uniqueStrings(suggestion.matchedBy),
-          tubeHints: uniqueStrings(suggestion.tubeHints),
-          tubeLabel: getTubeLabel(resolvedTest, suggestion.tubeHints)
+          matchedBy: uniqueStrings(suggestion.matchedBy)
         };
       })
       .filter(Boolean);
@@ -942,7 +1019,7 @@
       tags: buildTags(input, matchedPresentations, suggestedTests),
       tests: suggestedTests.map((item) => item.test),
       suggestedTests,
-      matchedRules: matchedPresentations.map((presentation) => ({
+      matchedRules: suggestedTests.length ? [] : matchedPresentations.map((presentation) => ({
         label: "Matched presentation",
         title: presentation.label,
         rationale: presentation.summary || "Matched to the current Find My Test dataset.",
@@ -966,44 +1043,73 @@
       .map((item) => {
         const isChecked = activePlanSelection.has(item.name);
         const alreadyInPlan = activePlanSelection.has(item.name);
-        const detailLine = uniqueStrings([
-          item.reasons[0] || item.test.clinicalUse || item.test.notes || "",
-          item.matchedBy.length ? `Matched from ${item.matchedBy.slice(0, 2).join(" and ")}` : "",
-          alreadyInPlan ? "Added to Tube Plan" : ""
-        ]).join(". ");
+        const stateLabel = alreadyInPlan ? "In Tube Plan" : "Tap to add to Tube Plan";
 
         return `
-          <label class="clinical-workup-test-option${isChecked ? " is-selected" : ""}">
-            <input
-              type="checkbox"
-              data-find-my-test-option="${escapeHtml(item.name)}"
-              ${isChecked ? "checked" : ""}
-            />
+          <button
+            type="button"
+            class="clinical-workup-test-option${isChecked ? " is-selected" : ""}"
+            data-find-my-test-option="${escapeHtml(item.name)}"
+            aria-pressed="${isChecked ? "true" : "false"}"
+          >
             <div class="clinical-workup-test-copy">
               <div class="clinical-workup-test-head">
                 <p class="clinical-workup-test-name">${escapeHtml(item.name)}</p>
-                <span class="clinical-workup-test-tube">${escapeHtml(item.tubeLabel)}</span>
+                <span class="clinical-workup-test-state">${stateLabel}</span>
               </div>
               <p class="clinical-workup-test-summary">${escapeHtml(item.test.clinicalUse || item.test.notes || item.test.specimen || "Suggested from the current catalogue.")}</p>
-              <p class="clinical-workup-test-reason">${escapeHtml(detailLine)}</p>
             </div>
-          </label>
+          </button>
         `;
       })
       .join("");
+
+    syncResultsActionButtons(activePlanSelection);
   }
 
+  // Returns suggested test names not yet in Tube Plan.
+  function getPendingSuggestedTestNames(activePlanSelection = new Set()) {
+    return (state.output?.suggestedTests || [])
+      .map((item) => item.name)
+      .filter((name) => name && !activePlanSelection.has(name));
+  }
+
+  // Keeps the results action buttons in sync with the current suggestions state.
+  function syncResultsActionButtons(activePlanSelection = null) {
+    if (!refs.addAllResultsBtn) return;
+
+    const suggestedTests = state.output?.suggestedTests || [];
+    const selection = activePlanSelection instanceof Set
+      ? activePlanSelection
+      : new Set(
+        typeof app.getSelectedTestNames === "function"
+          ? app.getSelectedTestNames()
+          : []
+      );
+    const pendingTestNames = getPendingSuggestedTestNames(selection);
+    const hasSuggestions = suggestedTests.length > 0;
+
+    refs.addAllResultsBtn.hidden = !hasSuggestions;
+    refs.addAllResultsBtn.disabled = !pendingTestNames.length;
+    refs.addAllResultsBtn.textContent = pendingTestNames.length
+      ? "Add all to Tube Plan"
+      : "All added";
+  }
+
+  // Renders output.
   function renderOutput(output) {
     state.output = output;
 
     if (!output) {
       clearSelectionUi();
+      syncResultsActionButtons();
       return;
     }
 
     renderSuggestedTests();
   }
 
+  // Applies output.
   function applyOutput(output) {
     if (typeof app.setFindMyTestSuggestions === "function") {
       app.setFindMyTestSuggestions(output);
@@ -1011,6 +1117,7 @@
     renderOutput(output);
   }
 
+  // Scrolls to results.
   function scrollToResults() {
     const target = refs.results && !refs.results.hidden
       ? refs.results
@@ -1025,6 +1132,7 @@
     });
   }
 
+  // Clears find my test UI.
   function clearFindMyTestUi({ clearInputsToo = false, clearStatusToo = false } = {}) {
     state.output = null;
     clearSelectionUi();
@@ -1046,6 +1154,7 @@
     }
   }
 
+  // Runs find my test.
   function runFindMyTest() {
     if (!state.dataset) {
       setStatus("Find My Test is still loading. Please try again in a moment.");
@@ -1213,6 +1322,10 @@
     });
 
     refs.resetBtn?.addEventListener("click", () => {
+      // Reset is treated as a fresh-patient action, so clear the shared Tube Plan too.
+      if (typeof app.clearTubePlan === "function") {
+        app.clearTubePlan();
+      }
       clearFindMyTestUi({ clearInputsToo: true, clearStatusToo: true });
     });
 
@@ -1220,14 +1333,41 @@
       clearFindMyTestUi({ clearInputsToo: false, clearStatusToo: true });
     });
 
-    refs.testList.addEventListener("change", (event) => {
-      const checkbox = event.target.closest("[data-find-my-test-option]");
-      if (!checkbox) return;
+    refs.addAllResultsBtn?.addEventListener("click", () => {
+      const pendingTestNames = getPendingSuggestedTestNames(
+        new Set(
+          typeof app.getSelectedTestNames === "function"
+            ? app.getSelectedTestNames()
+            : []
+        )
+      );
 
-      const testName = checkbox.getAttribute("data-find-my-test-option") || "";
+      if (!pendingTestNames.length) {
+        setStatus("All suggested tests are already in Tube Plan.");
+        syncResultsActionButtons();
+        return;
+      }
+
+      if (typeof app.addTestsToPlan === "function") {
+        app.addTestsToPlan(pendingTestNames, {
+          replace: false
+        });
+      }
+
+      setStatus(`${pendingTestNames.length === 1 ? "1 suggested test added" : `${pendingTestNames.length} suggested tests added`} to Tube Plan.`);
+      renderSuggestedTests();
+    });
+
+    refs.testList.addEventListener("click", (event) => {
+      const testButton = event.target.closest("[data-find-my-test-option]");
+      if (!testButton) return;
+
+      const testName = testButton.getAttribute("data-find-my-test-option") || "";
       if (!testName) return;
 
-      if (checkbox.checked) {
+      const isSelected = testButton.getAttribute("aria-pressed") === "true";
+
+      if (!isSelected) {
         if (typeof app.addTestsToPlan === "function") {
           app.addTestsToPlan([testName], {
             replace: false
@@ -1262,6 +1402,7 @@
               : [];
 
         if (field === refs.dobInput) {
+          refs.dobInput.value = formatDobDraft(refs.dobInput.value || "");
           renderDobField();
         }
         if (field === refs.dobInput || field === refs.sexSelect) {
@@ -1280,6 +1421,10 @@
     });
 
     refs.dobInput?.addEventListener("blur", () => {
+      const dobDetails = getDobDetails(refs.dobInput?.value || "");
+      if (dobDetails.date && !dobDetails.isFuture) {
+        refs.dobInput.value = formatDateForInput(dobDetails.date);
+      }
       renderDobField();
     });
 
@@ -1303,20 +1448,25 @@
         flashAutoMatchedQuickPicks(autoMatchedIds);
       });
     });
-
-    refs.dobDisplayBtn?.addEventListener("click", () => {
-      openDobEditor();
+    refs.dobPickerInput?.addEventListener("change", () => {
+      const selectedDate = parseDateInput(refs.dobPickerInput?.value || "");
+      refs.dobInput.value = selectedDate ? formatDateForInput(selectedDate) : "";
+      renderDobField();
+      syncPregnancyField();
+      setStatus("");
     });
 
     refs.sexSelect?.addEventListener("change", () => {
       syncPregnancyField();
       syncSexIcon();
+      syncContextSelectStates();
     });
 
     refs.pregnancySelect?.addEventListener("change", () => {
       if (!refs.pregnancySelect.disabled) {
         state.lastUnlockedPregnancyValue = refs.pregnancySelect.value || "unknown";
       }
+      syncContextSelectStates();
     });
 
     document.addEventListener("findmytest:clear", (event) => {
@@ -1351,12 +1501,10 @@
 
       const rawDataset = await response.json();
       state.dataset = hydrateDataset(rawDataset);
-      if (refs.dobInput) {
-        refs.dobInput.max = new Date().toISOString().slice(0, 10);
-      }
       renderDobField();
       syncSexIcon();
       syncPregnancyField();
+      syncContextSelectStates();
       syncQuickPickSelectionFromInputs();
       renderQuickPicks();
       setStatus("");

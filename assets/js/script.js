@@ -79,6 +79,31 @@ const GOLD_VOLUME_PROFILE_NAMES = new Set([
   "Lipid Profile / Lipogram", // 6
   "Fe Studies" // 9
 ]);
+const GOLD_HORMONE_OR_ENZYME_NAME_HINTS = [
+  "bhcg",
+  "beta hcg",
+  "free t4",
+  "free t3",
+  "tsh",
+  "insulin",
+  "prolactin",
+  "progesterone",
+  "estradiol",
+  "cortisol",
+  "testosterone",
+  "shbg",
+  "fsh",
+  "lh",
+  "17 oh progesterone",
+  "amylase",
+  "lipase",
+  "alt",
+  "ast",
+  "ggt",
+  "alp",
+  "ck total",
+  "ck mb"
+];
 const OGTT_MULTI_DRAW_TESTS = new Set([
   "OGTT (fasting, 1hr, 2hr)",
   "OGTT Pregnancy (fasting, 1hr, 2hr)"
@@ -108,7 +133,54 @@ const APP_HOME_TITLE = "Find My Tube";
 const FIND_MY_TEST_PAGE_TITLE = "Find My Test";
 const APP_HOME_HEADER_COPY = "Find the right test, the right tube and why it's ordered.";
 const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
+const THEME_COLOR_BY_MODE = {
+  light: "#0f766e",
+  dark: "#122028"
+};
 const appleMobileAppTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+const appleMobileStatusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+const systemThemeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+let currentTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+
+// Gets system theme.
+function getSystemTheme() {
+  return systemThemeMediaQuery.matches ? "dark" : "light";
+}
+
+// Updates theme meta.
+function updateThemeMeta(theme) {
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute("content", THEME_COLOR_BY_MODE[theme] || THEME_COLOR_BY_MODE.light);
+  }
+
+  if (appleMobileStatusBarMeta) {
+    appleMobileStatusBarMeta.setAttribute("content", theme === "dark" ? "black-translucent" : "default");
+  }
+}
+
+// Applies theme.
+function applyTheme(theme) {
+  currentTheme = theme === "dark" ? "dark" : "light";
+  document.documentElement.dataset.theme = currentTheme;
+  updateThemeMeta(currentTheme);
+}
+
+// Handles system theme change.
+function handleSystemThemeChange() {
+  applyTheme(getSystemTheme());
+}
+
+// Initializes theme.
+function initTheme() {
+  applyTheme(getSystemTheme());
+
+  if (typeof systemThemeMediaQuery.addEventListener === "function") {
+    systemThemeMediaQuery.addEventListener("change", handleSystemThemeChange);
+  } else if (typeof systemThemeMediaQuery.addListener === "function") {
+    systemThemeMediaQuery.addListener(handleSystemThemeChange);
+  }
+}
 
 document.body.classList.toggle("find-my-test-page", isFindMyTestPage);
 document.title = isFindMyTestPage ? FIND_MY_TEST_PAGE_TITLE : APP_HOME_TITLE;
@@ -119,6 +191,7 @@ if (appleMobileAppTitleMeta) {
   appleMobileAppTitleMeta.setAttribute("content", isFindMyTestPage ? FIND_MY_TEST_PAGE_TITLE : APP_HOME_TITLE);
 }
 
+// Dispatches find my tube event.
 function dispatchFindMyTubeEvent(name, detail = {}) {
   document.dispatchEvent(new CustomEvent(name, { detail }));
 }
@@ -197,6 +270,7 @@ const legalContentById = {
   }
 };
 
+// Sets results info.
 function setResultsInfo(text) {
   if (!resultsInfo) return;
   const message = String(text || "");
@@ -205,6 +279,7 @@ function setResultsInfo(text) {
   updateResultsToolbar();
 }
 
+// Updates results toolbar.
 function updateResultsToolbar() {
   if (!resultsToolbar) return;
 
@@ -213,6 +288,7 @@ function updateResultsToolbar() {
   updateBackToTopVisibility();
 }
 
+// Updates back to top visibility.
 function updateBackToTopVisibility() {
   if (!resultsBackToTopBtn) return;
 
@@ -251,6 +327,7 @@ function showSelectionNotice(message) {
   }, 2600);
 }
 
+// Checks whether renderable element.
 function isRenderableElement(element) {
   if (!element || element.hidden) return false;
   const style = window.getComputedStyle(element);
@@ -259,12 +336,14 @@ function isRenderableElement(element) {
   return rect.width > 0 && rect.height > 0;
 }
 
+// Gets add to plan animation target.
 function getAddToPlanAnimationTarget() {
   if (isRenderableElement(selectionCartBar)) return selectionCartBar;
   if (isRenderableElement(openDrawPlannerBtn)) return openDrawPlannerBtn;
   return null;
 }
 
+// Pulses plan target.
 function pulsePlanTarget(target) {
   if (!target) return;
   target.classList.remove("plan-target-catch");
@@ -275,10 +354,12 @@ function pulsePlanTarget(target) {
   }, { once: true });
 }
 
+// Gets plan animation tube group.
 function getPlanAnimationTubeGroup(tubeColorValue) {
   return getTubeGroups(tubeColorValue)[0] || "";
 }
 
+// Animates add to plan feedback.
 function animateAddToPlanFeedback({ sourceRect, tubeColorValue }) {
   if (!sourceRect) return;
 
@@ -360,6 +441,7 @@ function animateAddToPlanFeedback({ sourceRect, tubeColorValue }) {
   });
 }
 
+// Dismisses rack hint.
 function dismissRackHint() {
   if (hasDismissedRackHint) return;
   hasDismissedRackHint = true;
@@ -370,6 +452,7 @@ function dismissRackHint() {
   }
 }
 
+// Gets history state for section.
 function getHistoryStateForSection(sectionId = "") {
   if (sectionId && sectionMeta[sectionId]) {
     const browseId = getActiveBrowseGroup(sectionId);
@@ -379,6 +462,7 @@ function getHistoryStateForSection(sectionId = "") {
   return { view: "home" };
 }
 
+// Synchronizes history state.
 function syncHistoryState(sectionId = "", replace = false) {
   if (!window.history || typeof window.history.pushState !== "function") return;
 
@@ -395,12 +479,14 @@ function syncHistoryState(sectionId = "", replace = false) {
   window.history[method](nextState, "", currentUrl);
 }
 
+// Updates search clear button.
 function updateSearchClearButton() {
   if (!searchInput || !searchClearBtn) return;
   const hasQuery = searchInput.value.trim().length > 0;
   searchClearBtn.hidden = !hasQuery;
 }
 
+// Refreshes search placeholder.
 function refreshSearchPlaceholder() {
   if (!searchInput) return;
   if (searchInput.value.trim()) return;
@@ -409,6 +495,7 @@ function refreshSearchPlaceholder() {
     : SEARCH_PLACEHOLDER_HINT;
 }
 
+// Scrolls home viewport to top.
 function scrollHomeViewportToTop() {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.requestAnimationFrame(() => {
@@ -420,6 +507,7 @@ function scrollHomeViewportToTop() {
   });
 }
 
+// Navigates home.
 function goHome() {
   if (isFindMyTestPage) {
     window.location.assign(window.location.pathname);
@@ -435,6 +523,7 @@ function goHome() {
   scrollHomeViewportToTop();
 }
 
+// Handles find my test header action.
 function handleFindMyTestHeaderAction() {
   clearClinicalWorkupOutput({ preserveInputs: false, rerenderCards: true, clearStatus: true });
   clinicalWorkupPanel?.scrollIntoView({
@@ -443,6 +532,7 @@ function handleFindMyTestHeaderAction() {
   });
 }
 
+// Checks whether scroll search field into view.
 function shouldScrollSearchFieldIntoView(target) {
   if (!target || typeof target.getBoundingClientRect !== "function") return true;
 
@@ -455,6 +545,7 @@ function shouldScrollSearchFieldIntoView(target) {
   return rect.top < topMargin || rect.bottom > viewportHeight - bottomMargin;
 }
 
+// Focuses main search field.
 function focusMainSearchField({ scroll = "always" } = {}) {
   if (!searchInput) return;
 
@@ -463,6 +554,7 @@ function focusMainSearchField({ scroll = "always" } = {}) {
   const target = searchInput.closest(".search-box") || searchInput;
   const shouldScroll = scroll === "always"
     || (scroll === "if-needed" && shouldScrollSearchFieldIntoView(target));
+  // Focuses input.
   const focusInput = () => {
     const cursorEnd = searchInput.value.length;
     searchInput.focus({ preventScroll: true });
@@ -493,6 +585,7 @@ function focusMainSearchField({ scroll = "always" } = {}) {
   });
 }
 
+// Scrolls to results top.
 function scrollToResultsTop() {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.requestAnimationFrame(() => {
@@ -503,6 +596,7 @@ function scrollToResultsTop() {
   });
 }
 
+// Checks whether preserve search focus on mobile.
 function shouldPreserveSearchFocusOnMobile() {
   return Boolean(
     searchInput &&
@@ -511,6 +605,7 @@ function shouldPreserveSearchFocusOnMobile() {
   );
 }
 
+// Restores search focus without scroll.
 function restoreSearchFocusWithoutScroll() {
   if (!searchInput) return;
   const cursorEnd = searchInput.value.length;
@@ -520,6 +615,7 @@ function restoreSearchFocusWithoutScroll() {
   }
 }
 
+// Clears search for next plan entry.
 function clearSearchForNextPlanEntry() {
   if (!searchInput) return;
   if (!searchInput.value.trim()) return;
@@ -890,40 +986,49 @@ const sectionBrowseTitleById = {
   immunology: "Serology Groups"
 };
 
+// Gets section icon markup.
 function getSectionIconMarkup(groupId) {
   return sectionIconById[groupId] || sectionIconById.general;
 }
 
+// Checks whether section browse groups.
 function hasSectionBrowseGroups(sectionId = activeSectionGroup) {
   return Boolean(sectionBrowseGroups[sectionId]?.length);
 }
 
+// Gets active browse group.
 function getActiveBrowseGroup(sectionId = activeSectionGroup) {
   return activeBrowseGroupBySection[sectionId] || "";
 }
 
+// Gets active browse subsections.
 function getActiveBrowseSubsections(sectionId = activeSectionGroup) {
   const activeBrowseGroup = getActiveBrowseGroup(sectionId);
   return sectionBrowseGroupById[sectionId]?.[activeBrowseGroup]?.subsections || [];
 }
 
+// Gets active browse group label.
 function getActiveBrowseGroupLabel(sectionId = activeSectionGroup) {
   const activeBrowseGroup = getActiveBrowseGroup(sectionId);
   return sectionBrowseGroupById[sectionId]?.[activeBrowseGroup]?.label || "";
 }
 
+// Checks whether browse overview visible.
 function isBrowseOverviewVisible(sectionId = activeSectionGroup, query = searchInput?.value || "") {
   return hasSectionBrowseGroups(sectionId) && !String(query || "").trim() && !getActiveBrowseGroup(sectionId);
 }
 
+// Checks whether keep pre search panel visible.
 function shouldKeepPreSearchPanelVisible(sectionId = activeSectionGroup, query = searchInput?.value || "") {
   return isBrowseOverviewVisible(sectionId, query);
 }
 
+// Checks whether clinical workup state.
 function hasClinicalWorkupState() {
   return !isFindMyTestPage && Boolean(clinicalWorkupOutput);
 }
 
+// Checks whether results view active.
 function isResultsViewActive(sectionId = activeSectionGroup, query = searchInput?.value || "") {
   if (String(query || "").trim()) return true;
   if (!sectionId && hasClinicalWorkupState()) return true;
@@ -931,6 +1036,7 @@ function isResultsViewActive(sectionId = activeSectionGroup, query = searchInput
   return !isBrowseOverviewVisible(sectionId, query);
 }
 
+// Gets results context label.
 function getResultsContextLabel(sectionId = activeSectionGroup) {
   if (!sectionId || !sectionMeta[sectionId]) return "";
 
@@ -939,6 +1045,7 @@ function getResultsContextLabel(sectionId = activeSectionGroup) {
   return browseLabel ? `${sectionLabel}: ${browseLabel}` : sectionLabel;
 }
 
+// Updates section context bar.
 function updateSectionContextBar() {
   if (!sectionContextBar || !sectionContextBackBtn || !sectionContextLabel) return;
 
@@ -1493,7 +1600,16 @@ const aliasByName = {
     "HSV 2",
     "CSF HSV-2 PCR"
   ],
-  "D-Dimer": ["D dimer"],
+  "XDP (D-Dimer)": [
+    "D",
+    "DD",
+    "Dimer",
+    "D-Dimer",
+    "D dimer",
+    "XDP",
+    "XDP D-Dimer",
+    "XDP D dimer"
+  ],
   "Prothrombin Time (PT)": ["PT"],
   "Partial Thromboplastin Time (PTT)": ["APTT", "aPTT"]
 };
@@ -1927,10 +2043,12 @@ function normalizeForSearch(value) {
     .trim();
 }
 
+// Escapes reg exp.
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Escapes HTML.
 function escapeHtml(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -1940,6 +2058,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+// Normalizes turnaround time.
 function normalizeTurnaroundTime(value) {
   const raw = String(value || "").trim();
   if (!raw) return "N/A";
@@ -1958,6 +2077,7 @@ function normalizeTurnaroundTime(value) {
     .replace(/\b(\d+)\s*d\b/gi, (_, n) => `${n} ${Number(n) === 1 ? "day" : "days"}`);
 }
 
+// Normalizes tube color.
 function normalizeTubeColor(value) {
   const map = {
     grey: "Gray",
@@ -1999,6 +2119,7 @@ const tubeGroupPatternEntries = [
   { key: "Black", pattern: /\bblack\b/ }
 ];
 
+// Gets tube groups.
 function getTubeGroups(tubeColorValue) {
   const text = String(tubeColorValue || "").toLowerCase();
   const orderedMatches = tubeGroupPatternEntries
@@ -2018,6 +2139,7 @@ function getTubeGroups(tubeColorValue) {
   return groups;
 }
 
+// Gets tube swatch color.
 function getTubeSwatchColor(tubeGroup) {
   const swatch = {
     Tan: "#c8a37a",
@@ -2038,6 +2160,7 @@ function getTubeSwatchColor(tubeGroup) {
   return swatch[tubeGroup] || "#94a3b8";
 }
 
+// Gets tube additive label.
 function getTubeAdditiveLabel(tubeGroup) {
   const additiveByGroup = {
     Tan: "Sterile",
@@ -2058,6 +2181,7 @@ function getTubeAdditiveLabel(tubeGroup) {
   return additiveByGroup[tubeGroup] || "";
 }
 
+// Gets tube icon modifier class.
 function getTubeIconModifierClass(tubeGroup) {
   if (tubeGroup === "Pearl/White") return " tube-icon-pearl";
   if (tubeGroup === "Urine Container") return " tube-icon-urine-container";
@@ -2065,10 +2189,12 @@ function getTubeIconModifierClass(tubeGroup) {
   return "";
 }
 
+// Gets tube visual markup.
 function getTubeVisualMarkup(tubeGroup, sizeClass = "") {
   return `<span class="tube-icon${sizeClass}${getTubeIconModifierClass(tubeGroup)}" style="--tube-color: ${getTubeSwatchColor(tubeGroup)};" aria-hidden="true"></span>`;
 }
 
+// Checks whether alternative tube choice.
 function isAlternativeTubeChoice(tubeColorValue, tubeGroups = []) {
   if (tubeGroups.length < 2) return false;
 
@@ -2078,6 +2204,7 @@ function isAlternativeTubeChoice(tubeColorValue, tubeGroups = []) {
   return /(preferred|acceptable|alternate|alternative|\bor\b|\/)/i.test(text);
 }
 
+// Gets selected tests.
 function getSelectedTests() {
   return enrichedTests.filter((test) => selectedTestNames.has(test.name));
 }
@@ -2096,6 +2223,7 @@ const bloodGasComponentQueryTerms = new Set(
     .filter(Boolean)
 );
 
+// Gets expanded profile members.
 function getExpandedProfileMembers(profileName, seen = new Set()) {
   if (seen.has(profileName)) return new Set();
   seen.add(profileName);
@@ -2116,6 +2244,7 @@ const expandedProfileMembersByName = Object.fromEntries(
   profileNames.map((profileName) => [profileName, getExpandedProfileMembers(profileName)])
 );
 
+// Gets selected profiles containing test.
 function getSelectedProfilesContainingTest(testName, selectionSet = selectedTestNames) {
   const matchingProfiles = [];
 
@@ -2129,6 +2258,7 @@ function getSelectedProfilesContainingTest(testName, selectionSet = selectedTest
   return matchingProfiles;
 }
 
+// Gets already covered selection message.
 function getAlreadyCoveredSelectionMessage(testName, selectionSet = selectedTestNames) {
   const coveringProfiles = getSelectedProfilesContainingTest(testName, selectionSet);
   if (!coveringProfiles.length) return "";
@@ -2169,7 +2299,7 @@ const conditionShortcutDefinitions = [
     id: "heart-failure",
     label: "suspected heart failure",
     terms: ["heart failure", "cardiac failure", "congestive heart failure", "chf", "suspected heart failure"],
-    tests: ["NT-proBNP"]
+    tests: ["NT-proBNP", "Cardiac Profile"]
   },
   {
     id: "iron-deficiency-anaemia",
@@ -2212,7 +2342,7 @@ const conditionShortcutDefinitions = [
     id: "pancreatitis",
     label: "suspected acute pancreatitis",
     terms: ["pancreatitis", "acute pancreatitis"],
-    tests: ["Lipase", "Amylase"]
+    tests: ["Lipase", "Amylase", "Liver Function Tests (LFT)", "FBC", "CRP"]
   },
   {
     id: "coeliac-disease",
@@ -2294,6 +2424,7 @@ const clinicalWorkupChipDefinitions = [
   { id: "infertility", label: "Infertility", terms: ["infertility", "subfertility", "difficulty conceiving", "anovulation"] },
   { id: "hirsutism", label: "Hirsutism / acne", terms: ["hirsutism", "facial hair", "pcos", "androgen excess", "acne"] },
   { id: "confusion", label: "Confusion / encephalopathy", terms: ["confusion", "altered mental state", "drowsy", "encephalopathy"] },
+  { id: "psychosis", label: "Psychosis / agitation", terms: ["psychosis", "acute psychosis", "hallucinations", "delusions", "behavioural disturbance", "behavioral disturbance", "agitation"] },
   { id: "pregnancy-booking", label: "Pregnancy / booking", terms: ["pregnancy", "antenatal", "booking", "prenatal", "gestational"] }
 ];
 
@@ -2315,9 +2446,17 @@ const clinicalWorkupRuleDefinitions = [
     id: "heart-failure",
     title: "Heart failure / fluid overload support",
     matchAny: ["heart failure", "cardiac failure", "orthopnoea", "orthopnea", "pnd", "paroxysmal nocturnal dyspnoea", "paroxysmal nocturnal dyspnea", "pulmonary oedema", "pulmonary edema", "raised jvp", "bilateral leg swelling"],
-    tests: ["NT-proBNP"],
-    rationale: "Volume overload or heart-failure concerns often lead to natriuretic peptide testing.",
+    tests: ["NT-proBNP", "Cardiac Profile"],
+    rationale: "Volume overload or heart-failure concerns often lead to natriuretic peptide testing and may need cardiac marker support.",
     caution: "Interpret NT-proBNP with age, renal function, and the local heart-failure pathway."
+  },
+  {
+    id: "psychosis-substance",
+    title: "Psychosis / substance screen support",
+    matchAny: ["psychosis", "acute psychosis", "hallucinations", "delusions", "behavioural disturbance", "behavioral disturbance", "agitation", "substance-induced psychosis"],
+    tests: ["Drugs of Abuse Screen (Urine)"],
+    rationale: "Psychosis or behavioural disturbance may justify a drugs-of-abuse screen when substance exposure is part of the differential.",
+    caution: "Use the local mental-health, intoxication, and emergency pathway when agitation, violence, overdose, or reduced consciousness is present."
   },
   {
     id: "respiratory-distress",
@@ -2396,8 +2535,8 @@ const clinicalWorkupRuleDefinitions = [
     id: "liver",
     title: "Jaundice / liver injury support",
     matchAny: ["jaundice", "icterus", "dark urine", "hepatitis", "liver disease", "transaminitis", "hepatomegaly"],
-    tests: ["Liver Function Tests (LFT)"],
-    rationale: "Jaundice or liver injury concerns commonly start with liver function testing.",
+    tests: ["Liver Function Tests (LFT)", "FBC", "Coagulation Studies", "U&E"],
+    rationale: "Jaundice or liver injury concerns commonly start with liver tests plus baseline blood count, clotting, and renal support.",
     caution: "Severe jaundice, confusion, or coagulopathy needs urgent escalation and direct senior review."
   },
   {
@@ -2412,9 +2551,9 @@ const clinicalWorkupRuleDefinitions = [
     id: "pancreatitis",
     title: "Pancreatitis support",
     matchAny: ["pancreatitis", "epigastric pain", "radiates to back", "upper abdominal pain"],
-    tests: ["Lipase", "Amylase"],
-    rationale: "Pancreatitis-style pain patterns commonly prompt pancreatic enzyme testing.",
-    caution: "Abdominal emergencies still require direct clinical review and imaging decisions outside this tool."
+    tests: ["Lipase", "Amylase", "Liver Function Tests (LFT)", "FBC", "CRP"],
+    rationale: "Pancreatitis-style pain patterns commonly prompt pancreatic enzymes, biliary screen support, and baseline inflammatory markers.",
+    caution: "Abdominal emergencies still require direct clinical review and imaging decisions outside this tool; widen the workup further if sepsis or infected necrosis is suspected."
   },
   {
     id: "arthritis",
@@ -2537,6 +2676,7 @@ function dedupeStrings(values = []) {
   return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
 }
 
+// Joins with and.
 function joinWithAnd(values = []) {
   const items = dedupeStrings(values);
   if (items.length <= 1) return items[0] || "";
@@ -2544,24 +2684,28 @@ function joinWithAnd(values = []) {
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
 
+// Lowercases first character.
 function lowercaseFirstCharacter(value = "") {
   const text = String(value || "").trim();
   if (!text) return "";
   return text.charAt(0).toLowerCase() + text.slice(1);
 }
 
+// Truncates text.
 function truncateText(value, maxLength = 96) {
   const text = String(value || "").trim();
   if (!text || text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - 1).trim()}...`;
 }
 
+// Capitalizes phrase.
 function capitalizePhrase(value) {
   const text = String(value || "").trim();
   if (!text) return "";
   return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 }
 
+// Checks whether normalized phrase.
 function hasNormalizedPhrase(haystack, phrase) {
   const normalizedHaystack = normalizeForSearch(haystack);
   const normalizedPhrase = normalizeForSearch(phrase);
@@ -2571,6 +2715,7 @@ function hasNormalizedPhrase(haystack, phrase) {
   return pattern.test(normalizedHaystack);
 }
 
+// Gets clinical workup sex label.
 function getClinicalWorkupSexLabel(value = "") {
   if (value === "female") return "Female";
   if (value === "male") return "Male";
@@ -2578,6 +2723,7 @@ function getClinicalWorkupSexLabel(value = "") {
   return "";
 }
 
+// Checks whether pregnancy context.
 function hasPregnancyContext(input) {
   if (!input) return false;
   return input.pregnancy === "pregnant"
@@ -2588,6 +2734,7 @@ function hasPregnancyContext(input) {
     || hasNormalizedPhrase(input.normalizedBlob, "gestational");
 }
 
+// Checks whether clinical workup rule demographics.
 function passesClinicalWorkupRuleDemographics(rule, input) {
   if (!rule || !input) return false;
 
@@ -2607,6 +2754,7 @@ function passesClinicalWorkupRuleDemographics(rule, input) {
   return true;
 }
 
+// Evaluates clinical workup rule.
 function evaluateClinicalWorkupRule(rule, input) {
   if (!passesClinicalWorkupRuleDemographics(rule, input)) return null;
 
@@ -2636,6 +2784,7 @@ function evaluateClinicalWorkupRule(rule, input) {
   };
 }
 
+// Gets supplemental clinical shortcut rules.
 function getSupplementalClinicalShortcutRules(input) {
   const rules = [];
 
@@ -2663,6 +2812,7 @@ function getSupplementalClinicalShortcutRules(input) {
   return rules;
 }
 
+// Gets clinical workup recommended tests.
 function getClinicalWorkupRecommendedTests(matchedRules = []) {
   const recommendedSelection = new Set();
 
@@ -2690,6 +2840,7 @@ function getClinicalWorkupRecommendedTests(matchedRules = []) {
   return getTestsByNames(visibleNames);
 }
 
+// Gets clinical workup input.
 function getClinicalWorkupInput() {
   const ageValue = Number.parseInt(clinicalAgeInput?.value || "", 10);
   const age = Number.isFinite(ageValue) && ageValue >= 0 ? ageValue : null;
@@ -2725,6 +2876,7 @@ function getClinicalWorkupInput() {
   };
 }
 
+// Builds clinical workup tags.
 function buildClinicalWorkupTags(input) {
   const tags = [];
 
@@ -2740,6 +2892,7 @@ function buildClinicalWorkupTags(input) {
   return dedupeStrings(tags).slice(0, 8);
 }
 
+// Builds clinical workup summary.
 function buildClinicalWorkupSummary(input, tests = []) {
   const summaryParts = [];
 
@@ -2761,6 +2914,7 @@ function buildClinicalWorkupSummary(input, tests = []) {
   return `${intro}there is not a strong direct match yet in the current catalogue. Add a more specific symptom, sign, or concern, or switch to the main search by test or condition.`;
 }
 
+// Builds clinical workup output.
 function buildClinicalWorkupOutput(input) {
   const matchedRules = [
     ...clinicalWorkupRuleDefinitions
@@ -2783,15 +2937,18 @@ function buildClinicalWorkupOutput(input) {
   };
 }
 
+// Checks whether clinical workup suggestions.
 function hasClinicalWorkupSuggestions() {
   return Boolean(clinicalWorkupOutput?.tests?.length);
 }
 
+// Sets clinical workup status.
 function setClinicalWorkupStatus(message = "") {
   if (!clinicalWorkupStatus) return;
   clinicalWorkupStatus.textContent = String(message || "").trim();
 }
 
+// Renders clinical workup chips.
 function renderClinicalWorkupChips() {
   if (!clinicalWorkupChipList) return;
 
@@ -2809,6 +2966,7 @@ function renderClinicalWorkupChips() {
     .join("");
 }
 
+// Renders clinical workup results.
 function renderClinicalWorkupResults(output = clinicalWorkupOutput) {
   if (
     !clinicalWorkupResults
@@ -2831,12 +2989,16 @@ function renderClinicalWorkupResults(output = clinicalWorkupOutput) {
 
   clinicalWorkupResults.hidden = false;
   clinicalWorkupResultsTitle.textContent = output.tests.length
-    ? (output.resultsTitle || "Suggested tests")
+    ? "Suggestions"
     : (output.emptyStateTitle || "No strong match yet");
   clinicalWorkupResultsCopy.textContent = output.summary;
-  clinicalWorkupResultTags.innerHTML = outputTags
-    .map((tag) => `<span class="clinical-workup-result-tag">${escapeHtml(tag)}</span>`)
-    .join("");
+  clinicalWorkupResultTags.innerHTML = "";
+
+  // When suggestions exist, the test rows already carry the matched context.
+  if (output.tests.length) {
+    clinicalWorkupRuleList.innerHTML = "";
+    return;
+  }
 
   if (!matchedRules.length) {
     clinicalWorkupRuleList.innerHTML = `
@@ -2867,6 +3029,7 @@ function renderClinicalWorkupResults(output = clinicalWorkupOutput) {
     .join("");
 }
 
+// Clears clinical workup inputs.
 function clearClinicalWorkupInputs() {
   selectedClinicalChipIds.clear();
   if (clinicalAgeInput) clinicalAgeInput.value = "";
@@ -2878,6 +3041,7 @@ function clearClinicalWorkupInputs() {
   renderClinicalWorkupChips();
 }
 
+// Clears clinical workup output.
 function clearClinicalWorkupOutput({ preserveInputs = true, rerenderCards = true, clearStatus = false } = {}) {
   clinicalWorkupOutput = null;
   renderClinicalWorkupResults(null);
@@ -2903,6 +3067,7 @@ function clearClinicalWorkupOutput({ preserveInputs = true, rerenderCards = true
   }
 }
 
+// Sets find my test suggestions.
 function setFindMyTestSuggestions(output, { rerenderCards = true } = {}) {
   clinicalWorkupOutput = output && Array.isArray(output.tests) ? output : null;
   renderClinicalWorkupResults(clinicalWorkupOutput);
@@ -2915,6 +3080,7 @@ function setFindMyTestSuggestions(output, { rerenderCards = true } = {}) {
   }
 }
 
+// Prepares find my test results view.
 function prepareFindMyTestResultsView() {
   if (activeSectionGroup) {
     setSectionView("", { historyMode: "replace", scrollToTop: false, clearSearch: true });
@@ -2940,6 +3106,7 @@ function estimateDrawPlanForTests(testNames = [], { includeExistingSelection = f
   return getResolvedDrawPlan(getTestsByNames(Array.from(nextSelection)));
 }
 
+// Add tests to plan.
 function addTestsToPlan(testNames = [], { replace = false, openDrawPlan: shouldOpenDrawPlan = false } = {}) {
   const nextSelection = replace ? new Set() : new Set(selectedTestNames);
 
@@ -2954,6 +3121,7 @@ function addTestsToPlan(testNames = [], { replace = false, openDrawPlan: shouldO
   return getResolvedDrawPlan(getSelectedTests());
 }
 
+// Removes tests from plan.
 function removeTestsFromPlan(testNames = [], { openDrawPlan: shouldOpenDrawPlan = false } = {}) {
   const nextSelection = new Set(selectedTestNames);
 
@@ -2967,6 +3135,18 @@ function removeTestsFromPlan(testNames = [], { openDrawPlan: shouldOpenDrawPlan 
   return getResolvedDrawPlan(getSelectedTests());
 }
 
+// Clears Tube Plan selections.
+function clearTubePlan({ openDrawPlan: shouldOpenDrawPlan = false } = {}) {
+  setSelectedTests(new Set());
+
+  if (shouldOpenDrawPlan) {
+    openDrawModal();
+  }
+
+  return getResolvedDrawPlan(getSelectedTests());
+}
+
+// Runs clinical workup.
 function runClinicalWorkup() {
   const input = getClinicalWorkupInput();
   if (!input.normalizedBlob) {
@@ -3004,6 +3184,7 @@ function runClinicalWorkup() {
   });
 }
 
+// Initializes clinical workup.
 function initClinicalWorkup() {
   renderClinicalWorkupChips();
 
@@ -3059,6 +3240,7 @@ function initClinicalWorkup() {
   });
 }
 
+// Gets matched profile query.
 function getMatchedProfileQuery(normalizedQuery) {
   if (!normalizedQuery) return "";
   for (const profileName of profileNames) {
@@ -3067,6 +3249,7 @@ function getMatchedProfileQuery(normalizedQuery) {
   return "";
 }
 
+// Gets matched condition shortcut.
 function getMatchedConditionShortcut(normalizedQuery) {
   if (!normalizedQuery) return null;
 
@@ -3083,6 +3266,20 @@ function getMatchedConditionShortcut(normalizedQuery) {
   return null;
 }
 
+// Builds the Find My Test handoff when a condition search lands in Find My Tube.
+function getFindMyTestHandoffMarkup(queryLabel = "") {
+  const escapedQuery = escapeHtml(queryLabel || "this condition");
+
+  return `
+    <div class="no-results no-results-handoff-card">
+      <p class="no-results-handoff">Find My Tube works best for test and profile names.</p>
+      <p>Use Find My Test for condition-based searches like <strong>${escapedQuery}</strong>.</p>
+      <a class="no-results-link-btn" href="./index.html?tool=find-my-test">Open Find My Test</a>
+    </div>
+  `;
+}
+
+// Gets exact name matches.
 function getExactNameMatches(normalizedQuery, testList = enrichedTests) {
   if (!normalizedQuery) return [];
   return testList.filter((test) => {
@@ -3093,6 +3290,7 @@ function getExactNameMatches(normalizedQuery, testList = enrichedTests) {
   });
 }
 
+// Gets supplementary profile matches.
 function getSupplementaryProfileMatches(normalizedQuery) {
   if (!normalizedQuery) return [];
 
@@ -3103,12 +3301,14 @@ function getSupplementaryProfileMatches(normalizedQuery) {
   return [];
 }
 
+// Gets tests by names.
 function getTestsByNames(testNames = []) {
   return testNames
     .map((testName) => enrichedTests.find((test) => test.name === testName))
     .filter(Boolean);
 }
 
+// Collapses profile selections.
 function collapseProfileSelections(selectionSet) {
   let changed = true;
 
@@ -3134,6 +3334,7 @@ function collapseProfileSelections(selectionSet) {
   }
 }
 
+// Updates draw selection tools.
 function updateDrawSelectionTools() {
   const hasSelection = selectedTestNames.size > 0;
   if (!hasSelection) {
@@ -3157,12 +3358,14 @@ function updateDrawSelectionTools() {
   }
 }
 
+// Resets clear draw selection confirmation.
 function resetClearDrawSelectionConfirmation({ update = true } = {}) {
   window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
   isClearDrawSelectionConfirming = false;
   if (update) updateDrawSelectionTools();
 }
 
+// Requests clear draw selection confirmation.
 function requestClearDrawSelectionConfirmation() {
   if (!selectedTestNames.size) return;
   window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
@@ -3173,6 +3376,7 @@ function requestClearDrawSelectionConfirmation() {
   }, 3200);
 }
 
+// Renders draw selection summary.
 function renderDrawSelectionSummary() {
   if (!drawSelectionCount) return;
   const count = selectedTestNames.size;
@@ -3182,6 +3386,7 @@ function renderDrawSelectionSummary() {
   updateDrawSelectionTools();
 }
 
+// Updates quick tools panel state.
 function updateQuickToolsPanelState() {
   if (!quickToolsPanel || !quickToolsTitle || !quickToolsDescription || !openDrawPlannerBtn) return;
 
@@ -3219,6 +3424,7 @@ function updateQuickToolsPanelState() {
   openDrawPlannerBtn.setAttribute("aria-controls", "drawModal");
 }
 
+// Renders selected tests cart.
 function renderSelectedTestsCart() {
   if (!drawSelectedList) return;
   const selectedTests = getSelectedTests();
@@ -3257,6 +3463,7 @@ function renderSelectedTestsCart() {
   });
 }
 
+// Updates selection cart bar.
 function updateSelectionCartBar() {
   if (!selectionCartBar || !selectionCartCount) return;
 
@@ -3292,17 +3499,13 @@ function updateSelectionCartBar() {
   updateSelectionCartViewportPosition();
 }
 
+// Updates selection cart viewport position.
 function updateSelectionCartViewportPosition() {
   if (!selectionCartBar) return;
 
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
-  const isPreSearchVisible = Boolean(
-    preSearchPanel &&
-    window.getComputedStyle(preSearchPanel).display !== "none"
-  );
   const baseOffset = isMobile ? 10 : 18;
   let keyboardOffset = 0;
-  let useInlineDesktopPosition = false;
 
   if (isMobile && window.visualViewport) {
     const activeEl = document.activeElement;
@@ -3315,26 +3518,12 @@ function updateSelectionCartViewportPosition() {
     }
   }
 
-  if (!isMobile && !selectionCartBar.hidden && isPreSearchVisible && groupHintsPanel) {
-    const hintsRect = groupHintsPanel.getBoundingClientRect();
-    const cartRect = selectionCartBar.getBoundingClientRect();
-
-    if (hintsRect.height > 0 && cartRect.height > 0) {
-      const topOffset = Math.max(18, Math.round(hintsRect.bottom - cartRect.height));
-      selectionCartBar.style.top = `${topOffset}px`;
-      selectionCartBar.style.bottom = "auto";
-      useInlineDesktopPosition = true;
-    }
-  }
-
-  if (!useInlineDesktopPosition) {
-    selectionCartBar.style.top = "auto";
-    selectionCartBar.style.bottom = `calc(env(safe-area-inset-bottom) + ${baseOffset + keyboardOffset}px)`;
-  }
-
-  document.body.classList.toggle("selection-cart-inline", useInlineDesktopPosition);
+  selectionCartBar.style.top = "auto";
+  selectionCartBar.style.bottom = `calc(env(safe-area-inset-bottom) + ${baseOffset + keyboardOffset}px)`;
+  document.body.classList.remove("selection-cart-inline");
 }
 
+// Initializes selection cart viewport sync.
 function initSelectionCartViewportSync() {
   updateSelectionCartViewportPosition();
 
@@ -3353,6 +3542,7 @@ function initSelectionCartViewportSync() {
   });
 }
 
+// Refreshes selection UI.
 function refreshSelectionUi({ rerenderCards = true } = {}) {
   renderDrawSelectionSummary();
   updateQuickToolsPanelState();
@@ -3363,10 +3553,12 @@ function refreshSelectionUi({ rerenderCards = true } = {}) {
   if (rerenderCards) applyFilters();
 }
 
+// Gets selected test names list.
 function getSelectedTestNamesList() {
   return Array.from(selectedTestNames);
 }
 
+// Sets selected tests.
 function setSelectedTests(nextSelection, options = {}) {
   resetClearDrawSelectionConfirmation({ update: false });
   selectedTestNames.clear();
@@ -3378,6 +3570,7 @@ function setSelectedTests(nextSelection, options = {}) {
   });
 }
 
+// Toggles selected test.
 function toggleSelectedTest(testName, options = {}) {
   dismissRackHint();
   const nextSelection = new Set(selectedTestNames);
@@ -3394,6 +3587,7 @@ function toggleSelectedTest(testName, options = {}) {
   setSelectedTests(nextSelection, options);
 }
 
+// Removes selected test.
 function removeSelectedTest(testName, options = {}) {
   if (!selectedTestNames.has(testName)) return;
   const nextSelection = new Set(selectedTestNames);
@@ -3401,6 +3595,7 @@ function removeSelectedTest(testName, options = {}) {
   setSelectedTests(nextSelection, options);
 }
 
+// Animates draw result card.
 function animateDrawResultCard() {
   if (!drawResultCard) return;
   drawResultCard.classList.remove("draw-result-updated");
@@ -3408,10 +3603,12 @@ function animateDrawResultCard() {
   drawResultCard.classList.add("draw-result-updated");
 }
 
+// Checks whether draw planner open.
 function isDrawPlannerOpen() {
   return Boolean(drawModal && !drawModal.hidden);
 }
 
+// Updates quick tools toggle state.
 function updateQuickToolsToggleState() {
   if (!toggleQuickToolsBtn) return;
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
@@ -3430,11 +3627,13 @@ function updateQuickToolsToggleState() {
   toggleQuickToolsBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
 }
 
+// Updates draw planner toggle state.
 function updateDrawPlannerToggleState() {
   updateQuickToolsPanelState();
   updateQuickToolsToggleState();
 }
 
+// Opens draw modal.
 function openDrawModal() {
   if (!drawModal) return;
   resetClearDrawSelectionConfirmation({ update: false });
@@ -3449,6 +3648,7 @@ function openDrawModal() {
   syncModalOpenClass();
 }
 
+// Closes draw modal.
 function closeDrawModal() {
   if (!drawModal) return;
   resetClearDrawSelectionConfirmation({ update: false });
@@ -3457,6 +3657,7 @@ function closeDrawModal() {
   syncModalOpenClass();
 }
 
+// Opens profile modal.
 function openProfileModal(testName) {
   if (!profileModal || !profileModalList || !profileModalTitle) return;
   const components = profileComponentsByName[testName] || [];
@@ -3468,12 +3669,14 @@ function openProfileModal(testName) {
   syncModalOpenClass();
 }
 
+// Closes profile modal.
 function closeProfileModal() {
   if (!profileModal) return;
   profileModal.hidden = true;
   syncModalOpenClass();
 }
 
+// Opens legal modal.
 function openLegalModal(docId, trigger = null) {
   if (!legalModal || !legalModalTitle || !legalModalBody) return;
   const documentContent = legalContentById[docId];
@@ -3492,6 +3695,7 @@ function openLegalModal(docId, trigger = null) {
   }
 }
 
+// Closes legal modal.
 function closeLegalModal({ restoreFocus = true } = {}) {
   if (!legalModal) return;
   legalModal.hidden = true;
@@ -3506,6 +3710,7 @@ function closeLegalModal({ restoreFocus = true } = {}) {
   lastLegalModalTrigger = null;
 }
 
+// Synchronizes modal open class.
 function syncModalOpenClass() {
   const drawOpen = Boolean(drawModal && !drawModal.hidden);
   const profileOpen = Boolean(profileModal && !profileModal.hidden);
@@ -3519,12 +3724,14 @@ function normalizeNameKey(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+// Canonical draw rule name.
 function canonicalDrawRuleName(value) {
   const key = normalizeNameKey(value);
   if (key === "xdp (d-dimer)" || key === "xdp d dimer" || key === "xdp") return "d-dimer";
   return key;
 }
 
+// Add plan tube group.
 function addPlanTubeGroup(grouped, group, testName) {
   if (!grouped.has(group)) {
     grouped.set(group, { key: group, label: group, count: 1, tests: new Set() });
@@ -3532,6 +3739,7 @@ function addPlanTubeGroup(grouped, group, testName) {
   grouped.get(group).tests.add(testName);
 }
 
+// Gets alternative tube support counts.
 function getAlternativeTubeSupportCounts(alternativeTests) {
   const supportCounts = new Map();
 
@@ -3544,6 +3752,7 @@ function getAlternativeTubeSupportCounts(alternativeTests) {
   return supportCounts;
 }
 
+// Chooses alternative tube group.
 function chooseAlternativeTubeGroup(groups, grouped, supportCounts) {
   const candidateGroups = groups.filter((group) => grouped.has(group));
   const groupsToRank = candidateGroups.length ? candidateGroups : groups;
@@ -3561,6 +3770,7 @@ function chooseAlternativeTubeGroup(groups, grouped, supportCounts) {
     })[0];
 }
 
+// Finds exact draw rule.
 function findExactDrawRule(selectedTests) {
   const selected = new Set(selectedTests.map((test) => canonicalDrawRuleName(test.name)));
 
@@ -3570,10 +3780,12 @@ function findExactDrawRule(selectedTests) {
   }) || null;
 }
 
+// Gets default plan items.
 function getDefaultPlanItems(selectedTests) {
   const grouped = new Map();
   const manual = [];
   const alternativeTests = [];
+  const dedicatedAlternativeItems = [];
 
   selectedTests.forEach((test) => {
     const groups = getTubeGroups(test.tubeColor);
@@ -3583,6 +3795,17 @@ function getDefaultPlanItems(selectedTests) {
     }
 
     if (isAlternativeTubeChoice(test.tubeColor, groups)) {
+      if (selectedTests.length > 1 && normalizeNameKey(test.name) === "cardiac profile") {
+        dedicatedAlternativeItems.push({
+          key: `choice:${groups.join("|")}:${normalizeNameKey(test.name)}`,
+          label: groups.join(" or "),
+          count: 1,
+          tests: [test.name],
+          detail: "Use its own Green tube (preferred) or its own Gold/Yellow tube for Cardiac Profile."
+        });
+        return;
+      }
+
       alternativeTests.push({ test, groups });
       return;
     }
@@ -3613,7 +3836,7 @@ function getDefaultPlanItems(selectedTests) {
     addPlanTubeGroup(grouped, chosenGroup, test.name);
   });
 
-  const items = [...grouped.values()]
+  const items = [...grouped.values(), ...dedicatedAlternativeItems]
     .map((item) => ({ ...item, tests: [...item.tests] }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
@@ -3637,6 +3860,7 @@ function appendPlanItemDetail(item, detailText) {
   item.detail = `${currentDetail} ${nextDetail}`;
 }
 
+// Checks whether dedicated gold tube test.
 function isDedicatedGoldTubeTest(test) {
   const name = String(test.name || "").toLowerCase();
   const tubeGroups = getTubeGroups(test.tubeColor);
@@ -3652,11 +3876,33 @@ function isDedicatedGoldTubeTest(test) {
   );
 }
 
+// Checks whether shared gold tube test.
 function isSharedGoldTubeTest(test) {
   const tubeGroups = getTubeGroups(test.tubeColor);
   return tubeGroups.includes("Gold/Yellow") && !isDedicatedGoldTubeTest(test);
 }
 
+// Checks whether gold/yellow request is a hormone or enzyme support test.
+function isGoldHormoneOrEnzymeTest(test) {
+  if (!isSharedGoldTubeTest(test)) return false;
+
+  const summary = normalizeNameKey([
+    test?.name || "",
+    test?.notes || "",
+    test?.clinicalUse || ""
+  ].join(" "));
+
+  return summary.includes("hormone")
+    || summary.includes("endocrine")
+    || summary.includes("endocrinology")
+    || summary.includes("enzyme")
+    || GOLD_HORMONE_OR_ENZYME_NAME_HINTS.some((term) => {
+      const pattern = new RegExp(`(?:^|\\b)${escapeRegExp(term)}(?:\\b|$)`);
+      return pattern.test(summary);
+    });
+}
+
+// Gets required shared gold tube count.
 function getRequiredSharedGoldTubeCount(selectedTests) {
   const sharedGoldTests = selectedTests.filter((test) => isSharedGoldTubeTest(test));
   const hasCordBloodProfile = selectedTests.some((test) => normalizeNameKey(test.name) === "cord blood");
@@ -3665,10 +3911,18 @@ function getRequiredSharedGoldTubeCount(selectedTests) {
   if (!sharedGoldRequestCount) return 0;
 
   const listedGoldProfileCount = sharedGoldTests.filter((test) => GOLD_VOLUME_PROFILE_NAMES.has(test.name)).length;
+  const hasListedGoldProfile = listedGoldProfileCount > 0;
+  const hasHormoneOrEnzymeCompanion = sharedGoldTests.some((test) => (
+    !GOLD_VOLUME_PROFILE_NAMES.has(test.name)
+    && isGoldHormoneOrEnzymeTest(test)
+  ));
+
+  if (hasListedGoldProfile && hasHormoneOrEnzymeCompanion) return 2;
 
   return listedGoldProfileCount >= 3 && sharedGoldRequestCount > 3 ? 2 : 1;
 }
 
+// Applies dedicated gold tube rule.
 function applyDedicatedGoldTubeRule(plan, selectedTests) {
   const dedicatedTests = selectedTests.filter((test) => isDedicatedGoldTubeTest(test));
   if (!dedicatedTests.length) return "";
@@ -3686,6 +3940,7 @@ function applyDedicatedGoldTubeRule(plan, selectedTests) {
   return "RF/RPR/HIV rule applied: each needs its own Gold/Yellow tube.";
 }
 
+// Applies gold profile volume rule.
 function applyGoldProfileVolumeRule(plan, selectedTests) {
   const requiredGoldCount = getRequiredSharedGoldTubeCount(selectedTests);
   if (requiredGoldCount < 2) return "";
@@ -3699,9 +3954,10 @@ function applyGoldProfileVolumeRule(plan, selectedTests) {
   }
 
   plan.items.sort((a, b) => a.label.localeCompare(b.label));
-  return "Gold rule applied: 3 listed profiles fit in 1 Gold/Yellow tube; add any other shared yellow-top test and use 2 x Gold/Yellow tubes.";
+  return "Gold rule applied: use 2 x Gold/Yellow when a listed yellow profile is combined with a hormone/enzyme request, or when 3 listed profiles are combined with another shared yellow-top test.";
 }
 
+// Applies purple volume rule.
 function applyPurpleVolumeRule(plan, selectedTests) {
   const purpleTests = selectedTests.filter((test) => {
     const tubeGroups = getTubeGroups(test.tubeColor);
@@ -3722,6 +3978,7 @@ function applyPurpleVolumeRule(plan, selectedTests) {
   return `Purple rule applied: allow up to 2 purple-top tests per tube, so ${purpleTests.length} purple-top tests need ${requiredPurpleCount} x Purple tubes.`;
 }
 
+// Applies OGTT gray tube rule.
 function applyOgttGrayTubeRule(plan, selectedTests) {
   const hasOgtt = selectedTests.some((test) => OGTT_MULTI_DRAW_TESTS.has(test.name));
   if (!hasOgtt) return "";
@@ -3739,6 +3996,7 @@ function applyOgttGrayTubeRule(plan, selectedTests) {
   return "OGTT rule applied: use 3 x Gray tubes for fasting, 1 hour, and 2 hour samples.";
 }
 
+// Applies tube variant notes.
 function applyTubeVariantNotes(plan, selectedTests) {
   const variantRequests = new Map();
 
@@ -3772,6 +4030,7 @@ function applyTubeVariantNotes(plan, selectedTests) {
   });
 }
 
+// Gets lab draw plan.
 function getLabDrawPlan(selectedTests) {
   const exactRule = findExactDrawRule(selectedTests);
   if (exactRule) {
@@ -3785,6 +4044,7 @@ function getLabDrawPlan(selectedTests) {
   return getDefaultPlanItems(selectedTests);
 }
 
+// Gets resolved draw plan.
 function getResolvedDrawPlan(selectedTests) {
   const plan = getLabDrawPlan(selectedTests);
   const guidanceNotes = [
@@ -3799,6 +4059,7 @@ function getResolvedDrawPlan(selectedTests) {
   return { plan, guidanceNotes };
 }
 
+// Gets draw planner alerts.
 function getDrawPlannerAlerts(selectedTests) {
   return selectedTests.flatMap((test) => {
     if (test.name !== "Ammonia") return [];
@@ -3818,6 +4079,7 @@ function getDrawPlannerAlerts(selectedTests) {
   });
 }
 
+// Gets draw planner reminders.
 function getDrawPlannerReminders() {
   return [{
     id: "tube-fill",
@@ -3829,6 +4091,7 @@ function getDrawPlannerReminders() {
   }];
 }
 
+// Gets plan item alternative groups.
 function getPlanItemAlternativeGroups(item) {
   const key = String(item?.key || "").trim();
   if (!key.startsWith("choice:")) return [];
@@ -3840,6 +4103,7 @@ function getPlanItemAlternativeGroups(item) {
     .filter(Boolean);
 }
 
+// Renders draw result.
 function renderDrawResult() {
   if (!drawResultCard || !drawPlannerCount || !drawPlannerAlerts || !drawGroups || !drawPlannerNote) return;
 
@@ -3945,6 +4209,7 @@ function inferCriticalPrep(test) {
   return "Confirm patient prep and specimen handling against local lab protocol.";
 }
 
+// Infers specimen guide.
 function inferSpecimenGuide(test) {
   const text = `${test.name} ${test.specimen} ${test.tubeColor} ${test.notes}`.toLowerCase();
 
@@ -3958,6 +4223,7 @@ function inferSpecimenGuide(test) {
   return "Specimen-specific collection required (confirm exact sample type with lab protocol).";
 }
 
+// Gets card specimen value.
 function getCardSpecimenValue(test, { isMicro = false } = {}) {
   const baseValue = String(isMicro ? test.specimenGuide : test.specimen || "").trim();
   const isCsf = /\bcsf\b/i.test(`${test.name} ${test.specimen} ${test.specimenGuide} ${test.tubeColor}`);
@@ -3971,10 +4237,12 @@ function getCardSpecimenValue(test, { isMicro = false } = {}) {
   return conciseValue || baseValue || "CSF";
 }
 
+// Checks whether hide specimen on card.
 function shouldHideSpecimenOnCard(test) {
   return test.name === "HIV Viral Load";
 }
 
+// Gets micro specimen bucket.
 function getMicroSpecimenBucket(test) {
   const text = normalizeForSearch([
     test?.name || "",
@@ -3993,6 +4261,7 @@ function getMicroSpecimenBucket(test) {
   return "Specimen";
 }
 
+// Gets micro subsection.
 function getMicroSubsection(test) {
   const text = normalizeForSearch([
     test?.name || "",
@@ -4010,6 +4279,7 @@ function getMicroSubsection(test) {
   return "";
 }
 
+// Gets micro clinical profile.
 function getMicroClinicalProfile(subsection = "") {
   if (subsection.startsWith("MC&S • ")) {
     return {
@@ -4028,6 +4298,7 @@ function getMicroClinicalProfile(subsection = "") {
   return null;
 }
 
+// Gets clinical profile.
 function getClinicalProfile(testName, grouping) {
   if (clinicalProfileByName[testName]) return clinicalProfileByName[testName];
   if (clinicalProfileBySubsection[grouping.subsection]) return clinicalProfileBySubsection[grouping.subsection];
@@ -4042,6 +4313,7 @@ function getClinicalProfile(testName, grouping) {
   };
 }
 
+// Gets test grouping.
 function getTestGrouping(testOrName) {
   const test = typeof testOrName === "string"
     ? { name: testOrName }
@@ -4441,6 +4713,7 @@ function getTestGrouping(testOrName) {
   return { sectionId: "chemistry", subsection: "General Chemistry" };
 }
 
+// Enriches test.
 function enrichTest(test) {
   const grouping = getTestGrouping(test);
   const section = sectionMeta[grouping.sectionId] || sectionMeta.general;
@@ -4489,6 +4762,7 @@ function enrichTest(test) {
   return normalized;
 }
 
+// Deduplicates tests by name.
 function dedupeTestsByName(testList) {
   const seen = new Set();
   const unique = [];
@@ -4509,6 +4783,7 @@ if (sourceTests.length !== tests.length) {
 }
 const enrichedTests = sourceTests.map(enrichTest);
 
+// Starts carousel.
 function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
   if (!textElement || !items.length) return;
 
@@ -4531,19 +4806,23 @@ function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
   }, intervalMs);
 }
 
+// Renders facts carousel.
 function renderFactsCarousel() {
   startCarousel(factTips, tipText, null, 8200);
 }
 
+// Applies quick tools panel mode.
 function applyQuickToolsPanelMode(isMobile) {
   if (!toggleQuickToolsBtn) return;
   toggleQuickToolsBtn.hidden = true;
 }
 
+// Initializes quick tools panel.
 function initQuickToolsPanel() {
   if (!toggleQuickToolsBtn) return;
 
   const mediaQuery = window.matchMedia("(max-width: 600px)");
+  // On mode change.
   const onModeChange = () => applyQuickToolsPanelMode(mediaQuery.matches);
 
   toggleQuickToolsBtn.addEventListener("click", () => {
@@ -4563,6 +4842,7 @@ function initQuickToolsPanel() {
   }
 }
 
+// Applies facts panel mode.
 function applyFactsPanelMode(isMobile) {
   if (!factCarouselPanel || !factCarouselContent) return;
 
@@ -4574,10 +4854,12 @@ function applyFactsPanelMode(isMobile) {
   factCarouselPanel.classList.remove("mobile-facts");
 }
 
+// Initializes facts panel.
 function initFactsPanel() {
   if (!factCarouselPanel || !factCarouselContent) return;
 
   const mediaQuery = window.matchMedia("(max-width: 600px)");
+  // On mode change.
   const onModeChange = () => applyFactsPanelMode(mediaQuery.matches);
 
   onModeChange();
@@ -4589,6 +4871,7 @@ function initFactsPanel() {
   }
 }
 
+// Updates group chip state.
 function updateGroupChipState() {
   if (!groupChips) return;
 
@@ -4600,6 +4883,7 @@ function updateGroupChipState() {
   });
 }
 
+// Gets section browse panel markup.
 function getSectionBrowsePanelMarkup(sectionId) {
   const browseGroups = sectionBrowseGroups[sectionId] || [];
   if (!browseGroups.length) return "";
@@ -4701,6 +4985,7 @@ function renderGroupChips() {
   updateSectionContextBar();
 }
 
+// Sets section view.
 function setSectionView(sectionId = "", { browseGroup = "", historyMode = "none", scrollToTop = false, clearSearch = false } = {}) {
   activeSectionGroup = sectionMeta[sectionId] ? sectionId : "";
   if (activeSectionGroup && clinicalWorkupOutput) {
@@ -4741,6 +5026,7 @@ function setSectionView(sectionId = "", { browseGroup = "", historyMode = "none"
   });
 }
 
+// Initializes section navigation.
 function initSectionNavigation() {
   syncHistoryState(activeSectionGroup, true);
 
@@ -4772,18 +5058,22 @@ function matchesQuery(test, rawQuery) {
   });
 }
 
+// Checks whether profile components.
 function hasProfileComponents(test) {
   return (profileComponentsByName[test.name] || []).length > 0;
 }
 
+// Checks whether auto expand critical note.
 function shouldAutoExpandCriticalNote(testName, isSelected) {
   return isSelected && AUTO_EXPAND_CRITICAL_NOTE_TESTS.has(testName);
 }
 
+// Checks whether prioritize profiles first.
 function shouldPrioritizeProfilesFirst(selectedSection, normalizedQuery) {
   return Boolean(selectedSection) || normalizedQuery === "csf" || /\bcardiac\b/.test(normalizedQuery);
 }
 
+// Gets filtered tests.
 function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = activeSectionGroup || "";
@@ -4795,22 +5085,16 @@ function getFilteredTests() {
   }
   const activeBrowseSubsectionSet = new Set(getActiveBrowseSubsections(selectedSection));
   const matchedProfileName = getMatchedProfileQuery(normalizedQuery);
-  const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
   const exactNameMatches = getExactNameMatches(normalizedQuery);
   const supplementaryProfileMatches = getSupplementaryProfileMatches(normalizedQuery);
   const supplementaryProfileMatchSet = new Set(supplementaryProfileMatches);
   const isInflammatoryShortcut = normalizedQuery === "inflammatory" || normalizedQuery === "inflammation";
   const shouldBypassSectionFilter = Boolean(
     matchedProfileName
-    || matchedConditionShortcut
     || exactNameMatches.length
     || supplementaryProfileMatches.length
     || isInflammatoryShortcut
   );
-
-  if (matchedConditionShortcut) {
-    return getTestsByNames(matchedConditionShortcut.tests);
-  }
 
   const filtered = enrichedTests.filter((test) => {
     if (selectedSection && !shouldBypassSectionFilter && test.grouping.sectionId !== selectedSection) return false;
@@ -4840,11 +5124,14 @@ function getFilteredTests() {
   });
 }
 
+// Renders cards.
 function renderCards(filteredTests) {
   cardsContainer.innerHTML = "";
-  const normalizedQuery = normalizeForSearch(searchInput?.value || "");
+  const rawQuery = String(searchInput?.value || "").trim();
+  const normalizedQuery = normalizeForSearch(rawQuery);
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
   const isClinicalSuggestionsMode = !normalizedQuery && !activeSectionGroup && hasClinicalWorkupState();
+  const shouldShowFindMyTestHandoff = !isClinicalSuggestionsMode && Boolean(matchedConditionShortcut);
   const clinicalModeLabel = clinicalWorkupOutput?.modeLabel || "Find My Test";
   const resultsContextLabel = !normalizedQuery && activeSectionGroup
     ? getResultsContextLabel(activeSectionGroup)
@@ -4855,25 +5142,29 @@ function renderCards(filteredTests) {
     setResultsInfo(
       isClinicalSuggestionsMode
         ? `${clinicalModeLabel}. 0 tests found. ${CLINICAL_WORKUP_DISCLAIMER}`
-        : matchedConditionShortcut
-        ? `${resultsPrefix}Condition shortcut: ${matchedConditionShortcut.label}. 0 tests found. ${CONDITION_SHORTCUT_DISCLAIMER}`
+        : shouldShowFindMyTestHandoff
+        ? `${resultsPrefix}Find My Tube is test-first. Use Find My Test for condition-based suggestions.`
         : `${resultsPrefix}0 tests found`
     );
-    cardsContainer.innerHTML = `
-      <div class="no-results">
-        ${isClinicalSuggestionsMode
-          ? "No strong direct match yet. Add more specific symptoms or signs, or switch to the main search."
-          : "No matching test found. Try searching by test or profile (e.g. CRP or Liver function tests)."}
-      </div>
-    `;
+    cardsContainer.innerHTML = isClinicalSuggestionsMode
+      ? `
+        <div class="no-results">
+          No strong direct match yet. Add more specific symptoms or signs, or switch to the main search.
+        </div>
+      `
+      : shouldShowFindMyTestHandoff
+      ? getFindMyTestHandoffMarkup(rawQuery || matchedConditionShortcut?.label || "this condition")
+      : `
+        <div class="no-results">
+          No matching test found. Try searching by test or profile (e.g. CRP or Liver function tests).
+        </div>
+      `;
     return;
   }
 
   setResultsInfo(
     isClinicalSuggestionsMode
       ? `${clinicalModeLabel}. ${filteredTests.length} suggested test${filteredTests.length > 1 ? "s" : ""} found. ${CLINICAL_WORKUP_DISCLAIMER}`
-      : matchedConditionShortcut
-      ? `${resultsPrefix}Condition shortcut: ${matchedConditionShortcut.label}. ${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found. ${CONDITION_SHORTCUT_DISCLAIMER}`
       : `${resultsPrefix}${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found`
   );
 
@@ -4922,6 +5213,7 @@ function renderCards(filteredTests) {
     const hasSpecimenValue = Boolean(specimenValue);
     const showRequestedSpecimen = isSelected && hasSpecimenValue && !shouldHideSpecimenOnCard(test);
     const showRackHint = !hasDismissedRackHint && !isSelected && filteredTests[0]?.name === test.name;
+    // Renders summary field.
     const renderSummaryField = ({ label, content, isAction = false }) => {
       if (!isAction) {
         return `
@@ -5029,11 +5321,13 @@ function renderCards(filteredTests) {
       toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
     });
 
+    // Preserve search focus on press.
     const preserveSearchFocusOnPress = (event) => {
       if (!shouldPreserveSearchFocusOnMobile()) return;
       event.preventDefault();
     };
 
+    // Handles select.
     const handleSelect = (trigger) => {
       const shouldRestoreSearchFocus = shouldPreserveSearchFocusOnMobile();
       const wasSelected = isSelected;
@@ -5070,14 +5364,16 @@ function renderCards(filteredTests) {
   });
 }
 
+// Applies filters.
 function applyFilters() {
   const hasQuery = (searchInput?.value || "").trim().length > 0;
   const hasSectionFilter = Boolean(activeSectionGroup);
   const hasClinicalState = hasClinicalWorkupState();
+  const hasResultsView = isResultsViewActive(activeSectionGroup, searchInput?.value || "");
   const keepPreSearchVisible = shouldKeepPreSearchPanelVisible(activeSectionGroup, searchInput?.value || "");
   preSearchPanel.style.display = hasQuery || hasClinicalState || (hasSectionFilter && !keepPreSearchVisible) ? "none" : "grid";
   if (siteFooter) {
-    siteFooter.hidden = hasQuery || hasSectionFilter || hasClinicalState;
+    siteFooter.hidden = hasResultsView;
   }
   updateBackToTopVisibility();
   updateSelectionCartViewportPosition();
@@ -5215,6 +5511,19 @@ function bindEvents() {
   if (returnToSearchBtn) {
     returnToSearchBtn.addEventListener("click", () => {
       closeDrawModal();
+
+      if (isFindMyTestPage) {
+        const findMyTestTarget = clinicalWorkupResults && !clinicalWorkupResults.hidden
+          ? clinicalWorkupResults
+          : clinicalWorkupPanel;
+
+        findMyTestTarget?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          block: "start"
+        });
+        return;
+      }
+
       focusMainSearchField();
     });
   }
@@ -5284,8 +5593,8 @@ function bindEvents() {
 // Expose the small public API that the Find My Test module uses to share search and draw-plan state.
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
-    version: "2026-03-22.4",
-    assetVersion: "20260322d",
+    version: "2026-03-23.1",
+    assetVersion: "20260323a",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,
@@ -5295,6 +5604,7 @@ function updateFindMyTubePublicApi() {
     estimateDrawPlanForTests,
     addTestsToPlan,
     removeTestsFromPlan,
+    clearTubePlan,
     openDrawPlan: openDrawModal,
     prepareFindMyTestResultsView,
     setFindMyTestSuggestions,
@@ -5302,6 +5612,7 @@ function updateFindMyTubePublicApi() {
   };
 }
 
+initTheme();
 updateFindMyTubePublicApi();
 renderFactsCarousel();
 initQuickToolsPanel();

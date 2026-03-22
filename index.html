@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f766e" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Find My Tube" />
@@ -14,7 +15,12 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260317a" />
   <link rel="shortcut icon" href="./favicon-32.png?v=20260317a" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260317a" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260322e" />
+  <script>
+    (() => {
+      document.documentElement.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/style.css?v=20260323a" />
 </head>
 <body>
   <div class="container">
@@ -33,7 +39,6 @@
           <span>my</span>
           <span class="brand-gap"></span>
           <span>test</span>
-          <span class="find-my-test-beta-badge">Beta</span>
         </button>
       </h1>
       <p id="headerIntroText">
@@ -74,28 +79,34 @@
             <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
               <span id="clinicalDobLabel">Date of birth</span>
               <div class="clinical-workup-dob-control" id="clinicalDobControl">
-                <input
-                  type="date"
-                  id="clinicalDobInput"
-                />
-                <button
-                  type="button"
-                  class="clinical-workup-dob-display"
-                  id="clinicalDobDisplayBtn"
-                  aria-label="Change date of birth"
-                  aria-hidden="true"
-                  tabindex="-1"
-                >
-                  <span class="clinical-workup-dob-display-copy">
-                    <span class="clinical-workup-dob-age" id="clinicalDobAgeValue"></span>
-                    <span class="clinical-workup-dob-date" id="clinicalDobDateValue"></span>
-                  </span>
-                  <span class="clinical-workup-dob-display-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm12 7H5v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9ZM6 6a1 1 0 0 0-1 1h14a1 1 0 0 0-1-1H6Z"></path>
+                <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
+                  <input
+                    type="text"
+                    id="clinicalDobInput"
+                    inputmode="numeric"
+                    autocomplete="bday"
+                    maxlength="14"
+                    placeholder="DD / MM / YYYY"
+                    aria-describedby="clinicalDobAssist"
+                  />
+                  <label
+                    class="clinical-workup-field-glyph clinical-workup-field-glyph-button clinical-workup-dob-picker-label"
+                    for="clinicalDobPickerInput"
+                    aria-label="Pick date of birth from calendar"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6H8v1a1 1 0 1 1-2 0V6H5Zm3 7a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Z"></path>
                     </svg>
-                  </span>
-                </button>
+                    <input
+                      type="date"
+                      id="clinicalDobPickerInput"
+                      class="clinical-workup-dob-picker-native"
+                      tabindex="-1"
+                      aria-hidden="true"
+                    />
+                  </label>
+                </div>
+                <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
               </div>
             </label>
 
@@ -109,7 +120,7 @@
                     <option value="male">Male</option>
                     <option value="other">Other</option>
                   </select>
-                  <span class="clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
+                  <span class="clinical-workup-field-glyph clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
                 </div>
               </label>
 
@@ -166,7 +177,7 @@
 
           <div class="clinical-workup-actions">
             <button type="submit" class="clinical-workup-submit-btn" id="clinicalWorkupSubmitBtn">Suggest Tests</button>
-            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">Reset</button>
+            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">New patient</button>
           </div>
 
           <p class="clinical-workup-note">
@@ -183,12 +194,14 @@
           <p class="clinical-workup-kicker">Find My Test</p>
           <h3 id="clinicalWorkupResultsTitle">Suggested tests</h3>
         </div>
-        <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear suggestions</button>
+        <div class="clinical-workup-results-actions">
+          <button type="button" class="clinical-workup-results-add-all-btn" id="addAllClinicalWorkupResultsBtn">Add all to Tube Plan</button>
+          <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear suggestions</button>
+        </div>
       </div>
       <p class="clinical-workup-results-copy" id="clinicalWorkupResultsCopy"></p>
       <div class="clinical-workup-result-tags" id="clinicalWorkupResultTags"></div>
       <div class="clinical-workup-rule-list" id="clinicalWorkupRuleList"></div>
-      <p class="clinical-workup-selection-note">Tick a test to add it to Tube Plan.</p>
       <div class="clinical-workup-test-list" id="clinicalWorkupTestList"></div>
     </section>
 
@@ -286,7 +299,7 @@
       <div class="site-footer-links">
         <a
           class="footer-link-btn footer-link-btn-whatsapp"
-          href="https://wa.me/27606286757?text=Hi%20Edgar%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
+          href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Send feedback on WhatsApp"
@@ -366,12 +379,12 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260322d"></script>
-  <script src="assets/js/script.js?v=20260322d"></script>
-  <script src="assets/js/find-my-test.js?v=20260322c"></script>
+  <script src="assets/data/data.js?v=20260323a"></script>
+  <script src="assets/js/script.js?v=20260323a"></script>
+  <script src="assets/js/find-my-test.js?v=20260323a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-22.5";
+      const APP_VERSION = "2026-03-23.1";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -388,7 +401,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260322e", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260323a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
