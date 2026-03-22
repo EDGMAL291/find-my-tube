@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260317a" />
   <link rel="shortcut icon" href="./favicon-32.png?v=20260317a" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260317a" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260320az" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260322e" />
 </head>
 <body>
   <div class="container">
@@ -281,8 +281,18 @@
       <div class="site-footer-copy">
         <p class="site-footer-title">Find My Tube</p>
         <p class="site-footer-note">Reference tool only. Always confirm collection details against local lab policy, senior review, and urgent clinical context.</p>
+        <p class="site-footer-feedback-note">Send feedback on WhatsApp. Do not include patient names, DOBs, folder numbers, or other identifiers.</p>
       </div>
       <div class="site-footer-links">
+        <a
+          class="footer-link-btn footer-link-btn-whatsapp"
+          href="https://wa.me/27606286757?text=Hi%20Edgar%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Send feedback on WhatsApp"
+        >
+          WhatsApp Feedback
+        </a>
         <button type="button" class="footer-link-btn" data-legal-doc="privacy">Privacy Policy</button>
         <button type="button" class="footer-link-btn" data-legal-doc="terms">Terms of Use</button>
         <button type="button" class="footer-link-btn" data-legal-doc="disclaimer">Disclaimer</button>
@@ -356,12 +366,12 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260321e"></script>
-  <script src="assets/js/script.js?v=20260321e"></script>
-  <script src="assets/js/find-my-test.js?v=20260321e"></script>
+  <script src="assets/data/data.js?v=20260322d"></script>
+  <script src="assets/js/script.js?v=20260322d"></script>
+  <script src="assets/js/find-my-test.js?v=20260322c"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-03-21.5";
+      const APP_VERSION = "2026-03-22.5";
       const isLocalPreview = window.location.port === "3000"
         || ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       window.addEventListener("load", () => {
@@ -378,7 +388,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260321e", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260322e", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

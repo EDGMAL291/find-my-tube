@@ -1,13 +1,13 @@
-const CACHE_NAME = "find-my-tube-v184";
+const CACHE_NAME = "find-my-tube-v189";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest?v=20260316b",
-  "./assets/css/style.css?v=20260320az",
-  "./assets/js/script.js?v=20260321e",
-  "./assets/js/find-my-test.js?v=20260321e",
-  "./assets/data/data.js?v=20260321e",
-  "./assets/data/find-my-test-map.json?v=20260321e",
+  "./assets/css/style.css?v=20260322e",
+  "./assets/js/script.js?v=20260322d",
+  "./assets/js/find-my-test.js?v=20260322c",
+  "./assets/data/data.js?v=20260322d",
+  "./assets/data/find-my-test-map.json?v=20260322d",
   "./favicon.svg",
   "./favicon-16.png",
   "./favicon-32.png",

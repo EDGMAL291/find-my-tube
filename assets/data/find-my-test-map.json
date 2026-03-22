@@ -1,5 +1,5 @@
 {
-  "version": "2026-03-21.1",
+  "version": "2026-03-22.3",
   "sourceLabel": "Find My Test",
   "disclaimer": "Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.",
   "quickPicks": [
@@ -405,7 +405,7 @@
         {
           "name": "NT-proBNP",
           "reason": "Natriuretic peptide support for suspected heart failure.",
-          "tubeHints": ["Green", "Gold/Yellow"]
+          "tubeHints": ["Gray"]
         },
         {
           "name": "U&E",
@@ -626,7 +626,7 @@
       },
       "tests": [
         {
-          "name": "OGTT Pregnancy (75g, 2hr)",
+          "name": "OGTT Pregnancy (fasting, 1hr, 2hr)",
           "reason": "Dedicated pregnancy OGTT already present in the catalogue.",
           "tubeHints": ["Gray"]
         }

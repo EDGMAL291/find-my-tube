@@ -1,7 +1,9 @@
+// Find My Test runs as a focused module on top of the main app's shared search and draw-plan API.
 (function initFindMyTestModule() {
   const app = window.findMyTubeApp;
   if (!app) return;
 
+  // Cache panel-specific DOM references once and stop early if this module is not on the page.
   const refs = {
     panel: document.getElementById("clinicalWorkupPanel"),
     form: document.getElementById("clinicalWorkupForm"),
@@ -29,13 +31,16 @@
 
   if (!refs.form || !refs.testList) return;
 
+  // Keep Find My Test state local, then sync only the parts that need to reach the main app shell.
   const state = {
     dataset: null,
     selectedQuickPickIds: new Set(),
+    autoMatchedQuickPickIds: new Set(),
     output: null,
     expandedQuickPickFields: new Set(),
     pregnancyWasAutoLocked: false,
-    lastUnlockedPregnancyValue: "unknown"
+    lastUnlockedPregnancyValue: "unknown",
+    autoMatchResetTimeoutId: 0
   };
   const pageParams = new URLSearchParams(window.location.search);
   const isFindMyTestPage = pageParams.get("tool") === "find-my-test";
@@ -43,6 +48,7 @@
 
   const datasetUrl = `assets/data/find-my-test-map.json?v=${app.assetVersion || "20260320n"}`;
 
+  // Shared text helpers keep dataset matching rules predictable.
   function escapeHtml(value) {
     if (typeof app.escapeHtml === "function") {
       return app.escapeHtml(value);
@@ -88,6 +94,7 @@
     return `${count} ${noun}${count === 1 ? "" : "s"}`;
   }
 
+  // DOB helpers power the age summary and the pregnancy field locking rules.
   function parseDateInput(value) {
     const raw = String(value || "").trim();
     if (!raw) return null;
@@ -155,6 +162,7 @@
     }
   }
 
+  // Prefer the native date picker when available, but fall back to focus/click for older browsers.
   function openDobEditor() {
     if (!refs.dobControl || !refs.dobInput) return;
 
@@ -260,6 +268,7 @@
     };
   }
 
+  // Quick picks write into the free-text fields so clinicians can mix guided chips with their own wording.
   function getQuickPickById(id) {
     return state.dataset?.quickPickById?.[id] || null;
   }
@@ -303,7 +312,188 @@
   }
 
   function getQuickPickTokens(value) {
-    return uniqueStrings(String(value || "").split(/\s*,\s*/));
+    return uniqueStrings(
+      String(value || "")
+        .split(/[\n,;]+/)
+        .map((part) => String(part || "").trim())
+    );
+  }
+
+  function doesQuickPickInputEndWithDelimiter(value) {
+    return /[\n,;]\s*$/.test(String(value || ""));
+  }
+
+  function getQuickPickCandidateTexts(quickPick) {
+    return uniqueStrings([
+      getQuickPickText(quickPick),
+      quickPick?.label || "",
+      ...(Array.isArray(quickPick?.terms) ? quickPick.terms : [])
+    ]);
+  }
+
+  function getEditDistance(leftValue, rightValue) {
+    const left = String(leftValue || "");
+    const right = String(rightValue || "");
+    if (!left) return right.length;
+    if (!right) return left.length;
+
+    const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+    for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+      let diagonal = previous[0];
+      previous[0] = leftIndex;
+
+      for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+        const cached = previous[rightIndex];
+        const substitutionCost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+        previous[rightIndex] = Math.min(
+          previous[rightIndex] + 1,
+          previous[rightIndex - 1] + 1,
+          diagonal + substitutionCost
+        );
+        diagonal = cached;
+      }
+    }
+
+    return previous[right.length];
+  }
+
+  function getQuickPickCandidateMatch(rawToken, candidateText, { allowFuzzy = false } = {}) {
+    const normalizedToken = normalize(rawToken);
+    const normalizedCandidate = normalize(candidateText);
+    if (!normalizedToken || !normalizedCandidate) return null;
+
+    if (normalizedToken === normalizedCandidate) {
+      return {
+        exact: true,
+        distance: 0,
+        lengthDelta: 0
+      };
+    }
+
+    if (!allowFuzzy || normalizedToken.length < 4 || normalizedCandidate.length < 4) return null;
+
+    const distance = getEditDistance(normalizedToken, normalizedCandidate);
+    const threshold = normalizedCandidate.length <= 5 ? 1 : 2;
+    if (distance > threshold) return null;
+
+    return {
+      exact: false,
+      distance,
+      lengthDelta: Math.abs(normalizedCandidate.length - normalizedToken.length)
+    };
+  }
+
+  function compareQuickPickMatches(nextMatch, currentMatch) {
+    if (!currentMatch) return -1;
+    if (nextMatch.exact !== currentMatch.exact) return nextMatch.exact ? -1 : 1;
+    if (nextMatch.distance !== currentMatch.distance) return nextMatch.distance - currentMatch.distance;
+    if (nextMatch.lengthDelta !== currentMatch.lengthDelta) return nextMatch.lengthDelta - currentMatch.lengthDelta;
+    return nextMatch.canonicalText.localeCompare(currentMatch.canonicalText);
+  }
+
+  function findBestQuickPickMatch(field, rawToken, { allowFuzzy = false } = {}) {
+    const fieldQuickPicks = getFieldQuickPicks(field);
+    let bestMatch = null;
+    let isAmbiguous = false;
+
+    fieldQuickPicks.forEach((quickPick) => {
+      getQuickPickCandidateTexts(quickPick).forEach((candidateText) => {
+        const candidateMatch = getQuickPickCandidateMatch(rawToken, candidateText, { allowFuzzy });
+        if (!candidateMatch) return;
+
+        const nextMatch = {
+          ...candidateMatch,
+          quickPick,
+          canonicalText: getQuickPickText(quickPick)
+        };
+        const comparison = compareQuickPickMatches(nextMatch, bestMatch);
+
+        if (comparison < 0) {
+          bestMatch = nextMatch;
+          isAmbiguous = false;
+          return;
+        }
+
+        if (
+          comparison === 0
+          && bestMatch
+          && bestMatch.quickPick.id !== nextMatch.quickPick.id
+        ) {
+          isAmbiguous = true;
+        }
+      });
+    });
+
+    if (!bestMatch || isAmbiguous) return null;
+    return bestMatch.quickPick;
+  }
+
+  function flashAutoMatchedQuickPicks(quickPickIds = []) {
+    const ids = uniqueStrings(quickPickIds);
+    if (!ids.length) return;
+
+    ids.forEach((id) => state.autoMatchedQuickPickIds.add(id));
+    window.clearTimeout(state.autoMatchResetTimeoutId);
+    renderQuickPicks();
+    state.autoMatchResetTimeoutId = window.setTimeout(() => {
+      state.autoMatchedQuickPickIds.clear();
+      renderQuickPicks();
+    }, 820);
+  }
+
+  function autoSelectTypedQuickPicks(field, { commitActiveToken = false } = {}) {
+    const input = getQuickPickInput(field);
+    if (!input) return [];
+
+    const rawValue = String(input.value || "");
+    const rawTokens = getQuickPickTokens(rawValue);
+    if (!rawTokens.length) return [];
+
+    const endsWithDelimiter = doesQuickPickInputEndWithDelimiter(rawValue);
+    const nextTokens = [];
+    const autoMatchedIds = [];
+
+    rawTokens.forEach((token, index) => {
+      const isActiveToken = index === rawTokens.length - 1 && !endsWithDelimiter && !commitActiveToken;
+      const matchedQuickPick = findBestQuickPickMatch(field, token, {
+        allowFuzzy: !isActiveToken
+      });
+
+      if (!matchedQuickPick) {
+        nextTokens.push(token);
+        return;
+      }
+
+      nextTokens.push(getQuickPickText(matchedQuickPick));
+      autoMatchedIds.push(matchedQuickPick.id);
+    });
+
+    const dedupedTokens = uniqueStrings(nextTokens);
+    const nextValue = dedupedTokens.join(", ");
+    if (nextValue !== rawValue) {
+      input.value = nextValue;
+      if (document.activeElement === input) {
+        const cursor = nextValue.length;
+        input.setSelectionRange?.(cursor, cursor);
+      }
+    }
+
+    return autoMatchedIds;
+  }
+
+  function commitTypedQuickPickField(field) {
+    const input = getQuickPickInput(field);
+    if (!input) return [];
+
+    const autoMatchedIds = autoSelectTypedQuickPicks(field, { commitActiveToken: true });
+    const tokens = getQuickPickTokens(input.value);
+    if (!tokens.length) return autoMatchedIds;
+
+    input.value = `${tokens.join(", ")}, `;
+    const cursor = input.value.length;
+    input.focus({ preventScroll: true });
+    input.setSelectionRange?.(cursor, cursor);
+    return autoMatchedIds;
   }
 
   function appendQuickPickText(input, text) {
@@ -452,7 +642,7 @@
         .map((quickPick) => `
           <button
             type="button"
-            class="clinical-workup-chip${state.selectedQuickPickIds.has(quickPick.id) ? " active" : ""}"
+            class="clinical-workup-chip${state.selectedQuickPickIds.has(quickPick.id) ? " active" : ""}${state.autoMatchedQuickPickIds.has(quickPick.id) ? " auto-added" : ""}"
             data-find-my-test-chip="${escapeHtml(quickPick.id)}"
             aria-pressed="${state.selectedQuickPickIds.has(quickPick.id) ? "true" : "false"}"
           >
@@ -485,6 +675,7 @@
     }
   }
 
+  // Build one normalized input object so the matcher can stay focused on rules instead of DOM access.
   function getInput() {
     const dobDetails = getDobDetails(refs.dobInput?.value || "");
     const symptoms = String(refs.symptomsInput?.value || "").trim();
@@ -561,6 +752,7 @@
       || hasNormalizedPhrase(input.normalizedBlob, "gestational");
   }
 
+  // Presentation matching stays conservative: a suggestion only appears if the dataset conditions are met.
   function passesDemographics(presentation, input) {
     const demographics = presentation.demographics || {};
 
@@ -635,6 +827,7 @@
     };
   }
 
+  // Combine matched presentations with the main catalogue so suggested tests stay real and selectable.
   function getTubeLabel(test, tubeHints = []) {
     const tubeGroups = typeof app.getTubeGroups === "function"
       ? app.getTubeGroups(test?.tubeColor || "")
@@ -760,6 +953,7 @@
     };
   }
 
+  // Suggested test checkboxes mirror Tube Plan so this panel and the main app always agree on selection state.
   function renderSuggestedTests() {
     const suggestedTests = state.output?.suggestedTests || [];
     const activePlanSelection = new Set(
@@ -893,6 +1087,7 @@
     scrollToResults();
   }
 
+  // Normalize the JSON dataset once so runtime matching can assume a clean shape and valid test names.
   function hydrateDataset(rawDataset) {
     const quickPicks = Array.isArray(rawDataset?.quickPicks)
       ? rawDataset.quickPicks.map((quickPick) => ({
@@ -967,6 +1162,7 @@
     };
   }
 
+  // Event wiring keeps the form reactive while delegating shared actions back to the main app API.
   function bindEvents() {
     [
       refs.symptomsChipList,
@@ -1057,6 +1253,14 @@
       refs.concernInput
     ].forEach((field) => {
       field?.addEventListener("input", () => {
+        const autoMatchedIds = field === refs.symptomsInput
+          ? autoSelectTypedQuickPicks("symptoms")
+          : field === refs.signsInput
+            ? autoSelectTypedQuickPicks("signs")
+            : field === refs.concernInput
+              ? autoSelectTypedQuickPicks("concern")
+              : [];
+
         if (field === refs.dobInput) {
           renderDobField();
         }
@@ -1064,6 +1268,7 @@
           syncPregnancyField();
         }
         syncQuickPickSelectionFromInputs();
+        flashAutoMatchedQuickPicks(autoMatchedIds);
         setStatus("");
       });
     });
@@ -1076,6 +1281,27 @@
 
     refs.dobInput?.addEventListener("blur", () => {
       renderDobField();
+    });
+
+    [
+      [refs.symptomsInput, "symptoms"],
+      [refs.signsInput, "signs"],
+      [refs.concernInput, "concern"]
+    ].forEach(([field, quickPickField]) => {
+      field?.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" || event.shiftKey) return;
+        event.preventDefault();
+        const autoMatchedIds = commitTypedQuickPickField(quickPickField);
+        syncQuickPickSelectionFromInputs();
+        flashAutoMatchedQuickPicks(autoMatchedIds);
+        setStatus("");
+      });
+
+      field?.addEventListener("blur", () => {
+        const autoMatchedIds = autoSelectTypedQuickPicks(quickPickField, { commitActiveToken: true });
+        syncQuickPickSelectionFromInputs();
+        flashAutoMatchedQuickPicks(autoMatchedIds);
+      });
     });
 
     refs.dobDisplayBtn?.addEventListener("click", () => {
@@ -1113,6 +1339,7 @@
     });
   }
 
+  // Boot the module by loading the latest dataset, then render the empty ready state.
   async function loadDataset() {
     setStatus("Loading Find My Test...");
 

@@ -1,3 +1,4 @@
+// Cache shared DOM nodes once so the rest of the app can treat the page as one UI surface.
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
 const headerIntroText = document.getElementById("headerIntroText");
@@ -79,8 +80,8 @@ const GOLD_VOLUME_PROFILE_NAMES = new Set([
   "Fe Studies" // 9
 ]);
 const OGTT_MULTI_DRAW_TESTS = new Set([
-  "OGTT (2hr)",
-  "OGTT Pregnancy (75g, 2hr)"
+  "OGTT (fasting, 1hr, 2hr)",
+  "OGTT Pregnancy (fasting, 1hr, 2hr)"
 ]);
 const selectedTestNames = new Set();
 let activeSectionGroup = "";
@@ -226,6 +227,7 @@ function updateBackToTopVisibility() {
   resultsBackToTopBtn.setAttribute("aria-hidden", isVisible ? "false" : "true");
 }
 
+// Lightweight interaction helpers keep the shared shell responsive without extra framework state.
 function showSelectionNotice(message) {
   if (!selectionNoticeToast) return;
 
@@ -526,6 +528,7 @@ function clearSearchForNextPlanEntry() {
   applyFilters();
 }
 
+// Exact planner overrides cover combinations where tube counts are fixed by local collection rules.
 const exactDrawRules = [
   {
     id: "full-blood-and-grouping",
@@ -769,14 +772,15 @@ const factTips = [
   "Document collection time clearly for tests with strict timing requirements."
 ];
 
+// Section metadata drives the browse chips, labels, and icons shown on the home screen.
 const sectionMeta = {
   chemistry: { label: "Biochemistry" },
   haematology: { label: "Haematology" },
   micro_virology: { label: "Microbiology" },
   immunology: { label: "Serology" },
+  metabolic_genetic: { label: "Molecular Biology / Genetics" },
   cytology: { label: "Cytology" },
   histology: { label: "Histology" },
-  metabolic_genetic: { label: "Molecular Biology / Genetics" },
   general: { label: "General" }
 };
 
@@ -872,6 +876,7 @@ const sectionBrowseGroups = {
   immunology: serologyBrowseGroups
 };
 
+// Section browsing helpers decide whether the user is looking at home, a department, or a subgroup.
 const sectionBrowseGroupById = Object.fromEntries(
   Object.entries(sectionBrowseGroups).map(([sectionId, groups]) => [
     sectionId,
@@ -961,9 +966,9 @@ const chipGroups = [
   "haematology",
   "micro_virology",
   "immunology",
+  "metabolic_genetic",
   "cytology",
-  "histology",
-  "metabolic_genetic"
+  "histology"
 ];
 
 const aliasByName = {
@@ -1020,14 +1025,14 @@ const aliasByName = {
     "Neonatal bilirubin",
     "Newborn jaundice bilirubin"
   ],
-  "OGTT (2hr)": [
+  "OGTT (fasting, 1hr, 2hr)": [
     "OGTT",
     "GTT",
     "Oral glucose tolerance test",
     "75 g OGTT",
     "Glucose tolerance test"
   ],
-  "OGTT Pregnancy (75g, 2hr)": [
+  "OGTT Pregnancy (fasting, 1hr, 2hr)": [
     "Pregnancy OGTT",
     "Gestational OGTT",
     "75 g pregnancy OGTT",
@@ -1694,12 +1699,12 @@ const clinicalProfileByName = {
     use: "Fasting plasma glucose test for diabetes screening and glucose regulation assessment.",
     keywords: ["fasting glucose", "fasting sugar", "diabetes", "prediabetes", "high sugar"]
   },
-  "OGTT (2hr)": {
-    use: "75 g oral glucose tolerance test using fasting, 1 hour, and 2 hour fluoride samples.",
+  "OGTT (fasting, 1hr, 2hr)": {
+    use: "Oral glucose tolerance test using fasting, 1 hour, and 2 hour fluoride samples.",
     keywords: ["ogtt", "gtt", "glucose tolerance test", "prediabetes", "diabetes", "fasting 1 hour 2 hour"]
   },
-  "OGTT Pregnancy (75g, 2hr)": {
-    use: "Pregnancy 75 g oral glucose tolerance test using fasting, 1 hour, and 2 hour fluoride samples.",
+  "OGTT Pregnancy (fasting, 1hr, 2hr)": {
+    use: "Pregnancy oral glucose tolerance test using fasting, 1 hour, and 2 hour fluoride samples.",
     keywords: ["pregnancy ogtt", "gestational diabetes", "gtt pregnancy", "fasting 1 hour 2 hour", "75 g ogtt"]
   },
   "Random Glucose": {
@@ -1911,6 +1916,7 @@ const clinicalProfileBySubsection = {
   }
 };
 
+// Shared normalization helpers keep search, shortcut matching, and tube parsing consistent.
 function normalizeForSearch(value) {
   return String(value || "")
     .toLowerCase()
@@ -2175,7 +2181,7 @@ const conditionShortcutDefinitions = [
     id: "diabetes",
     label: "suspected diabetes mellitus",
     terms: ["diabetes", "diabetes mellitus", "prediabetes", "hyperglycaemia", "hyperglycemia", "high blood sugar"],
-    tests: ["HbA1c", "Fasting Glucose", "OGTT (2hr)", "Albumin:Creatinine Ratio (Random Urine)"]
+    tests: ["HbA1c", "Fasting Glucose", "OGTT (fasting, 1hr, 2hr)", "Albumin:Creatinine Ratio (Random Urine)"]
   },
   {
     id: "thyroid-dysfunction",
@@ -2373,7 +2379,7 @@ const clinicalWorkupRuleDefinitions = [
     id: "gestational-diabetes",
     title: "Pregnancy glucose screening support",
     matchAny: ["gestational diabetes", "gdm", "pregnancy glucose", "screening glucose", "high sugar", "hyperglycaemia", "hyperglycemia"],
-    tests: ["OGTT Pregnancy (75g, 2hr)"],
+    tests: ["OGTT Pregnancy (fasting, 1hr, 2hr)"],
     requiresPregnancyContext: true,
     rationale: "Pregnancy glucose concerns may need the dedicated antenatal OGTT listed in the current catalogue.",
     caution: "Timing and eligibility for OGTT in pregnancy must follow the local antenatal guideline."
@@ -2526,6 +2532,7 @@ const supplementalClinicalShortcutIds = new Set([
   "prostate-cancer"
 ]);
 
+// These helpers turn loose clinical context into conservative suggested tests from the existing catalogue.
 function dedupeStrings(values = []) {
   return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
 }
@@ -2921,6 +2928,7 @@ function prepareFindMyTestResultsView() {
   }
 }
 
+// Selection helpers collapse profile components so Tube Plan stays readable and avoids duplicate items.
 function estimateDrawPlanForTests(testNames = [], { includeExistingSelection = false } = {}) {
   const nextSelection = includeExistingSelection
     ? new Set(selectedTestNames)
@@ -3506,6 +3514,7 @@ function syncModalOpenClass() {
   updateBackToTopVisibility();
 }
 
+// Draw planning starts with exact overrides, then falls back to grouped tube-color logic.
 function normalizeNameKey(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -3611,6 +3620,7 @@ function getDefaultPlanItems(selectedTests) {
   return { items, manual, ruleId: null };
 }
 
+// Volume and specimen-specific adjustments refine the base plan after the initial grouping step.
 function appendPlanItemDetail(item, detailText) {
   if (!item) return;
 
@@ -3919,6 +3929,7 @@ function renderDrawResult() {
   animateDrawResultCard();
 }
 
+// Card enrichment turns the raw catalogue into display-ready content for the test cards.
 function inferCriticalPrep(test) {
   const name = test.name.toLowerCase();
   const specimen = String(test.specimen || "").toLowerCase();
@@ -4626,6 +4637,7 @@ function getSectionBrowsePanelMarkup(sectionId) {
   `;
 }
 
+// Build the department chip UI from metadata so order and browse groups stay centralized.
 function renderGroupChips() {
   if (!groupChips) return;
 
@@ -4747,6 +4759,7 @@ function initSectionNavigation() {
   });
 }
 
+// Filtering merges search, section browsing, shortcuts, and clinical suggestions into one result set.
 function matchesQuery(test, rawQuery) {
   const query = normalizeForSearch(rawQuery);
   if (!query) return true;
@@ -5084,6 +5097,7 @@ function applyFilters() {
   renderCards(getFilteredTests());
 }
 
+// Wire the app shell after all shared helpers are defined.
 function bindEvents() {
   if (searchInput) {
     searchInput.addEventListener("focus", () => {
@@ -5267,10 +5281,11 @@ function bindEvents() {
   });
 }
 
+// Expose the small public API that the Find My Test module uses to share search and draw-plan state.
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
-    version: "2026-03-21.5",
-    assetVersion: "20260321e",
+    version: "2026-03-22.4",
+    assetVersion: "20260322d",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

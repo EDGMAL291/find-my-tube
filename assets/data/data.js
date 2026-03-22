@@ -1353,20 +1353,20 @@ const tests = [
     borderColor: "gray"
   },
   {
-    name: "OGTT (2hr)",
+    name: "OGTT (fasting, 1hr, 2hr)",
     tubeColor: "Grey",
     specimen: "Fluoride plasma (fasting, 1 hour, 2 hour)",
     turnaroundTime: "Same day",
-    notes: "75 g oral glucose tolerance test with fasting, 1 hour, and 2 hour fluoride samples.",
+    notes: "Oral glucose tolerance test with fasting, 1 hour, and 2 hour fluoride samples.",
     criticalPrep: "Fast overnight. Draw the fasting sample first, then give 75 g glucose to drink within 5 minutes. Keep the patient seated during the test; no food, smoking, or caffeine until the 2 hour sample is taken.",
     borderColor: "gray"
   },
   {
-    name: "OGTT Pregnancy (75g, 2hr)",
+    name: "OGTT Pregnancy (fasting, 1hr, 2hr)",
     tubeColor: "Grey",
     specimen: "Fluoride plasma (fasting, 1 hour, 2 hour)",
     turnaroundTime: "Same day",
-    notes: "Pregnancy 75 g oral glucose tolerance test with fasting, 1 hour, and 2 hour fluoride samples.",
+    notes: "Pregnancy oral glucose tolerance test with fasting, 1 hour, and 2 hour fluoride samples.",
     criticalPrep: "Fast overnight. Draw the fasting sample first, then give 75 g glucose to drink within 5 minutes. Keep the patient seated during the test; no food, smoking, or caffeine until the 2 hour sample is taken.",
     borderColor: "gray"
   },
