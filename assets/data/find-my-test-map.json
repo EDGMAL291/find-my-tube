@@ -1,5 +1,5 @@
 {
-  "version": "2026-03-22.3",
+  "version": "2026-03-23.1",
   "sourceLabel": "Find My Test",
   "disclaimer": "Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.",
   "quickPicks": [
@@ -15,7 +15,7 @@
       "label": "Shortness of breath",
       "field": "symptoms",
       "related": ["chest-pain", "hypoxia-cyanosis", "cyanosis", "heart-failure-concern", "resp-distress-concern"],
-      "terms": ["shortness of breath", "dyspnoea", "dyspnea", "orthopnoea", "orthopnea"]
+      "terms": ["shortness of breath", "dyspnoea", "dyspnea", "orthopnoea", "orthopnea", "sob"]
     },
     {
       "id": "palpitations",
@@ -41,6 +41,22 @@
       "terms": ["fatigue", "weakness"]
     },
     {
+      "id": "dizziness",
+      "label": "Dizziness",
+      "insertText": "dizziness",
+      "field": "symptoms",
+      "related": ["fatigue-pallor", "palpitations", "anaemia-concern"],
+      "terms": ["dizziness", "light-headedness", "light headedness", "vertigo"]
+    },
+    {
+      "id": "malaise",
+      "label": "Malaise",
+      "insertText": "malaise",
+      "field": "symptoms",
+      "related": ["fatigue-pallor", "fever-sepsis", "sepsis-concern"],
+      "terms": ["malaise", "generally unwell", "feeling unwell"]
+    },
+    {
       "id": "pallor",
       "label": "Pallor",
       "insertText": "pallor",
@@ -54,7 +70,7 @@
       "insertText": "bleeding",
       "field": "symptoms",
       "related": ["bruising", "fatigue-pallor", "anaemia-concern"],
-      "terms": ["bleeding", "epistaxis", "melena", "haematemesis", "hematemesis"]
+      "terms": ["bleeding", "epistaxis", "melena", "haematemesis", "hematemesis", "pv bleeding", "vaginal bleeding"]
     },
     {
       "id": "bruising",
@@ -125,12 +141,20 @@
       "terms": ["hot flushes", "hot flashes", "perimenopause", "menopause", "menopausal"]
     },
     {
+      "id": "missed-period",
+      "label": "Missed period",
+      "insertText": "missed period",
+      "field": "symptoms",
+      "related": ["pregnancy-booking", "pcos-concern", "menopause-concern"],
+      "terms": ["missed period", "late period", "amenorrhoea", "amenorrhea"]
+    },
+    {
       "id": "oedema-proteinuria",
       "label": "Oedema",
       "insertText": "oedema",
       "field": "signs",
       "related": ["proteinuria", "ckd-concern"],
-      "terms": ["oedema", "edema", "swelling"]
+      "terms": ["oedema", "edema", "swelling", "leg swelling", "foot swelling", "unilateral leg swelling"]
     },
     {
       "id": "proteinuria",
@@ -169,6 +193,14 @@
       "field": "signs",
       "related": ["palpitations", "temperature-intolerance", "cold-intolerance", "thyroid-concern"],
       "terms": ["goitre", "goiter", "thyroid enlargement"]
+    },
+    {
+      "id": "hair-loss",
+      "label": "Hair loss",
+      "insertText": "hair loss",
+      "field": "signs",
+      "related": ["thyroid-concern", "anaemia-concern"],
+      "terms": ["hair loss", "alopecia", "hair thinning"]
     },
     {
       "id": "joint-pain",
@@ -231,11 +263,18 @@
       "terms": ["heart failure", "cardiac failure", "fluid overload", "pulmonary oedema", "pulmonary edema"]
     },
     {
+      "id": "dvt-concern",
+      "label": "DVT / clot",
+      "field": "concern",
+      "related": ["shortness-breath", "oedema-proteinuria"],
+      "terms": ["dvt", "deep vein thrombosis", "venous thromboembolism", "blood clot", "vte"]
+    },
+    {
       "id": "sepsis-concern",
       "label": "Sepsis",
       "field": "concern",
       "related": ["fever-sepsis", "confusion", "resp-distress-concern"],
-      "terms": ["sepsis", "septic shock", "infection", "toxic looking"]
+      "terms": ["sepsis", "septic shock", "infection", "toxic looking", "site infection", "wound infection", "local infection"]
     },
     {
       "id": "anaemia-concern",
@@ -257,6 +296,20 @@
       "field": "concern",
       "related": ["hyperglycaemia", "thirst", "gestational-diabetes-concern"],
       "terms": ["diabetes", "hyperglycaemia", "hyperglycemia", "high sugar", "glycosuria"]
+    },
+    {
+      "id": "malaria-concern",
+      "label": "Malaria",
+      "field": "concern",
+      "related": ["fever-sepsis"],
+      "terms": ["malaria", "suspected malaria"]
+    },
+    {
+      "id": "gout-concern",
+      "label": "Gout",
+      "field": "concern",
+      "related": ["joint-pain"],
+      "terms": ["gout", "podagra"]
     },
     {
       "id": "pancreatitis-concern",
@@ -290,8 +343,8 @@
       "id": "thyroid-concern",
       "label": "Thyroid disease",
       "field": "concern",
-      "related": ["palpitations", "temperature-intolerance", "cold-intolerance", "goitre"],
-      "terms": ["thyroid", "goitre", "goiter", "hyperthyroidism", "hypothyroidism", "thyrotoxicosis"]
+      "related": ["palpitations", "temperature-intolerance", "cold-intolerance", "goitre", "hair-loss"],
+      "terms": ["thyroid", "goitre", "goiter", "hyperthyroidism", "hypothyroidism", "thyrotoxicosis", "hypothyroid", "hyperthyroid"]
     },
     {
       "id": "autoimmune-concern",
@@ -629,6 +682,50 @@
         }
       ],
       "caution": "High-risk DVT or PE still needs urgent imaging and the local clot pathway."
+    },
+    {
+      "id": "gout",
+      "label": "Gout support",
+      "summary": "Useful when gout or podagra is suspected, especially with an acutely painful swollen joint.",
+      "match": {
+        "any": ["gout", "podagra", "acute gout", "gout flare", "hot swollen joint", "first mtp pain"],
+        "allGroups": []
+      },
+      "demographics": {
+        "sexes": [],
+        "allowUnspecifiedSex": true,
+        "minAge": null,
+        "maxAge": null,
+        "pregnancy": "any"
+      },
+      "tests": [
+        {
+          "name": "Uric Acid",
+          "reason": "Serum urate support when gout is suspected.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "U&E",
+          "reason": "Baseline renal-function support, especially because kidney function affects ongoing gout treatment choices.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "CRP",
+          "reason": "Inflammatory marker support in an acutely inflamed joint presentation.",
+          "tubeHints": ["Gold/Yellow"]
+        },
+        {
+          "name": "FBC",
+          "reason": "Baseline blood count support when gout, inflammation, or an infective differential is being considered.",
+          "tubeHints": ["Purple"]
+        },
+        {
+          "name": "ESR",
+          "reason": "Additional inflammation marker sometimes requested alongside CRP in gout workup.",
+          "tubeHints": ["Black"]
+        }
+      ],
+      "caution": "Serum urate can be normal during an acute flare. If the diagnosis is uncertain or septic arthritis is a concern, follow the local pathway for joint aspiration and urgent review."
     },
     {
       "id": "renal-proteinuria",

@@ -443,7 +443,7 @@ const tests = [
   },
   {
     name: "GI PCR Panel",
-    tubeColor: "N/A (Stool specimen)",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "1-2 days",
     notes: "Multiplex gastrointestinal pathogen panel.",
@@ -531,7 +531,7 @@ const tests = [
   },
   {
     name: "Urine MCS",
-    tubeColor: "Sterile urine container",
+    tubeColor: "Specimen jar",
     specimen: "Midstream urine",
     turnaroundTime: "24-72 hours",
     notes: "Microbiology culture and sensitivity.",
@@ -670,15 +670,31 @@ const tests = [
   },
   {
     name: "Swab MCS",
-    tubeColor: "N/A (Swab-specific)",
+    tubeColor: "Swab in transport medium",
     specimen: "Wound/throat/nasal/other clinical swab",
     turnaroundTime: "24-72 hours",
     notes: "Microbiology culture and sensitivity on swab specimen.",
     borderColor: "#64748b"
   },
   {
+    name: "Fluid MCS",
+    tubeColor: "Specimen jar",
+    specimen: "Sterile aspirated/body fluid sample",
+    turnaroundTime: "24-72 hours",
+    notes: "Microbiology culture and sensitivity on aspirated fluid specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "Tissue MCS",
+    tubeColor: "Specimen jar",
+    specimen: "Sterile tissue sample",
+    turnaroundTime: "24-72 hours",
+    notes: "Microbiology culture and sensitivity on tissue specimen.",
+    borderColor: "#64748b"
+  },
+  {
     name: "Stool MCS",
-    tubeColor: "Sterile stool container",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "24-72 hours",
     notes: "Microbiology culture and sensitivity on stool specimen.",
@@ -686,7 +702,7 @@ const tests = [
   },
   {
     name: "Sputum MCS",
-    tubeColor: "Sterile sputum container",
+    tubeColor: "Specimen jar",
     specimen: "Sputum",
     turnaroundTime: "24-72 hours",
     notes: "Microbiology culture and sensitivity on sputum specimen.",
@@ -694,31 +710,127 @@ const tests = [
   },
   {
     name: "Stool Culture",
-    tubeColor: "Sterile stool container",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "24-72 hours",
     notes: "Routine stool microbiology culture.",
     borderColor: "#64748b"
   },
   {
-    name: "TB PCR (GeneXpert)",
-    tubeColor: "N/A (Specimen-specific)",
-    specimen: "Sputum/respiratory or other appropriate sample",
+    name: "TB PCR (GeneXpert) - Sputum",
+    tubeColor: "Specimen jar",
+    specimen: "Sputum",
     turnaroundTime: "Same day to 2 days",
-    notes: "Molecular tuberculosis testing.",
+    notes: "Molecular tuberculosis testing on a sputum specimen.",
     borderColor: "#64748b"
   },
   {
-    name: "TB Culture",
-    tubeColor: "N/A (Specimen-specific)",
-    specimen: "Sputum/respiratory or other appropriate sample",
+    name: "TB PCR (GeneXpert) - Urine",
+    tubeColor: "Specimen jar",
+    specimen: "Urine",
+    turnaroundTime: "Same day to 2 days",
+    notes: "Molecular tuberculosis testing on a urine specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB PCR (GeneXpert) - Fluid",
+    tubeColor: "Specimen jar",
+    specimen: "Fluid",
+    turnaroundTime: "Same day to 2 days",
+    notes: "Molecular tuberculosis testing on a fluid specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB PCR (GeneXpert) - Tissue",
+    tubeColor: "Specimen jar",
+    specimen: "Tissue",
+    turnaroundTime: "Same day to 2 days",
+    notes: "Molecular tuberculosis testing on a tissue specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB PCR (GeneXpert) - Stool",
+    tubeColor: "Specimen jar",
+    specimen: "Stool",
+    turnaroundTime: "Same day to 2 days",
+    notes: "Molecular tuberculosis testing on a stool specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB PCR (GeneXpert) - Swab",
+    tubeColor: "Swab in transport medium",
+    specimen: "Swab",
+    turnaroundTime: "Same day to 2 days",
+    notes: "Molecular tuberculosis testing on a swab specimen in transport medium.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB PCR (GeneXpert) - CSF",
+    tubeColor: "Tan",
+    specimen: "CSF",
+    turnaroundTime: "Same day to 2 days",
+    notes: "Molecular tuberculosis testing on a CSF specimen.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB Culture - Sputum",
+    tubeColor: "Specimen jar",
+    specimen: "Sputum",
     turnaroundTime: "2-8 weeks",
-    notes: "Mycobacterial culture turnaround is typically prolonged.",
+    notes: "Mycobacterial culture on a sputum specimen. Mycobacterial culture turnaround is typically prolonged.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB Culture - Urine",
+    tubeColor: "Specimen jar",
+    specimen: "Urine",
+    turnaroundTime: "2-8 weeks",
+    notes: "Mycobacterial culture on a urine specimen. Mycobacterial culture turnaround is typically prolonged.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB Culture - Fluid",
+    tubeColor: "Specimen jar",
+    specimen: "Fluid",
+    turnaroundTime: "2-8 weeks",
+    notes: "Mycobacterial culture on a fluid specimen. Mycobacterial culture turnaround is typically prolonged.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB Culture - Tissue",
+    tubeColor: "Specimen jar",
+    specimen: "Tissue",
+    turnaroundTime: "2-8 weeks",
+    notes: "Mycobacterial culture on a tissue specimen. Mycobacterial culture turnaround is typically prolonged.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB Culture - Stool",
+    tubeColor: "Specimen jar",
+    specimen: "Stool",
+    turnaroundTime: "2-8 weeks",
+    notes: "Mycobacterial culture on a stool specimen. Mycobacterial culture turnaround is typically prolonged.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB Culture - Swab",
+    tubeColor: "Swab in transport medium",
+    specimen: "Swab",
+    turnaroundTime: "2-8 weeks",
+    notes: "Mycobacterial culture on a swab specimen in transport medium. Mycobacterial culture turnaround is typically prolonged.",
+    borderColor: "#64748b"
+  },
+  {
+    name: "TB Culture - CSF",
+    tubeColor: "Tan",
+    specimen: "CSF",
+    turnaroundTime: "2-8 weeks",
+    notes: "Mycobacterial culture on a CSF specimen. Mycobacterial culture turnaround is typically prolonged.",
     borderColor: "#64748b"
   },
   {
     name: "Calprotectin (Fecal)",
-    tubeColor: "Stool container",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "1-3 days",
     notes: "Gut inflammation marker listed on form.",
@@ -726,7 +838,7 @@ const tests = [
   },
   {
     name: "Faecal Occult Blood",
-    tubeColor: "Stool container",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "1-3 days",
     notes: "Occult blood screening test performed on a stool sample.",
@@ -894,8 +1006,8 @@ const tests = [
   },
   {
     name: "LDH",
-    tubeColor: "Green (Heparinised) preferred / Gold-Yellow acceptable",
-    specimen: "Heparinised plasma (preferred) or serum",
+    tubeColor: "Gold/Yellow",
+    specimen: "Serum",
     turnaroundTime: "4-8 hours",
     notes: "General tissue injury marker.",
     borderColor: "yellow"
@@ -1078,7 +1190,7 @@ const tests = [
   },
   {
     name: "H. pylori Stool Antigen",
-    tubeColor: "Stool container",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "1-3 days",
     notes: "Stool antigen test for Helicobacter pylori.",
@@ -1086,7 +1198,7 @@ const tests = [
   },
   {
     name: "C. difficile Toxin A/B",
-    tubeColor: "Stool container",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "Same day to 1 day",
     notes: "Stool toxin assay for C. difficile infection.",
@@ -1102,7 +1214,7 @@ const tests = [
   },
   {
     name: "MRSA Screen",
-    tubeColor: "N/A (Swab-specific)",
+    tubeColor: "Swab in transport medium",
     specimen: "Nasal/groin/other screening swab",
     turnaroundTime: "1-3 days",
     notes: "Culture or PCR-based MRSA screening.",
@@ -1274,7 +1386,7 @@ const tests = [
   },
   {
     name: "Steatocrit",
-    tubeColor: "Stool container",
+    tubeColor: "Specimen jar",
     specimen: "Stool",
     turnaroundTime: "1-3 days",
     notes: "Fecal fat screening test.",
@@ -1392,6 +1504,14 @@ const tests = [
     specimen: "Serum",
     turnaroundTime: "1-3 days",
     notes: "Immunoglobulin quantification.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Immunoglobulin Profile (IgG, IgA, IgM)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Profile including total IgG, IgA, and IgM quantification.",
     borderColor: "yellow"
   },
   {
@@ -1590,6 +1710,14 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "HE4",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Tumor marker often paired with CA 125 in selected ovarian-mass workup.",
+    borderColor: "yellow"
+  },
+  {
     name: "Protein Electrophoresis with Immunofixation",
     tubeColor: "Gold",
     specimen: "Serum",
@@ -1779,6 +1907,14 @@ const tests = [
     specimen: "EDTA whole blood",
     turnaroundTime: "1-3 days",
     notes: "Hemoglobinopathy assessment.",
+    borderColor: "purple"
+  },
+  {
+    name: "Peripheral Blood Smear / Blood Film",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day to 1 day",
+    notes: "Peripheral smear or blood film morphology review requested with hematology workup.",
     borderColor: "purple"
   },
   {

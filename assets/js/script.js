@@ -2,6 +2,10 @@
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
 const headerIntroText = document.getElementById("headerIntroText");
+const headerSettings = document.getElementById("headerSettings");
+const themeSettingsBtn = document.getElementById("themeSettingsBtn");
+const themeSwitcherPanel = document.getElementById("themeSwitcherPanel");
+const themeModeButtons = document.querySelectorAll("[data-theme-mode]");
 const sectionContextBar = document.getElementById("sectionContextBar");
 const sectionContextBackBtn = document.getElementById("sectionContextBackBtn");
 const sectionContextLabel = document.getElementById("sectionContextLabel");
@@ -118,6 +122,7 @@ const activeBrowseGroupBySection = {
 let isClearDrawSelectionConfirming = false;
 let clearDrawSelectionConfirmTimeoutId = 0;
 let selectionNoticeTimeoutId = 0;
+let isThemePanelOpen = false;
 let selectionNoticeHideTimeoutId = 0;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
 const CLINICAL_WORKUP_DISCLAIMER = "Reference-only test support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.";
@@ -133,20 +138,19 @@ const APP_HOME_TITLE = "Find My Tube";
 const FIND_MY_TEST_PAGE_TITLE = "Find My Test";
 const APP_HOME_HEADER_COPY = "Find the right test, the right tube and why it's ordered.";
 const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
+const THEME_STORAGE_KEY = "fmt-theme-mode";
 const THEME_COLOR_BY_MODE = {
   light: "#0f766e",
+  neutral: "#6b7c7a",
   dark: "#122028"
 };
 const appleMobileAppTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const appleMobileStatusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-const systemThemeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-let currentTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-
-// Gets system theme.
-function getSystemTheme() {
-  return systemThemeMediaQuery.matches ? "dark" : "light";
-}
+const ALLOWED_THEME_MODES = new Set(["light", "neutral", "dark"]);
+let currentTheme = ALLOWED_THEME_MODES.has(document.documentElement.dataset.theme)
+  ? document.documentElement.dataset.theme
+  : "neutral";
 
 // Updates theme meta.
 function updateThemeMeta(theme) {
@@ -159,27 +163,68 @@ function updateThemeMeta(theme) {
   }
 }
 
-// Applies theme.
-function applyTheme(theme) {
-  currentTheme = theme === "dark" ? "dark" : "light";
-  document.documentElement.dataset.theme = currentTheme;
-  updateThemeMeta(currentTheme);
+// Updates theme switcher state.
+function updateThemeSwitcherState() {
+  themeModeButtons.forEach((button) => {
+    const mode = button.getAttribute("data-theme-mode") || "";
+    const isActive = mode === currentTheme;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
 }
 
-// Handles system theme change.
-function handleSystemThemeChange() {
-  applyTheme(getSystemTheme());
+// Sets theme panel open state.
+function setThemePanelOpen(isOpen) {
+  isThemePanelOpen = Boolean(isOpen);
+  if (themeSwitcherPanel) {
+    themeSwitcherPanel.hidden = !isThemePanelOpen;
+  }
+  if (themeSettingsBtn) {
+    themeSettingsBtn.setAttribute("aria-expanded", isThemePanelOpen ? "true" : "false");
+    themeSettingsBtn.classList.toggle("active", isThemePanelOpen);
+  }
+}
+
+// Applies theme.
+function applyTheme(theme) {
+  currentTheme = ALLOWED_THEME_MODES.has(theme) ? theme : "neutral";
+  document.documentElement.dataset.theme = currentTheme;
+  updateThemeMeta(currentTheme);
+  updateThemeSwitcherState();
 }
 
 // Initializes theme.
 function initTheme() {
-  applyTheme(getSystemTheme());
+  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  applyTheme(ALLOWED_THEME_MODES.has(storedTheme) ? storedTheme : currentTheme);
+  setThemePanelOpen(false);
 
-  if (typeof systemThemeMediaQuery.addEventListener === "function") {
-    systemThemeMediaQuery.addEventListener("change", handleSystemThemeChange);
-  } else if (typeof systemThemeMediaQuery.addListener === "function") {
-    systemThemeMediaQuery.addListener(handleSystemThemeChange);
+  themeModeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextTheme = button.getAttribute("data-theme-mode") || "neutral";
+      applyTheme(nextTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+      setThemePanelOpen(false);
+    });
+  });
+
+  if (themeSettingsBtn) {
+    themeSettingsBtn.addEventListener("click", () => {
+      setThemePanelOpen(!isThemePanelOpen);
+    });
   }
+
+  document.addEventListener("click", (event) => {
+    if (!isThemePanelOpen || !headerSettings) return;
+    if (headerSettings.contains(event.target)) return;
+    setThemePanelOpen(false);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !isThemePanelOpen) return;
+    setThemePanelOpen(false);
+    themeSettingsBtn?.focus();
+  });
 }
 
 document.body.classList.toggle("find-my-test-page", isFindMyTestPage);
@@ -649,9 +694,7 @@ const exactDrawRules = [
   {
     id: "cardiac-panel",
     tests: ["Cardiac Profile"],
-    items: [
-      { key: "choice:Green|Gold/Yellow", label: "Green or Gold/Yellow", count: 1, detail: "Use 1 x Green tube or 1 x Gold/Yellow tube for Cardiac Profile." }
-    ]
+    items: [{ key: "choice:Green|Gold/Yellow", label: "Green or Gold/Yellow", count: 1 }]
   },
   {
     id: "tumour-markers-core",
@@ -980,12 +1023,6 @@ const sectionBrowseGroupById = Object.fromEntries(
   ])
 );
 
-const sectionBrowseTitleById = {
-  chemistry: "Biochemistry Focus Areas",
-  haematology: "Haematology Groups",
-  immunology: "Serology Groups"
-};
-
 // Gets section icon markup.
 function getSectionIconMarkup(groupId) {
   return sectionIconById[groupId] || sectionIconById.general;
@@ -1079,10 +1116,10 @@ const chipGroups = [
 ];
 
 const aliasByName = {
-  "U&E": ["U+E", "UE", "Renal profile", "Kidney function"],
+  "U&E": ["U+E", "UE", "Renal profile", "Kidney function", "U and E"],
   "CMP": ["CMP profile", "Bone profile", "Calcium magnesium phosphate profile"],
   "FBC": ["CBC", "Complete blood count", "Full blood count"],
-  "Lipid Profile / Lipogram": ["Lipid profile", "Lipogram", "Lipid"],
+  "Lipid Profile / Lipogram": ["Lipid profile", "Lipogram", "Lipid", "Lipids", "Lipid panel"],
   "Blood Gases": ["ABG", "Blood gas", "Blood gases"],
   "Cholesterol Total": ["Total cholesterol", "TC"],
   "LDL Cholesterol": ["LDL", "Bad cholesterol"],
@@ -1094,7 +1131,7 @@ const aliasByName = {
   Transferrin: ["Iron binding protein"],
   TIBC: ["Total iron binding capacity"],
   "Transferrin Saturation (Calculated)": ["TSAT", "Transferrin sat", "Iron saturation"],
-  "Uric Acid": ["UA", "Urate"],
+  "Uric Acid": ["UA", "Urate", "Serum uric acid", "S-urate", "S urate"],
   "RBC Count": ["RBC", "Red cell count"],
   "WBC and Differential Count": ["WBC", "White cell count", "Differential"],
   "Platelet Count": ["Platelets", "PLT"],
@@ -1105,14 +1142,16 @@ const aliasByName = {
   "Calcium": ["Ca"],
   "Magnesium": ["Mg"],
   "Phosphate": ["PO4", "PO4-3", "Phos"],
-  "Liver Function Tests (LFT)": ["LFT", "Liver profile", "Hepatic profile"],
+  "Liver Function Tests (LFT)": ["LFT", "Liver profile", "Hepatic profile", "LFTs"],
   Haptoglobin: ["Haptoglobin level"],
   "Fasting Glucose": [
     "Glucose Fasting",
     "Glucose",
     "Fasting",
     "Fasting sugar",
-    "Blood sugar fasting"
+    "Blood sugar fasting",
+    "Fasting glucose",
+    "F glucose"
   ],
   "Cord Blood": [
     "Cord blood profile",
@@ -1166,7 +1205,7 @@ const aliasByName = {
   ],
   "Malaria PCR": ["Malaria PCR (with ID if Positive)"],
   "INR": ["PT INR", "Clotting ratio", "INR calculated"],
-  "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin"],
+  "HbA1c": ["A1c", "Glycated haemoglobin", "Glycated hemoglobin", "HBA1C", "HbA1C"],
   "Blood Group & Rh": ["ABO", "Rh factor", "Group "],
   "Blood Bank / Transfusion": ["Blood bank", "Blood transfusion", "Transfusion", "Transfusion request"],
   "STD PCR": [
@@ -1490,7 +1529,10 @@ const aliasByName = {
     "TFT",
     "Thyroid profile",
     "TSH / Thyroid Profile",
-    "Thyroid function test"
+    "Thyroid function test",
+    "Thy funct",
+    "TSH+T4",
+    "T4+TSH"
   ],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
@@ -1510,22 +1552,45 @@ const aliasByName = {
   "Anti-CCP Antibody": ["CCP", "ACCP", "Anti CCP"],
   "Malaria Profile": ["Malaria panel", "Malaria screen", "Malaria studies"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
-  "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies"],
+  "Fe Studies": ["Iron Studies", "Iron", "Fe", "Fe Studies", "Iron study", "Fe study"],
   "Ammonia": ["NH3", "Ammonia plasma"],
-  "TB PCR (GeneXpert)": ["Xpert", "GeneXpert"],
+  "TB PCR (GeneXpert) - Sputum": ["TB PCR (GeneXpert)", "TB GeneXpert", "Xpert", "GeneXpert", "TB Xpert", "TB PCR sputum", "GeneXpert sputum"],
+  "TB PCR (GeneXpert) - Urine": ["TB PCR (GeneXpert)", "TB GeneXpert", "Xpert", "GeneXpert", "TB Xpert", "TB PCR urine", "GeneXpert urine"],
+  "TB PCR (GeneXpert) - Fluid": ["TB PCR (GeneXpert)", "TB GeneXpert", "Xpert", "GeneXpert", "TB Xpert", "TB PCR fluid", "GeneXpert fluid"],
+  "TB PCR (GeneXpert) - Tissue": ["TB PCR (GeneXpert)", "TB GeneXpert", "Xpert", "GeneXpert", "TB Xpert", "TB PCR tissue", "GeneXpert tissue"],
+  "TB PCR (GeneXpert) - Stool": ["TB PCR (GeneXpert)", "TB GeneXpert", "Xpert", "GeneXpert", "TB Xpert", "TB PCR stool", "GeneXpert stool"],
+  "TB PCR (GeneXpert) - Swab": ["TB PCR (GeneXpert)", "TB GeneXpert", "Xpert", "GeneXpert", "TB Xpert", "TB PCR swab", "GeneXpert swab"],
+  "TB PCR (GeneXpert) - CSF": ["TB PCR (GeneXpert)", "TB GeneXpert", "Xpert", "GeneXpert", "TB Xpert", "TB PCR csf", "GeneXpert csf"],
+  "TB Culture - Sputum": ["TB Culture", "TB culture sputum", "Mycobacterial culture sputum"],
+  "TB Culture - Urine": ["TB Culture", "TB culture urine", "Mycobacterial culture urine"],
+  "TB Culture - Fluid": ["TB Culture", "TB culture fluid", "Mycobacterial culture fluid"],
+  "TB Culture - Tissue": ["TB Culture", "TB culture tissue", "Mycobacterial culture tissue"],
+  "TB Culture - Stool": ["TB Culture", "TB culture stool", "Mycobacterial culture stool"],
+  "TB Culture - Swab": ["TB Culture", "TB culture swab", "Mycobacterial culture swab"],
+  "TB Culture - CSF": ["TB Culture", "TB culture csf", "Mycobacterial culture csf"],
   "CSF Profile": [
     "LP profile",
     "Lumbar puncture profile",
     "CSF screen",
     "CSF workup"
   ],
-  "Urine MCS": ["Urine culture", "MC&S", "STI", "STD"],
-  "Sputum MCS": ["Sputum culture", "MC&S"],
-  "faeces MCS": ["Stool culture", "MC&S"],
-  "Swab MCS": ["Swab culture", "MC&S"],
-  "fluid MCS": ["Fluid culture", "MC&S"],
-  "tissue MCS": ["Tissue culture", "MC&S"],
+  "Urine MCS": ["Urine culture", "MC&S", "Urine MCS", "STI", "STD"],
+  "Sputum MCS": ["Sputum culture", "MC&S", "Sputum MCS"],
+  "Stool MCS": ["Stool culture", "MC&S", "Faeces MCS", "Feces MCS", "Faecal MCS"],
+  "Swab MCS": ["Swab culture", "MC&S", "Swab MCS"],
+  "Fluid MCS": ["Fluid culture", "MC&S", "Fluid MCS"],
+  "Tissue MCS": ["Tissue culture", "MC&S", "Tissue MCS"],
   "CSF MCS": ["CSF culture", "MC&S"],
+  "Blood Culture": ["Blood culture", "Blood MCS", "Blood M/C/S"],
+  "Malaria Smear (Thick and Thin)": ["Malaria screen (microscopy)", "Malaria smear", "Malaria blood film"],
+  "Total Testosterone (+SHBG if Female)": ["Testosterone", "Testosterone total"],
+  "Folate (Serum)": ["Folate", "Folic acid", "Serum folate"],
+  "Vitamin B12": ["Vit B12", "Vitamin B12", "VITB12", "B12"],
+  "Vitamin D (25OH)": ["Vit D", "Vitamin D", "VitD", "VITD", "25 OH vitamin D", "25-OH vitamin D"],
+  "NT-proBNP": ["BNP", "Pro-BNP", "proBNP", "NTproBNP"],
+  "Peripheral Blood Smear / Blood Film": ["Blood film", "Peripheral blood smear", "Peripheral smear", "Blood smear"],
+  "Immunoglobulin Profile (IgG, IgA, IgM)": ["Immunoglobulins", "Immunoglobulin profile", "Ig profile", "IgG IgA IgM"],
+  "HE4": ["Human epididymis protein 4"],
   "CSF Cell Count and Chemistry": [
     "Cell count and chemistry",
     "CSF cell count and chemistry",
@@ -2105,6 +2170,8 @@ function normalizeTubeColor(value) {
 
 const tubeGroupPatternEntries = [
   { key: "Blood Culture Bottles", pattern: /\bblood culture\b|\bculture bottles?\b/ },
+  { key: "Swab Transport Medium", pattern: /\bswab in transport medium\b|\btransport medium\b/ },
+  { key: "Specimen Jar", pattern: /\b(?:dark\s+blue\s+|blue\s+)?(?:sterile\s+)?specimen jar\b/ },
   { key: "Tan", pattern: /\btan\b/ },
   { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
   { key: "Pink", pattern: /\bpink\b/ },
@@ -2136,6 +2203,9 @@ function getTubeGroups(tubeColorValue) {
   if (groups.includes("24hr Urine Container")) {
     return groups.filter((group) => group !== "Urine Container");
   }
+  if (groups.includes("Specimen Jar")) {
+    return groups.filter((group) => group !== "Blue" && group !== "Urine Container");
+  }
   return groups;
 }
 
@@ -2150,6 +2220,8 @@ function getTubeSwatchColor(tubeGroup) {
     "Pearl/White": "#e5e7eb",
     Green: "#22c55e",
     Gray: "#9ca3af",
+    "Swab Transport Medium": "#0f766e",
+    "Specimen Jar": "#1d4ed8",
     "Urine Container": "#f8d66d",
     "24hr Urine Container": "#f59e0b",
     Red: "#ef4444",
@@ -2171,6 +2243,8 @@ function getTubeAdditiveLabel(tubeGroup) {
     "Pearl/White": "EDTA with gel",
     Green: "Heparin",
     Gray: "Fluoride / oxalate",
+    "Swab Transport Medium": "Transport medium",
+    "Specimen Jar": "Sterile container",
     "Urine Container": "Sterile container",
     "24hr Urine Container": "24-hour collection",
     Red: "Plain",
@@ -2184,6 +2258,8 @@ function getTubeAdditiveLabel(tubeGroup) {
 // Gets tube icon modifier class.
 function getTubeIconModifierClass(tubeGroup) {
   if (tubeGroup === "Pearl/White") return " tube-icon-pearl";
+  if (tubeGroup === "Swab Transport Medium") return " tube-icon-swab-medium";
+  if (tubeGroup === "Specimen Jar") return " tube-icon-specimen-jar";
   if (tubeGroup === "Urine Container") return " tube-icon-urine-container";
   if (tubeGroup === "24hr Urine Container") return " tube-icon-urine-24hr";
   return "";
@@ -2192,6 +2268,36 @@ function getTubeIconModifierClass(tubeGroup) {
 // Gets tube visual markup.
 function getTubeVisualMarkup(tubeGroup, sizeClass = "") {
   return `<span class="tube-icon${sizeClass}${getTubeIconModifierClass(tubeGroup)}" style="--tube-color: ${getTubeSwatchColor(tubeGroup)};" aria-hidden="true"></span>`;
+}
+
+const NON_TUBE_COLLECTION_GROUPS = new Set([
+  "Specimen Jar",
+  "Swab Transport Medium",
+  "Urine Container",
+  "24hr Urine Container",
+  "Blood Culture Bottles"
+]);
+
+function isTubeLikeCollectionGroup(group) {
+  return !NON_TUBE_COLLECTION_GROUPS.has(String(group || "").trim());
+}
+
+function getCollectionFieldLabel(groups = []) {
+  if (!groups.length) return "Collection";
+  return groups.every((group) => isTubeLikeCollectionGroup(group)) ? "Tube" : "Collection";
+}
+
+function planIncludesNonTubeItems(plan) {
+  return (plan?.items || []).some((item) => {
+    const alternativeGroups = getPlanItemAlternativeGroups(item);
+    const groups = alternativeGroups.length ? alternativeGroups : [item.key];
+    return groups.some((group) => !isTubeLikeCollectionGroup(group));
+  });
+}
+
+function formatPlanCountLabel(count, plan) {
+  const noun = planIncludesNonTubeItems(plan) ? "collection item" : "tube";
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 // Checks whether alternative tube choice.
@@ -3399,25 +3505,27 @@ function updateQuickToolsPanelState() {
     quickToolsDescription.textContent = "Add tests as you search to combine tubes and save consumables.";
     if (quickToolsStats) quickToolsStats.hidden = true;
     if (quickToolsTestsStat) quickToolsTestsStat.textContent = "";
-    if (quickToolsTubesStat) quickToolsTubesStat.textContent = "";
+    if (quickToolsTubesStat) {
+      quickToolsTubesStat.textContent = "";
+      quickToolsTubesStat.hidden = true;
+    }
     if (quickToolsClearBtn) quickToolsClearBtn.hidden = true;
     openDrawPlannerBtn.textContent = "Plan My Draw";
     openDrawPlannerBtn.setAttribute("aria-controls", "searchInput");
     return;
   }
 
-  const { plan } = getResolvedDrawPlan(selectedTests);
-  const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
   quickToolsPanel.classList.remove("inactive-plan");
   quickToolsPanel.classList.add("active-plan");
   quickToolsTitle.textContent = "Current Draw Plan";
-  quickToolsDescription.textContent = "Keep searching to add more tests, or open your plan to review the current tube count.";
+  quickToolsDescription.textContent = "Keep searching to add more tests, or open your plan to review the current selections.";
   if (quickToolsStats) quickToolsStats.hidden = false;
   if (quickToolsTestsStat) {
     quickToolsTestsStat.textContent = `${count} test${count !== 1 ? "s" : ""}`;
   }
   if (quickToolsTubesStat) {
-    quickToolsTubesStat.textContent = `${totalTubes} tube${totalTubes !== 1 ? "s" : ""}`;
+    quickToolsTubesStat.textContent = "";
+    quickToolsTubesStat.hidden = true;
   }
   if (quickToolsClearBtn) quickToolsClearBtn.hidden = false;
   openDrawPlannerBtn.textContent = "View Plan";
@@ -3485,6 +3593,7 @@ function updateSelectionCartBar() {
 
   const { plan } = getResolvedDrawPlan(selectedTests);
   const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
+  const countLabel = formatPlanCountLabel(totalTubes, plan);
   const badgeCount = count > 99 ? "99+" : String(count);
 
   selectionCartBar.hidden = false;
@@ -3492,7 +3601,7 @@ function updateSelectionCartBar() {
   selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
-    `Tube Plan. ${count} added test${count !== 1 ? "s" : ""}, ${totalTubes} tube${totalTubes !== 1 ? "s" : ""} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
+    `Tube Plan. ${count} added test${count !== 1 ? "s" : ""}, ${countLabel} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
   );
   selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
   document.body.classList.add("has-selection-cart");
@@ -3795,17 +3904,6 @@ function getDefaultPlanItems(selectedTests) {
     }
 
     if (isAlternativeTubeChoice(test.tubeColor, groups)) {
-      if (selectedTests.length > 1 && normalizeNameKey(test.name) === "cardiac profile") {
-        dedicatedAlternativeItems.push({
-          key: `choice:${groups.join("|")}:${normalizeNameKey(test.name)}`,
-          label: groups.join(" or "),
-          count: 1,
-          tests: [test.name],
-          detail: "Use its own Green tube (preferred) or its own Gold/Yellow tube for Cardiac Profile."
-        });
-        return;
-      }
-
       alternativeTests.push({ test, groups });
       return;
     }
@@ -4079,15 +4177,30 @@ function getDrawPlannerAlerts(selectedTests) {
   });
 }
 
+// Checks whether the plan includes a collection group.
+function planIncludesCollectionGroup(plan, groupName) {
+  return (plan?.items || []).some((item) => {
+    if (item?.key === groupName) return true;
+    return getPlanItemAlternativeGroups(item).includes(groupName);
+  });
+}
+
 // Gets draw planner reminders.
-function getDrawPlannerReminders() {
+function getDrawPlannerReminders(plan) {
+  if (planIncludesCollectionGroup(plan, "Specimen Jar")) {
+    return [{
+      id: "tube-fill",
+      tone: "info",
+      title: "Collection reminder",
+      items: ["Make sure the specimen container / jar is properly filled and tightly sealed."]
+    }];
+  }
+
   return [{
     id: "tube-fill",
     tone: "info",
     title: "Collection reminder",
-    items: [
-      "Make sure tubes are properly filled."
-    ]
+    items: ["Make sure samples are properly filled and tightly sealed."]
   }];
 }
 
@@ -4110,7 +4223,7 @@ function renderDrawResult() {
   const selectedTests = getSelectedTests();
   if (!selectedTests.length) {
     drawResultCard.hidden = false;
-    drawPlannerCount.textContent = "0 tests • 0 tubes";
+    drawPlannerCount.textContent = "0 tests";
     drawPlannerAlerts.hidden = true;
     drawPlannerAlerts.innerHTML = "";
     drawGroups.innerHTML = `
@@ -4125,13 +4238,12 @@ function renderDrawResult() {
   }
 
   const { plan } = getResolvedDrawPlan(selectedTests);
-  const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
   const plannerAlerts = [
-    ...getDrawPlannerReminders(),
+    ...getDrawPlannerReminders(plan),
     ...getDrawPlannerAlerts(selectedTests)
   ];
   drawResultCard.hidden = false;
-  drawPlannerCount.textContent = `${selectedTests.length} test${selectedTests.length > 1 ? "s" : ""} • ${totalTubes} tube${totalTubes !== 1 ? "s" : ""}`;
+  drawPlannerCount.textContent = `${selectedTests.length} test${selectedTests.length > 1 ? "s" : ""}`;
   drawPlannerAlerts.hidden = plannerAlerts.length === 0;
   drawPlannerAlerts.innerHTML = plannerAlerts
     .map((alert) => `
@@ -4205,7 +4317,8 @@ function inferCriticalPrep(test) {
   }
   if (tube.includes("purple") || specimen.includes("edta")) return "Mix gently by inversion immediately after collection to avoid clots.";
   if (specimen.includes("serum") || tube.includes("gold")) return "Allow blood to clot fully before centrifugation (follow local protocol timing).";
-  if (specimen.includes("stool") || specimen.includes("urine") || specimen.includes("swab")) return "Use the correct sterile container/swab and transport promptly.";
+  if (specimen.includes("stool") || specimen.includes("urine")) return "Use the correct sterile container and transport promptly.";
+  if (specimen.includes("swab")) return "Use the correct swab in transport medium and transport promptly.";
   return "Confirm patient prep and specimen handling against local lab protocol.";
 }
 
@@ -4215,7 +4328,7 @@ function inferSpecimenGuide(test) {
 
   if (text.includes("urine")) return "Urine specimen (sterile container or urine swab/collection protocol as required).";
   if (text.includes("stool") || text.includes("fecal")) return "Stool specimen (clean stool container).";
-  if (text.includes("swab")) return "Swab specimen (site-specific swab: nasal, throat, vaginal, ulcer, or wound as indicated).";
+  if (text.includes("swab")) return "Swab specimen in transport medium (site-specific swab: nasal, throat, vaginal, ulcer, or wound as indicated).";
   if (text.includes("csf")) return "CSF specimen (sterile tan tube).";
   if (text.includes("sputum") || text.includes("respiratory")) return "Respiratory specimen (e.g., sputum, NP swab, or lower respiratory sample).";
   if (text.includes("blood culture")) return "Blood culture bottles (aseptic blood specimen collection).";
@@ -4891,7 +5004,6 @@ function getSectionBrowsePanelMarkup(sectionId) {
   const isOpen = activeSectionGroup === sectionId;
   const activeBrowseGroup = activeBrowseGroupBySection[sectionId] || "";
   const panelId = `${sectionId}BrowsePanel`;
-  const panelTitle = sectionBrowseTitleById[sectionId] || `${sectionMeta[sectionId]?.label || "Section"} Groups`;
 
   return `
     <div
@@ -4900,7 +5012,6 @@ function getSectionBrowsePanelMarkup(sectionId) {
       aria-hidden="${isOpen ? "false" : "true"}"
     >
       <div class="chemistry-browse-panel-inner">
-        <p class="chemistry-browse-title">${panelTitle}</p>
         <div class="chemistry-browse-grid">
           ${browseGroups.map((group) => `
             <button
@@ -4911,8 +5022,8 @@ function getSectionBrowsePanelMarkup(sectionId) {
               aria-pressed="${activeBrowseGroup === group.id ? "true" : "false"}"
               tabindex="${isOpen ? "0" : "-1"}"
             >
-              <span class="chemistry-browse-chip-icon" aria-hidden="true">${group.icon}</span>
               <span class="chemistry-browse-chip-label">${group.label}</span>
+              <span class="chemistry-browse-chip-icon" aria-hidden="true">${group.icon}</span>
             </button>
           `).join("")}
         </div>
@@ -5209,6 +5320,7 @@ function renderCards(filteredTests) {
       : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
     const tubeVariantValue = String(test.tubeVariant || "").trim();
     const hasTubeOptions = tubeGroups.length > 0;
+    const collectionFieldLabel = getCollectionFieldLabel(tubeGroups);
     const specimenValue = getCardSpecimenValue(test, { isMicro });
     const hasSpecimenValue = Boolean(specimenValue);
     const showRequestedSpecimen = isSelected && hasSpecimenValue && !shouldHideSpecimenOnCard(test);
@@ -5243,7 +5355,7 @@ function renderCards(filteredTests) {
     };
     const summaryFields = hasTubeOptions ? `
       ${renderSummaryField({
-        label: "Tube",
+        label: collectionFieldLabel,
         content: `<div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
           ${tubeOptionsMarkup}
         </div>`,
@@ -5287,13 +5399,13 @@ function renderCards(filteredTests) {
         <div class="test-subgroup-badge">${test.grouping.subsection}</div>
         ${showTubeChoiceNote ? `
         <div class="field">
-          <span class="label">Tube Note</span>
+          <span class="label">${collectionFieldLabel} Note</span>
           <span>${test.tubeColor}</span>
         </div>
         ` : ""}
         ${tubeVariantValue ? `
         <div class="field">
-          <span class="label">Tube Type</span>
+          <span class="label">${collectionFieldLabel} Type</span>
           <span>${tubeVariantValue}</span>
         </div>
         ` : ""}

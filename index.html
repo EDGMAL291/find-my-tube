@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0f766e" />
+  <meta name="theme-color" content="#6b7c7a" />
   <meta name="color-scheme" content="light dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -17,7 +17,11 @@
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260317a" />
   <script>
     (() => {
-      document.documentElement.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      const storedTheme = localStorage.getItem("fmt-theme-mode");
+      const initialTheme = storedTheme === "light" || storedTheme === "neutral" || storedTheme === "dark"
+        ? storedTheme
+        : "neutral";
+      document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260323a" />
@@ -44,6 +48,27 @@
       <p id="headerIntroText">
         Find the right test, the right tube and why it's ordered.
       </p>
+      <div class="header-settings" id="headerSettings">
+        <button
+          type="button"
+          class="header-settings-btn"
+          id="themeSettingsBtn"
+          aria-controls="themeSwitcherPanel"
+          aria-expanded="false"
+          aria-haspopup="true"
+        >
+          <span class="header-settings-btn-icon" aria-hidden="true">⚙</span>
+          <span class="sr-only">Open settings</span>
+        </button>
+        <div class="theme-switcher-panel" id="themeSwitcherPanel" hidden>
+          <p class="theme-switcher-title">Appearance</p>
+          <div class="theme-switcher" role="group" aria-label="Choose theme">
+            <button type="button" class="theme-switcher-btn" data-theme-mode="light" aria-pressed="false">Light</button>
+            <button type="button" class="theme-switcher-btn" data-theme-mode="neutral" aria-pressed="false">Neutral</button>
+            <button type="button" class="theme-switcher-btn" data-theme-mode="dark" aria-pressed="false">Dark</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <section class="search-box">
