@@ -26,7 +26,7 @@
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260323a" />
 </head>
-<body data-app-page="home">
+<body data-app-page="find-my-tube">
   <div class="container">
     <header class="header">
       <h1>
@@ -84,178 +84,86 @@
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
-    <section class="home-hub" id="homeHub">
-      <div class="home-brief-grid">
-        <article class="home-brief-card">
-          <h2>Tip</h2>
-          <p class="home-brief-text" id="homeTipText"></p>
-        </article>
-        <article class="home-brief-card">
-          <h2>News</h2>
-          <p class="home-brief-text">
-            Dedicated pages for each feature are taking shape.
-          </p>
-        </article>
-      </div>
-
-      <div class="home-feature-grid">
-        <button type="button" class="home-feature-card" data-menu-action="tube">
-          <h3>Fast test and tube lookup</h3>
-          <p>Find the right test, specimen, and collection guidance quickly.</p>
-          <span class="home-feature-action">Open Find My Tube</span>
-        </button>
-        <button type="button" class="home-feature-card" data-menu-action="find-my-test">
-          <h3>Clinical test suggestions</h3>
-          <p>Start with symptoms and context to guide test selection.</p>
-          <span class="home-feature-action">Open Find My Test</span>
-        </button>
-        <button type="button" class="home-feature-card" data-menu-action="stock">
-          <h3>Consumables ordering workflow</h3>
-          <p>Request stock more easily and keep track of department demand.</p>
-          <span class="home-feature-action">Open Order Stock</span>
-        </button>
+    <section class="search-box" id="tubeLookupPanel">
+      <div class="search-input-wrap">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by test or profile (e.g. CRP or Liver function tests)"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          enterkeyhint="search"
+        />
+        <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" hidden>&times;</button>
       </div>
     </section>
 
-    <section class="find-my-test-page-bar" aria-label="Find My Test navigation">
-      <a class="find-my-test-page-back" href="./index.html">Back to Find My Tube</a>
-    </section>
+    <div class="section-context-bar" id="sectionContextBar" hidden>
+      <button type="button" class="section-context-back-btn" id="sectionContextBackBtn">Back to departments</button>
+      <p class="section-context-label" id="sectionContextLabel"></p>
+    </div>
 
-    <section class="clinical-workup-panel" id="clinicalWorkupPanel" aria-labelledby="clinicalWorkupTitle">
-      <div class="clinical-workup-shell">
-        <form class="clinical-workup-form" id="clinicalWorkupForm">
-          <h2 id="clinicalWorkupTitle" class="sr-only">Find My Test form</h2>
-          <div class="clinical-workup-form-grid">
-            <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
-              <span id="clinicalDobLabel">Date of birth</span>
-              <div class="clinical-workup-dob-control" id="clinicalDobControl">
-                <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
-                  <input
-                    type="text"
-                    id="clinicalDobInput"
-                    inputmode="numeric"
-                    autocomplete="bday"
-                    maxlength="14"
-                    placeholder="DD / MM / YYYY"
-                    aria-describedby="clinicalDobAssist"
-                  />
-                  <label
-                    class="clinical-workup-field-glyph clinical-workup-field-glyph-button clinical-workup-dob-picker-label"
-                    for="clinicalDobPickerInput"
-                    aria-label="Pick date of birth from calendar"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6H8v1a1 1 0 1 1-2 0V6H5Zm3 7a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Z"></path>
-                    </svg>
-                    <input
-                      type="date"
-                      id="clinicalDobPickerInput"
-                      class="clinical-workup-dob-picker-native"
-                      tabindex="-1"
-                      aria-hidden="true"
-                    />
-                  </label>
-                </div>
-                <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
-              </div>
-            </label>
+    <section class="pre-search" id="preSearchPanel">
+      <div class="group-hints">
+        <h3>Browse by Department</h3>
+        <div class="group-chips" id="groupChips"></div>
+      </div>
 
-            <div class="clinical-workup-context-pair">
-              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
-                <span>Sex</span>
-                <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
-                  <select id="clinicalSexSelect">
-                    <option value="unspecified">Not specified</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <span class="clinical-workup-field-glyph clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
-                </div>
-              </label>
-
-              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
-                <span>Pregnancy</span>
-                <select id="clinicalPregnancySelect">
-                  <option value="unknown">Unknown / not applicable</option>
-                  <option value="pregnant">Pregnant / possible pregnancy</option>
-                  <option value="not-pregnant">Not pregnant</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
-              <textarea
-                id="clinicalSymptomsInput"
-                rows="3"
-                placeholder="e.g. chest pain radiating to the left arm, fever, frothy urine, weight loss"
-              ></textarea>
-              <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add common symptoms</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSymptomsChipList" aria-label="Common symptoms"></div>
-              </div>
-            </div>
-
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
-              <textarea
-                id="clinicalSignsInput"
-                rows="3"
-                placeholder="e.g. pallor, jaundice, oedema, hypotension, tachycardia"
-              ></textarea>
-              <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add common signs</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSignsChipList" aria-label="Common signs"></div>
-              </div>
-            </div>
-
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
-              <input
-                type="text"
-                id="clinicalConcernInput"
-                placeholder="e.g. ACS, heart failure, CKD, infertility, autoimmune disease"
-              />
-              <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add common concerns</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalConcernChipList" aria-label="Common clinical concerns"></div>
-              </div>
-            </div>
-
+      <div class="pre-search-primary">
+        <button
+          type="button"
+          class="quick-tools-toggle-btn"
+          id="toggleQuickToolsBtn"
+          aria-controls="drawModal"
+          aria-expanded="false"
+          hidden
+        >
+          Start Tube Plan
+        </button>
+        <section class="quick-tools-panel" id="quickToolsPanel">
+          <h3 id="quickToolsTitle">Tube Plan</h3>
+          <p id="quickToolsDescription">Add tests as you search to plan your draw, avoid unnecessary extra tubes, and save on consumables.</p>
+          <div class="quick-tools-stats" id="quickToolsStats" hidden>
+            <span class="quick-tools-stat" id="quickToolsTestsStat"></span>
+            <span class="quick-tools-stat" id="quickToolsTubesStat"></span>
           </div>
-
-          <div class="clinical-workup-actions">
-            <button type="submit" class="clinical-workup-submit-btn" id="clinicalWorkupSubmitBtn">Suggest Tests</button>
-            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">New patient</button>
+          <div class="quick-tools-actions" id="quickToolsActions">
+            <button
+              type="button"
+              class="quick-tool-launch-btn"
+              id="openDrawPlannerBtn"
+              aria-controls="searchInput"
+            >
+              Plan My Draw
+            </button>
+            <button
+              type="button"
+              class="quick-tool-clear-btn"
+              id="quickToolsClearBtn"
+              hidden
+            >
+              Clear all
+            </button>
           </div>
-
-          <p class="clinical-workup-note">
-            Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.
-          </p>
-          <p class="clinical-workup-status" id="clinicalWorkupStatus" role="status" aria-live="polite"></p>
-        </form>
+        </section>
       </div>
     </section>
 
-    <section class="clinical-workup-results" id="clinicalWorkupResults" aria-labelledby="clinicalWorkupResultsTitle" hidden>
-      <div class="clinical-workup-results-head">
-        <div>
-          <p class="clinical-workup-kicker">Find My Test</p>
-          <h3 id="clinicalWorkupResultsTitle">Suggested tests</h3>
-        </div>
-        <div class="clinical-workup-results-actions">
-          <button type="button" class="clinical-workup-results-add-all-btn" id="addAllClinicalWorkupResultsBtn">Add all to Tube Plan</button>
-          <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear suggestions</button>
-        </div>
-      </div>
-      <p class="clinical-workup-results-copy" id="clinicalWorkupResultsCopy"></p>
-      <div class="clinical-workup-result-tags" id="clinicalWorkupResultTags"></div>
-      <div class="clinical-workup-rule-list" id="clinicalWorkupRuleList"></div>
-      <div class="clinical-workup-test-list" id="clinicalWorkupTestList"></div>
-    </section>
-
+    <div class="results-toolbar" id="resultsToolbar" hidden>
+      <p class="results-info" id="resultsInfo" hidden></p>
+    </div>
     <div class="selection-notice" id="selectionNoticeToast" role="status" aria-live="polite" hidden></div>
+    <section class="cards" id="cardsContainer"></section>
+    <button
+      type="button"
+      class="results-back-to-top-btn"
+      id="resultsBackToTopBtn"
+      aria-label="Back to top"
+      title="Back to top"
+      hidden
+    >&#8593;</button>
 
     <footer class="site-footer" id="siteFooter">
       <div class="site-footer-copy">
@@ -333,6 +241,19 @@
         <p class="draw-planner-note" id="drawPlannerNote"></p>
       </div>
       <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add More Tests</button>
+    </div>
+  </section>
+
+  <section class="profile-modal section-browse-modal" id="sectionBrowseModal" hidden>
+    <div class="profile-modal-card section-browse-modal-card" role="dialog" aria-modal="true" aria-labelledby="sectionBrowseModalTitle">
+      <div class="profile-modal-head section-browse-modal-head">
+        <div class="section-browse-modal-copy-wrap">
+          <h3 id="sectionBrowseModalTitle">Browse Section</h3>
+          <p class="section-browse-modal-copy" id="sectionBrowseModalCopy">Choose a section to browse.</p>
+        </div>
+        <button type="button" class="profile-modal-close-btn" id="closeSectionBrowseModalBtn">Close</button>
+      </div>
+      <div class="section-browse-grid" id="sectionBrowseModalGrid"></div>
     </div>
   </section>
 

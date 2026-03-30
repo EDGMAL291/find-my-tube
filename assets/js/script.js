@@ -3,9 +3,18 @@ const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
 const headerIntroText = document.getElementById("headerIntroText");
 const headerSettings = document.getElementById("headerSettings");
+const menuToggleBtn = document.getElementById("menuToggleBtn");
+const siteMenuPanel = document.getElementById("siteMenuPanel");
+const siteMenuLinks = document.querySelectorAll("[data-menu-action]");
 const themeSettingsBtn = document.getElementById("themeSettingsBtn");
 const themeSwitcherPanel = document.getElementById("themeSwitcherPanel");
+const surfacePanelBackdrop = document.getElementById("surfacePanelBackdrop");
 const themeModeButtons = document.querySelectorAll("[data-theme-mode]");
+const homeHub = document.getElementById("homeHub");
+const homeTipText = document.getElementById("homeTipText");
+const heroDrawPlanBtn = document.getElementById("heroDrawPlanBtn");
+const heroOrderStockBtn = document.getElementById("heroOrderStockBtn");
+const tubeLookupPanel = document.getElementById("tubeLookupPanel");
 const sectionContextBar = document.getElementById("sectionContextBar");
 const sectionContextBackBtn = document.getElementById("sectionContextBackBtn");
 const sectionContextLabel = document.getElementById("sectionContextLabel");
@@ -48,12 +57,22 @@ const factCarouselContent = document.getElementById("factCarouselContent");
 const tipText = document.getElementById("tipText");
 const groupChips = document.getElementById("groupChips");
 const groupHintsPanel = document.querySelector(".group-hints");
+const sectionBrowseModal = document.getElementById("sectionBrowseModal");
+const sectionBrowseModalTitle = document.getElementById("sectionBrowseModalTitle");
+const sectionBrowseModalCopy = document.getElementById("sectionBrowseModalCopy");
+const sectionBrowseModalGrid = document.getElementById("sectionBrowseModalGrid");
+const closeSectionBrowseModalBtn = document.getElementById("closeSectionBrowseModalBtn");
+const stockOrderPanel = document.getElementById("stockOrderPanel");
+const aboutPanel = document.getElementById("aboutPanel");
 const drawModal = document.getElementById("drawModal");
 const drawResultCard = document.getElementById("drawResultCard");
 const drawPlannerCount = document.getElementById("drawPlannerCount");
 const drawPlannerAlerts = document.getElementById("drawPlannerAlerts");
 const drawGroups = document.getElementById("drawGroups");
 const drawPlannerNote = document.getElementById("drawPlannerNote");
+const shareDrawPlanBtn = document.getElementById("shareDrawPlanBtn");
+const copyDrawPlanLinkBtn = document.getElementById("copyDrawPlanLinkBtn");
+const shareDrawPlanWhatsappBtn = document.getElementById("shareDrawPlanWhatsappBtn");
 const openDrawPlannerBtn = document.getElementById("openDrawPlannerBtn");
 const closeDrawPlannerBtn = document.getElementById("closeDrawPlannerBtn");
 const clearDrawSelectionBtn = document.getElementById("clearDrawSelectionBtn");
@@ -123,7 +142,10 @@ let isClearDrawSelectionConfirming = false;
 let clearDrawSelectionConfirmTimeoutId = 0;
 let selectionNoticeTimeoutId = 0;
 let isThemePanelOpen = false;
+let isSiteMenuOpen = false;
 let selectionNoticeHideTimeoutId = 0;
+let activeSectionBrowseModalSectionId = "";
+let lastSectionBrowseModalTrigger = null;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
 const CLINICAL_WORKUP_DISCLAIMER = "Reference-only test support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.";
 const RACK_HINT_STORAGE_KEY = "fmt-rack-hint-dismissed";
@@ -133,11 +155,20 @@ let hasDismissedRackHint = false;
 let lastLegalModalTrigger = null;
 let clinicalWorkupOutput = null;
 const currentPageParams = new URLSearchParams(window.location.search);
-const isFindMyTestPage = currentPageParams.get("tool") === "find-my-test";
+const currentAppPage = currentPageParams.get("tool") === "find-my-test"
+  ? "find-my-test"
+  : (document.body.dataset.appPage || "home");
+const isHomePage = currentAppPage === "home";
+const isFindMyTubePage = currentAppPage === "find-my-tube";
+const isFindMyTestPage = currentAppPage === "find-my-test";
+const sharedPlanToken = currentPageParams.get("plan") || "";
 const APP_HOME_TITLE = "Find My Tube";
+const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube";
 const FIND_MY_TEST_PAGE_TITLE = "Find My Test";
-const APP_HOME_HEADER_COPY = "Find the right test, the right tube and why it's ordered.";
+const APP_HOME_HEADER_COPY = "The right tube. The right test. Right now.";
+const FIND_MY_TUBE_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
+const DRAW_PLAN_SHARE_PARAM = "plan";
 const THEME_STORAGE_KEY = "fmt-theme-mode";
 const THEME_COLOR_BY_MODE = {
   light: "#0f766e",
@@ -183,6 +214,29 @@ function setThemePanelOpen(isOpen) {
     themeSettingsBtn.setAttribute("aria-expanded", isThemePanelOpen ? "true" : "false");
     themeSettingsBtn.classList.toggle("active", isThemePanelOpen);
   }
+  syncSurfacePanelState();
+}
+
+// Sets site menu open state.
+function setSiteMenuOpen(isOpen) {
+  isSiteMenuOpen = Boolean(isOpen);
+  if (siteMenuPanel) {
+    siteMenuPanel.hidden = !isSiteMenuOpen;
+  }
+  if (menuToggleBtn) {
+    menuToggleBtn.setAttribute("aria-expanded", isSiteMenuOpen ? "true" : "false");
+    menuToggleBtn.classList.toggle("active", isSiteMenuOpen);
+  }
+  syncSurfacePanelState();
+}
+
+// Synchronizes the shared surface-panel backdrop.
+function syncSurfacePanelState() {
+  const hasSurfacePanelOpen = isThemePanelOpen || isSiteMenuOpen;
+  if (surfacePanelBackdrop) {
+    surfacePanelBackdrop.hidden = !hasSurfacePanelOpen;
+  }
+  document.body.classList.toggle("surface-panel-open", hasSurfacePanelOpen);
 }
 
 // Applies theme.
@@ -210,6 +264,7 @@ function initTheme() {
 
   if (themeSettingsBtn) {
     themeSettingsBtn.addEventListener("click", () => {
+      setSiteMenuOpen(false);
       setThemePanelOpen(!isThemePanelOpen);
     });
   }
@@ -228,12 +283,28 @@ function initTheme() {
 }
 
 document.body.classList.toggle("find-my-test-page", isFindMyTestPage);
-document.title = isFindMyTestPage ? FIND_MY_TEST_PAGE_TITLE : APP_HOME_TITLE;
+document.body.classList.toggle("find-my-tube-page", isFindMyTubePage);
+document.title = isFindMyTestPage
+  ? FIND_MY_TEST_PAGE_TITLE
+  : isFindMyTubePage
+    ? FIND_MY_TUBE_PAGE_TITLE
+    : APP_HOME_TITLE;
 if (headerIntroText) {
-  headerIntroText.textContent = isFindMyTestPage ? FIND_MY_TEST_HEADER_COPY : APP_HOME_HEADER_COPY;
+  headerIntroText.textContent = isFindMyTestPage
+    ? FIND_MY_TEST_HEADER_COPY
+    : isFindMyTubePage
+      ? FIND_MY_TUBE_HEADER_COPY
+      : APP_HOME_HEADER_COPY;
 }
 if (appleMobileAppTitleMeta) {
-  appleMobileAppTitleMeta.setAttribute("content", isFindMyTestPage ? FIND_MY_TEST_PAGE_TITLE : APP_HOME_TITLE);
+  appleMobileAppTitleMeta.setAttribute(
+    "content",
+    isFindMyTestPage
+      ? FIND_MY_TEST_PAGE_TITLE
+      : isFindMyTubePage
+        ? FIND_MY_TUBE_PAGE_TITLE
+        : APP_HOME_TITLE
+  );
 }
 
 // Dispatches find my tube event.
@@ -370,6 +441,103 @@ function showSelectionNotice(message) {
       selectionNoticeToast.hidden = true;
     }, 200);
   }, 2600);
+}
+
+// Encodes bytes to base64url.
+function bytesToBase64Url(bytes) {
+  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+  return window.btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+// Decodes base64url to string.
+function base64UrlToString(value) {
+  if (!value) return "";
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
+  return window.atob(padded);
+}
+
+// Encodes a share plan token from selected names.
+function encodeDrawPlanShareToken(testNames = []) {
+  const names = Array.from(new Set(testNames.map((name) => String(name || "").trim()).filter(Boolean)));
+  if (!names.length) return "";
+  const json = JSON.stringify(names);
+  return bytesToBase64Url(new TextEncoder().encode(json));
+}
+
+// Decodes a share plan token into valid test names.
+function decodeDrawPlanShareToken(token = "") {
+  if (!token) return [];
+
+  try {
+    const decodedText = new TextDecoder().decode(Uint8Array.from(base64UrlToString(token), (char) => char.charCodeAt(0)));
+    const parsed = JSON.parse(decodedText);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((name) => String(name || "").trim())
+      .filter((name) => name && enrichedTests.some((test) => test.name === name));
+  } catch {
+    return [];
+  }
+}
+
+// Builds a shareable draw plan URL.
+function getDrawPlanShareUrl(testNames = getSelectedTestNamesList()) {
+  const shareToken = encodeDrawPlanShareToken(testNames);
+  const url = new URL(window.location.pathname, window.location.origin);
+  if (shareToken) {
+    url.searchParams.set(DRAW_PLAN_SHARE_PARAM, shareToken);
+  }
+  return url.toString();
+}
+
+// Builds a share summary for messaging apps.
+function getDrawPlanShareText(testNames = getSelectedTestNamesList()) {
+  const validNames = getTestsByNames(testNames).map((test) => test.name);
+  if (!validNames.length) return "Open this Find My Tube draw plan:";
+
+  const previewNames = validNames.slice(0, 6).join(", ");
+  const extraCount = validNames.length - Math.min(validNames.length, 6);
+  const suffix = extraCount > 0 ? `, +${extraCount} more` : "";
+  return `Shared blood draw plan on Find My Tube: ${previewNames}${suffix}. Open the link to review the full tube plan.`;
+}
+
+// Updates draw plan share actions.
+function updateDrawPlanShareActions() {
+  const selectedNames = getSelectedTestNamesList();
+  const hasSelection = selectedNames.length > 0;
+  const shareUrl = hasSelection ? getDrawPlanShareUrl(selectedNames) : "";
+  const shareText = hasSelection ? getDrawPlanShareText(selectedNames) : "";
+
+  if (shareDrawPlanBtn) {
+    shareDrawPlanBtn.disabled = !hasSelection;
+  }
+
+  if (copyDrawPlanLinkBtn) {
+    copyDrawPlanLinkBtn.disabled = !hasSelection;
+  }
+
+  if (shareDrawPlanWhatsappBtn) {
+    shareDrawPlanWhatsappBtn.classList.toggle("is-disabled", !hasSelection);
+    shareDrawPlanWhatsappBtn.setAttribute("aria-disabled", hasSelection ? "false" : "true");
+    shareDrawPlanWhatsappBtn.href = hasSelection
+      ? `https://wa.me/?text=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`
+      : "#";
+    shareDrawPlanWhatsappBtn.tabIndex = hasSelection ? 0 : -1;
+  }
+}
+
+// Loads a shared draw plan from URL.
+function loadSharedDrawPlanFromUrl() {
+  if (!sharedPlanToken || isFindMyTestPage) return;
+
+  const sharedTestNames = decodeDrawPlanShareToken(sharedPlanToken);
+  if (!sharedTestNames.length) return;
+
+  setSelectedTests(new Set(sharedTestNames), { rerenderCards: false });
+  window.requestAnimationFrame(() => {
+    openDrawModal();
+    showSelectionNotice("Shared draw plan loaded.");
+  });
 }
 
 // Checks whether renderable element.
@@ -552,16 +720,83 @@ function scrollHomeViewportToTop() {
   });
 }
 
-// Navigates home.
-function goHome() {
-  if (isFindMyTestPage) {
-    window.location.assign(window.location.pathname);
+// Gets the dedicated Find My Tube page URL.
+function getFindMyTubePageUrl() {
+  return "./find-my-tube.html";
+}
+
+// Scrolls a specific panel into view.
+function scrollPanelIntoView(panel) {
+  if (!panel) return;
+
+  panel.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start"
+  });
+}
+
+// Opens home lookup view.
+function openLookupHomeView() {
+  if (isHomePage || isFindMyTestPage) {
+    window.location.assign(getFindMyTubePageUrl());
+    return;
+  }
+
+  if (!isFindMyTubePage || !tubeLookupPanel || tubeLookupPanel.hidden) {
+    window.location.assign(getFindMyTubePageUrl());
     return;
   }
 
   closeDrawModal();
   closeProfileModal();
   closeLegalModal({ restoreFocus: false });
+  scrollPanelIntoView(tubeLookupPanel || preSearchPanel);
+  focusMainSearchField({ scroll: "if-needed" });
+}
+
+// Opens stock section.
+function openStockSection() {
+  if (isFindMyTestPage) {
+    window.location.assign(`${window.location.pathname}#stockOrderPanel`);
+    return;
+  }
+
+  if (!stockOrderPanel || stockOrderPanel.hidden) {
+    showSelectionNotice("Order Stock will move to its own dedicated page next.");
+    return;
+  }
+
+  closeDrawModal();
+  closeProfileModal();
+  closeLegalModal({ restoreFocus: false });
+  scrollPanelIntoView(stockOrderPanel);
+}
+
+// Opens about section.
+function openAboutSection() {
+  if (isFindMyTestPage) {
+    window.location.assign(`${window.location.pathname}#aboutPanel`);
+    return;
+  }
+
+  closeDrawModal();
+  closeProfileModal();
+  closeLegalModal({ restoreFocus: false });
+  scrollPanelIntoView(aboutPanel || siteFooter);
+}
+
+// Navigates home.
+function goHome() {
+  if (!isHomePage) {
+    window.location.assign("./index.html");
+    return;
+  }
+
+  closeDrawModal();
+  closeProfileModal();
+  closeLegalModal({ restoreFocus: false });
+  setSiteMenuOpen(false);
+  setThemePanelOpen(false);
   clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: false, clearStatus: true });
 
   setSectionView("", { historyMode: "push", scrollToTop: false, clearSearch: true });
@@ -918,6 +1153,7 @@ const sectionMeta = {
   micro_virology: { label: "Microbiology" },
   immunology: { label: "Serology" },
   metabolic_genetic: { label: "Molecular Biology / Genetics" },
+  cytohistology: { label: "Cytology / Histology" },
   cytology: { label: "Cytology" },
   histology: { label: "Histology" },
   general: { label: "General" }
@@ -929,9 +1165,14 @@ const sectionIconById = {
   haematology: `<svg viewBox="0 0 24 24"><path d="M12 3c-3 4-5 6.7-5 9.5A5 5 0 0 0 12 18a5 5 0 0 0 5-5.5C17 9.7 15 7 12 3z"/><circle cx="12" cy="12" r="1.6"/></svg>`,
   immunology: `<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.3 8.4-7 10-3.7-1.6-7-5-7-10V6l7-3z"/><path d="M9.5 12l1.7 1.7L14.8 10"/></svg>`,
   micro_virology: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4.8 8h14.4"/><path d="M10 8v8"/><path d="M7 14.5h5"/><path d="M14 14.5h3"/></svg>`,
+  cytohistology: `<svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M9 6V4h6v2"/><path d="M9 10h6"/><circle cx="10" cy="13.5" r="1.7"/><circle cx="15" cy="13.5" r="1.2"/></svg>`,
   cytology: `<svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="10" cy="12" r="2.2"/><circle cx="15" cy="12" r="1.5"/><path d="M7 18v2"/><path d="M17 18v2"/></svg>`,
   histology: `<svg viewBox="0 0 24 24"><path d="M5 6h14v12H5z"/><path d="M9 6V4h6v2"/><path d="M9 10h6"/><path d="M9 14h6"/></svg>`,
   general: `<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6"/><path d="M9 12h6"/><path d="M9 15h4"/></svg>`
+};
+
+const sectionFilterIdsBySection = {
+  cytohistology: ["cytology", "histology"]
 };
 
 const chemistryBrowseGroups = [
@@ -1105,14 +1346,84 @@ function updateSectionContextBar() {
   sectionContextBar.hidden = false;
 }
 
+// Opens section browse modal.
+function openSectionBrowseModal(sectionId, trigger = null) {
+  if (!sectionBrowseModal || !sectionBrowseModalTitle || !sectionBrowseModalCopy || !sectionBrowseModalGrid) return false;
+
+  const section = sectionMeta[sectionId];
+  const browseGroups = sectionBrowseGroups[sectionId] || [];
+  if (!section || !browseGroups.length) return false;
+
+  const activeBrowseGroup = getActiveBrowseGroup(sectionId);
+  activeSectionBrowseModalSectionId = sectionId;
+  lastSectionBrowseModalTrigger = trigger || document.activeElement;
+  sectionBrowseModalTitle.textContent = section.label;
+  sectionBrowseModalCopy.textContent = `Choose a section to browse ${section.label.toLowerCase()} tests.`;
+  sectionBrowseModalGrid.innerHTML = browseGroups.map((group) => `
+    <button
+      type="button"
+      class="section-browse-option${activeBrowseGroup === group.id ? " active" : ""}"
+      data-section-modal-browse="${group.id}"
+      data-section-modal-parent="${sectionId}"
+      aria-pressed="${activeBrowseGroup === group.id ? "true" : "false"}"
+    >
+      <span class="section-browse-option-icon" aria-hidden="true">${group.icon}</span>
+      <span class="section-browse-option-label">${group.label}</span>
+    </button>
+  `).join("");
+
+  sectionBrowseModalGrid.querySelectorAll("button[data-section-modal-browse]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const browseId = button.getAttribute("data-section-modal-browse") || "";
+      const parentSectionId = button.getAttribute("data-section-modal-parent") || "";
+      if (!parentSectionId || !browseId) return;
+
+      closeSectionBrowseModal({ restoreFocus: false });
+      setSectionView(parentSectionId, {
+        browseGroup: browseId,
+        historyMode: "push",
+        scrollToTop: true
+      });
+    });
+  });
+
+  sectionBrowseModal.hidden = false;
+  updateGroupChipState();
+  syncModalOpenClass();
+
+  const firstOption = sectionBrowseModalGrid.querySelector(".section-browse-option");
+  window.requestAnimationFrame(() => {
+    firstOption?.focus({ preventScroll: true });
+  });
+
+  return true;
+}
+
+// Closes section browse modal.
+function closeSectionBrowseModal({ restoreFocus = true } = {}) {
+  if (!sectionBrowseModal) return;
+
+  sectionBrowseModal.hidden = true;
+  activeSectionBrowseModalSectionId = "";
+  syncModalOpenClass();
+  updateGroupChipState();
+
+  if (restoreFocus && lastSectionBrowseModalTrigger && typeof lastSectionBrowseModalTrigger.focus === "function") {
+    window.requestAnimationFrame(() => {
+      lastSectionBrowseModalTrigger.focus({ preventScroll: true });
+    });
+  }
+
+  lastSectionBrowseModalTrigger = null;
+}
+
 const chipGroups = [
   "chemistry",
   "haematology",
   "micro_virology",
   "immunology",
   "metabolic_genetic",
-  "cytology",
-  "histology"
+  "cytohistology"
 ];
 
 const aliasByName = {
@@ -3659,6 +3970,7 @@ function refreshSelectionUi({ rerenderCards = true } = {}) {
   renderDrawResult();
   updateSelectionCartBar();
   updateDrawPlannerToggleState();
+  updateDrawPlanShareActions();
   if (rerenderCards) applyFilters();
 }
 
@@ -3824,7 +4136,8 @@ function syncModalOpenClass() {
   const drawOpen = Boolean(drawModal && !drawModal.hidden);
   const profileOpen = Boolean(profileModal && !profileModal.hidden);
   const legalOpen = Boolean(legalModal && !legalModal.hidden);
-  document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen);
+  const sectionBrowseOpen = Boolean(sectionBrowseModal && !sectionBrowseModal.hidden);
+  document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen || sectionBrowseOpen);
   updateBackToTopVisibility();
 }
 
@@ -4922,6 +5235,7 @@ function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
 // Renders facts carousel.
 function renderFactsCarousel() {
   startCarousel(factTips, tipText, null, 8200);
+  startCarousel(factTips, homeTipText, null, 8200);
 }
 
 // Applies quick tools panel mode.
@@ -4990,7 +5304,7 @@ function updateGroupChipState() {
 
   groupChips.querySelectorAll(".group-chip").forEach((chip) => {
     const groupId = chip.getAttribute("data-group") || "";
-    const isActive = activeSectionGroup === groupId;
+    const isActive = activeSectionGroup === groupId || activeSectionBrowseModalSectionId === groupId;
     chip.classList.toggle("active", isActive);
     chip.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
@@ -4998,6 +5312,7 @@ function updateGroupChipState() {
 
 // Gets section browse panel markup.
 function getSectionBrowsePanelMarkup(sectionId) {
+  if (isFindMyTubePage) return "";
   const browseGroups = sectionBrowseGroups[sectionId] || [];
   if (!browseGroups.length) return "";
 
@@ -5040,7 +5355,7 @@ function renderGroupChips() {
     .map((groupId) => {
       const group = sectionMeta[groupId];
       const isActive = activeSectionGroup === groupId;
-      const hasBrowsePanel = hasSectionBrowseGroups(groupId);
+      const hasBrowsePanel = !isFindMyTubePage && hasSectionBrowseGroups(groupId);
       const panelId = `${groupId}BrowsePanel`;
       return `
         <div class="group-chip-stack${hasBrowsePanel && isActive ? " browse-open" : ""}">
@@ -5063,6 +5378,11 @@ function renderGroupChips() {
   groupChips.querySelectorAll(".group-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       const groupId = chip.getAttribute("data-group") || "";
+      if (isFindMyTubePage && hasSectionBrowseGroups(groupId)) {
+        openSectionBrowseModal(groupId, chip);
+        return;
+      }
+
       const isCurrentSection = activeSectionGroup === groupId;
       const hasActiveBrowseGroup = Boolean(getActiveBrowseGroup(groupId));
 
@@ -5114,6 +5434,9 @@ function setSectionView(sectionId = "", { browseGroup = "", historyMode = "none"
   }
 
   if (clearSearch && searchInput) searchInput.value = "";
+  if (sectionBrowseModal && !sectionBrowseModal.hidden && (browseGroup || !activeSectionGroup)) {
+    closeSectionBrowseModal({ restoreFocus: false });
+  }
   updateSearchClearButton();
   renderGroupChips();
   applyFilters();
@@ -5153,6 +5476,9 @@ function initSectionNavigation() {
       clearSearch: nextSectionGroup === "",
       scrollToTop: true
     });
+    if (isFindMyTubePage && nextSectionGroup && hasSectionBrowseGroups(nextSectionGroup) && !nextBrowseGroup) {
+      openSectionBrowseModal(nextSectionGroup);
+    }
   });
 }
 
@@ -5188,6 +5514,7 @@ function shouldPrioritizeProfilesFirst(selectedSection, normalizedQuery) {
 function getFilteredTests() {
   const query = searchInput?.value || "";
   const selectedSection = activeSectionGroup || "";
+  const selectedSectionFilterIds = sectionFilterIdsBySection[selectedSection] || [selectedSection];
   const normalizedQuery = normalizeForSearch(query);
   if (!normalizedQuery && !selectedSection && hasClinicalWorkupState()) {
     return Array.isArray(clinicalWorkupOutput?.tests)
@@ -5208,7 +5535,11 @@ function getFilteredTests() {
   );
 
   const filtered = enrichedTests.filter((test) => {
-    if (selectedSection && !shouldBypassSectionFilter && test.grouping.sectionId !== selectedSection) return false;
+    if (
+      selectedSection
+      && !shouldBypassSectionFilter
+      && !selectedSectionFilterIds.includes(test.grouping.sectionId)
+    ) return false;
     if (activeBrowseSubsectionSet.size && !activeBrowseSubsectionSet.has(test.grouping.subsection)) {
       return false;
     }
@@ -5237,6 +5568,7 @@ function getFilteredTests() {
 
 // Renders cards.
 function renderCards(filteredTests) {
+  if (!cardsContainer) return;
   cardsContainer.innerHTML = "";
   const rawQuery = String(searchInput?.value || "").trim();
   const normalizedQuery = normalizeForSearch(rawQuery);
@@ -5478,6 +5810,13 @@ function renderCards(filteredTests) {
 
 // Applies filters.
 function applyFilters() {
+  if (!preSearchPanel || !cardsContainer) {
+    if (siteFooter) siteFooter.hidden = false;
+    updateBackToTopVisibility();
+    updateSelectionCartViewportPosition();
+    return;
+  }
+
   const hasQuery = (searchInput?.value || "").trim().length > 0;
   const hasSectionFilter = Boolean(activeSectionGroup);
   const hasClinicalState = hasClinicalWorkupState();
@@ -5542,6 +5881,17 @@ function bindEvents() {
   if (sectionContextBackBtn) {
     sectionContextBackBtn.addEventListener("click", () => {
       if (getActiveBrowseGroup(activeSectionGroup)) {
+        if (isFindMyTubePage && hasSectionBrowseGroups(activeSectionGroup)) {
+          const nextSectionGroup = activeSectionGroup;
+          setSectionView(nextSectionGroup, {
+            browseGroup: "",
+            historyMode: "replace",
+            scrollToTop: true
+          });
+          openSectionBrowseModal(nextSectionGroup, sectionContextBackBtn);
+          return;
+        }
+
         setSectionView(activeSectionGroup, {
           browseGroup: "",
           historyMode: "replace",
@@ -5561,6 +5911,120 @@ function bindEvents() {
   if (brandHomeBtn) {
     brandHomeBtn.addEventListener("click", () => {
       goHome();
+    });
+  }
+
+  if (menuToggleBtn) {
+    menuToggleBtn.addEventListener("click", () => {
+      setThemePanelOpen(false);
+      setSiteMenuOpen(!isSiteMenuOpen);
+    });
+  }
+
+  if (siteMenuLinks.length) {
+    siteMenuLinks.forEach((button) => {
+      button.addEventListener("click", () => {
+        const action = button.getAttribute("data-menu-action") || "";
+        setSiteMenuOpen(false);
+
+        if (action === "home") {
+          goHome();
+          return;
+        }
+
+        if (action === "draw") {
+          openLookupHomeView();
+          return;
+        }
+
+        if (action === "tube") {
+          openLookupHomeView();
+          return;
+        }
+
+        if (action === "find-my-test") {
+          window.location.assign("./index.html?tool=find-my-test");
+          return;
+        }
+
+        if (action === "stock") {
+          openStockSection();
+          return;
+        }
+
+        if (action === "settings") {
+          setThemePanelOpen(true);
+          return;
+        }
+
+        if (action === "about") {
+          openAboutSection();
+        }
+      });
+    });
+  }
+
+  if (heroDrawPlanBtn) {
+    heroDrawPlanBtn.addEventListener("click", () => {
+      openLookupHomeView();
+    });
+  }
+
+  if (heroOrderStockBtn) {
+    heroOrderStockBtn.addEventListener("click", () => {
+      openStockSection();
+    });
+  }
+
+  if (shareDrawPlanBtn) {
+    shareDrawPlanBtn.addEventListener("click", async () => {
+      const selectedNames = getSelectedTestNamesList();
+      if (!selectedNames.length) return;
+
+      const shareData = {
+        title: "Find My Tube Draw Plan",
+        text: getDrawPlanShareText(selectedNames),
+        url: getDrawPlanShareUrl(selectedNames)
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          showSelectionNotice("Draw plan shared.");
+          return;
+        } catch {
+          // Fall back to copying if the native share sheet is dismissed or unavailable.
+        }
+      }
+
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        showSelectionNotice("Draw plan link copied.");
+      } catch {
+        showSelectionNotice("Sharing is not available here. Use WhatsApp or copy the link instead.");
+      }
+    });
+  }
+
+  if (copyDrawPlanLinkBtn) {
+    copyDrawPlanLinkBtn.addEventListener("click", async () => {
+      const selectedNames = getSelectedTestNamesList();
+      if (!selectedNames.length) return;
+
+      try {
+        await navigator.clipboard.writeText(getDrawPlanShareUrl(selectedNames));
+        showSelectionNotice("Draw plan link copied.");
+      } catch {
+        showSelectionNotice("Could not copy the draw plan link on this device.");
+      }
+    });
+  }
+
+  if (shareDrawPlanWhatsappBtn) {
+    shareDrawPlanWhatsappBtn.addEventListener("click", (event) => {
+      if (shareDrawPlanWhatsappBtn.getAttribute("aria-disabled") === "true") {
+        event.preventDefault();
+      }
     });
   }
 
@@ -5662,6 +6126,21 @@ function bindEvents() {
     });
   }
 
+  if (closeSectionBrowseModalBtn) {
+    closeSectionBrowseModalBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeSectionBrowseModal();
+    });
+  }
+
+  if (sectionBrowseModal) {
+    sectionBrowseModal.addEventListener("click", (event) => {
+      if (event.target !== sectionBrowseModal) return;
+      closeSectionBrowseModal();
+    });
+  }
+
   if (legalDocButtons.length) {
     legalDocButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -5686,8 +6165,23 @@ function bindEvents() {
     });
   }
 
+  if (surfacePanelBackdrop) {
+    surfacePanelBackdrop.addEventListener("click", () => {
+      if (isThemePanelOpen) {
+        setThemePanelOpen(false);
+      }
+      if (isSiteMenuOpen) {
+        setSiteMenuOpen(false);
+      }
+    });
+  }
+
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    if (isSiteMenuOpen) {
+      setSiteMenuOpen(false);
+      return;
+    }
     if (legalModal && !legalModal.hidden) {
       closeLegalModal();
       return;
@@ -5696,9 +6190,19 @@ function bindEvents() {
       closeProfileModal();
       return;
     }
+    if (sectionBrowseModal && !sectionBrowseModal.hidden) {
+      closeSectionBrowseModal();
+      return;
+    }
     if (drawModal && !drawModal.hidden) {
       closeDrawModal();
     }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!isSiteMenuOpen || !headerSettings) return;
+    if (headerSettings.contains(event.target)) return;
+    setSiteMenuOpen(false);
   });
 }
 
@@ -5737,3 +6241,4 @@ initSelectionCartViewportSync();
 applyFilters();
 updateSearchClearButton();
 refreshSelectionUi({ rerenderCards: false });
+loadSharedDrawPlanFromUrl();
