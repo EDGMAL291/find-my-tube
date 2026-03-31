@@ -11,6 +11,7 @@ const themeSwitcherPanel = document.getElementById("themeSwitcherPanel");
 const surfacePanelBackdrop = document.getElementById("surfacePanelBackdrop");
 const themeModeButtons = document.querySelectorAll("[data-theme-mode]");
 const homeHub = document.getElementById("homeHub");
+const homeTipCard = document.querySelector(".home-brief-card-featured");
 const homeTipText = document.getElementById("homeTipText");
 const heroDrawPlanBtn = document.getElementById("heroDrawPlanBtn");
 const heroOrderStockBtn = document.getElementById("heroOrderStockBtn");
@@ -43,7 +44,6 @@ const clinicalWorkupRuleList = document.getElementById("clinicalWorkupRuleList")
 const clearClinicalWorkupResultsBtn = document.getElementById("clearClinicalWorkupResultsBtn");
 const preSearchPanel = document.getElementById("preSearchPanel");
 const brandHomeBtn = document.getElementById("brandHomeBtn");
-const findMyTestHeaderTitle = document.getElementById("findMyTestHeaderTitle");
 const toggleQuickToolsBtn = document.getElementById("toggleQuickToolsBtn");
 const quickToolsPanel = document.getElementById("quickToolsPanel");
 const quickToolsTitle = document.getElementById("quickToolsTitle");
@@ -63,6 +63,20 @@ const sectionBrowseModalCopy = document.getElementById("sectionBrowseModalCopy")
 const sectionBrowseModalGrid = document.getElementById("sectionBrowseModalGrid");
 const closeSectionBrowseModalBtn = document.getElementById("closeSectionBrowseModalBtn");
 const stockOrderPanel = document.getElementById("stockOrderPanel");
+const stockOrderForm = document.getElementById("stockOrderForm");
+const stockOrderRequesterNameInput = document.getElementById("stockOrderRequesterNameInput");
+const stockOrderRequesterSelect = document.getElementById("stockOrderRequesterSelect");
+const stockOrderNoteInput = document.getElementById("stockOrderNoteInput");
+const stockOrderGrid = document.getElementById("stockOrderGrid");
+const stockOrderStatusBadge = document.getElementById("stockOrderStatusBadge");
+const stockOrderRequestMeta = document.getElementById("stockOrderRequestMeta");
+const stockOrderSummaryName = document.getElementById("stockOrderSummaryName");
+const stockOrderSummaryWard = document.getElementById("stockOrderSummaryWard");
+const stockOrderSummaryItems = document.getElementById("stockOrderSummaryItems");
+const stockOrderRequestPreview = document.getElementById("stockOrderRequestPreview");
+const copyStockOrderBtn = document.getElementById("copyStockOrderBtn");
+const shareStockOrderWhatsappBtn = document.getElementById("shareStockOrderWhatsappBtn");
+const resetStockOrderBtn = document.getElementById("resetStockOrderBtn");
 const aboutPanel = document.getElementById("aboutPanel");
 const drawModal = document.getElementById("drawModal");
 const drawResultCard = document.getElementById("drawResultCard");
@@ -154,6 +168,8 @@ const selectedClinicalChipIds = new Set();
 let hasDismissedRackHint = false;
 let lastLegalModalTrigger = null;
 let clinicalWorkupOutput = null;
+const stockOrderState = Object.create(null);
+let stockOrderStatusMode = "draft";
 const currentPageParams = new URLSearchParams(window.location.search);
 const currentAppPage = currentPageParams.get("tool") === "find-my-test"
   ? "find-my-test"
@@ -161,14 +177,18 @@ const currentAppPage = currentPageParams.get("tool") === "find-my-test"
 const isHomePage = currentAppPage === "home";
 const isFindMyTubePage = currentAppPage === "find-my-tube";
 const isFindMyTestPage = currentAppPage === "find-my-test";
+const isStockOrderPage = currentAppPage === "stock-order";
 const sharedPlanToken = currentPageParams.get("plan") || "";
 const APP_HOME_TITLE = "Find My Tube";
 const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube";
 const FIND_MY_TEST_PAGE_TITLE = "Find My Test";
+const STOCK_ORDER_PAGE_TITLE = "Order Stock";
 const APP_HOME_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TUBE_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
+const STOCK_ORDER_HEADER_COPY = "Consumables, stock requests, and order status.";
 const DRAW_PLAN_SHARE_PARAM = "plan";
+const STOCK_ORDER_HOME_URL = "./order-stock.html";
 const THEME_STORAGE_KEY = "fmt-theme-mode";
 const THEME_COLOR_BY_MODE = {
   light: "#0f766e",
@@ -225,6 +245,7 @@ function setSiteMenuOpen(isOpen) {
   }
   if (menuToggleBtn) {
     menuToggleBtn.setAttribute("aria-expanded", isSiteMenuOpen ? "true" : "false");
+    menuToggleBtn.setAttribute("aria-label", isSiteMenuOpen ? "Close menu" : "Open menu");
     menuToggleBtn.classList.toggle("active", isSiteMenuOpen);
   }
   syncSurfacePanelState();
@@ -284,17 +305,22 @@ function initTheme() {
 
 document.body.classList.toggle("find-my-test-page", isFindMyTestPage);
 document.body.classList.toggle("find-my-tube-page", isFindMyTubePage);
+document.body.classList.toggle("stock-order-page", isStockOrderPage);
 document.title = isFindMyTestPage
   ? FIND_MY_TEST_PAGE_TITLE
   : isFindMyTubePage
     ? FIND_MY_TUBE_PAGE_TITLE
-    : APP_HOME_TITLE;
+    : isStockOrderPage
+      ? STOCK_ORDER_PAGE_TITLE
+      : APP_HOME_TITLE;
 if (headerIntroText) {
   headerIntroText.textContent = isFindMyTestPage
     ? FIND_MY_TEST_HEADER_COPY
     : isFindMyTubePage
       ? FIND_MY_TUBE_HEADER_COPY
-      : APP_HOME_HEADER_COPY;
+      : isStockOrderPage
+        ? STOCK_ORDER_HEADER_COPY
+        : APP_HOME_HEADER_COPY;
 }
 if (appleMobileAppTitleMeta) {
   appleMobileAppTitleMeta.setAttribute(
@@ -303,7 +329,9 @@ if (appleMobileAppTitleMeta) {
       ? FIND_MY_TEST_PAGE_TITLE
       : isFindMyTubePage
         ? FIND_MY_TUBE_PAGE_TITLE
-        : APP_HOME_TITLE
+        : isStockOrderPage
+          ? STOCK_ORDER_PAGE_TITLE
+          : APP_HOME_TITLE
   );
 }
 
@@ -756,13 +784,13 @@ function openLookupHomeView() {
 
 // Opens stock section.
 function openStockSection() {
-  if (isFindMyTestPage) {
-    window.location.assign(`${window.location.pathname}#stockOrderPanel`);
+  if (!isStockOrderPage) {
+    window.location.assign(STOCK_ORDER_HOME_URL);
     return;
   }
 
   if (!stockOrderPanel || stockOrderPanel.hidden) {
-    showSelectionNotice("Order Stock will move to its own dedicated page next.");
+    window.location.assign(STOCK_ORDER_HOME_URL);
     return;
   }
 
@@ -770,6 +798,345 @@ function openStockSection() {
   closeProfileModal();
   closeLegalModal({ restoreFocus: false });
   scrollPanelIntoView(stockOrderPanel);
+}
+
+// Gets current consumables request lines.
+function getSelectedStockConsumables() {
+  return stockConsumableItems
+    .map((item) => ({ ...item, quantity: Number(stockOrderState[item.id] || 0) }))
+    .filter((item) => item.quantity > 0);
+}
+
+// Formats a consumables quantity line.
+function formatStockQuantity(item) {
+  if (item.unitType === "tray") {
+    const tubeCount = item.quantity * item.traySize;
+    return `${item.quantity} tray${item.quantity === 1 ? "" : "s"} (${tubeCount} tubes)`;
+  }
+
+  if (item.unitType === "packet") {
+    const itemCount = item.quantity * item.packetSize;
+    return `${item.quantity} packet${item.quantity === 1 ? "" : "s"} (${itemCount} bags)`;
+  }
+
+  return `${item.quantity} each`;
+}
+
+// Gets a stock item config by id.
+function getStockConsumableItem(itemId) {
+  return stockConsumableItems.find((item) => item.id === itemId) || null;
+}
+
+// Gets the maximum allowed quantity for a stock item.
+function getStockItemMaxQuantity(itemId) {
+  const item = getStockConsumableItem(itemId);
+  return Number(item?.maxQuantity || 0) || Infinity;
+}
+
+// Gets the current consumables status label.
+function getStockOrderStatusLabel() {
+  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
+  const selectedItems = getSelectedStockConsumables();
+
+  if (stockOrderStatusMode === "copied") return "Copied";
+  if (stockOrderStatusMode === "shared") return "Shared";
+  if (requesterName && requesterWard && selectedItems.length) return "Ready";
+  return "Draft";
+}
+
+// Gets the concise ordered items summary.
+function getStockOrderItemsSummary(selectedItems = getSelectedStockConsumables()) {
+  if (!selectedItems.length) return "No items selected";
+
+  return selectedItems
+    .map((item) => `${item.label} x ${formatStockQuantity(item)}`)
+    .join(", ");
+}
+
+// Builds the consumables request text.
+function buildStockOrderRequestText() {
+  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
+  const notes = String(stockOrderNoteInput?.value || "").trim();
+  const selectedItems = getSelectedStockConsumables();
+
+  const lines = ["Consumables request"];
+
+  lines.push(`Status: ${getStockOrderStatusLabel()}`);
+  if (requesterName) lines.push(`Requested by: ${requesterName}`);
+  if (requesterWard) lines.push(`Ward / Unit: ${requesterWard}`);
+
+  if (!selectedItems.length) {
+    lines.push("");
+    lines.push("No consumables selected yet.");
+  } else {
+    lines.push("");
+    lines.push("Items:");
+    selectedItems.forEach((item) => {
+      lines.push(`- ${item.label}: ${formatStockQuantity(item)}`);
+    });
+  }
+
+  if (notes) {
+    lines.push("");
+    lines.push(`Notes: ${notes}`);
+  }
+
+  return lines.join("\n");
+}
+
+// Updates the consumables request preview.
+function updateStockOrderPreview() {
+  if (!stockOrderRequestPreview || !stockOrderRequestMeta || !copyStockOrderBtn || !shareStockOrderWhatsappBtn) return;
+
+  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
+  const selectedItems = getSelectedStockConsumables();
+  const itemCount = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const hasRequest = Boolean(requesterName && requesterWard && selectedItems.length);
+  const requestText = buildStockOrderRequestText();
+  const statusLabel = getStockOrderStatusLabel();
+
+  stockOrderRequestPreview.value = requestText;
+  if (stockOrderStatusBadge) {
+    stockOrderStatusBadge.textContent = statusLabel;
+    stockOrderStatusBadge.dataset.status = statusLabel.toLowerCase();
+  }
+  if (stockOrderSummaryName) {
+    stockOrderSummaryName.textContent = requesterName || "Not added";
+  }
+  if (stockOrderSummaryWard) {
+    stockOrderSummaryWard.textContent = requesterWard || "Not selected";
+  }
+  if (stockOrderSummaryItems) {
+    stockOrderSummaryItems.textContent = getStockOrderItemsSummary(selectedItems);
+  }
+  stockOrderRequestMeta.textContent = hasRequest
+    ? `${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
+    : "Add your name, ward / unit, and at least one item.";
+
+  copyStockOrderBtn.disabled = !hasRequest;
+  shareStockOrderWhatsappBtn.classList.toggle("is-disabled", !hasRequest);
+  shareStockOrderWhatsappBtn.setAttribute("aria-disabled", hasRequest ? "false" : "true");
+  shareStockOrderWhatsappBtn.href = hasRequest
+    ? `https://wa.me/?text=${encodeURIComponent(requestText)}`
+    : "#";
+  shareStockOrderWhatsappBtn.tabIndex = hasRequest ? 0 : -1;
+}
+
+// Sets a consumables quantity.
+function setStockItemQuantity(itemId, quantity) {
+  const maxQuantity = getStockItemMaxQuantity(itemId);
+  const safeQuantity = Math.min(maxQuantity, Math.max(0, Number(quantity) || 0));
+  stockOrderState[itemId] = safeQuantity;
+  if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+    stockOrderStatusMode = "ready";
+  }
+
+  const input = stockOrderGrid?.querySelector(`[data-stock-qty-input="${itemId}"]`);
+  if (input) {
+    input.value = String(safeQuantity);
+  }
+
+  syncStockOrderItemState(itemId);
+  updateStockOrderPreview();
+}
+
+// Syncs disabled and visual max state for a stock item card.
+function syncStockOrderItemState(itemId) {
+  if (!stockOrderGrid) return;
+
+  const card = stockOrderGrid.querySelector(`[data-stock-item="${itemId}"]`);
+  const increaseBtn = stockOrderGrid.querySelector(`[data-stock-qty-step="${itemId}"][data-stock-qty-direction="1"]`);
+  const quantityInput = stockOrderGrid.querySelector(`[data-stock-qty-input="${itemId}"]`);
+  const maxQuantity = getStockItemMaxQuantity(itemId);
+  const currentValue = Number(stockOrderState[itemId] || 0);
+  const isMaxed = Number.isFinite(maxQuantity) && currentValue >= maxQuantity;
+
+  card?.classList.toggle("is-maxed", isMaxed);
+
+  if (increaseBtn instanceof HTMLButtonElement) {
+    increaseBtn.disabled = isMaxed;
+    increaseBtn.setAttribute("aria-disabled", isMaxed ? "true" : "false");
+  }
+
+  if (quantityInput instanceof HTMLInputElement && Number.isFinite(maxQuantity)) {
+    quantityInput.max = String(maxQuantity);
+  }
+}
+
+// Renders consumables cards.
+function renderStockOrderItems() {
+  if (!stockOrderGrid) return;
+
+  stockOrderGrid.innerHTML = stockConsumableItems
+    .map((item) => {
+      const cardLabel = item.unitType === "tray"
+        ? item.label.replace(/\s+tubes$/i, "")
+        : item.label;
+
+      return `
+      <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}">
+        <div class="stock-order-item-head">
+          <span class="stock-order-item-kicker">${item.unitType === "tray" ? `Tray of ${item.traySize}` : item.unitType === "packet" ? `Packet of ${item.packetSize}` : "Each"}</span>
+          <h3>${cardLabel}</h3>
+        </div>
+        <div class="stock-order-qty-row">
+          <button
+            type="button"
+            class="stock-order-qty-btn"
+            data-stock-qty-step="${item.id}"
+            data-stock-qty-direction="-1"
+            aria-label="Reduce ${item.label}"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value="0"
+            class="stock-order-qty-input"
+            data-stock-qty-input="${item.id}"
+            ${item.maxQuantity ? `max="${item.maxQuantity}"` : ""}
+            aria-label="${cardLabel} quantity"
+          />
+          <button
+            type="button"
+            class="stock-order-qty-btn"
+            data-stock-qty-step="${item.id}"
+            data-stock-qty-direction="1"
+            aria-label="Increase ${item.label}"
+          >
+            +
+          </button>
+        </div>
+      </article>
+    `;
+    })
+    .join("");
+
+  stockOrderGrid.querySelectorAll("[data-stock-qty-step]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const itemId = button.getAttribute("data-stock-qty-step") || "";
+      const direction = Number(button.getAttribute("data-stock-qty-direction") || "0");
+      const currentValue = Number(stockOrderState[itemId] || 0);
+      setStockItemQuantity(itemId, currentValue + direction);
+    });
+  });
+
+  stockOrderGrid.querySelectorAll("[data-stock-qty-input]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const itemId = input.getAttribute("data-stock-qty-input") || "";
+      setStockItemQuantity(itemId, input.value);
+    });
+  });
+
+  stockConsumableItems.forEach((item) => {
+    syncStockOrderItemState(item.id);
+  });
+}
+
+// Populates requester options.
+function populateStockRequesterOptions() {
+  if (!stockOrderRequesterSelect) return;
+
+  stockRequesterGroups.forEach((group) => {
+    const optionGroup = document.createElement("optgroup");
+    optionGroup.label = group.label;
+
+    group.options.forEach((optionLabel) => {
+      const option = document.createElement("option");
+      option.value = optionLabel;
+      option.textContent = optionLabel;
+      optionGroup.appendChild(option);
+    });
+
+    stockOrderRequesterSelect.appendChild(optionGroup);
+  });
+}
+
+// Clears the consumables request form.
+function resetStockOrderForm() {
+  stockConsumableItems.forEach((item) => {
+    stockOrderState[item.id] = 0;
+  });
+  stockOrderStatusMode = "draft";
+
+  if (stockOrderForm) {
+    stockOrderForm.reset();
+  }
+
+  if (stockOrderGrid) {
+    stockOrderGrid.querySelectorAll("[data-stock-qty-input]").forEach((input) => {
+      input.value = "0";
+    });
+  }
+
+  updateStockOrderPreview();
+}
+
+// Initializes the consumables order panel.
+function initStockOrderPanel() {
+  if (!stockOrderPanel || !stockOrderRequesterNameInput || !stockOrderRequesterSelect || !stockOrderGrid) return;
+
+  stockConsumableItems.forEach((item) => {
+    stockOrderState[item.id] = 0;
+  });
+  stockOrderStatusMode = "draft";
+
+  populateStockRequesterOptions();
+  renderStockOrderItems();
+  updateStockOrderPreview();
+
+  stockOrderRequesterNameInput.addEventListener("input", () => {
+    if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+      stockOrderStatusMode = "ready";
+    }
+    updateStockOrderPreview();
+  });
+
+  stockOrderRequesterSelect.addEventListener("change", () => {
+    if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+      stockOrderStatusMode = "ready";
+    }
+    updateStockOrderPreview();
+  });
+  stockOrderNoteInput?.addEventListener("input", () => {
+    if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+      stockOrderStatusMode = "ready";
+    }
+    updateStockOrderPreview();
+  });
+
+  copyStockOrderBtn?.addEventListener("click", async () => {
+    const requestText = buildStockOrderRequestText();
+    if (copyStockOrderBtn.disabled) return;
+
+    try {
+      await navigator.clipboard.writeText(requestText);
+      stockOrderStatusMode = "copied";
+      updateStockOrderPreview();
+      showSelectionNotice("Consumables request copied.");
+    } catch {
+      showSelectionNotice("Could not copy the consumables request on this device.");
+    }
+  });
+
+  shareStockOrderWhatsappBtn?.addEventListener("click", (event) => {
+    if (shareStockOrderWhatsappBtn.getAttribute("aria-disabled") === "true") {
+      event.preventDefault();
+      return;
+    }
+
+    stockOrderStatusMode = "shared";
+    updateStockOrderPreview();
+  });
+
+  resetStockOrderBtn?.addEventListener("click", () => {
+    resetStockOrderForm();
+  });
 }
 
 // Opens about section.
@@ -801,15 +1168,6 @@ function goHome() {
 
   setSectionView("", { historyMode: "push", scrollToTop: false, clearSearch: true });
   scrollHomeViewportToTop();
-}
-
-// Handles find my test header action.
-function handleFindMyTestHeaderAction() {
-  clearClinicalWorkupOutput({ preserveInputs: false, rerenderCards: true, clearStatus: true });
-  clinicalWorkupPanel?.scrollIntoView({
-    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start"
-  });
 }
 
 // Checks whether scroll search field into view.
@@ -1144,6 +1502,58 @@ const factTips = [
   "Protect light-sensitive specimens per lab policy during transport.",
   "For urgent samples, notify the lab in advance to shorten processing delays.",
   "Document collection time clearly for tests with strict timing requirements."
+];
+const HOME_TIP_CYCLE_MS = 8200;
+
+const stockRequesterGroups = [
+  {
+    label: "Military sickbays / clinics",
+    options: [
+      "IMM (Institute for Maritime Medicine)",
+      "Wingfield",
+      "Ysterplaat",
+      "Youngsfield",
+      "Overberg",
+      "Gordon's Bay",
+      "Eerste Rivier",
+      "Langebaan",
+      "George",
+      "Oudtshoorn",
+      "Saldanha"
+    ]
+  },
+  {
+    label: "Hospital wards / units",
+    options: [
+      "Ward 7 / Paeds",
+      "Ward 8",
+      "Ward 9",
+      "Ward 11",
+      "Casualty",
+      "ICU",
+      "MOPD",
+      "GOPD",
+      "Gynae",
+      "Maternity Ward",
+      "Theatre",
+      "Oncology"
+    ]
+  }
+];
+
+const stockConsumableItems = [
+  { id: "yellow-tubes", label: "Yellow (Gel) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Serum tubes ordered per tray." },
+  { id: "grey-tubes", label: "Grey (Fluoride) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Fluoride tubes ordered per tray." },
+  { id: "purple-tubes", label: "Purple (EDTA) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "EDTA tubes ordered per tray." },
+  { id: "green-tubes", label: "Green (Heparin) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Heparin tubes ordered per tray." },
+  { id: "blue-tubes", label: "Blue (Citrate) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Citrate tubes ordered per tray." },
+  { id: "pearl-tubes", label: "Pearl tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Pearl/PPT tubes ordered per tray." },
+  { id: "tan-tubes", label: "Tan tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Tan tubes ordered per tray." },
+  { id: "specimen-jars", label: "Specimen jars", unitType: "each", maxQuantity: 50, note: "Requested individually." },
+  { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, note: "Packed in 50s." },
+  { id: "blood-culture-bottles", label: "Blood culture bottles", unitType: "each", note: "Requested individually." },
+  { id: "blood-gas-syringes", label: "Blood gas syringes", unitType: "each", note: "Requested individually." },
+  { id: "swabs-transport-media", label: "Swabs with transport media", unitType: "each", note: "Requested individually." }
 ];
 
 // Section metadata drives the browse chips, labels, and icons shown on the home screen.
@@ -4663,6 +5073,13 @@ function getCardSpecimenValue(test, { isMicro = false } = {}) {
   return conciseValue || baseValue || "CSF";
 }
 
+// Gets concise collection tips for the card summary.
+function getCardCollectionTips(test) {
+  const primaryValue = String(test.criticalPrep || "").trim();
+  if (primaryValue) return primaryValue;
+  return String(test.notes || "").trim();
+}
+
 // Checks whether hide specimen on card.
 function shouldHideSpecimenOnCard(test) {
   return test.name === "HIV Viral Load";
@@ -5234,8 +5651,11 @@ function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
 
 // Renders facts carousel.
 function renderFactsCarousel() {
-  startCarousel(factTips, tipText, null, 8200);
-  startCarousel(factTips, homeTipText, null, 8200);
+  startCarousel(factTips, tipText, null, HOME_TIP_CYCLE_MS);
+  if (homeTipText && factTips.length) {
+    homeTipText.textContent = factTips[0];
+  }
+  homeTipCard?.classList.remove("is-orbiting");
 }
 
 // Applies quick tools panel mode.
@@ -5655,13 +6075,15 @@ function renderCards(filteredTests) {
     const collectionFieldLabel = getCollectionFieldLabel(tubeGroups);
     const specimenValue = getCardSpecimenValue(test, { isMicro });
     const hasSpecimenValue = Boolean(specimenValue);
-    const showRequestedSpecimen = isSelected && hasSpecimenValue && !shouldHideSpecimenOnCard(test);
+    const showRequestedSpecimen = hasSpecimenValue && !shouldHideSpecimenOnCard(test);
+    const collectionTipsValue = getCardCollectionTips(test);
+    const hasCollectionTipsValue = Boolean(collectionTipsValue);
     const showRackHint = !hasDismissedRackHint && !isSelected && filteredTests[0]?.name === test.name;
     // Renders summary field.
-    const renderSummaryField = ({ label, content, isAction = false }) => {
+    const renderSummaryField = ({ label, content, isAction = false, className = "" }) => {
       if (!isAction) {
         return `
-        <div class="field card-summary-field">
+        <div class="field card-summary-field${className ? ` ${className}` : ""}">
           <span class="label">${label}</span>
           ${content}
         </div>
@@ -5671,7 +6093,7 @@ function renderCards(filteredTests) {
       return `
       <button
         type="button"
-        class="field card-summary-field card-summary-action${isSelected ? " selected" : ""}${showRackHint ? " hinted" : ""}"
+        class="field card-summary-field card-summary-action${className ? ` ${className}` : ""}${isSelected ? " selected" : ""}${showRackHint ? " hinted" : ""}"
         data-card-select="${encodeURIComponent(test.name)}"
         aria-pressed="${isSelected ? "true" : "false"}"
         aria-label="${isSelected ? `Remove ${test.name} from Tube Plan` : `Add ${test.name} to Tube Plan`}"
@@ -5685,16 +6107,31 @@ function renderCards(filteredTests) {
       </button>
       `;
     };
-    const summaryFields = hasTubeOptions ? `
-      ${renderSummaryField({
-        label: collectionFieldLabel,
-        content: `<div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
-          ${tubeOptionsMarkup}
-        </div>`,
-        isAction: true
-      })}
-      ` : "";
-    const summaryFieldCount = Number(hasTubeOptions);
+    const summaryFields = `
+      ${hasTubeOptions
+        ? renderSummaryField({
+          label: collectionFieldLabel,
+          content: `<div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
+            ${tubeOptionsMarkup}
+          </div>`,
+          isAction: true
+        })
+        : ""}
+      ${showRequestedSpecimen
+        ? renderSummaryField({
+          label: "Requested Specimen",
+          content: `<span class="card-summary-value">${specimenValue}</span>`
+        })
+        : ""}
+      ${hasCollectionTipsValue
+        ? renderSummaryField({
+          label: "Collection Tips",
+          content: `<span class="card-summary-value">${collectionTipsValue}</span>`,
+          className: "card-summary-field-wide"
+        })
+        : ""}
+    `;
+    const summaryFieldCount = Number(hasTubeOptions) + Number(showRequestedSpecimen) + Number(hasCollectionTipsValue);
     const cardMetaRow = hasProfileComponents
       ? `
       <div class="card-meta-row">
@@ -5719,12 +6156,6 @@ function renderCards(filteredTests) {
       ${summaryFieldCount ? `
       <div class="card-summary-grid${summaryFieldCount <= 1 ? " single" : ""}">
         ${summaryFields}
-      </div>
-      ` : ""}
-      ${showRequestedSpecimen ? `
-      <div class="card-requested-specimen">
-        <span class="label">Requested Specimen</span>
-        <span class="card-requested-specimen-value">${specimenValue}</span>
       </div>
       ` : ""}
       <div class="card-extra">
@@ -6028,12 +6459,6 @@ function bindEvents() {
     });
   }
 
-  if (findMyTestHeaderTitle) {
-    findMyTestHeaderTitle.addEventListener("click", () => {
-      handleFindMyTestHeaderAction();
-    });
-  }
-
   if (resultsBackToTopBtn) {
     resultsBackToTopBtn.addEventListener("click", () => {
       scrollToResultsTop();
@@ -6231,6 +6656,7 @@ function updateFindMyTubePublicApi() {
 initTheme();
 updateFindMyTubePublicApi();
 renderFactsCarousel();
+initStockOrderPanel();
 initQuickToolsPanel();
 initFactsPanel();
 initSectionNavigation();

@@ -7,8 +7,8 @@
   <meta name="color-scheme" content="light dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Find My Tube" />
-  <title>Find My Tube</title>
+  <meta name="apple-mobile-web-app-title" content="Order Stock" />
+  <title>Order Stock</title>
   <link rel="manifest" href="manifest.webmanifest?v=20260317a" />
   <link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg?v=20260317a" />
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=20260317a" />
@@ -26,7 +26,7 @@
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260323a" />
 </head>
-<body data-app-page="find-my-tube">
+<body data-app-page="stock-order">
   <div class="container">
     <header class="header">
       <h1>
@@ -46,7 +46,7 @@
         </button>
       </h1>
       <p id="headerIntroText">
-        Find the right test, the right tube and why it's ordered.
+        Consumables, stock requests, and order status.
       </p>
       <div class="header-settings" id="headerSettings">
         <button
@@ -89,86 +89,92 @@
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
-    <section class="search-box" id="tubeLookupPanel">
-      <div class="search-input-wrap">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search by test or profile (e.g. CRP or Liver function tests)"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-          enterkeyhint="search"
-        />
-        <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" hidden>&times;</button>
+    <section class="stock-order-panel" id="stockOrderPanel" aria-labelledby="stockOrderTitle">
+      <div class="stock-order-head">
+        <div>
+          <p class="stock-order-kicker">Order Stock</p>
+        </div>
       </div>
+
+      <form class="stock-order-form" id="stockOrderForm">
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Requested by</span>
+          <input
+            type="text"
+            id="stockOrderRequesterNameInput"
+            placeholder="Rank initial and surname"
+            autocomplete="name"
+          />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Ward / unit</span>
+          <select id="stockOrderRequesterSelect">
+            <option value="">Select clinic, sickbay, or ward</option>
+          </select>
+        </label>
+
+        <label class="stock-order-field stock-order-field-wide">
+          <span class="stock-order-field-label">Notes</span>
+          <textarea
+            id="stockOrderNoteInput"
+            rows="2"
+            placeholder="Optional note, e.g. urgent top-up for weekend cover"
+          ></textarea>
+        </label>
+      </form>
+
+      <div class="stock-order-grid" id="stockOrderGrid" aria-label="Consumables available to order"></div>
+
+      <section class="stock-order-request-card" aria-labelledby="stockOrderRequestTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Request Preview</p>
+            <h3 id="stockOrderRequestTitle">Ready to send</h3>
+          </div>
+          <div class="stock-order-request-status-wrap">
+            <span class="stock-order-status-badge" id="stockOrderStatusBadge">Draft</span>
+            <p class="stock-order-request-meta" id="stockOrderRequestMeta">No items selected yet.</p>
+          </div>
+        </div>
+        <div class="stock-order-summary-grid" id="stockOrderSummaryGrid">
+          <div class="stock-order-summary-item">
+            <span class="stock-order-summary-label">Name</span>
+            <span class="stock-order-summary-value" id="stockOrderSummaryName">Not added</span>
+          </div>
+          <div class="stock-order-summary-item">
+            <span class="stock-order-summary-label">Ward / Unit</span>
+            <span class="stock-order-summary-value" id="stockOrderSummaryWard">Not selected</span>
+          </div>
+          <div class="stock-order-summary-item stock-order-summary-item-wide">
+            <span class="stock-order-summary-label">Items ordered</span>
+            <span class="stock-order-summary-value" id="stockOrderSummaryItems">No items selected</span>
+          </div>
+        </div>
+        <textarea
+          id="stockOrderRequestPreview"
+          class="stock-order-request-preview"
+          readonly
+          aria-label="Consumables request preview"
+        ></textarea>
+        <div class="stock-order-request-actions">
+          <button type="button" class="quick-tool-launch-btn" id="copyStockOrderBtn">Copy Request</button>
+          <a
+            class="draw-tool-btn ghost draw-tool-link-btn"
+            id="shareStockOrderWhatsappBtn"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-disabled="true"
+          >
+            WhatsApp
+          </a>
+          <button type="button" class="quick-tool-clear-btn" id="resetStockOrderBtn">Clear</button>
+        </div>
+      </section>
     </section>
 
-    <div class="section-context-bar" id="sectionContextBar" hidden>
-      <button type="button" class="section-context-back-btn" id="sectionContextBackBtn">Back to departments</button>
-      <p class="section-context-label" id="sectionContextLabel"></p>
-    </div>
-
-    <section class="pre-search" id="preSearchPanel">
-      <div class="group-hints">
-        <h3>Browse by Department</h3>
-        <div class="group-chips" id="groupChips"></div>
-      </div>
-
-      <div class="pre-search-primary">
-        <button
-          type="button"
-          class="quick-tools-toggle-btn"
-          id="toggleQuickToolsBtn"
-          aria-controls="drawModal"
-          aria-expanded="false"
-          hidden
-        >
-          Start Tube Plan
-        </button>
-        <section class="quick-tools-panel" id="quickToolsPanel">
-          <h3 id="quickToolsTitle">Tube Plan</h3>
-          <p id="quickToolsDescription">Add tests as you search to plan your draw, avoid unnecessary extra tubes, and save on consumables.</p>
-          <div class="quick-tools-stats" id="quickToolsStats" hidden>
-            <span class="quick-tools-stat" id="quickToolsTestsStat"></span>
-            <span class="quick-tools-stat" id="quickToolsTubesStat"></span>
-          </div>
-          <div class="quick-tools-actions" id="quickToolsActions">
-            <button
-              type="button"
-              class="quick-tool-launch-btn"
-              id="openDrawPlannerBtn"
-              aria-controls="searchInput"
-            >
-              Plan My Draw
-            </button>
-            <button
-              type="button"
-              class="quick-tool-clear-btn"
-              id="quickToolsClearBtn"
-              hidden
-            >
-              Clear all
-            </button>
-          </div>
-        </section>
-      </div>
-    </section>
-
-    <div class="results-toolbar" id="resultsToolbar" hidden>
-      <p class="results-info" id="resultsInfo" hidden></p>
-    </div>
     <div class="selection-notice" id="selectionNoticeToast" role="status" aria-live="polite" hidden></div>
-    <section class="cards" id="cardsContainer"></section>
-    <button
-      type="button"
-      class="results-back-to-top-btn"
-      id="resultsBackToTopBtn"
-      aria-label="Back to top"
-      title="Back to top"
-      hidden
-    >&#8593;</button>
 
     <footer class="site-footer" id="siteFooter">
       <div class="site-footer-copy">
@@ -193,85 +199,6 @@
     </footer>
   </div>
 
-  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Draw Plan" hidden>
-    <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0</span>
-    <span class="selection-cart-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 18h16" />
-        <path d="M6 18v-4h12v4" />
-        <path d="M8 6v8" />
-        <path d="M12 5v9" />
-        <path d="M16 7v7" />
-        <path d="M7 6h2" />
-        <path d="M11 5h2" />
-        <path d="M15 7h2" />
-      </svg>
-    </span>
-    <span class="selection-cart-copy">
-      <span class="selection-cart-kicker">Draw</span>
-      <span class="selection-cart-label">Plan</span>
-    </span>
-  </button>
-
-  <section class="draw-modal" id="drawModal" hidden>
-    <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
-      <div class="draw-selection-head">
-        <div>
-          <p class="draw-cart-kicker">Tube Planning</p>
-          <h3 id="drawModalTitle">Tube Plan</h3>
-        </div>
-        <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn" aria-label="Close Tube Plan" title="Close Tube Plan">&times;</button>
-      </div>
-      <div class="draw-selection-actions">
-        <p class="draw-selection-count" id="drawSelectionCount">0 tests added</p>
-        <div class="draw-selection-share-actions" id="drawSelectionShareActions">
-          <button type="button" class="draw-tool-btn" id="shareDrawPlanBtn">Share</button>
-          <button type="button" class="draw-tool-btn ghost" id="copyDrawPlanLinkBtn">Copy Link</button>
-          <a
-            class="draw-tool-btn ghost draw-tool-link-btn"
-            id="shareDrawPlanWhatsappBtn"
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            WhatsApp
-          </a>
-        </div>
-      </div>
-      <div class="draw-selected-list" id="drawSelectedList"></div>
-      <div class="draw-result-card" id="drawResultCard" tabindex="-1">
-        <p class="draw-planner-count" id="drawPlannerCount"></p>
-        <div class="draw-planner-alerts" id="drawPlannerAlerts" hidden></div>
-        <div class="draw-groups" id="drawGroups"></div>
-        <p class="draw-planner-note" id="drawPlannerNote"></p>
-      </div>
-      <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add More Tests</button>
-    </div>
-  </section>
-
-  <section class="profile-modal section-browse-modal" id="sectionBrowseModal" hidden>
-    <div class="profile-modal-card section-browse-modal-card" role="dialog" aria-modal="true" aria-labelledby="sectionBrowseModalTitle">
-      <div class="profile-modal-head section-browse-modal-head">
-        <div class="section-browse-modal-copy-wrap">
-          <h3 id="sectionBrowseModalTitle">Browse Section</h3>
-          <p class="section-browse-modal-copy" id="sectionBrowseModalCopy">Choose a section to browse.</p>
-        </div>
-        <button type="button" class="profile-modal-close-btn" id="closeSectionBrowseModalBtn">Close</button>
-      </div>
-      <div class="section-browse-grid" id="sectionBrowseModalGrid"></div>
-    </div>
-  </section>
-
-  <section class="profile-modal" id="profileModal" hidden>
-    <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
-      <div class="profile-modal-head">
-        <h3 id="profileModalTitle">Profile Tests</h3>
-        <button type="button" class="profile-modal-close-btn" id="closeProfileModalBtn">Close</button>
-      </div>
-      <ul class="profile-modal-list" id="profileModalList"></ul>
-    </div>
-  </section>
-
   <section class="profile-modal legal-modal" id="legalModal" hidden>
     <div class="profile-modal-card legal-modal-card" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
       <div class="profile-modal-head legal-modal-head">
@@ -287,7 +214,6 @@
 
   <script src="assets/data/data.js?v=20260323a"></script>
   <script src="assets/js/script.js?v=20260323a"></script>
-  <script src="assets/js/find-my-test.js?v=20260323a"></script>
   <script>
     if ("serviceWorker" in navigator) {
       const APP_VERSION = "2026-03-23.1";

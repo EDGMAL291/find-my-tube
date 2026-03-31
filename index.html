@@ -37,13 +37,6 @@
           <span class="brand-gap"></span>
           <span>tube</span>
         </button>
-        <button type="button" class="brand-title find-my-test-header-title find-my-test-header-btn" id="findMyTestHeaderTitle" aria-label="Clear Find My Test">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>test</span>
-        </button>
       </h1>
       <p id="headerIntroText">
         Find the right test, the right tube and why it's ordered.
@@ -56,8 +49,13 @@
           aria-controls="siteMenuPanel"
           aria-expanded="false"
           aria-haspopup="true"
+          aria-label="Open menu"
         >
-          <span class="header-menu-btn-label">Menu</span>
+          <span class="header-menu-icon" aria-hidden="true">
+            <span class="header-menu-line"></span>
+            <span class="header-menu-line"></span>
+            <span class="header-menu-line"></span>
+          </span>
         </button>
         <div class="site-menu-panel" id="siteMenuPanel" hidden>
           <p class="site-menu-title">Menu</p>
@@ -86,39 +84,38 @@
 
     <section class="home-hub" id="homeHub">
       <div class="home-brief-grid">
-        <article class="home-brief-card">
-          <h2>Tip</h2>
+        <article class="home-brief-card home-brief-card-featured">
+          <h2>Collection Tips</h2>
           <p class="home-brief-text" id="homeTipText"></p>
         </article>
-        <article class="home-brief-card">
-          <h2>News</h2>
-          <p class="home-brief-text">
-            Dedicated pages for each feature are taking shape.
-          </p>
+        <article class="home-brief-card home-brief-card-desktop-only" aria-label="Collection reminders">
+          <h2>Collection Reminders</h2>
+          <ul class="home-brief-list">
+            <li>Confirm patient prep and timing before collection.</li>
+            <li>Label specimens immediately after the draw.</li>
+            <li>Use the correct tube or container and fill to the line where required.</li>
+            <li>Escalate urgent or unusual handling requirements to the lab early.</li>
+          </ul>
         </article>
       </div>
 
       <div class="home-feature-grid">
         <button type="button" class="home-feature-card" data-menu-action="tube">
-          <h3>Fast test and tube lookup</h3>
-          <p>Find the right test, specimen, and collection guidance quickly.</p>
-          <span class="home-feature-action">Open Find My Tube</span>
+          <h3>Tube lookup</h3>
+          <p>Find the right test, specimen, and collection guidance.</p>
+          <span class="home-feature-action">Find My Tube</span>
         </button>
         <button type="button" class="home-feature-card" data-menu-action="find-my-test">
-          <h3>Clinical test suggestions</h3>
-          <p>Start with symptoms and context to guide test selection.</p>
-          <span class="home-feature-action">Open Find My Test</span>
+          <h3>Test lookup</h3>
+          <p>Use symptoms and signs to guide test choice.</p>
+          <span class="home-feature-action">Find My Test</span>
         </button>
         <button type="button" class="home-feature-card" data-menu-action="stock">
-          <h3>Consumables ordering workflow</h3>
-          <p>Request stock more easily and keep track of department demand.</p>
-          <span class="home-feature-action">Open Order Stock</span>
+          <h3>Consumables</h3>
+          <p>Order lab essentials.</p>
+          <span class="home-feature-action">Order Stock</span>
         </button>
       </div>
-    </section>
-
-    <section class="find-my-test-page-bar" aria-label="Find My Test navigation">
-      <a class="find-my-test-page-back" href="./index.html">Back to Find My Tube</a>
     </section>
 
     <section class="clinical-workup-panel" id="clinicalWorkupPanel" aria-labelledby="clinicalWorkupTitle">
