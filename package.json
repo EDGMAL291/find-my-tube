@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "browser-sync start --server --files \"index.html, assets/**/*.css, assets/**/*.js, assets/**/*.svg, assets/**/*.png, manifest.webmanifest, service-worker.js\" --port 3000"
+    "dev": "node server.js",
+    "start": "node server.js",
+    "owner:set": "node scripts/set-stock-owner.js"
   },
   "devDependencies": {
     "browser-sync": "^3.0.3"

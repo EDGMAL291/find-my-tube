@@ -20,6 +20,33 @@ npm run dev
 
 - `http://localhost:3000`
 
+## Local Backend
+
+The stock request flow now has a free built-in backend:
+
+- `POST /api/stock-requests` saves consumables requests locally
+- `GET /api/stock-requests` returns recent requests
+- `GET /api/lab/stock-stats` returns protected summary stats for lab users
+- data is stored in `data/stock-requests.json`
+- lab login data is stored in `data/stock-users.json`
+
+Use `http://localhost:3000/stock-dashboard.html` to review recent requests and update their status.
+Lab users cannot self-register anymore. The site owner creates them.
+
+## Owner Setup
+
+To set or reset the owner login from this Mac:
+
+```bash
+npm run owner:set -- --user 001 --pin 1234
+```
+
+That user becomes the owner and can:
+
+- create other lab users
+- clear saved stock request history
+- access the protected dashboard
+
 ## Deploy Online
 
 This project is static with no build step required.
@@ -43,7 +70,11 @@ How to install:
 - `index.html` - structure and content
 - `assets/css/style.css` - UI styles
 - `assets/js/script.js` - search/filter logic and rendering
+- `assets/js/stock-dashboard.js` - local stock dashboard
 - `assets/data/data.js` - lab test dataset
+- `server.js` - local backend and static file server
+- `data/stock-requests.json` - saved consumables requests
+- `data/stock-users.json` - local lab login records
 - `assets/images/lab-bg.svg` - lab-themed background artwork
 - `assets/icons/` - favicons, PWA icons, and source icon artwork
 - `docs/find-my-tube-preview.zip` - packaged preview artifact

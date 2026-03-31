@@ -74,9 +74,13 @@ const stockOrderSummaryName = document.getElementById("stockOrderSummaryName");
 const stockOrderSummaryWard = document.getElementById("stockOrderSummaryWard");
 const stockOrderSummaryItems = document.getElementById("stockOrderSummaryItems");
 const stockOrderRequestPreview = document.getElementById("stockOrderRequestPreview");
+const submitStockOrderBtn = document.getElementById("submitStockOrderBtn");
 const copyStockOrderBtn = document.getElementById("copyStockOrderBtn");
 const shareStockOrderWhatsappBtn = document.getElementById("shareStockOrderWhatsappBtn");
 const resetStockOrderBtn = document.getElementById("resetStockOrderBtn");
+const refreshStockTrackingBtn = document.getElementById("refreshStockTrackingBtn");
+const stockOrderTrackingMeta = document.getElementById("stockOrderTrackingMeta");
+const stockOrderTrackingList = document.getElementById("stockOrderTrackingList");
 const aboutPanel = document.getElementById("aboutPanel");
 const drawModal = document.getElementById("drawModal");
 const drawResultCard = document.getElementById("drawResultCard");
@@ -170,6 +174,8 @@ let lastLegalModalTrigger = null;
 let clinicalWorkupOutput = null;
 const stockOrderState = Object.create(null);
 let stockOrderStatusMode = "draft";
+let isSubmittingStockOrder = false;
+let submittedStockOrderRecord = null;
 const currentPageParams = new URLSearchParams(window.location.search);
 const currentAppPage = currentPageParams.get("tool") === "find-my-test"
   ? "find-my-test"
@@ -189,6 +195,11 @@ const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests
 const STOCK_ORDER_HEADER_COPY = "Consumables, stock requests, and order status.";
 const DRAW_PLAN_SHARE_PARAM = "plan";
 const STOCK_ORDER_HOME_URL = "./order-stock.html";
+const STOCK_DASHBOARD_URL = "./stock-dashboard.html";
+const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
+  ? String(window.FMT_APP_CONFIG?.stockOrderSubmitUrl || "/api/stock-requests").trim()
+  : "";
+const STOCK_ORDER_TRACKING_URL = "/api/stock-requests?limit=12";
 const THEME_STORAGE_KEY = "fmt-theme-mode";
 const THEME_COLOR_BY_MODE = {
   light: "#0f766e",
@@ -800,6 +811,88 @@ function openStockSection() {
   scrollPanelIntoView(stockOrderPanel);
 }
 
+// Opens the stock dashboard page.
+function openStockDashboard() {
+  window.location.assign(STOCK_DASHBOARD_URL);
+}
+
+// Formats a stock request timestamp for the tracking list.
+function formatStockRequestDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown time";
+
+  return new Intl.DateTimeFormat("en-ZA", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
+}
+
+// Renders the stock tracking list on the order page.
+function renderStockTrackingList(requests) {
+  if (!stockOrderTrackingList) return;
+
+  if (!Array.isArray(requests) || !requests.length) {
+    stockOrderTrackingList.innerHTML = `
+      <p class="stock-dashboard-empty">No requests yet. Once you submit an order, it will appear here.</p>
+    `;
+    return;
+  }
+
+  stockOrderTrackingList.innerHTML = requests.map((request) => {
+    const items = Array.isArray(request.items) ? request.items : [];
+    const orderedItems = items
+      .map((item) => `${escapeHtml(item.label || "")}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
+      .join(", ");
+    const statusLabel = String(request.status || "received")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+    return `
+      <article class="stock-dashboard-request-card">
+        <div class="stock-dashboard-request-top">
+          <div>
+            <p class="stock-order-kicker">${escapeHtml(request.id || "Request")}</p>
+            <h4>${escapeHtml(request.requestedBy || "Unknown requester")}</h4>
+          </div>
+          <span class="stock-order-status-badge" data-status="${escapeHtml(String(request.status || "received").toLowerCase())}">${escapeHtml(statusLabel)}</span>
+        </div>
+        <div class="stock-dashboard-request-meta">
+          <span>${escapeHtml(request.wardUnit || "Ward not set")}</span>
+          <span>${escapeHtml(formatStockRequestDateTime(request.createdAt))}</span>
+        </div>
+        <p class="stock-dashboard-request-items">${orderedItems || "No items listed"}</p>
+      </article>
+    `;
+  }).join("");
+}
+
+// Loads recent stock requests for the order page tracking section.
+async function loadStockTrackingList() {
+  if (!stockOrderTrackingList || !stockOrderTrackingMeta) return;
+
+  stockOrderTrackingMeta.textContent = "Loading recent requests...";
+  if (refreshStockTrackingBtn) refreshStockTrackingBtn.disabled = true;
+
+  try {
+    const response = await fetch(STOCK_ORDER_TRACKING_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Tracking fetch failed with status ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const requests = Array.isArray(payload?.requests) ? payload.requests : [];
+    renderStockTrackingList(requests);
+    stockOrderTrackingMeta.textContent = requests.length
+      ? `${requests.length} recent request${requests.length === 1 ? "" : "s"} shown.`
+      : "No requests yet.";
+  } catch {
+    renderStockTrackingList([]);
+    stockOrderTrackingMeta.textContent = "Could not load tracking yet.";
+  } finally {
+    if (refreshStockTrackingBtn) refreshStockTrackingBtn.disabled = false;
+  }
+}
+
 // Gets current consumables request lines.
 function getSelectedStockConsumables() {
   return stockConsumableItems
@@ -822,6 +915,34 @@ function formatStockQuantity(item) {
   return `${item.quantity} each`;
 }
 
+// Builds a structured consumables payload for integrations.
+function buildStockOrderPayload() {
+  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
+  const notes = String(stockOrderNoteInput?.value || "").trim();
+  const selectedItems = getSelectedStockConsumables();
+
+  return {
+    source: "find-my-tube",
+    submittedAt: new Date().toISOString(),
+    requestedBy: requesterName,
+    wardUnit: requesterWard,
+    notes,
+    lineItemCount: selectedItems.length,
+    totalRequestedQuantity: selectedItems.reduce((sum, item) => sum + item.quantity, 0),
+    requestText: buildStockOrderRequestText(),
+    items: selectedItems.map((item) => ({
+      id: item.id,
+      label: item.label,
+      quantity: item.quantity,
+      unitType: item.unitType,
+      traySize: item.traySize || null,
+      packetSize: item.packetSize || null,
+      formattedQuantity: formatStockQuantity(item)
+    }))
+  };
+}
+
 // Gets a stock item config by id.
 function getStockConsumableItem(itemId) {
   return stockConsumableItems.find((item) => item.id === itemId) || null;
@@ -839,6 +960,17 @@ function getStockOrderStatusLabel() {
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
 
+  if (isSubmittingStockOrder) return "Submitting";
+  if (stockOrderStatusMode === "submitted") {
+    const submittedStatus = String(submittedStockOrderRecord?.status || "").trim().toLowerCase();
+    if (submittedStatus === "received") return "Received";
+    if (submittedStatus === "packed") return "Packed";
+    if (submittedStatus === "sent") return "Sent";
+    if (submittedStatus === "completed") return "Completed";
+    if (submittedStatus === "cancelled") return "Cancelled";
+    return "Submitted";
+  }
+  if (stockOrderStatusMode === "submit-failed") return "Retry";
   if (stockOrderStatusMode === "copied") return "Copied";
   if (stockOrderStatusMode === "shared") return "Shared";
   if (requesterName && requesterWard && selectedItems.length) return "Ready";
@@ -913,9 +1045,16 @@ function updateStockOrderPreview() {
     stockOrderSummaryItems.textContent = getStockOrderItemsSummary(selectedItems);
   }
   stockOrderRequestMeta.textContent = hasRequest
-    ? `${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
+    ? stockOrderStatusMode === "submitted" && submittedStockOrderRecord?.id
+      ? `Request ${submittedStockOrderRecord.id} saved. ${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
+      : `${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
     : "Add your name, ward / unit, and at least one item.";
 
+  if (submitStockOrderBtn) {
+    submitStockOrderBtn.disabled = !hasRequest || isSubmittingStockOrder;
+    submitStockOrderBtn.textContent = isSubmittingStockOrder ? "Submitting..." : "Submit Request";
+    submitStockOrderBtn.setAttribute("aria-disabled", submitStockOrderBtn.disabled ? "true" : "false");
+  }
   copyStockOrderBtn.disabled = !hasRequest;
   shareStockOrderWhatsappBtn.classList.toggle("is-disabled", !hasRequest);
   shareStockOrderWhatsappBtn.setAttribute("aria-disabled", hasRequest ? "false" : "true");
@@ -930,8 +1069,9 @@ function setStockItemQuantity(itemId, quantity) {
   const maxQuantity = getStockItemMaxQuantity(itemId);
   const safeQuantity = Math.min(maxQuantity, Math.max(0, Number(quantity) || 0));
   stockOrderState[itemId] = safeQuantity;
-  if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+  if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
     stockOrderStatusMode = "ready";
+    submittedStockOrderRecord = null;
   }
 
   const input = stockOrderGrid?.querySelector(`[data-stock-qty-input="${itemId}"]`);
@@ -1063,6 +1203,7 @@ function resetStockOrderForm() {
     stockOrderState[item.id] = 0;
   });
   stockOrderStatusMode = "draft";
+  submittedStockOrderRecord = null;
 
   if (stockOrderForm) {
     stockOrderForm.reset();
@@ -1085,29 +1226,76 @@ function initStockOrderPanel() {
     stockOrderState[item.id] = 0;
   });
   stockOrderStatusMode = "draft";
+  submittedStockOrderRecord = null;
 
   populateStockRequesterOptions();
   renderStockOrderItems();
   updateStockOrderPreview();
+  loadStockTrackingList();
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
-    if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+    if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
+      submittedStockOrderRecord = null;
     }
     updateStockOrderPreview();
   });
 
   stockOrderRequesterSelect.addEventListener("change", () => {
-    if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+    if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
+      submittedStockOrderRecord = null;
     }
     updateStockOrderPreview();
   });
   stockOrderNoteInput?.addEventListener("input", () => {
-    if (stockOrderStatusMode === "copied" || stockOrderStatusMode === "shared") {
+    if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
+      submittedStockOrderRecord = null;
     }
     updateStockOrderPreview();
+  });
+
+  submitStockOrderBtn?.addEventListener("click", async () => {
+    if (isSubmittingStockOrder) return;
+
+    const payload = buildStockOrderPayload();
+    if (!payload.requestedBy || !payload.wardUnit || !payload.items.length) {
+      showSelectionNotice("Add your name, ward / unit, and at least one item first.");
+      return;
+    }
+
+    isSubmittingStockOrder = true;
+    updateStockOrderPreview();
+
+    try {
+      const response = await fetch(STOCK_ORDER_SUBMIT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Submit failed with status ${response.status}`);
+      }
+
+      const result = await response.json().catch(() => ({}));
+      submittedStockOrderRecord = result?.request || null;
+      stockOrderStatusMode = "submitted";
+      showSelectionNotice(submittedStockOrderRecord?.id
+        ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.`
+        : "Consumables request submitted.");
+      loadStockTrackingList();
+    } catch {
+      submittedStockOrderRecord = null;
+      stockOrderStatusMode = "submit-failed";
+      showSelectionNotice("Could not submit the consumables request. You can still copy or share it.");
+    } finally {
+      isSubmittingStockOrder = false;
+      updateStockOrderPreview();
+    }
   });
 
   copyStockOrderBtn?.addEventListener("click", async () => {
@@ -1136,6 +1324,10 @@ function initStockOrderPanel() {
 
   resetStockOrderBtn?.addEventListener("click", () => {
     resetStockOrderForm();
+  });
+
+  refreshStockTrackingBtn?.addEventListener("click", () => {
+    loadStockTrackingList();
   });
 }
 
@@ -6380,6 +6572,11 @@ function bindEvents() {
 
         if (action === "stock") {
           openStockSection();
+          return;
+        }
+
+        if (action === "stock-dashboard") {
+          openStockDashboard();
           return;
         }
 

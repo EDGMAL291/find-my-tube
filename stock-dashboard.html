@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6b7c7a" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Stock Dashboard" />
+  <title>Stock Dashboard</title>
+  <link rel="manifest" href="manifest.webmanifest?v=20260317a" />
+  <link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg?v=20260317a" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=20260317a" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=20260317a" />
+  <link rel="shortcut icon" href="./favicon-32.png?v=20260317a" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=20260317a" />
+  <script>
+    (() => {
+      const storedTheme = localStorage.getItem("fmt-theme-mode");
+      const initialTheme = storedTheme === "light" || storedTheme === "neutral" || storedTheme === "dark"
+        ? storedTheme
+        : "neutral";
+      document.documentElement.dataset.theme = initialTheme;
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/style.css?v=20260331b" />
+</head>
+<body data-app-page="stock-dashboard">
+  <div class="container">
+    <header class="header">
+      <h1>
+        <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
+          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
+          <span class="brand-gap"></span>
+          <span>my</span>
+          <span class="brand-gap"></span>
+          <span>tube</span>
+        </button>
+      </h1>
+      <p id="headerIntroText">Local request dashboard, status tracking, and quick stats.</p>
+      <div class="header-settings" id="headerSettings">
+        <button
+          type="button"
+          class="header-settings-btn header-menu-btn"
+          id="menuToggleBtn"
+          aria-controls="siteMenuPanel"
+          aria-expanded="false"
+          aria-haspopup="true"
+          aria-label="Open menu"
+        >
+          <span class="header-menu-icon" aria-hidden="true">
+            <span class="header-menu-line"></span>
+            <span class="header-menu-line"></span>
+            <span class="header-menu-line"></span>
+          </span>
+        </button>
+        <div class="site-menu-panel" id="siteMenuPanel" hidden>
+          <p class="site-menu-title">Menu</p>
+          <div class="site-menu-list" role="menu" aria-label="Site menu">
+            <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
+            <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
+            <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Start a Draw Plan</button>
+            <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
+            <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order Stock / Consumables</button>
+            <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
+            <button type="button" class="site-menu-link" data-menu-action="settings" role="menuitem">Settings</button>
+            <button type="button" class="site-menu-link" data-menu-action="about" role="menuitem">About</button>
+          </div>
+        </div>
+        <div class="theme-switcher-panel" id="themeSwitcherPanel" hidden>
+          <p class="theme-switcher-title">Appearance</p>
+          <div class="theme-switcher" role="group" aria-label="Choose theme">
+            <button type="button" class="theme-switcher-btn" data-theme-mode="light" aria-pressed="false">Light</button>
+            <button type="button" class="theme-switcher-btn" data-theme-mode="neutral" aria-pressed="false">Neutral</button>
+            <button type="button" class="theme-switcher-btn" data-theme-mode="dark" aria-pressed="false">Dark</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
+
+    <main class="stock-dashboard-panel" aria-labelledby="stockDashboardTitle">
+      <section class="stock-order-request-card" aria-labelledby="labAccessTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Lab access</p>
+            <h2 id="labAccessTitle">Pack and track login</h2>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardAuthStatus">Sign in to view dashboard data and update request status.</p>
+        </div>
+
+        <div class="stock-dashboard-auth-shell" id="stockDashboardAuthShell">
+          <form class="stock-dashboard-auth-form" id="stockDashboardAuthForm">
+            <label class="stock-order-field">
+              <span class="stock-order-field-label">Lab user number</span>
+              <input type="text" id="stockDashboardUserNumberInput" inputmode="numeric" autocomplete="username" placeholder="Choose or enter your number" />
+            </label>
+
+            <label class="stock-order-field">
+              <span class="stock-order-field-label">4-digit PIN</span>
+              <input type="password" id="stockDashboardPinInput" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="4 digits" />
+            </label>
+
+            <div class="stock-dashboard-auth-actions">
+              <button type="button" class="quick-tool-launch-btn" id="stockDashboardLoginBtn">Log In</button>
+            </div>
+          </form>
+
+          <div class="stock-dashboard-session-card" id="stockDashboardSessionCard" hidden>
+            <div>
+              <p class="stock-order-kicker">Signed in</p>
+              <h3 id="stockDashboardSessionUser">Lab user</h3>
+            </div>
+            <div class="stock-dashboard-session-actions">
+              <button type="button" class="quick-tool-clear-btn" id="clearStockDataBtn" hidden>Clear request data</button>
+              <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn">Log out</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardUserAdminCard" hidden aria-labelledby="stockDashboardUserAdminTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Owner only</p>
+            <h3 id="stockDashboardUserAdminTitle">Manage lab users</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review lab user logins.</p>
+        </div>
+
+        <form class="stock-dashboard-auth-form" id="stockDashboardCreateUserForm">
+          <label class="stock-order-field">
+            <span class="stock-order-field-label">New user number</span>
+            <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" placeholder="e.g. 102" />
+          </label>
+
+          <label class="stock-order-field">
+            <span class="stock-order-field-label">New 4-digit PIN</span>
+            <input type="password" id="stockDashboardCreateUserPinInput" inputmode="numeric" maxlength="4" placeholder="4 digits" />
+          </label>
+
+          <div class="stock-dashboard-auth-actions">
+            <button type="submit" class="quick-tool-launch-btn" id="stockDashboardCreateUserBtn">Create User</button>
+          </div>
+        </form>
+
+        <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
+      </section>
+
+      <section class="stock-order-request-card stock-dashboard-hero">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Stock Dashboard</p>
+            <h2 id="stockDashboardTitle">Team requests at a glance</h2>
+          </div>
+          <div class="stock-dashboard-hero-actions">
+            <p class="stock-dashboard-status" id="stockDashboardStatus">Loading requests...</p>
+            <button type="button" class="quick-tool-launch-btn" id="stockDashboardRefreshBtn">Refresh</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardNotificationCard" hidden aria-labelledby="stockDashboardNotificationTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Lab notifications</p>
+            <h3 id="stockDashboardNotificationTitle">No new requests</h3>
+          </div>
+          <div class="stock-dashboard-notification-actions">
+            <span class="stock-dashboard-alert-badge" id="stockDashboardAlertBadge" hidden>0 new</span>
+            <button type="button" class="quick-tool-launch-btn" id="stockDashboardEnableAlertsBtn">Enable browser alerts</button>
+            <button type="button" class="quick-tool-clear-btn" id="stockDashboardMarkSeenBtn" hidden>Mark seen</button>
+          </div>
+        </div>
+        <p class="stock-dashboard-status" id="stockDashboardNotificationStatus">Alerts work for signed-in lab users while this dashboard stays open.</p>
+      </section>
+
+      <section class="stock-dashboard-metrics" id="stockDashboardMetrics" aria-label="Stock request metrics" hidden>
+        <article class="stock-order-summary-item">
+          <span class="stock-order-summary-label">Total requests</span>
+          <span class="stock-order-summary-value" id="stockDashboardTotalRequests">0</span>
+        </article>
+        <article class="stock-order-summary-item">
+          <span class="stock-order-summary-label">Open requests</span>
+          <span class="stock-order-summary-value" id="stockDashboardOpenRequests">0</span>
+        </article>
+        <article class="stock-order-summary-item">
+          <span class="stock-order-summary-label">Line items</span>
+          <span class="stock-order-summary-value" id="stockDashboardLineItems">0</span>
+        </article>
+        <article class="stock-order-summary-item">
+          <span class="stock-order-summary-label">Units requested</span>
+          <span class="stock-order-summary-value" id="stockDashboardUnitsRequested">0</span>
+        </article>
+      </section>
+
+      <section class="stock-dashboard-grid" id="stockDashboardInsights" hidden>
+        <article class="stock-order-request-card">
+          <div class="stock-order-request-head">
+            <div>
+              <p class="stock-order-kicker">Activity</p>
+              <h3>Status breakdown</h3>
+            </div>
+          </div>
+          <div class="stock-dashboard-chip-list" id="stockDashboardStatusCounts"></div>
+        </article>
+
+        <article class="stock-order-request-card">
+          <div class="stock-order-request-head">
+            <div>
+              <p class="stock-order-kicker">Usage</p>
+              <h3>Top wards</h3>
+            </div>
+          </div>
+          <div class="stock-dashboard-list" id="stockDashboardTopWards"></div>
+        </article>
+
+        <article class="stock-order-request-card">
+          <div class="stock-order-request-head">
+            <div>
+              <p class="stock-order-kicker">Usage</p>
+              <h3>Top items</h3>
+            </div>
+          </div>
+          <div class="stock-dashboard-list" id="stockDashboardTopItems"></div>
+        </article>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardRequestsCard" hidden>
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Requests</p>
+            <h3>Recent consumables requests</h3>
+          </div>
+        </div>
+        <div class="stock-dashboard-request-list" id="stockDashboardRequestList"></div>
+      </section>
+    </main>
+
+    <div class="selection-notice" id="selectionNoticeToast" role="status" aria-live="polite" hidden></div>
+
+    <footer class="site-footer" id="siteFooter">
+      <div class="site-footer-copy">
+        <p class="site-footer-title">Find My Tube</p>
+        <p class="site-footer-note">Reference tool only. Always confirm collection details against local lab policy, senior review, and urgent clinical context.</p>
+        <p class="site-footer-feedback-note">Send feedback on WhatsApp. Do not include patient names, DOBs, folder numbers, or other identifiers.</p>
+      </div>
+      <div class="site-footer-links">
+        <a
+          class="footer-link-btn footer-link-btn-whatsapp"
+          href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Send feedback on WhatsApp"
+        >
+          WhatsApp Feedback
+        </a>
+        <button type="button" class="footer-link-btn" data-legal-doc="privacy">Privacy Policy</button>
+        <button type="button" class="footer-link-btn" data-legal-doc="terms">Terms of Use</button>
+        <button type="button" class="footer-link-btn" data-legal-doc="disclaimer">Disclaimer</button>
+      </div>
+    </footer>
+  </div>
+
+  <section class="profile-modal legal-modal" id="legalModal" hidden>
+    <div class="profile-modal-card legal-modal-card" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
+      <div class="profile-modal-head legal-modal-head">
+        <div>
+          <p class="draw-cart-kicker">Legal</p>
+          <h3 id="legalModalTitle">Privacy Policy</h3>
+        </div>
+        <button type="button" class="profile-modal-close-btn" id="closeLegalModalBtn">Close</button>
+      </div>
+      <div class="legal-modal-body" id="legalModalBody"></div>
+    </div>
+  </section>
+
+  <script src="assets/data/data.js?v=20260323a"></script>
+  <script src="assets/js/app-config.js?v=20260331a"></script>
+  <script src="assets/js/script.js?v=20260331b"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260331a"></script>
+</body>
+</html>
