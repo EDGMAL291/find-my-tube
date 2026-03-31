@@ -1055,6 +1055,7 @@ body.find-my-test-page .about-panel {
   color: #52636d;
   font-size: 0.84rem;
   line-height: 1.45;
+  white-space: pre-line;
 }
 
 .stock-order-qty-row {
@@ -1243,6 +1244,7 @@ body.find-my-test-page .about-panel {
   font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.45;
+  white-space: pre-line;
 }
 
 .stock-order-request-preview {
@@ -6303,6 +6305,7 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
 
 .stock-dashboard-request-items {
   color: var(--heading-color);
+  white-space: pre-line;
 }
 
 .stock-dashboard-request-note {

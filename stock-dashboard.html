@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260331b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260331d" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -82,7 +82,7 @@
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
     <main class="stock-dashboard-panel" aria-labelledby="stockDashboardTitle">
-      <section class="stock-order-request-card" aria-labelledby="labAccessTitle">
+      <section class="stock-order-request-card" id="stockDashboardAccessCard" aria-labelledby="labAccessTitle">
         <div class="stock-order-request-head">
           <div>
             <p class="stock-order-kicker">Lab access</p>
@@ -124,7 +124,7 @@
       <section class="stock-order-request-card" id="stockDashboardUserAdminCard" hidden aria-labelledby="stockDashboardUserAdminTitle">
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Owner only</p>
+            <p class="stock-order-kicker">Admin only</p>
             <h3 id="stockDashboardUserAdminTitle">Manage lab users</h3>
           </div>
           <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review lab user logins.</p>
@@ -279,7 +279,51 @@
 
   <script src="assets/data/data.js?v=20260323a"></script>
   <script src="assets/js/app-config.js?v=20260331a"></script>
-  <script src="assets/js/script.js?v=20260331b"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260331a"></script>
+  <script src="assets/js/script.js?v=20260331d"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260331c"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      const APP_VERSION = "2026-03-31.4";
+      const hostname = window.location.hostname || "";
+      const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
+      const isLocalPreview = window.location.port === "3000"
+        || ["localhost", "0.0.0.0"].includes(hostname)
+        || isPrivateIpv4
+        || hostname.endsWith(".local");
+
+      window.addEventListener("load", () => {
+        const resetAppCache = async () => {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+          if ("caches" in window) {
+            const cacheKeys = await caches.keys();
+            await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+          }
+        };
+
+        const boot = async () => {
+          if (isLocalPreview) {
+            await resetAppCache();
+            localStorage.removeItem("fmt-app-version");
+            sessionStorage.removeItem("fmt-hard-refresh-done");
+            return;
+          }
+
+          const storedVersion = localStorage.getItem("fmt-app-version");
+          if (storedVersion !== APP_VERSION) {
+            await resetAppCache();
+            localStorage.setItem("fmt-app-version", APP_VERSION);
+          }
+
+          await navigator.serviceWorker.register("./service-worker.js?v=20260323a", { updateViaCache: "none" });
+          localStorage.setItem("fmt-app-version", APP_VERSION);
+        };
+
+        boot().catch(() => {
+          localStorage.setItem("fmt-app-version", APP_VERSION);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

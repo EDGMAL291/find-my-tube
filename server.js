@@ -12,7 +12,7 @@ const STOCK_REQUESTS_FILE = path.join(DATA_DIR, "stock-requests.json");
 const STOCK_USERS_FILE = path.join(DATA_DIR, "stock-users.json");
 const STOCK_OWNER_FILE = path.join(DATA_DIR, "stock-owner.json");
 const MAX_BODY_BYTES = 1024 * 1024;
-const VALID_REQUEST_STATUSES = new Set(["received", "packed", "sent", "completed", "cancelled"]);
+const VALID_REQUEST_STATUSES = new Set(["received", "packed", "completed", "cancelled"]);
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 
 const MIME_TYPES = {
@@ -140,6 +140,7 @@ function queueStockRequestWrite(task) {
 
 function slugifyStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
+  if (safeStatus === "sent") return "completed";
   return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "received";
 }
 
@@ -240,7 +241,7 @@ async function requireOwnerSession(req, res) {
   if (!(await isOwnerUserNumber(session.userNumber))) {
     sendJson(res, 403, {
       ok: false,
-      error: "Owner access required"
+      error: "Admin access required"
     });
     return null;
   }

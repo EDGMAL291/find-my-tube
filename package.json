@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
+    "admin:set": "node scripts/set-stock-owner.js",
     "owner:set": "node scripts/set-stock-owner.js"
   },
   "devDependencies": {

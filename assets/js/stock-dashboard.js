@@ -42,7 +42,7 @@ const STOCK_DASHBOARD_LOGOUT_URL = "/api/stock-auth/logout";
 const STOCK_DASHBOARD_CLEAR_DATA_URL = "/api/lab/stock-data";
 const STOCK_DASHBOARD_USERS_URL = "/api/lab/users";
 const STOCK_DASHBOARD_TOKEN_KEY = "fmt-stock-lab-token";
-const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "sent", "completed", "cancelled"];
+const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "completed", "cancelled"];
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
@@ -286,7 +286,7 @@ function stockDashboardSetSession(token, user) {
   if (stockDashboardSessionUser) {
     stockDashboardSessionUser.textContent = isAuthenticated
       ? stockDashboardSession.isOwner
-        ? `Lab user ${stockDashboardSession.userNumber} · Owner`
+        ? `Lab user ${stockDashboardSession.userNumber} · Admin`
         : `Lab user ${stockDashboardSession.userNumber}`
       : "Lab user";
   }
@@ -298,7 +298,7 @@ function stockDashboardSetSession(token, user) {
   if (stockDashboardAuthStatus) {
     stockDashboardAuthStatus.textContent = isAuthenticated
       ? stockDashboardSession.isOwner
-        ? `Signed in as owner lab user ${stockDashboardSession.userNumber}.`
+        ? `Signed in as admin lab user ${stockDashboardSession.userNumber}.`
         : `Signed in as lab user ${stockDashboardSession.userNumber}.`
       : "Sign in to view dashboard data and update request status.";
   }
@@ -516,15 +516,19 @@ function renderStockDashboardStats(stats) {
 function renderStockDashboardRequests(requests) {
   if (!stockDashboardRequestList) return;
 
-  if (!requests.length) {
+  const activeRequests = Array.isArray(requests)
+    ? requests.filter((request) => String(request?.status || "").trim().toLowerCase() !== "completed")
+    : [];
+
+  if (!activeRequests.length) {
     stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No requests have been submitted yet.</p>';
     return;
   }
 
-  stockDashboardRequestList.innerHTML = requests.map((request) => {
+  stockDashboardRequestList.innerHTML = activeRequests.map((request) => {
     const safeStatus = String(request.status || "received").toLowerCase();
     const items = Array.isArray(request.items) ? request.items : [];
-    const itemSummary = items.map((item) => `${item.label}: ${item.formattedQuantity || item.quantity}`).join(", ");
+    const itemSummary = items.map((item) => `${item.label}: ${item.formattedQuantity || item.quantity}`).join("\n");
     const statusButtons = STOCK_DASHBOARD_STATUS_ORDER.map((status) => `
       <button
         type="button"

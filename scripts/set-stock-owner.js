@@ -53,7 +53,7 @@ async function main() {
   const pin = sanitizePin(readArg("--pin"));
 
   if (userNumber.length < 3 || pin.length !== 4) {
-    console.error("Usage: npm run owner:set -- --user 001 --pin 1234");
+    console.error("Usage: npm run admin:set -- --user 001 --pin 1234");
     process.exit(1);
   }
 
@@ -80,10 +80,10 @@ async function main() {
   await fs.writeFile(STOCK_USERS_FILE, `${JSON.stringify(users, null, 2)}\n`, "utf8");
   await fs.writeFile(STOCK_OWNER_FILE, `${JSON.stringify({ ownerUserNumber: userNumber }, null, 2)}\n`, "utf8");
 
-  console.log(`Owner set to lab user ${userNumber}`);
+  console.log(`Admin set to lab user ${userNumber}`);
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : "Could not set owner");
+  console.error(error instanceof Error ? error.message : "Could not set admin");
   process.exit(1);
 });

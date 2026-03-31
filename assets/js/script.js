@@ -534,7 +534,7 @@ function getDrawPlanShareText(testNames = getSelectedTestNamesList()) {
   const validNames = getTestsByNames(testNames).map((test) => test.name);
   if (!validNames.length) return "Open this Find My Tube draw plan:";
 
-  const previewNames = validNames.slice(0, 6).join(", ");
+  const previewNames = validNames.slice(0, 6).join("\n");
   const extraCount = validNames.length - Math.min(validNames.length, 6);
   const suffix = extraCount > 0 ? `, +${extraCount} more` : "";
   return `Shared blood draw plan on Find My Tube: ${previewNames}${suffix}. Open the link to review the full tube plan.`;
@@ -831,18 +831,22 @@ function formatStockRequestDateTime(value) {
 function renderStockTrackingList(requests) {
   if (!stockOrderTrackingList) return;
 
-  if (!Array.isArray(requests) || !requests.length) {
+  const activeRequests = Array.isArray(requests)
+    ? requests.filter((request) => String(request?.status || "").trim().toLowerCase() !== "completed")
+    : [];
+
+  if (!activeRequests.length) {
     stockOrderTrackingList.innerHTML = `
       <p class="stock-dashboard-empty">No requests yet. Once you submit an order, it will appear here.</p>
     `;
     return;
   }
 
-  stockOrderTrackingList.innerHTML = requests.map((request) => {
+  stockOrderTrackingList.innerHTML = activeRequests.map((request) => {
     const items = Array.isArray(request.items) ? request.items : [];
     const orderedItems = items
       .map((item) => `${escapeHtml(item.label || "")}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
-      .join(", ");
+      .join("\n");
     const statusLabel = String(request.status || "received")
       .replace(/-/g, " ")
       .replace(/\b\w/g, (char) => char.toUpperCase());
@@ -965,7 +969,6 @@ function getStockOrderStatusLabel() {
     const submittedStatus = String(submittedStockOrderRecord?.status || "").trim().toLowerCase();
     if (submittedStatus === "received") return "Received";
     if (submittedStatus === "packed") return "Packed";
-    if (submittedStatus === "sent") return "Sent";
     if (submittedStatus === "completed") return "Completed";
     if (submittedStatus === "cancelled") return "Cancelled";
     return "Submitted";
@@ -983,7 +986,7 @@ function getStockOrderItemsSummary(selectedItems = getSelectedStockConsumables()
 
   return selectedItems
     .map((item) => `${item.label} x ${formatStockQuantity(item)}`)
-    .join(", ");
+    .join("\n");
 }
 
 // Builds the consumables request text.
@@ -1287,6 +1290,7 @@ function initStockOrderPanel() {
       showSelectionNotice(submittedStockOrderRecord?.id
         ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.`
         : "Consumables request submitted.");
+      resetStockOrderForm();
       loadStockTrackingList();
     } catch {
       submittedStockOrderRecord = null;
@@ -1709,8 +1713,6 @@ const stockRequesterGroups = [
       "Gordon's Bay",
       "Eerste Rivier",
       "Langebaan",
-      "George",
-      "Oudtshoorn",
       "Saldanha"
     ]
   },
@@ -3285,7 +3287,7 @@ function getAlreadyCoveredSelectionMessage(testName, selectionSet = selectedTest
   const itemType = Object.prototype.hasOwnProperty.call(profileComponentsByName, testName) ? "profile" : "test";
   const profileList = coveringProfiles.length > 2
     ? `${coveringProfiles.slice(0, 2).join(", ")} +${coveringProfiles.length - 2} more`
-    : coveringProfiles.join(", ");
+    : coveringProfiles.join("\n");
 
   return `This ${itemType} is already included in selected profile${coveringProfiles.length === 1 ? "" : "s"}: ${profileList}.`;
 }

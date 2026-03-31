@@ -31,17 +31,17 @@ The stock request flow now has a free built-in backend:
 - lab login data is stored in `data/stock-users.json`
 
 Use `http://localhost:3000/stock-dashboard.html` to review recent requests and update their status.
-Lab users cannot self-register anymore. The site owner creates them.
+Lab users cannot self-register anymore. The site admin creates them.
 
-## Owner Setup
+## Admin Setup
 
-To set or reset the owner login from this Mac:
+To set or reset the admin login from this Mac:
 
 ```bash
-npm run owner:set -- --user 001 --pin 1234
+npm run admin:set -- --user 001 --pin 1234
 ```
 
-That user becomes the owner and can:
+That user becomes the admin and can:
 
 - create other lab users
 - clear saved stock request history
