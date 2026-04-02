@@ -34,13 +34,6 @@ const stockDashboardTopWards = document.getElementById("stockDashboardTopWards")
 const stockDashboardTopItems = document.getElementById("stockDashboardTopItems");
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
-const STOCK_DASHBOARD_REQUESTS_URL = "/api/lab/stock-requests?limit=30";
-const STOCK_DASHBOARD_STATS_URL = "/api/lab/stock-stats";
-const STOCK_DASHBOARD_SESSION_URL = "/api/stock-auth/session";
-const STOCK_DASHBOARD_LOGIN_URL = "/api/stock-auth/login";
-const STOCK_DASHBOARD_LOGOUT_URL = "/api/stock-auth/logout";
-const STOCK_DASHBOARD_CLEAR_DATA_URL = "/api/lab/stock-data";
-const STOCK_DASHBOARD_USERS_URL = "/api/lab/users";
 const STOCK_DASHBOARD_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "completed", "cancelled"];
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
@@ -53,6 +46,42 @@ let stockDashboardToken = localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "";
 let stockDashboardPollTimer = 0;
 let stockDashboardLatestRequestMarker = "";
 let stockDashboardUnreadCount = 0;
+
+function stockDashboardGetApiBaseUrl() {
+  if (typeof window === "undefined") return "";
+
+  const configuredBaseUrl = String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim();
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/+$/g, "");
+  }
+
+  const currentOrigin = window.location.origin || "";
+  const currentHostname = window.location.hostname || "";
+  const currentPort = window.location.port || "";
+  const isDirectBackendOrigin = currentPort === "3000";
+  const isLikelyLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(currentHostname)
+    || currentHostname.endsWith(".local")
+    || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(currentHostname);
+
+  if (isDirectBackendOrigin || !isLikelyLocalHost) {
+    return currentOrigin;
+  }
+
+  return `${window.location.protocol}//${currentHostname}:3000`;
+}
+
+function stockDashboardBuildApiUrl(path) {
+  const safePath = String(path || "").startsWith("/") ? path : `/${String(path || "")}`;
+  return `${stockDashboardGetApiBaseUrl()}${safePath}`;
+}
+
+const STOCK_DASHBOARD_REQUESTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests?limit=30");
+const STOCK_DASHBOARD_STATS_URL = stockDashboardBuildApiUrl("/api/lab/stock-stats");
+const STOCK_DASHBOARD_SESSION_URL = stockDashboardBuildApiUrl("/api/stock-auth/session");
+const STOCK_DASHBOARD_LOGIN_URL = stockDashboardBuildApiUrl("/api/stock-auth/login");
+const STOCK_DASHBOARD_LOGOUT_URL = stockDashboardBuildApiUrl("/api/stock-auth/logout");
+const STOCK_DASHBOARD_CLEAR_DATA_URL = stockDashboardBuildApiUrl("/api/lab/stock-data");
+const STOCK_DASHBOARD_USERS_URL = stockDashboardBuildApiUrl("/api/lab/users");
 
 function stockDashboardEscapeHtml(value) {
   return String(value || "")
@@ -78,6 +107,12 @@ function stockDashboardFormatDateTime(value) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(date);
+}
+
+function stockDashboardNormalizeStatus(status) {
+  const safeStatus = String(status || "").trim().toLowerCase();
+  if (safeStatus === "sent") return "completed";
+  return safeStatus || "received";
 }
 
 function stockDashboardGetHeaders(includeJson = false) {
@@ -517,7 +552,7 @@ function renderStockDashboardRequests(requests) {
   if (!stockDashboardRequestList) return;
 
   const activeRequests = Array.isArray(requests)
-    ? requests.filter((request) => String(request?.status || "").trim().toLowerCase() !== "completed")
+    ? requests.filter((request) => stockDashboardNormalizeStatus(request?.status) !== "completed")
     : [];
 
   if (!activeRequests.length) {
@@ -526,7 +561,7 @@ function renderStockDashboardRequests(requests) {
   }
 
   stockDashboardRequestList.innerHTML = activeRequests.map((request) => {
-    const safeStatus = String(request.status || "received").toLowerCase();
+    const safeStatus = stockDashboardNormalizeStatus(request?.status);
     const items = Array.isArray(request.items) ? request.items : [];
     const itemSummary = items.map((item) => `${item.label}: ${item.formattedQuantity || item.quantity}`).join("\n");
     const statusButtons = STOCK_DASHBOARD_STATUS_ORDER.map((status) => `

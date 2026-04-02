@@ -196,10 +196,6 @@ const STOCK_ORDER_HEADER_COPY = "Consumables, stock requests, and order status."
 const DRAW_PLAN_SHARE_PARAM = "plan";
 const STOCK_ORDER_HOME_URL = "./order-stock.html";
 const STOCK_DASHBOARD_URL = "./stock-dashboard.html";
-const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
-  ? String(window.FMT_APP_CONFIG?.stockOrderSubmitUrl || "/api/stock-requests").trim()
-  : "";
-const STOCK_ORDER_TRACKING_URL = "/api/stock-requests?limit=12";
 const THEME_STORAGE_KEY = "fmt-theme-mode";
 const THEME_COLOR_BY_MODE = {
   light: "#0f766e",
@@ -213,6 +209,40 @@ const ALLOWED_THEME_MODES = new Set(["light", "neutral", "dark"]);
 let currentTheme = ALLOWED_THEME_MODES.has(document.documentElement.dataset.theme)
   ? document.documentElement.dataset.theme
   : "neutral";
+
+// Resolves the local stock API origin for both direct backend use and static preview ports.
+function getStockApiBaseUrl() {
+  if (typeof window === "undefined") return "";
+
+  const configuredBaseUrl = String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim();
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/+$/g, "");
+  }
+
+  const currentOrigin = window.location.origin || "";
+  const currentHostname = window.location.hostname || "";
+  const currentPort = window.location.port || "";
+  const isDirectBackendOrigin = currentPort === "3000";
+  const isLikelyLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(currentHostname)
+    || currentHostname.endsWith(".local")
+    || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(currentHostname);
+
+  if (isDirectBackendOrigin || !isLikelyLocalHost) {
+    return currentOrigin;
+  }
+
+  return `${window.location.protocol}//${currentHostname}:3000`;
+}
+
+function buildStockApiUrl(path) {
+  const safePath = String(path || "").startsWith("/") ? path : `/${String(path || "")}`;
+  return `${getStockApiBaseUrl()}${safePath}`;
+}
+
+const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
+  ? String(window.FMT_APP_CONFIG?.stockOrderSubmitUrl || buildStockApiUrl("/api/stock-requests")).trim()
+  : "";
+const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=12");
 
 // Updates theme meta.
 function updateThemeMeta(theme) {
@@ -827,12 +857,19 @@ function formatStockRequestDateTime(value) {
   }).format(date);
 }
 
+// Normalizes legacy stock request statuses to the current UI model.
+function normalizeStockRequestStatus(status) {
+  const safeStatus = String(status || "").trim().toLowerCase();
+  if (safeStatus === "sent") return "completed";
+  return safeStatus || "received";
+}
+
 // Renders the stock tracking list on the order page.
 function renderStockTrackingList(requests) {
   if (!stockOrderTrackingList) return;
 
   const activeRequests = Array.isArray(requests)
-    ? requests.filter((request) => String(request?.status || "").trim().toLowerCase() !== "completed")
+    ? requests.filter((request) => normalizeStockRequestStatus(request?.status) !== "completed")
     : [];
 
   if (!activeRequests.length) {
@@ -843,11 +880,12 @@ function renderStockTrackingList(requests) {
   }
 
   stockOrderTrackingList.innerHTML = activeRequests.map((request) => {
+    const normalizedStatus = normalizeStockRequestStatus(request?.status);
     const items = Array.isArray(request.items) ? request.items : [];
     const orderedItems = items
       .map((item) => `${escapeHtml(item.label || "")}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
       .join("\n");
-    const statusLabel = String(request.status || "received")
+    const statusLabel = normalizedStatus
       .replace(/-/g, " ")
       .replace(/\b\w/g, (char) => char.toUpperCase());
 
@@ -858,7 +896,7 @@ function renderStockTrackingList(requests) {
             <p class="stock-order-kicker">${escapeHtml(request.id || "Request")}</p>
             <h4>${escapeHtml(request.requestedBy || "Unknown requester")}</h4>
           </div>
-          <span class="stock-order-status-badge" data-status="${escapeHtml(String(request.status || "received").toLowerCase())}">${escapeHtml(statusLabel)}</span>
+          <span class="stock-order-status-badge" data-status="${escapeHtml(normalizedStatus)}">${escapeHtml(statusLabel)}</span>
         </div>
         <div class="stock-dashboard-request-meta">
           <span>${escapeHtml(request.wardUnit || "Ward not set")}</span>
@@ -966,7 +1004,7 @@ function getStockOrderStatusLabel() {
 
   if (isSubmittingStockOrder) return "Submitting";
   if (stockOrderStatusMode === "submitted") {
-    const submittedStatus = String(submittedStockOrderRecord?.status || "").trim().toLowerCase();
+    const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
     if (submittedStatus === "received") return "Received";
     if (submittedStatus === "packed") return "Packed";
     if (submittedStatus === "completed") return "Completed";
