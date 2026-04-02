@@ -40,6 +40,9 @@ const labSessions = new Map();
 function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(statusCode, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(body)
@@ -49,6 +52,9 @@ function sendJson(res, statusCode, payload) {
 
 function sendText(res, statusCode, message) {
   res.writeHead(statusCode, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Content-Type": "text/plain; charset=utf-8",
     "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(message)
@@ -415,6 +421,18 @@ async function serveStaticAsset(req, res, pathname) {
 }
 
 async function handleApiRequest(req, res, pathname, searchParams) {
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+      "Content-Length": "0"
+    });
+    res.end();
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/api/health") {
     sendJson(res, 200, {
       ok: true,
