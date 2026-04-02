@@ -209,14 +209,19 @@ const ALLOWED_THEME_MODES = new Set(["light", "neutral", "dark"]);
 let currentTheme = ALLOWED_THEME_MODES.has(document.documentElement.dataset.theme)
   ? document.documentElement.dataset.theme
   : "neutral";
+const STOCK_API_CONFIGURED_BASE_URL = typeof window !== "undefined"
+  ? String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim()
+  : "";
+const STOCK_API_CONFIGURED_SUBMIT_URL = typeof window !== "undefined"
+  ? String(window.FMT_APP_CONFIG?.stockOrderSubmitUrl || "").trim()
+  : "";
 
 // Resolves the local stock API origin for both direct backend use and static preview ports.
 function getStockApiBaseUrl() {
   if (typeof window === "undefined") return "";
 
-  const configuredBaseUrl = String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim();
-  if (configuredBaseUrl) {
-    return configuredBaseUrl.replace(/\/+$/g, "");
+  if (STOCK_API_CONFIGURED_BASE_URL) {
+    return STOCK_API_CONFIGURED_BASE_URL.replace(/\/+$/g, "");
   }
 
   const currentOrigin = window.location.origin || "";
@@ -240,9 +245,27 @@ function buildStockApiUrl(path) {
 }
 
 const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
-  ? String(window.FMT_APP_CONFIG?.stockOrderSubmitUrl || buildStockApiUrl("/api/stock-requests")).trim()
+  ? String(STOCK_API_CONFIGURED_SUBMIT_URL || buildStockApiUrl("/api/stock-requests")).trim()
   : "";
 const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=12");
+
+function stockRequestsNeedConfiguredBackend() {
+  if (typeof window === "undefined") return false;
+  if (STOCK_API_CONFIGURED_BASE_URL || STOCK_API_CONFIGURED_SUBMIT_URL) return false;
+
+  const hostname = window.location.hostname || "";
+  const port = window.location.port || "";
+  const isLikelyLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname)
+    || hostname.endsWith(".local")
+    || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
+
+  return !isLikelyLocalHost && port !== "3000";
+}
+
+function getStockSubmitBlockedReason() {
+  if (!stockRequestsNeedConfiguredBackend()) return "";
+  return "Live stock submit needs the local backend on localhost:3000 or a configured stockApiBaseUrl.";
+}
 
 // Updates theme meta.
 function updateThemeMeta(theme) {
@@ -1070,6 +1093,7 @@ function updateStockOrderPreview() {
   const hasRequest = Boolean(requesterName && requesterWard && selectedItems.length);
   const requestText = buildStockOrderRequestText();
   const statusLabel = getStockOrderStatusLabel();
+  const blockedReason = getStockSubmitBlockedReason();
 
   stockOrderRequestPreview.value = requestText;
   if (stockOrderStatusBadge) {
@@ -1086,13 +1110,15 @@ function updateStockOrderPreview() {
     stockOrderSummaryItems.textContent = getStockOrderItemsSummary(selectedItems);
   }
   stockOrderRequestMeta.textContent = hasRequest
-    ? stockOrderStatusMode === "submitted" && submittedStockOrderRecord?.id
+    ? blockedReason
+      ? blockedReason
+      : stockOrderStatusMode === "submitted" && submittedStockOrderRecord?.id
       ? `Request ${submittedStockOrderRecord.id} saved. ${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
       : `${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
     : "Add your name, ward / unit, and at least one item.";
 
   if (submitStockOrderBtn) {
-    submitStockOrderBtn.disabled = !hasRequest || isSubmittingStockOrder;
+    submitStockOrderBtn.disabled = !hasRequest || isSubmittingStockOrder || Boolean(blockedReason);
     submitStockOrderBtn.textContent = isSubmittingStockOrder ? "Submitting..." : "Submit Request";
     submitStockOrderBtn.setAttribute("aria-disabled", submitStockOrderBtn.disabled ? "true" : "false");
   }
@@ -1300,6 +1326,12 @@ function initStockOrderPanel() {
   submitStockOrderBtn?.addEventListener("click", async () => {
     if (isSubmittingStockOrder) return;
 
+    const blockedReason = getStockSubmitBlockedReason();
+    if (blockedReason) {
+      showSelectionNotice(blockedReason);
+      return;
+    }
+
     const payload = buildStockOrderPayload();
     if (!payload.requestedBy || !payload.wardUnit || !payload.items.length) {
       showSelectionNotice("Add your name, ward / unit, and at least one item first.");
@@ -1319,7 +1351,8 @@ function initStockOrderPanel() {
       });
 
       if (!response.ok) {
-        throw new Error(`Submit failed with status ${response.status}`);
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || `Submit failed with status ${response.status}`);
       }
 
       const result = await response.json().catch(() => ({}));
@@ -1330,10 +1363,13 @@ function initStockOrderPanel() {
         : "Consumables request submitted.");
       resetStockOrderForm();
       loadStockTrackingList();
-    } catch {
+    } catch (error) {
       submittedStockOrderRecord = null;
       stockOrderStatusMode = "submit-failed";
-      showSelectionNotice("Could not submit the consumables request. You can still copy or share it.");
+      const message = error instanceof Error
+        ? error.message
+        : "You can still copy or share it.";
+      showSelectionNotice(`Could not submit the consumables request. ${message}`);
     } finally {
       isSubmittingStockOrder = false;
       updateStockOrderPreview();
