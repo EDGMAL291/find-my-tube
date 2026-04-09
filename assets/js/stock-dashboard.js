@@ -1,5 +1,6 @@
 const stockDashboardRefreshBtn = document.getElementById("stockDashboardRefreshBtn");
 const stockDashboardStatus = document.getElementById("stockDashboardStatus");
+const stockDashboardAccessCard = document.getElementById("stockDashboardAccessCard");
 const stockDashboardAuthStatus = document.getElementById("stockDashboardAuthStatus");
 const stockDashboardNotificationCard = document.getElementById("stockDashboardNotificationCard");
 const stockDashboardNotificationTitle = document.getElementById("stockDashboardNotificationTitle");
@@ -11,6 +12,7 @@ const stockDashboardAuthForm = document.getElementById("stockDashboardAuthForm")
 const stockDashboardUserNumberInput = document.getElementById("stockDashboardUserNumberInput");
 const stockDashboardPinInput = document.getElementById("stockDashboardPinInput");
 const stockDashboardLoginBtn = document.getElementById("stockDashboardLoginBtn");
+const stockDashboardAccessCloseBtn = document.getElementById("stockDashboardAccessCloseBtn");
 const stockDashboardLogoutBtn = document.getElementById("stockDashboardLogoutBtn");
 const clearStockDataBtn = document.getElementById("clearStockDataBtn");
 const stockDashboardSessionCard = document.getElementById("stockDashboardSessionCard");
@@ -48,6 +50,7 @@ let stockDashboardPollTimer = 0;
 let stockDashboardLatestRequestMarker = "";
 let stockDashboardUnreadCount = 0;
 let stockDashboardSetupRequired = false;
+let stockDashboardLoginModalFocusTimer = 0;
 
 function stockDashboardGetApiBaseUrl() {
   if (typeof window === "undefined") return "";
@@ -174,6 +177,38 @@ function stockDashboardWriteScopedValue(prefix, value) {
   const key = stockDashboardGetScopedKey(prefix);
   if (!key) return;
   localStorage.setItem(key, String(value || ""));
+}
+
+function stockDashboardReturnToPreviousPage() {
+  try {
+    const referrer = String(document.referrer || "");
+    if (referrer) {
+      const referrerUrl = new URL(referrer);
+      if (referrerUrl.origin === window.location.origin && window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+    }
+  } catch {
+    // Fall through to home.
+  }
+
+  window.location.assign("./index.html");
+}
+
+function stockDashboardSetAccessModalOpen(isOpen) {
+  if (stockDashboardAccessCard) {
+    stockDashboardAccessCard.hidden = !isOpen;
+  }
+
+  document.body.classList.toggle("stock-dashboard-login-open", isOpen);
+  window.clearTimeout(stockDashboardLoginModalFocusTimer);
+
+  if (isOpen && stockDashboardUserNumberInput) {
+    stockDashboardLoginModalFocusTimer = window.setTimeout(() => {
+      stockDashboardUserNumberInput.focus({ preventScroll: true });
+    }, 40);
+  }
 }
 
 function stockDashboardBrowserAlertsEnabled() {
@@ -343,6 +378,7 @@ function stockDashboardSetSession(token, user) {
   }
 
   const isAuthenticated = Boolean(stockDashboardSession);
+  stockDashboardSetAccessModalOpen(!isAuthenticated);
   if (stockDashboardAuthForm) stockDashboardAuthForm.hidden = isAuthenticated;
   if (stockDashboardSessionCard) stockDashboardSessionCard.hidden = !isAuthenticated;
   if (stockDashboardMetrics) stockDashboardMetrics.hidden = !isAuthenticated;
@@ -840,6 +876,15 @@ stockDashboardRequestList?.addEventListener("click", (event) => {
   updateStockDashboardRequestStatus(requestId, status);
 });
 
+stockDashboardAccessCloseBtn?.addEventListener("click", () => {
+  stockDashboardReturnToPreviousPage();
+});
+
+stockDashboardAccessCard?.addEventListener("click", (event) => {
+  if (event.target !== stockDashboardAccessCard) return;
+  stockDashboardReturnToPreviousPage();
+});
+
 stockDashboardAuthForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   stockDashboardSendAuthRequest(stockDashboardSetupRequired ? STOCK_DASHBOARD_BOOTSTRAP_URL : STOCK_DASHBOARD_LOGIN_URL);
@@ -848,6 +893,12 @@ stockDashboardAuthForm?.addEventListener("submit", (event) => {
 stockDashboardCreateUserForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   createStockDashboardUser();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (stockDashboardAccessCard?.hidden) return;
+  stockDashboardReturnToPreviousPage();
 });
 
 checkStockDashboardSession();
