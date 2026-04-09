@@ -37,6 +37,8 @@ npm run admin:set -- --user 001 --pin 1234
 
 That creates the first admin user in the hosted backend storage.
 
+If you prefer not to use the Render shell, the live dashboard can now bootstrap the first admin automatically when no lab users exist yet.
+
 ## Wire The Live Frontend To The Backend
 
 Once Render gives you the backend URL, update [`assets/js/app-config.js`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/assets/js/app-config.js):

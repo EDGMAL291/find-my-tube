@@ -57,6 +57,8 @@ That user becomes the admin and can:
 - clear saved stock request history
 - access the protected dashboard
 
+If the hosted backend has no lab users yet, the first admin can also be created from the live dashboard login screen.
+
 ## Deploy Online
 
 This project is static with no build step required.

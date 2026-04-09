@@ -11,6 +11,10 @@ const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT_DIR, "data"
 const STOCK_REQUESTS_FILE = path.join(DATA_DIR, "stock-requests.json");
 const STOCK_USERS_FILE = path.join(DATA_DIR, "stock-users.json");
 const STOCK_OWNER_FILE = path.join(DATA_DIR, "stock-owner.json");
+const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
+  process.env.STOCK_ORDER_SHEETS_WEBHOOK_URL
+  ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
+).trim();
 const MAX_BODY_BYTES = 1024 * 1024;
 const VALID_REQUEST_STATUSES = new Set(["received", "packed", "completed", "cancelled"]);
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
@@ -137,6 +141,15 @@ async function getResolvedOwnerUserNumber() {
 
   const users = await readStockUsers();
   return sanitizeUserNumber(users[0]?.userNumber || "");
+}
+
+async function canBootstrapOwner() {
+  const [ownerRecord, users] = await Promise.all([
+    readStockOwner(),
+    readStockUsers()
+  ]);
+
+  return !ownerRecord.ownerUserNumber && users.length === 0;
 }
 
 function queueStockRequestWrite(task) {
@@ -309,6 +322,86 @@ async function collectRequestBody(req) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
+function toSheetLineItems(items) {
+  return (Array.isArray(items) ? items : []).map((item) => ({
+    id: sanitizeString(item?.id, 80),
+    label: sanitizeString(item?.label, 120),
+    quantity: Math.max(0, Number(item?.quantity) || 0),
+    unitType: sanitizeString(item?.unitType, 40),
+    traySize: Number(item?.traySize) || null,
+    packetSize: Number(item?.packetSize) || null,
+    formattedQuantity: sanitizeString(item?.formattedQuantity, 120)
+  }));
+}
+
+async function mirrorStockRequestToGoogleSheets(record) {
+  if (!STOCK_ORDER_SHEETS_WEBHOOK_URL) {
+    return {
+      ok: false,
+      skipped: true,
+      reason: "No Google Sheets webhook configured"
+    };
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(STOCK_ORDER_SHEETS_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        id: sanitizeString(record?.id, 40),
+        source: sanitizeString(record?.source || "find-my-tube", 60),
+        submittedAt: sanitizeString(record?.submittedAt, 40),
+        createdAt: sanitizeString(record?.createdAt, 40),
+        status: sanitizeString(record?.status || "received", 40),
+        requestedBy: sanitizeString(record?.requestedBy, 120),
+        wardUnit: sanitizeString(record?.wardUnit, 120),
+        notes: sanitizeMultilineString(record?.notes, 500),
+        requestText: sanitizeMultilineString(record?.requestText, 4000),
+        lineItemCount: Math.max(0, Number(record?.lineItemCount) || 0),
+        totalRequestedQuantity: Math.max(0, Number(record?.totalRequestedQuantity) || 0),
+        items: toSheetLineItems(record?.items)
+      }),
+      signal: controller.signal
+    });
+
+    const bodyText = await response.text().catch(() => "");
+    let payload = null;
+
+    try {
+      payload = bodyText ? JSON.parse(bodyText) : null;
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        skipped: false,
+        reason: payload?.error || `Google Sheets mirror failed with status ${response.status}`
+      };
+    }
+
+    return {
+      ok: true,
+      skipped: false,
+      payload
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      skipped: false,
+      reason: error instanceof Error ? error.message : "Google Sheets mirror failed"
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 function buildStockStats(records) {
   const requests = [...records].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const totalRequests = requests.length;
@@ -445,9 +538,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   if (req.method === "GET" && pathname === "/api/stock-auth/session") {
     const session = getLabSession(req);
     if (!session) {
+      const setupRequired = await canBootstrapOwner();
       sendJson(res, 200, {
         ok: true,
-        authenticated: false
+        authenticated: false,
+        setupRequired
       });
       return;
     }
@@ -503,6 +598,65 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       user: {
         userNumber,
         isOwner
+      }
+    });
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/stock-auth/bootstrap") {
+    if (!(await canBootstrapOwner())) {
+      sendJson(res, 403, {
+        ok: false,
+        error: "Initial admin has already been configured"
+      });
+      return;
+    }
+
+    let bodyText = "";
+    try {
+      bodyText = await collectRequestBody(req);
+    } catch (error) {
+      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      return;
+    }
+
+    let payload = {};
+    try {
+      payload = bodyText ? JSON.parse(bodyText) : {};
+    } catch {
+      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      return;
+    }
+
+    const userNumber = sanitizeUserNumber(payload.userNumber);
+    const pin = sanitizePin(payload.pin);
+    if (userNumber.length < 3 || pin.length !== 4) {
+      sendJson(res, 400, {
+        ok: false,
+        error: "Use a user number of at least 3 digits and a 4-digit PIN"
+      });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const { salt, hash } = createPinHash(pin);
+    await writeStockUsers([{
+      userNumber,
+      salt,
+      pinHash: hash,
+      createdAt: now,
+      updatedAt: now
+    }]);
+    await writeStockOwner({ ownerUserNumber: userNumber });
+
+    const session = createLabSession(userNumber);
+    sendJson(res, 201, {
+      ok: true,
+      authenticated: true,
+      token: session.token,
+      user: {
+        userNumber,
+        isOwner: true
       }
     });
     return;
@@ -697,12 +851,22 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return nextRecord;
     });
 
+    const sheetMirror = await mirrorStockRequestToGoogleSheets(record);
+    if (!sheetMirror.ok && !sheetMirror.skipped) {
+      console.error(`Find My Tube: Google Sheets mirror failed for ${record.id}: ${sheetMirror.reason}`);
+    }
+
     sendJson(res, 201, {
       ok: true,
       request: {
         id: record.id,
         status: record.status,
         createdAt: record.createdAt
+      },
+      sheetMirror: {
+        ok: sheetMirror.ok,
+        skipped: sheetMirror.skipped,
+        reason: sheetMirror.reason || ""
       }
     });
     return;

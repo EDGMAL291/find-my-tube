@@ -46,6 +46,7 @@ let stockDashboardToken = localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "";
 let stockDashboardPollTimer = 0;
 let stockDashboardLatestRequestMarker = "";
 let stockDashboardUnreadCount = 0;
+let stockDashboardSetupRequired = false;
 
 function stockDashboardGetApiBaseUrl() {
   if (typeof window === "undefined") return "";
@@ -79,6 +80,7 @@ const STOCK_DASHBOARD_REQUESTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-r
 const STOCK_DASHBOARD_STATS_URL = stockDashboardBuildApiUrl("/api/lab/stock-stats");
 const STOCK_DASHBOARD_SESSION_URL = stockDashboardBuildApiUrl("/api/stock-auth/session");
 const STOCK_DASHBOARD_LOGIN_URL = stockDashboardBuildApiUrl("/api/stock-auth/login");
+const STOCK_DASHBOARD_BOOTSTRAP_URL = stockDashboardBuildApiUrl("/api/stock-auth/bootstrap");
 const STOCK_DASHBOARD_LOGOUT_URL = stockDashboardBuildApiUrl("/api/stock-auth/logout");
 const STOCK_DASHBOARD_CLEAR_DATA_URL = stockDashboardBuildApiUrl("/api/lab/stock-data");
 const STOCK_DASHBOARD_USERS_URL = stockDashboardBuildApiUrl("/api/lab/users");
@@ -335,7 +337,17 @@ function stockDashboardSetSession(token, user) {
       ? stockDashboardSession.isOwner
         ? `Signed in as admin lab user ${stockDashboardSession.userNumber}.`
         : `Signed in as lab user ${stockDashboardSession.userNumber}.`
-      : "Sign in to view dashboard data and update request status.";
+      : stockDashboardSetupRequired
+        ? "No lab admin is set up yet. Enter a user number and 4-digit PIN to create the first admin."
+        : "Sign in to view dashboard data and update request status.";
+  }
+
+  if (stockDashboardLoginBtn) {
+    stockDashboardLoginBtn.textContent = isAuthenticated
+      ? "Log In"
+      : stockDashboardSetupRequired
+        ? "Create Admin"
+        : "Log In";
   }
 
   if (!isAuthenticated) {
@@ -400,9 +412,10 @@ async function stockDashboardSendAuthRequest(url) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload?.token || !payload?.user) {
-      throw new Error(payload?.error || "Could not sign in");
+      throw new Error(payload?.error || (stockDashboardSetupRequired ? "Could not create admin." : "Could not sign in"));
     }
 
+    stockDashboardSetupRequired = false;
     stockDashboardSetSession(payload.token, payload.user);
     if (stockDashboardPinInput) stockDashboardPinInput.value = "";
     await loadStockDashboard();
@@ -650,7 +663,7 @@ async function updateStockDashboardRequestStatus(requestId, status) {
   stockDashboardStatus.textContent = `Updating ${requestId}...`;
 
   try {
-    const response = await fetch(`/api/stock-requests/${encodeURIComponent(requestId)}/status`, {
+    const response = await fetch(stockDashboardBuildApiUrl(`/api/stock-requests/${encodeURIComponent(requestId)}/status`), {
       method: "PATCH",
       headers: stockDashboardGetHeaders(true),
       body: JSON.stringify({ status })
@@ -672,11 +685,6 @@ async function updateStockDashboardRequestStatus(requestId, status) {
 }
 
 async function checkStockDashboardSession() {
-  if (!stockDashboardToken) {
-    stockDashboardSetSession("", null);
-    return;
-  }
-
   try {
     const response = await fetch(STOCK_DASHBOARD_SESSION_URL, {
       cache: "no-store",
@@ -684,11 +692,14 @@ async function checkStockDashboardSession() {
     });
     const payload = await response.json().catch(() => ({}));
 
+    stockDashboardSetupRequired = Boolean(payload?.setupRequired);
+
     if (!response.ok || !payload?.authenticated || !payload?.user) {
       stockDashboardSetSession("", null);
       return;
     }
 
+    stockDashboardSetupRequired = false;
     stockDashboardSetSession(stockDashboardToken, payload.user);
     await loadStockDashboard();
     await loadStockDashboardUsers();
@@ -752,7 +763,7 @@ async function clearStockDashboardData() {
 }
 
 stockDashboardLoginBtn?.addEventListener("click", () => {
-  stockDashboardSendAuthRequest(STOCK_DASHBOARD_LOGIN_URL);
+  stockDashboardSendAuthRequest(stockDashboardSetupRequired ? STOCK_DASHBOARD_BOOTSTRAP_URL : STOCK_DASHBOARD_LOGIN_URL);
 });
 
 stockDashboardLogoutBtn?.addEventListener("click", () => {
@@ -804,7 +815,7 @@ stockDashboardRequestList?.addEventListener("click", (event) => {
 
 stockDashboardAuthForm?.addEventListener("submit", (event) => {
   event.preventDefault();
-  stockDashboardSendAuthRequest(STOCK_DASHBOARD_LOGIN_URL);
+  stockDashboardSendAuthRequest(stockDashboardSetupRequired ? STOCK_DASHBOARD_BOOTSTRAP_URL : STOCK_DASHBOARD_LOGIN_URL);
 });
 
 stockDashboardCreateUserForm?.addEventListener("submit", (event) => {
