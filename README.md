@@ -48,7 +48,7 @@ Setup guide:
 To set or reset the admin login from this Mac:
 
 ```bash
-npm run admin:set -- --user 001 --pin 1234
+npm run admin:set -- --user 001 --pin 1234 --name "Lab Admin"
 ```
 
 That user becomes the admin and can:

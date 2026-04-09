@@ -177,6 +177,10 @@ function sanitizeString(value, maxLength = 160) {
     .slice(0, maxLength);
 }
 
+function sanitizeDisplayName(value) {
+  return sanitizeString(value, 120);
+}
+
 function sanitizeMultilineString(value, maxLength = 1000) {
   return String(value || "")
     .replace(/\r\n/g, "\n")
@@ -191,6 +195,18 @@ function sanitizeUserNumber(value) {
 
 function sanitizePin(value) {
   return String(value || "").replace(/\D+/g, "").slice(0, 4);
+}
+
+function getStoredUserDisplayName(user) {
+  return sanitizeDisplayName(user?.displayName || user?.name || "");
+}
+
+async function findStockUserByNumber(userNumber) {
+  const safeUserNumber = sanitizeUserNumber(userNumber);
+  if (!safeUserNumber) return null;
+
+  const users = await readStockUsers();
+  return users.find((entry) => sanitizeUserNumber(entry.userNumber) === safeUserNumber) || null;
 }
 
 function createPinHash(pin, salt = crypto.randomBytes(16).toString("hex")) {
@@ -547,12 +563,14 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
+    const user = await findStockUserByNumber(session.userNumber);
     const isOwner = await isOwnerUserNumber(session.userNumber);
     sendJson(res, 200, {
       ok: true,
       authenticated: true,
       user: {
         userNumber: session.userNumber,
+        displayName: getStoredUserDisplayName(user),
         isOwner
       }
     });
@@ -578,8 +596,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const userNumber = sanitizeUserNumber(payload.userNumber);
     const pin = sanitizePin(payload.pin);
-    const users = await readStockUsers();
-    const user = users.find((entry) => entry.userNumber === userNumber);
+    const user = await findStockUserByNumber(userNumber);
 
     if (!user || pin.length !== 4 || !verifyPin(pin, user.salt, user.pinHash)) {
       sendJson(res, 401, {
@@ -597,6 +614,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       token: session.token,
       user: {
         userNumber,
+        displayName: getStoredUserDisplayName(user),
         isOwner
       }
     });
@@ -630,6 +648,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const userNumber = sanitizeUserNumber(payload.userNumber);
     const pin = sanitizePin(payload.pin);
+    const displayName = sanitizeDisplayName(payload.displayName);
     if (userNumber.length < 3 || pin.length !== 4) {
       sendJson(res, 400, {
         ok: false,
@@ -642,6 +661,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const { salt, hash } = createPinHash(pin);
     await writeStockUsers([{
       userNumber,
+      displayName,
       salt,
       pinHash: hash,
       createdAt: now,
@@ -656,6 +676,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       token: session.token,
       user: {
         userNumber,
+        displayName,
         isOwner: true
       }
     });
@@ -682,6 +703,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     sendJson(res, 200, {
       users: users.map((user) => ({
         userNumber: sanitizeUserNumber(user.userNumber),
+        displayName: getStoredUserDisplayName(user),
         createdAt: user.createdAt || "",
         updatedAt: user.updatedAt || ""
       }))
@@ -711,10 +733,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const userNumber = sanitizeUserNumber(payload.userNumber);
     const pin = sanitizePin(payload.pin);
-    if (userNumber.length < 3 || pin.length !== 4) {
+    const displayName = sanitizeDisplayName(payload.displayName);
+    if (userNumber.length < 3 || pin.length !== 4 || displayName.length < 2) {
       sendJson(res, 400, {
         ok: false,
-        error: "Use a user number of at least 3 digits and a 4-digit PIN"
+        error: "Use a display name, a user number of at least 3 digits, and a 4-digit PIN"
       });
       return;
     }
@@ -732,6 +755,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const now = new Date().toISOString();
     users.push({
       userNumber,
+      displayName,
       salt,
       pinHash: hash,
       createdAt: now,
@@ -743,6 +767,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       ok: true,
       user: {
         userNumber,
+        displayName,
         createdAt: now
       }
     });

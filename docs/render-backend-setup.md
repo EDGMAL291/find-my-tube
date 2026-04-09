@@ -32,7 +32,7 @@ Render will create:
 After the service is live, open the Render Shell for the web service and run:
 
 ```bash
-npm run admin:set -- --user 001 --pin 1234
+npm run admin:set -- --user 001 --pin 1234 --name "Lab Admin"
 ```
 
 That creates the first admin user in the hosted backend storage.

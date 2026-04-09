@@ -18,6 +18,7 @@ const stockDashboardSessionUser = document.getElementById("stockDashboardSession
 const stockDashboardUserAdminCard = document.getElementById("stockDashboardUserAdminCard");
 const stockDashboardUserAdminStatus = document.getElementById("stockDashboardUserAdminStatus");
 const stockDashboardCreateUserForm = document.getElementById("stockDashboardCreateUserForm");
+const stockDashboardCreateUserNameInput = document.getElementById("stockDashboardCreateUserNameInput");
 const stockDashboardCreateUserNumberInput = document.getElementById("stockDashboardCreateUserNumberInput");
 const stockDashboardCreateUserPinInput = document.getElementById("stockDashboardCreateUserPinInput");
 const stockDashboardCreateUserBtn = document.getElementById("stockDashboardCreateUserBtn");
@@ -109,6 +110,34 @@ function stockDashboardFormatDateTime(value) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(date);
+}
+
+function stockDashboardGetDisplayName(user) {
+  return String(user?.displayName || "").trim();
+}
+
+function stockDashboardGetUserHeading(user) {
+  const displayName = stockDashboardGetDisplayName(user);
+  const userNumber = String(user?.userNumber || "").trim();
+  const roleLabel = user?.isOwner ? "Admin" : "Lab user";
+  if (displayName && userNumber) return `${displayName} (${userNumber}) · ${roleLabel}`;
+  if (displayName) return `${displayName} · ${roleLabel}`;
+  if (userNumber) return `Lab user ${userNumber} · ${roleLabel}`;
+  return "Lab user";
+}
+
+function stockDashboardGetSignedInLabel(user) {
+  const displayName = stockDashboardGetDisplayName(user);
+  const userNumber = String(user?.userNumber || "").trim();
+  if (displayName && userNumber) {
+    return user?.isOwner
+      ? `Signed in as ${displayName} (${userNumber}) · Admin.`
+      : `Signed in as ${displayName} (${userNumber}).`;
+  }
+
+  return user?.isOwner
+    ? `Signed in as admin lab user ${userNumber}.`
+    : `Signed in as lab user ${userNumber}.`;
 }
 
 function stockDashboardNormalizeStatus(status) {
@@ -303,6 +332,7 @@ function stockDashboardSetSession(token, user) {
   stockDashboardToken = token || "";
   stockDashboardSession = user ? {
     userNumber: user.userNumber,
+    displayName: stockDashboardGetDisplayName(user),
     isOwner: Boolean(user.isOwner)
   } : null;
 
@@ -322,9 +352,7 @@ function stockDashboardSetSession(token, user) {
 
   if (stockDashboardSessionUser) {
     stockDashboardSessionUser.textContent = isAuthenticated
-      ? stockDashboardSession.isOwner
-        ? `Lab user ${stockDashboardSession.userNumber} · Admin`
-        : `Lab user ${stockDashboardSession.userNumber}`
+      ? stockDashboardGetUserHeading(stockDashboardSession)
       : "Lab user";
   }
 
@@ -334,9 +362,7 @@ function stockDashboardSetSession(token, user) {
 
   if (stockDashboardAuthStatus) {
     stockDashboardAuthStatus.textContent = isAuthenticated
-      ? stockDashboardSession.isOwner
-        ? `Signed in as admin lab user ${stockDashboardSession.userNumber}.`
-        : `Signed in as lab user ${stockDashboardSession.userNumber}.`
+      ? stockDashboardGetSignedInLabel(stockDashboardSession)
       : stockDashboardSetupRequired
         ? "No lab admin is set up yet. Enter a user number and 4-digit PIN to create the first admin."
         : "Sign in to view dashboard data and update request status.";
@@ -457,7 +483,7 @@ async function loadStockDashboardUsers() {
     stockDashboardUserList.innerHTML = users.length
       ? users.map((user) => `
         <div class="stock-dashboard-list-row">
-          <span>${stockDashboardEscapeHtml(user.userNumber)}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}</span>
+          <span>${stockDashboardEscapeHtml(stockDashboardGetDisplayName(user) || `Lab user ${user.userNumber}`)}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}<br /><small>${stockDashboardEscapeHtml(user.userNumber)}</small></span>
           <strong>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(user.createdAt))}</strong>
         </div>
       `).join("")
@@ -476,11 +502,12 @@ async function loadStockDashboardUsers() {
 async function createStockDashboardUser() {
   if (!stockDashboardSession?.isOwner) return;
 
+  const displayName = String(stockDashboardCreateUserNameInput?.value || "").replace(/\s+/g, " ").trim().slice(0, 120);
   const userNumber = String(stockDashboardCreateUserNumberInput?.value || "").replace(/\D+/g, "").slice(0, 12);
   const pin = String(stockDashboardCreateUserPinInput?.value || "").replace(/\D+/g, "").slice(0, 4);
-  if (userNumber.length < 3 || pin.length !== 4) {
+  if (displayName.length < 2 || userNumber.length < 3 || pin.length !== 4) {
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = "Use a user number of at least 3 digits and a 4-digit PIN.";
+      stockDashboardUserAdminStatus.textContent = "Use a display name, a user number of at least 3 digits, and a 4-digit PIN.";
     }
     return;
   }
@@ -494,7 +521,7 @@ async function createStockDashboardUser() {
     const response = await fetch(STOCK_DASHBOARD_USERS_URL, {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
-      body: JSON.stringify({ userNumber, pin })
+      body: JSON.stringify({ displayName, userNumber, pin })
     });
 
     if (response.status === 401 || response.status === 403) {
@@ -509,7 +536,7 @@ async function createStockDashboardUser() {
 
     if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = `Lab user ${userNumber} created.`;
+      stockDashboardUserAdminStatus.textContent = `${displayName} (${userNumber}) created.`;
     }
     await loadStockDashboardUsers();
   } catch (error) {
