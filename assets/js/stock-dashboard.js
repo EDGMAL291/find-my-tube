@@ -17,7 +17,11 @@ const stockDashboardSessionCard = document.getElementById("stockDashboardSession
 const stockDashboardSessionUser = document.getElementById("stockDashboardSessionUser");
 const stockDashboardUserAdminCard = document.getElementById("stockDashboardUserAdminCard");
 const stockDashboardUserAdminStatus = document.getElementById("stockDashboardUserAdminStatus");
+const stockDashboardOpenCreateUserBtn = document.getElementById("stockDashboardOpenCreateUserBtn");
+const stockDashboardCreateUserModal = document.getElementById("stockDashboardCreateUserModal");
+const stockDashboardCloseCreateUserModalBtn = document.getElementById("stockDashboardCloseCreateUserModalBtn");
 const stockDashboardCreateUserForm = document.getElementById("stockDashboardCreateUserForm");
+const stockDashboardCreateUserNameInput = document.getElementById("stockDashboardCreateUserNameInput");
 const stockDashboardCreateUserNumberInput = document.getElementById("stockDashboardCreateUserNumberInput");
 const stockDashboardCreateUserPinInput = document.getElementById("stockDashboardCreateUserPinInput");
 const stockDashboardCreateUserBtn = document.getElementById("stockDashboardCreateUserBtn");
@@ -68,6 +72,7 @@ let stockDashboardToken = localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "";
 let stockDashboardPollTimer = 0;
 let stockDashboardLatestRequestMarker = "";
 let stockDashboardUnreadCount = 0;
+let stockDashboardLastFocusedElement = null;
 
 function stockDashboardGetApiBaseUrl() {
   if (typeof window === "undefined") return "";
@@ -150,6 +155,28 @@ function stockDashboardGetHeaders(includeJson = false) {
     headers.Authorization = `Bearer ${stockDashboardToken}`;
   }
   return headers;
+}
+
+function stockDashboardSetCreateUserModalOpen(isOpen) {
+  if (!stockDashboardCreateUserModal) return;
+
+  const nextState = Boolean(isOpen);
+  stockDashboardCreateUserModal.hidden = !nextState;
+  document.body.classList.toggle("modal-open", nextState);
+
+  if (nextState) {
+    stockDashboardLastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    window.requestAnimationFrame(() => {
+      stockDashboardCreateUserNameInput?.focus();
+    });
+    return;
+  }
+
+  if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
+  if (stockDashboardLastFocusedElement) {
+    stockDashboardLastFocusedElement.focus();
+  }
+  stockDashboardLastFocusedElement = null;
 }
 
 function stockDashboardGetDisplayLabel(item) {
@@ -468,6 +495,7 @@ function stockDashboardSetSession(token, user) {
   stockDashboardToken = token || "";
   stockDashboardSession = user ? {
     userNumber: user.userNumber,
+    fullName: String(user.fullName || user.userNumber || "").trim(),
     isOwner: Boolean(user.isOwner)
   } : null;
 
@@ -490,10 +518,8 @@ function stockDashboardSetSession(token, user) {
 
   if (stockDashboardSessionUser) {
     stockDashboardSessionUser.textContent = isAuthenticated
-      ? stockDashboardSession.isOwner
-        ? `Lab user ${stockDashboardSession.userNumber} · Admin`
-        : `Lab user ${stockDashboardSession.userNumber}`
-      : "Lab user";
+      ? stockDashboardSession.fullName || stockDashboardSession.userNumber
+      : "Signed in as";
   }
 
   if (clearStockDataBtn) {
@@ -502,9 +528,7 @@ function stockDashboardSetSession(token, user) {
 
   if (stockDashboardAuthStatus) {
     stockDashboardAuthStatus.textContent = isAuthenticated
-      ? stockDashboardSession.isOwner
-        ? `Signed in as admin lab user ${stockDashboardSession.userNumber}.`
-        : `Signed in as lab user ${stockDashboardSession.userNumber}.`
+      ? `Signed in as: ${stockDashboardSession.fullName || stockDashboardSession.userNumber}.`
       : "Sign in to view dashboard data and update request status.";
   }
 
@@ -625,7 +649,7 @@ async function loadStockDashboardUsers() {
     stockDashboardUserList.innerHTML = users.length
       ? users.map((user) => `
         <div class="stock-dashboard-list-row">
-          <span>${stockDashboardEscapeHtml(user.userNumber)}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}</span>
+          <span>${stockDashboardEscapeHtml(user.fullName || user.userNumber)}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}</span>
           <strong>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(user.createdAt))}</strong>
         </div>
       `).join("")
@@ -644,11 +668,12 @@ async function loadStockDashboardUsers() {
 async function createStockDashboardUser() {
   if (!stockDashboardSession?.isOwner) return;
 
+  const fullName = String(stockDashboardCreateUserNameInput?.value || "").trim();
   const userNumber = String(stockDashboardCreateUserNumberInput?.value || "").replace(/\D+/g, "").slice(0, 12);
   const pin = String(stockDashboardCreateUserPinInput?.value || "").replace(/\D+/g, "").slice(0, 4);
-  if (userNumber.length < 3 || pin.length !== 4) {
+  if (!fullName || userNumber.length < 3 || pin.length !== 4) {
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = "Use a user number of at least 3 digits and a 4-digit PIN.";
+      stockDashboardUserAdminStatus.textContent = "Add a name, a user number of at least 3 digits, and a 4-digit PIN.";
     }
     return;
   }
@@ -662,7 +687,7 @@ async function createStockDashboardUser() {
     const response = await fetch(STOCK_DASHBOARD_USERS_URL, {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
-      body: JSON.stringify({ userNumber, pin })
+      body: JSON.stringify({ fullName, userNumber, pin })
     });
 
     if (response.status === 401 || response.status === 403) {
@@ -677,8 +702,9 @@ async function createStockDashboardUser() {
 
     if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = `Lab user ${userNumber} created.`;
+      stockDashboardUserAdminStatus.textContent = `${fullName} created.`;
     }
+    stockDashboardSetCreateUserModalOpen(false);
     await loadStockDashboardUsers();
   } catch (error) {
     if (stockDashboardUserAdminStatus) {
@@ -1251,6 +1277,20 @@ stockDashboardAuthForm?.addEventListener("submit", (event) => {
 stockDashboardCreateUserForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   createStockDashboardUser();
+});
+
+stockDashboardOpenCreateUserBtn?.addEventListener("click", () => {
+  stockDashboardSetCreateUserModalOpen(true);
+});
+
+stockDashboardCloseCreateUserModalBtn?.addEventListener("click", () => {
+  stockDashboardSetCreateUserModalOpen(false);
+});
+
+stockDashboardCreateUserModal?.addEventListener("click", (event) => {
+  if (event.target === stockDashboardCreateUserModal) {
+    stockDashboardSetCreateUserModalOpen(false);
+  }
 });
 
 stockDashboardManualEntryForm?.addEventListener("submit", (event) => {

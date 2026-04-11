@@ -282,6 +282,15 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "ACTH",
+    tubeColor: "Purple (pre-chilled EDTA)",
+    specimen: "EDTA plasma",
+    turnaroundTime: "1-3 days",
+    notes: "Adrenocorticotropic hormone. Collect in a chilled EDTA tube, keep on ice, separate plasma promptly, and confirm local transport/freezing requirements with the receiving lab.",
+    criticalPrep: "Collect into a pre-chilled lavender EDTA tube, place on ice immediately after draw, separate plasma from cells as soon as possible, and send/freeze per receiving lab protocol.",
+    borderColor: "purple"
+  },
+  {
     name: "DHEAS",
     tubeColor: "Gold",
     specimen: "Serum",

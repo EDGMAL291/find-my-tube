@@ -234,6 +234,10 @@ function sanitizePin(value) {
   return String(value || "").replace(/\D+/g, "").slice(0, 4);
 }
 
+function sanitizePersonName(value) {
+  return sanitizeString(value, 120);
+}
+
 function createPinHash(pin, salt = crypto.randomBytes(16).toString("hex")) {
   const hash = crypto.scryptSync(pin, salt, 64).toString("hex");
   return { salt, hash };
@@ -292,6 +296,17 @@ function requireLabSession(req, res) {
 async function isOwnerUserNumber(userNumber) {
   const ownerUserNumber = await getResolvedOwnerUserNumber();
   return Boolean(ownerUserNumber && ownerUserNumber === sanitizeUserNumber(userNumber));
+}
+
+async function getUserRecord(userNumber) {
+  const users = await readStockUsers();
+  return users.find((entry) => sanitizeUserNumber(entry.userNumber) === sanitizeUserNumber(userNumber)) || null;
+}
+
+function getUserDisplayName(user) {
+  const fullName = sanitizePersonName(user?.fullName || "");
+  if (fullName) return fullName;
+  return sanitizeUserNumber(user?.userNumber || "") || "User";
 }
 
 async function requireOwnerSession(req, res) {
@@ -785,11 +800,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const isOwner = await isOwnerUserNumber(session.userNumber);
+    const userRecord = await getUserRecord(session.userNumber);
     sendJson(res, 200, {
       ok: true,
       authenticated: true,
       user: {
         userNumber: session.userNumber,
+        fullName: getUserDisplayName(userRecord || { userNumber: session.userNumber }),
         isOwner
       }
     });
@@ -834,6 +851,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       token: session.token,
       user: {
         userNumber,
+        fullName: getUserDisplayName(user),
         isOwner
       }
     });
@@ -860,6 +878,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     sendJson(res, 200, {
       users: users.map((user) => ({
         userNumber: sanitizeUserNumber(user.userNumber),
+        fullName: getUserDisplayName(user),
         createdAt: user.createdAt || "",
         updatedAt: user.updatedAt || ""
       }))
@@ -888,11 +907,12 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const userNumber = sanitizeUserNumber(payload.userNumber);
+    const fullName = sanitizePersonName(payload.fullName);
     const pin = sanitizePin(payload.pin);
-    if (userNumber.length < 3 || pin.length !== 4) {
+    if (userNumber.length < 3 || pin.length !== 4 || !fullName) {
       sendJson(res, 400, {
         ok: false,
-        error: "Use a user number of at least 3 digits and a 4-digit PIN"
+        error: "Use a name, a user number of at least 3 digits, and a 4-digit PIN"
       });
       return;
     }
@@ -910,6 +930,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const now = new Date().toISOString();
     users.push({
       userNumber,
+      fullName,
       salt,
       pinHash: hash,
       createdAt: now,
@@ -921,6 +942,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       ok: true,
       user: {
         userNumber,
+        fullName,
         createdAt: now
       }
     });

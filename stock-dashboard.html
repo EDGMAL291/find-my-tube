@@ -129,22 +129,9 @@
           </div>
           <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review lab user logins.</p>
         </div>
-
-        <form class="stock-dashboard-auth-form" id="stockDashboardCreateUserForm">
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">New user number</span>
-            <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" placeholder="e.g. 102" />
-          </label>
-
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">New 4-digit PIN</span>
-            <input type="password" id="stockDashboardCreateUserPinInput" inputmode="numeric" maxlength="4" placeholder="4 digits" />
-          </label>
-
-          <div class="stock-dashboard-auth-actions">
-            <button type="submit" class="quick-tool-launch-btn" id="stockDashboardCreateUserBtn">Create User</button>
-          </div>
-        </form>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardOpenCreateUserBtn">Create User</button>
+        </div>
 
         <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
       </section>
@@ -362,6 +349,39 @@
         <button type="button" class="profile-modal-close-btn" id="closeLegalModalBtn">Close</button>
       </div>
       <div class="legal-modal-body" id="legalModalBody"></div>
+    </div>
+  </section>
+
+  <section class="profile-modal" id="stockDashboardCreateUserModal" hidden>
+    <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="stockDashboardCreateUserModalTitle">
+      <div class="profile-modal-head">
+        <div>
+          <p class="draw-cart-kicker">Admin only</p>
+          <h3 id="stockDashboardCreateUserModalTitle">Create User</h3>
+        </div>
+        <button type="button" class="profile-modal-close-btn" id="stockDashboardCloseCreateUserModalBtn">Close</button>
+      </div>
+
+      <form class="stock-dashboard-auth-form" id="stockDashboardCreateUserForm">
+        <label class="stock-order-field stock-order-field-wide">
+          <span class="stock-order-field-label">User name</span>
+          <input type="text" id="stockDashboardCreateUserNameInput" autocomplete="name" placeholder="Full name" />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">New user number</span>
+          <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" placeholder="e.g. 102" />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">New 4-digit PIN</span>
+          <input type="password" id="stockDashboardCreateUserPinInput" inputmode="numeric" maxlength="4" placeholder="4 digits" />
+        </label>
+
+        <div class="stock-dashboard-auth-actions">
+          <button type="submit" class="quick-tool-launch-btn" id="stockDashboardCreateUserBtn">Create User</button>
+        </div>
+      </form>
     </div>
   </section>
 
