@@ -1,4 +1,5 @@
 const http = require("http");
+const https = require("https");
 const fs = require("fs/promises");
 const fsSync = require("fs");
 const path = require("path");
@@ -6,14 +7,47 @@ const crypto = require("crypto");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
+const STOCK_SHEETS_WEBHOOK_URL = process.env.STOCK_SHEETS_WEBHOOK_URL
+  ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec";
+const STOCK_SHEETS_TIMEOUT_MS = 12000;
 const ROOT_DIR = __dirname;
 const DATA_DIR = path.join(ROOT_DIR, "data");
 const STOCK_REQUESTS_FILE = path.join(DATA_DIR, "stock-requests.json");
+const STOCK_RECEIPTS_FILE = path.join(DATA_DIR, "stock-receipts.json");
 const STOCK_USERS_FILE = path.join(DATA_DIR, "stock-users.json");
 const STOCK_OWNER_FILE = path.join(DATA_DIR, "stock-owner.json");
 const MAX_BODY_BYTES = 1024 * 1024;
-const VALID_REQUEST_STATUSES = new Set(["received", "packed", "completed", "cancelled"]);
+const VALID_REQUEST_STATUSES = new Set(["received", "packed", "collected", "completed", "cancelled"]);
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
+const STOCK_SHEETS_COLUMN_DEFAULTS = Object.freeze({
+  yellowTubes: 0,
+  greyTubes: 0,
+  purpleTubes: 0,
+  greenTubes: 0,
+  blueTubes: 0,
+  pearlTubes: 0,
+  tanTubes: 0,
+  pinkTubes: 0,
+  yellowTubeTrays: 0,
+  greyTubeTrays: 0,
+  purpleTubeTrays: 0,
+  greenTubeTrays: 0,
+  blueTubeTrays: 0,
+  pearlTubeTrays: 0,
+  tanTubeTrays: 0,
+  pinkTubeTrays: 0,
+  yellowTubeSingles: 0,
+  greyTubeSingles: 0,
+  purpleTubeSingles: 0,
+  greenTubeSingles: 0,
+  blueTubeSingles: 0,
+  pearlTubeSingles: 0,
+  tanTubeSingles: 0,
+  pinkTubeSingles: 0
+});
+const STOCK_REQUEST_ITEM_LIMITS = Object.freeze({
+  "pink-tubes-single": 5
+});
 
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
@@ -40,6 +74,9 @@ const labSessions = new Map();
 function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(statusCode, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(body)
@@ -49,6 +86,9 @@ function sendJson(res, statusCode, payload) {
 
 function sendText(res, statusCode, message) {
   res.writeHead(statusCode, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Content-Type": "text/plain; charset=utf-8",
     "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(message)
@@ -60,6 +100,9 @@ async function ensureStockRequestsFile() {
   await fs.mkdir(DATA_DIR, { recursive: true });
   if (!fsSync.existsSync(STOCK_REQUESTS_FILE)) {
     await fs.writeFile(STOCK_REQUESTS_FILE, "[]\n", "utf8");
+  }
+  if (!fsSync.existsSync(STOCK_RECEIPTS_FILE)) {
+    await fs.writeFile(STOCK_RECEIPTS_FILE, "[]\n", "utf8");
   }
   if (!fsSync.existsSync(STOCK_USERS_FILE)) {
     await fs.writeFile(STOCK_USERS_FILE, "[]\n", "utf8");
@@ -84,6 +127,23 @@ async function readStockRequests() {
 async function writeStockRequests(records) {
   await ensureStockRequestsFile();
   await fs.writeFile(STOCK_REQUESTS_FILE, `${JSON.stringify(records, null, 2)}\n`, "utf8");
+}
+
+async function readStockReceipts() {
+  await ensureStockRequestsFile();
+  const raw = await fs.readFile(STOCK_RECEIPTS_FILE, "utf8");
+
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeStockReceipts(records) {
+  await ensureStockRequestsFile();
+  await fs.writeFile(STOCK_RECEIPTS_FILE, `${JSON.stringify(records, null, 2)}\n`, "utf8");
 }
 
 async function readStockUsers() {
@@ -256,11 +316,16 @@ function sanitizeItem(item) {
   return {
     id: sanitizeString(item?.id, 80),
     label: sanitizeString(item?.label, 120),
+    variantLabel: sanitizeString(item?.variantLabel, 80),
     quantity,
     unitType: sanitizeString(item?.unitType, 40),
     traySize: Number(item?.traySize) || null,
     packetSize: Number(item?.packetSize) || null,
-    formattedQuantity: sanitizeString(item?.formattedQuantity, 120)
+    formattedQuantity: sanitizeString(item?.formattedQuantity, 120),
+    inventoryUnits: Math.max(0, Number(item?.inventoryUnits) || 0),
+    sheetColumnKey: sanitizeString(item?.sheetColumnKey, 80),
+    sheetTrayColumnKey: sanitizeString(item?.sheetTrayColumnKey, 80),
+    sheetSingleColumnKey: sanitizeString(item?.sheetSingleColumnKey, 80)
   };
 }
 
@@ -268,6 +333,12 @@ function buildRequestId() {
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const suffix = crypto.randomBytes(2).toString("hex").toUpperCase();
   return `STK-${today}-${suffix}`;
+}
+
+function buildReceiptId() {
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const suffix = crypto.randomBytes(2).toString("hex").toUpperCase();
+  return `REC-${today}-${suffix}`;
 }
 
 function sanitizeStockRequestPayload(payload) {
@@ -283,9 +354,276 @@ function sanitizeStockRequestPayload(payload) {
     notes: sanitizeMultilineString(payload?.notes, 500),
     requestText: sanitizeMultilineString(payload?.requestText, 4000),
     lineItemCount: items.length,
-    totalRequestedQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+    totalRequestedQuantity: items.reduce((sum, item) => sum + getItemInventoryUnits(item), 0),
     items
   };
+}
+
+function validateStockRequestItems(items = []) {
+  for (const item of items) {
+    const maxAllowed = Number(STOCK_REQUEST_ITEM_LIMITS[item?.id] || 0);
+    if (maxAllowed && Number(item?.quantity || 0) > maxAllowed) {
+      return `${sanitizeString(item?.label, 120) || "This item"} is limited to ${maxAllowed} per request.`;
+    }
+  }
+
+  return "";
+}
+
+function sanitizeStockReceiptPayload(payload) {
+  const items = Array.isArray(payload?.items)
+    ? payload.items.map(sanitizeItem).filter(Boolean)
+    : [];
+
+  return {
+    supplierName: sanitizeString(payload?.supplierName, 120),
+    reference: sanitizeString(payload?.reference, 120),
+    notes: sanitizeMultilineString(payload?.notes, 500),
+    submittedAt: sanitizeString(payload?.submittedAt, 40) || new Date().toISOString(),
+    lineItemCount: items.length,
+    totalReceivedQuantity: items.reduce((sum, item) => sum + getItemInventoryUnits(item), 0),
+    items
+  };
+}
+
+function getItemInventoryUnits(item) {
+  const explicitInventoryUnits = Math.max(0, Number(item?.inventoryUnits) || 0);
+  if (explicitInventoryUnits) return explicitInventoryUnits;
+
+  const quantity = Math.max(0, Number(item?.quantity) || 0);
+  if (!quantity) return 0;
+  if (item?.unitType === "tray") {
+    return quantity * Math.max(0, Number(item?.traySize) || 0);
+  }
+  if (item?.unitType === "packet") {
+    return quantity * Math.max(0, Number(item?.packetSize) || 0);
+  }
+  return quantity;
+}
+
+function buildStockSheetsColumns(items = []) {
+  const columns = { ...STOCK_SHEETS_COLUMN_DEFAULTS };
+
+  items.forEach((item) => {
+    const totalUnits = getItemInventoryUnits(item);
+    if (item.sheetColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetColumnKey)) {
+      columns[item.sheetColumnKey] += totalUnits;
+    }
+    if (item.unitType === "tray" && item.sheetTrayColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetTrayColumnKey)) {
+      columns[item.sheetTrayColumnKey] += Math.max(0, Number(item.quantity) || 0);
+    }
+    if (item.unitType === "each" && item.sheetSingleColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetSingleColumnKey)) {
+      columns[item.sheetSingleColumnKey] += Math.max(0, Number(item.quantity) || 0);
+    }
+  });
+
+  return columns;
+}
+
+function getStockInventoryKey(item) {
+  return sanitizeString(item?.sheetColumnKey, 80) || sanitizeString(item?.id, 80);
+}
+
+function getStockInventoryLabel(item) {
+  return sanitizeString(item?.label, 120) || sanitizeString(item?.id, 80) || "Item";
+}
+
+function getStockInventorySummary(receipts, requests) {
+  const rows = new Map();
+
+  function touchRow(item) {
+    const key = getStockInventoryKey(item);
+    if (!key) return null;
+    const existing = rows.get(key) || {
+      key,
+      label: getStockInventoryLabel(item),
+      received: 0,
+      issued: 0,
+      onHand: 0,
+      updatedAt: ""
+    };
+    if (!existing.label) {
+      existing.label = getStockInventoryLabel(item);
+    }
+    rows.set(key, existing);
+    return existing;
+  }
+
+  receipts.forEach((receipt) => {
+    const updatedAt = sanitizeString(receipt?.updatedAt || receipt?.createdAt, 40);
+    (Array.isArray(receipt?.items) ? receipt.items : []).forEach((item) => {
+      const row = touchRow(item);
+      if (!row) return;
+      row.received += getItemInventoryUnits(item);
+      if (updatedAt && (!row.updatedAt || updatedAt > row.updatedAt)) {
+        row.updatedAt = updatedAt;
+      }
+    });
+  });
+
+  requests
+    .filter((request) => slugifyStatus(request?.status) === "completed")
+    .forEach((request) => {
+      const updatedAt = sanitizeString(request?.updatedAt || request?.createdAt, 40);
+      (Array.isArray(request?.items) ? request.items : []).forEach((item) => {
+        const row = touchRow(item);
+        if (!row) return;
+        row.issued += getItemInventoryUnits(item);
+        if (updatedAt && (!row.updatedAt || updatedAt > row.updatedAt)) {
+          row.updatedAt = updatedAt;
+        }
+      });
+    });
+
+  return [...rows.values()]
+    .map((row) => ({
+      ...row,
+      onHand: row.received - row.issued
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function appendStatusAudit(record, status, userNumber, timestamp) {
+  const safeStatus = slugifyStatus(status);
+  const safeUserNumber = sanitizeUserNumber(userNumber);
+  const safeTimestamp = sanitizeString(timestamp, 40) || new Date().toISOString();
+  const history = Array.isArray(record.statusHistory) ? record.statusHistory : [];
+
+  history.push({
+    status: safeStatus,
+    updatedAt: safeTimestamp,
+    updatedBy: safeUserNumber
+  });
+  record.statusHistory = history;
+
+  if (safeStatus === "received") {
+    record.receivedAt = safeTimestamp;
+    record.receivedBy = safeUserNumber;
+  }
+  if (safeStatus === "packed") {
+    record.packedAt = safeTimestamp;
+    record.packedBy = safeUserNumber;
+  }
+  if (safeStatus === "collected") {
+    record.collectedAt = safeTimestamp;
+    record.collectedBy = safeUserNumber;
+  }
+  if (safeStatus === "completed") {
+    record.completedAt = safeTimestamp;
+    record.completedBy = safeUserNumber;
+  }
+  if (safeStatus === "cancelled") {
+    record.cancelledAt = safeTimestamp;
+    record.cancelledBy = safeUserNumber;
+  }
+}
+
+function buildStockSheetsPayload(record, options = {}) {
+  const { action = "upsert-request", previousStatus = "", changedBy = "" } = options;
+  const items = Array.isArray(record?.items) ? record.items : [];
+
+  return {
+    action,
+    requestId: sanitizeString(record?.id, 80),
+    source: sanitizeString(record?.source, 60),
+    enteredBy: sanitizeString(record?.enteredBy, 40),
+    status: slugifyStatus(record?.status),
+    statusLabel: formatStatusLabel(record?.status),
+    previousStatus: previousStatus ? slugifyStatus(previousStatus) : "",
+    previousStatusLabel: previousStatus ? formatStatusLabel(previousStatus) : "",
+    changedBy: sanitizeString(changedBy, 40),
+    createdAt: sanitizeString(record?.createdAt, 40),
+    updatedAt: sanitizeString(record?.updatedAt, 40),
+    submittedAt: sanitizeString(record?.submittedAt, 40),
+    requestedBy: sanitizeString(record?.requestedBy, 120),
+    wardUnit: sanitizeString(record?.wardUnit, 120),
+    notes: sanitizeMultilineString(record?.notes, 500),
+    requestText: sanitizeMultilineString(record?.requestText, 4000),
+    lineItemCount: Math.max(0, Number(record?.lineItemCount) || 0),
+    totalRequestedQuantity: Math.max(0, Number(record?.totalRequestedQuantity) || 0),
+    itemsSummary: items.map((item) => `${item.variantLabel ? `${item.label} - ${item.variantLabel}` : item.label}: ${item.formattedQuantity || item.quantity}`).join(" | "),
+    items: items.map((item) => ({
+      id: sanitizeString(item.id, 80),
+      label: sanitizeString(item.label, 120),
+      variantLabel: sanitizeString(item.variantLabel, 80),
+      quantity: Math.max(0, Number(item.quantity) || 0),
+      unitType: sanitizeString(item.unitType, 40),
+      traySize: Number(item.traySize) || null,
+      packetSize: Number(item.packetSize) || null,
+      inventoryUnits: getItemInventoryUnits(item),
+      formattedQuantity: sanitizeString(item.formattedQuantity, 120)
+    })),
+    sheetColumns: buildStockSheetsColumns(items)
+  };
+}
+
+function postJson(urlString, payload, redirectCount = 0) {
+  return new Promise((resolve, reject) => {
+    const target = new URL(urlString);
+    const transport = target.protocol === "https:" ? https : http;
+    const body = JSON.stringify(payload);
+    const request = transport.request({
+      protocol: target.protocol,
+      hostname: target.hostname,
+      port: target.port || (target.protocol === "https:" ? 443 : 80),
+      path: `${target.pathname}${target.search}`,
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": Buffer.byteLength(body)
+      }
+    }, (response) => {
+      let responseBody = "";
+      response.setEncoding("utf8");
+      response.on("data", (chunk) => {
+        responseBody += chunk;
+      });
+      response.on("end", () => {
+        const statusCode = Number(response.statusCode) || 0;
+        const location = typeof response.headers.location === "string" ? response.headers.location : "";
+        if (location && [301, 302, 303, 307, 308].includes(statusCode) && redirectCount < 5) {
+          resolve(postJson(new URL(location, target).toString(), payload, redirectCount + 1));
+          return;
+        }
+
+        resolve({
+          statusCode,
+          body: responseBody
+        });
+      });
+    });
+
+    request.on("error", reject);
+    request.setTimeout(STOCK_SHEETS_TIMEOUT_MS, () => {
+      request.destroy(new Error("Google Sheets sync timed out"));
+    });
+    request.write(body);
+    request.end();
+  });
+}
+
+async function syncStockRecordToSheets(record, options = {}) {
+  if (!STOCK_SHEETS_WEBHOOK_URL) {
+    return { ok: false, skipped: true, error: "No Google Sheets webhook configured" };
+  }
+
+  try {
+    const payload = buildStockSheetsPayload(record, options);
+    const response = await postJson(STOCK_SHEETS_WEBHOOK_URL, payload);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return { ok: true, statusCode: response.statusCode };
+    }
+    return {
+      ok: false,
+      statusCode: response.statusCode,
+      error: response.body || `Google Sheets sync failed with status ${response.statusCode}`
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Google Sheets sync failed"
+    };
+  }
 }
 
 async function collectRequestBody(req) {
@@ -329,11 +667,11 @@ function buildStockStats(records) {
     }
 
     (Array.isArray(request.items) ? request.items : []).forEach((item) => {
-      const label = sanitizeString(item.label, 120);
+      const label = sanitizeString(item.variantLabel ? `${item.label} - ${item.variantLabel}` : item.label, 120);
       if (!label) return;
       const current = items.get(label) || { requests: 0, quantity: 0 };
       current.requests += 1;
-      current.quantity += Number(item.quantity || 0);
+      current.quantity += getItemInventoryUnits(item);
       items.set(label, current);
     });
   });
@@ -415,6 +753,18 @@ async function serveStaticAsset(req, res, pathname) {
 }
 
 async function handleApiRequest(req, res, pathname, searchParams) {
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+      "Content-Length": "0"
+    });
+    res.end();
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/api/health") {
     sendJson(res, 200, {
       ok: true,
@@ -581,6 +931,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const requests = await readStockRequests();
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
     const rows = [...requests]
+      .filter((record) => sanitizeString(record?.source, 60) !== "lab-manual-entry")
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, limit);
 
@@ -621,6 +972,29 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
+  if (req.method === "GET" && pathname === "/api/lab/stock-inventory") {
+    const session = requireLabSession(req, res);
+    if (!session) return;
+
+    const [requests, receipts] = await Promise.all([
+      readStockRequests(),
+      readStockReceipts()
+    ]);
+    const summary = getStockInventorySummary(receipts, requests);
+    const recentReceipts = [...receipts]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 12);
+
+    sendJson(res, 200, {
+      summary,
+      recentReceipts,
+      user: {
+        userNumber: session.userNumber
+      }
+    });
+    return;
+  }
+
   if (req.method === "DELETE" && pathname === "/api/lab/stock-data") {
     const session = await requireOwnerSession(req, res);
     if (!session) return;
@@ -633,6 +1007,138 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       ok: true,
       cleared: true,
       clearedBy: session.userNumber
+    });
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/lab/stock-receipts") {
+    const session = requireLabSession(req, res);
+    if (!session) return;
+
+    let bodyText = "";
+    try {
+      bodyText = await collectRequestBody(req);
+    } catch (error) {
+      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      return;
+    }
+
+    let payload = {};
+    try {
+      payload = bodyText ? JSON.parse(bodyText) : {};
+    } catch {
+      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      return;
+    }
+
+    const cleanPayload = sanitizeStockReceiptPayload(payload);
+    if (!cleanPayload.supplierName || !cleanPayload.items.length) {
+      sendJson(res, 400, {
+        ok: false,
+        error: "Supplier name and at least one item are required"
+      });
+      return;
+    }
+
+    const receipt = await queueStockRequestWrite(async () => {
+      const existing = await readStockReceipts();
+      const now = new Date().toISOString();
+      const nextRecord = {
+        id: buildReceiptId(),
+        createdAt: now,
+        updatedAt: now,
+        receivedBy: session.userNumber,
+        ...cleanPayload
+      };
+
+      existing.push(nextRecord);
+      await writeStockReceipts(existing);
+      return nextRecord;
+    });
+
+    sendJson(res, 201, {
+      ok: true,
+      receipt: {
+        id: receipt.id,
+        createdAt: receipt.createdAt,
+        receivedBy: receipt.receivedBy
+      }
+    });
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/lab/stock-requests/manual") {
+    const session = requireLabSession(req, res);
+    if (!session) return;
+
+    let bodyText = "";
+    try {
+      bodyText = await collectRequestBody(req);
+    } catch (error) {
+      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      return;
+    }
+
+    let payload = {};
+    try {
+      payload = bodyText ? JSON.parse(bodyText) : {};
+    } catch {
+      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      return;
+    }
+
+    const cleanPayload = sanitizeStockRequestPayload({
+      ...payload,
+      source: "lab-manual-entry"
+    });
+    const itemValidationError = validateStockRequestItems(cleanPayload.items);
+    if (!cleanPayload.requestedBy || !cleanPayload.wardUnit || !cleanPayload.items.length) {
+      sendJson(res, 400, {
+        ok: false,
+        error: "Requested by, ward / unit, and at least one item are required"
+      });
+      return;
+    }
+    if (itemValidationError) {
+      sendJson(res, 400, {
+        ok: false,
+        error: itemValidationError
+      });
+      return;
+    }
+
+    const record = await queueStockRequestWrite(async () => {
+      const existing = await readStockRequests();
+      const now = new Date().toISOString();
+      const nextRecord = {
+        id: buildRequestId(),
+        createdAt: now,
+        updatedAt: now,
+        status: "received",
+        statusUpdatedAt: now,
+        statusUpdatedBy: session.userNumber,
+        enteredBy: session.userNumber,
+        ...cleanPayload
+      };
+      appendStatusAudit(nextRecord, "received", session.userNumber, now);
+
+      existing.push(nextRecord);
+      await writeStockRequests(existing);
+      return nextRecord;
+    });
+    const sheetSync = await syncStockRecordToSheets(record, { action: "create-request", changedBy: session.userNumber });
+
+    sendJson(res, 201, {
+      ok: true,
+      request: {
+        id: record.id,
+        status: record.status,
+        statusLabel: formatStatusLabel(record.status),
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        enteredBy: record.enteredBy
+      },
+      sheetSync
     });
     return;
   }
@@ -655,10 +1161,18 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const cleanPayload = sanitizeStockRequestPayload(payload);
+    const itemValidationError = validateStockRequestItems(cleanPayload.items);
     if (!cleanPayload.requestedBy || !cleanPayload.wardUnit || !cleanPayload.items.length) {
       sendJson(res, 400, {
         ok: false,
         error: "Requested by, ward / unit, and at least one item are required"
+      });
+      return;
+    }
+    if (itemValidationError) {
+      sendJson(res, 400, {
+        ok: false,
+        error: itemValidationError
       });
       return;
     }
@@ -671,21 +1185,28 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         createdAt: now,
         updatedAt: now,
         status: "received",
+        statusUpdatedAt: now,
+        statusUpdatedBy: "",
         ...cleanPayload
       };
+      appendStatusAudit(nextRecord, "received", "", now);
 
       existing.push(nextRecord);
       await writeStockRequests(existing);
       return nextRecord;
     });
+    const sheetSync = await syncStockRecordToSheets(record, { action: "create-request" });
 
     sendJson(res, 201, {
       ok: true,
       request: {
         id: record.id,
         status: record.status,
-        createdAt: record.createdAt
-      }
+        statusLabel: formatStatusLabel(record.status),
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt
+      },
+      sheetSync
     });
     return;
   }
@@ -718,23 +1239,37 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const nextStatus = slugifyStatus(payload.status);
     const requestId = sanitizeString(match[1], 80);
-    const updatedRecord = await queueStockRequestWrite(async () => {
+    const updatedResult = await queueStockRequestWrite(async () => {
       const existing = await readStockRequests();
       const target = existing.find((record) => record.id === requestId);
       if (!target) {
         return null;
       }
 
+      const previousStatus = slugifyStatus(target.status);
+      const now = new Date().toISOString();
       target.status = nextStatus;
-      target.updatedAt = new Date().toISOString();
+      target.updatedAt = now;
+      target.statusUpdatedAt = target.updatedAt;
+      target.statusUpdatedBy = session.userNumber;
+      appendStatusAudit(target, nextStatus, session.userNumber, now);
       await writeStockRequests(existing);
-      return target;
+      return {
+        record: target,
+        previousStatus
+      };
     });
 
-    if (!updatedRecord) {
+    if (!updatedResult?.record) {
       sendJson(res, 404, { ok: false, error: "Request not found" });
       return;
     }
+    const updatedRecord = updatedResult.record;
+    const sheetSync = await syncStockRecordToSheets(updatedRecord, {
+      action: "update-status",
+      previousStatus: updatedResult.previousStatus,
+      changedBy: session.userNumber
+    });
 
     sendJson(res, 200, {
       ok: true,
@@ -742,8 +1277,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         id: updatedRecord.id,
         status: updatedRecord.status,
         statusLabel: formatStatusLabel(updatedRecord.status),
-        updatedAt: updatedRecord.updatedAt
-      }
+        updatedAt: updatedRecord.updatedAt,
+        statusUpdatedAt: updatedRecord.statusUpdatedAt || updatedRecord.updatedAt,
+        statusUpdatedBy: updatedRecord.statusUpdatedBy || ""
+      },
+      sheetSync
     });
     return;
   }
