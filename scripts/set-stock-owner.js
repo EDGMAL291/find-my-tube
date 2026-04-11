@@ -21,6 +21,13 @@ function sanitizePin(value) {
   return String(value || "").replace(/\D+/g, "").slice(0, 4);
 }
 
+function sanitizeDisplayName(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+}
+
 function createPinHash(pin, salt = crypto.randomBytes(16).toString("hex")) {
   const hash = crypto.scryptSync(pin, salt, 64).toString("hex");
   return { salt, hash };
@@ -51,9 +58,10 @@ async function readJsonArray(filePath) {
 async function main() {
   const userNumber = sanitizeUserNumber(readArg("--user"));
   const pin = sanitizePin(readArg("--pin"));
+  const displayName = sanitizeDisplayName(readArg("--name"));
 
   if (userNumber.length < 3 || pin.length !== 4) {
-    console.error("Usage: npm run admin:set -- --user 001 --pin 1234");
+    console.error("Usage: npm run admin:set -- --user 001 --pin 1234 [--name 'Lab Admin']");
     process.exit(1);
   }
 
@@ -64,12 +72,14 @@ async function main() {
   const existing = users.find((user) => sanitizeUserNumber(user.userNumber) === userNumber);
 
   if (existing) {
+    existing.displayName = displayName || existing.displayName || "";
     existing.salt = salt;
     existing.pinHash = hash;
     existing.updatedAt = now;
   } else {
     users.unshift({
       userNumber,
+      displayName,
       salt,
       pinHash: hash,
       createdAt: now,

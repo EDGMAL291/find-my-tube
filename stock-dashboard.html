@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260411b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260402a" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -82,42 +82,45 @@
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
     <main class="stock-dashboard-panel" aria-labelledby="stockDashboardTitle">
-      <section class="stock-order-request-card" id="stockDashboardAccessCard" aria-labelledby="labAccessTitle">
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Lab access</p>
-            <h2 id="labAccessTitle">Pack and track login</h2>
-          </div>
-          <p class="stock-dashboard-status" id="stockDashboardAuthStatus">Sign in to view dashboard data and update request status.</p>
-        </div>
-
-        <div class="stock-dashboard-auth-shell" id="stockDashboardAuthShell">
-          <form class="stock-dashboard-auth-form" id="stockDashboardAuthForm">
-            <label class="stock-order-field">
-              <span class="stock-order-field-label">Lab user number</span>
-              <input type="text" id="stockDashboardUserNumberInput" inputmode="numeric" autocomplete="username" placeholder="Choose or enter your number" />
-            </label>
-
-            <label class="stock-order-field">
-              <span class="stock-order-field-label">4-digit PIN</span>
-              <input type="password" id="stockDashboardPinInput" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="4 digits" />
-            </label>
-
-            <div class="stock-dashboard-auth-actions">
-              <button type="button" class="quick-tool-launch-btn" id="stockDashboardLoginBtn">Log In</button>
-            </div>
-          </form>
-
-          <div class="stock-dashboard-session-card" id="stockDashboardSessionCard" hidden>
+      <section class="profile-modal stock-dashboard-login-modal" id="stockDashboardAccessCard" hidden aria-labelledby="labAccessTitle">
+        <div class="profile-modal-card stock-dashboard-login-modal-card stock-order-request-card" role="dialog" aria-modal="true" aria-labelledby="labAccessTitle" aria-describedby="stockDashboardAuthStatus">
+          <div class="profile-modal-head stock-dashboard-login-modal-head">
             <div>
-              <p class="stock-order-kicker">Signed in</p>
-              <h3 id="stockDashboardSessionUser">Lab user</h3>
+              <p class="stock-order-kicker">Lab access</p>
+              <h2 id="labAccessTitle">Pack and track login</h2>
             </div>
-            <div class="stock-dashboard-session-actions">
-              <button type="button" class="quick-tool-clear-btn" id="clearStockDataBtn" hidden>Clear request data</button>
-              <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn">Log out</button>
-            </div>
+            <button type="button" class="profile-modal-close-btn" id="stockDashboardAccessCloseBtn">Back</button>
           </div>
+          <p class="stock-dashboard-status stock-dashboard-login-status" id="stockDashboardAuthStatus">Sign in to view dashboard data and update request status.</p>
+
+          <div class="stock-dashboard-auth-shell" id="stockDashboardAuthShell">
+            <form class="stock-dashboard-auth-form" id="stockDashboardAuthForm">
+              <label class="stock-order-field">
+                <span class="stock-order-field-label">Lab user number</span>
+                <input type="text" id="stockDashboardUserNumberInput" inputmode="numeric" autocomplete="username" placeholder="Choose or enter your number" />
+              </label>
+
+              <label class="stock-order-field">
+                <span class="stock-order-field-label">4-digit PIN</span>
+                <input type="password" id="stockDashboardPinInput" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="4 digits" />
+              </label>
+
+              <div class="stock-dashboard-auth-actions">
+                <button type="button" class="quick-tool-launch-btn" id="stockDashboardLoginBtn">Log In</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="stock-order-request-card stock-dashboard-session-card" id="stockDashboardSessionCard" hidden>
+        <div>
+          <p class="stock-order-kicker">Signed in</p>
+          <h3 id="stockDashboardSessionUser">Lab user</h3>
+        </div>
+        <div class="stock-dashboard-session-actions">
+          <button type="button" class="quick-tool-clear-btn" id="clearStockDataBtn" hidden>Clear request data</button>
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn">Log out</button>
         </div>
       </section>
 
@@ -147,8 +150,13 @@
 
         <form class="stock-order-form" id="stockDashboardManualEntryForm">
           <label class="stock-order-field">
-            <span class="stock-order-field-label">Requested by</span>
-            <input type="text" id="stockDashboardManualRequesterInput" placeholder="Nurse or ward representative" autocomplete="name" />
+            <span class="stock-order-field-label">Display name</span>
+            <input type="text" id="stockDashboardCreateUserNameInput" autocomplete="name" placeholder="Name" />
+          </label>
+
+          <label class="stock-order-field">
+            <span class="stock-order-field-label">New user number</span>
+            <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" placeholder="e.g. 102" />
           </label>
 
           <label class="stock-order-field">
@@ -386,12 +394,12 @@
   </section>
 
   <script src="assets/data/data.js?v=20260323a"></script>
-  <script src="assets/js/app-config.js?v=20260411b"></script>
-  <script src="assets/js/script.js?v=20260411b"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260411b"></script>
+  <script src="assets/js/app-config.js?v=20260402a"></script>
+  <script src="assets/js/script.js?v=20260402a"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260402a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-11.2";
+      const APP_VERSION = "2026-04-02.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"

@@ -33,12 +33,22 @@ The stock request flow now has a free built-in backend:
 Use `http://localhost:3000/stock-dashboard.html` to review recent requests and update their status.
 Lab users cannot self-register anymore. The site admin creates them.
 
+## Hosted Backend
+
+If you want the stock request flow to work on the deployed site, you need a hosted backend URL.
+
+This repo now includes a Render blueprint in [`render.yaml`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/render.yaml) so you can deploy the existing Node API without rewriting it first.
+
+Setup guide:
+
+- [`docs/render-backend-setup.md`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/docs/render-backend-setup.md)
+
 ## Admin Setup
 
 To set or reset the admin login from this Mac:
 
 ```bash
-npm run admin:set -- --user 001 --pin 1234
+npm run admin:set -- --user 001 --pin 1234 --name "Lab Admin"
 ```
 
 That user becomes the admin and can:
@@ -46,6 +56,8 @@ That user becomes the admin and can:
 - create other lab users
 - clear saved stock request history
 - access the protected dashboard
+
+If the hosted backend has no lab users yet, the first admin can also be created from the live dashboard login screen.
 
 ## Deploy Online
 

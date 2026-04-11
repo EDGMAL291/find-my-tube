@@ -160,6 +160,10 @@ body.surface-panel-open {
   overflow: hidden;
 }
 
+body.stock-dashboard-login-open {
+  overflow: hidden;
+}
+
 body.has-selection-cart {
   padding-bottom: 12px;
 }
@@ -6146,6 +6150,27 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
 .stock-dashboard-auth-shell {
   display: grid;
   gap: 1rem;
+}
+
+.stock-dashboard-login-modal {
+  z-index: 1180;
+}
+
+.stock-dashboard-login-modal-card {
+  width: min(460px, calc(100vw - 28px));
+}
+
+.stock-dashboard-login-modal-head h2 {
+  font-size: 1.25rem;
+  color: var(--heading-color);
+}
+
+.stock-dashboard-login-status {
+  margin-bottom: 1rem;
+}
+
+.stock-dashboard-login-modal-card .stock-dashboard-auth-form {
+  grid-template-columns: 1fr;
 }
 
 .stock-dashboard-auth-form {
