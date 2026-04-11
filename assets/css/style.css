@@ -1030,6 +1030,9 @@ body.find-my-test-page .about-panel {
   gap: 10px;
   align-content: start;
   padding: 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: border-color 0.18s ease, background-color 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -1080,6 +1083,8 @@ body.find-my-test-page .about-panel {
   font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
@@ -1102,6 +1107,16 @@ body.find-my-test-page .about-panel {
 .stock-order-qty-input {
   text-align: center;
   font-weight: 800;
+  touch-action: manipulation;
+}
+
+.stock-order-request-actions .quick-tool-launch-btn,
+.stock-order-request-actions .quick-tool-clear-btn,
+.stock-order-request-actions .draw-tool-link-btn,
+.stock-order-tracking-action-row .quick-tool-launch-btn,
+.stock-order-tracking-action-row .draw-tool-link-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .stock-order-item-hint {
@@ -6253,6 +6268,28 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
 .stock-dashboard-request-list {
   display: grid;
   gap: 0.8rem;
+}
+
+.stock-dashboard-stock-grid {
+  margin-top: 0.9rem;
+}
+
+.stock-dashboard-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.stock-dashboard-audit-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.stock-dashboard-audit-item {
+  font-size: 0.84rem;
+  color: var(--muted-text);
 }
 
 .stock-dashboard-chip-list {

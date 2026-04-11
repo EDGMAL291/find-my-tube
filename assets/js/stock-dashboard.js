@@ -19,12 +19,37 @@ const stockDashboardSessionCard = document.getElementById("stockDashboardSession
 const stockDashboardSessionUser = document.getElementById("stockDashboardSessionUser");
 const stockDashboardUserAdminCard = document.getElementById("stockDashboardUserAdminCard");
 const stockDashboardUserAdminStatus = document.getElementById("stockDashboardUserAdminStatus");
+const stockDashboardOpenCreateUserBtn = document.getElementById("stockDashboardOpenCreateUserBtn");
+const stockDashboardCreateUserModal = document.getElementById("stockDashboardCreateUserModal");
+const stockDashboardCloseCreateUserModalBtn = document.getElementById("stockDashboardCloseCreateUserModalBtn");
 const stockDashboardCreateUserForm = document.getElementById("stockDashboardCreateUserForm");
 const stockDashboardCreateUserNameInput = document.getElementById("stockDashboardCreateUserNameInput");
 const stockDashboardCreateUserNumberInput = document.getElementById("stockDashboardCreateUserNumberInput");
 const stockDashboardCreateUserPinInput = document.getElementById("stockDashboardCreateUserPinInput");
 const stockDashboardCreateUserBtn = document.getElementById("stockDashboardCreateUserBtn");
 const stockDashboardUserList = document.getElementById("stockDashboardUserList");
+const stockDashboardManualEntryCard = document.getElementById("stockDashboardManualEntryCard");
+const stockDashboardManualEntryStatus = document.getElementById("stockDashboardManualEntryStatus");
+const stockDashboardManualEntryForm = document.getElementById("stockDashboardManualEntryForm");
+const stockDashboardManualRequesterInput = document.getElementById("stockDashboardManualRequesterInput");
+const stockDashboardManualWardSelect = document.getElementById("stockDashboardManualWardSelect");
+const stockDashboardManualNoteInput = document.getElementById("stockDashboardManualNoteInput");
+const stockDashboardManualGrid = document.getElementById("stockDashboardManualGrid");
+const stockDashboardManualSubmitBtn = document.getElementById("stockDashboardManualSubmitBtn");
+const stockDashboardManualResetBtn = document.getElementById("stockDashboardManualResetBtn");
+const stockDashboardReceiptCard = document.getElementById("stockDashboardReceiptCard");
+const stockDashboardReceiptStatus = document.getElementById("stockDashboardReceiptStatus");
+const stockDashboardReceiptForm = document.getElementById("stockDashboardReceiptForm");
+const stockDashboardReceiptSupplierInput = document.getElementById("stockDashboardReceiptSupplierInput");
+const stockDashboardReceiptReferenceInput = document.getElementById("stockDashboardReceiptReferenceInput");
+const stockDashboardReceiptNoteInput = document.getElementById("stockDashboardReceiptNoteInput");
+const stockDashboardReceiptGrid = document.getElementById("stockDashboardReceiptGrid");
+const stockDashboardReceiptSubmitBtn = document.getElementById("stockDashboardReceiptSubmitBtn");
+const stockDashboardReceiptResetBtn = document.getElementById("stockDashboardReceiptResetBtn");
+const stockDashboardInventoryCard = document.getElementById("stockDashboardInventoryCard");
+const stockDashboardInventoryStatus = document.getElementById("stockDashboardInventoryStatus");
+const stockDashboardInventoryList = document.getElementById("stockDashboardInventoryList");
+const stockDashboardReceiptList = document.getElementById("stockDashboardReceiptList");
 const stockDashboardMetrics = document.getElementById("stockDashboardMetrics");
 const stockDashboardInsights = document.getElementById("stockDashboardInsights");
 const stockDashboardRequestsCard = document.getElementById("stockDashboardRequestsCard");
@@ -38,7 +63,7 @@ const stockDashboardTopItems = document.getElementById("stockDashboardTopItems")
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
 const STOCK_DASHBOARD_TOKEN_KEY = "fmt-stock-lab-token";
-const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "completed", "cancelled"];
+const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "collected", "completed", "cancelled"];
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
@@ -158,6 +183,169 @@ function stockDashboardGetHeaders(includeJson = false) {
     headers.Authorization = `Bearer ${stockDashboardToken}`;
   }
   return headers;
+}
+
+function stockDashboardSetCreateUserModalOpen(isOpen) {
+  if (!stockDashboardCreateUserModal) return;
+
+  const nextState = Boolean(isOpen);
+  stockDashboardCreateUserModal.hidden = !nextState;
+  document.body.classList.toggle("modal-open", nextState);
+
+  if (nextState) {
+    stockDashboardLastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    window.requestAnimationFrame(() => {
+      stockDashboardCreateUserNameInput?.focus();
+    });
+    return;
+  }
+
+  if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
+  if (stockDashboardLastFocusedElement) {
+    stockDashboardLastFocusedElement.focus();
+  }
+  stockDashboardLastFocusedElement = null;
+}
+
+function stockDashboardGetDisplayLabel(item) {
+  const label = String(item?.label || "").trim();
+  const variantLabel = String(item?.variantLabel || "").trim();
+  return variantLabel ? `${label} - ${variantLabel}` : label;
+}
+
+function stockDashboardGetItemQuantityLabel(item) {
+  if (typeof formatStockQuantity === "function") {
+    return formatStockQuantity(item);
+  }
+  return String(item?.quantity || 0);
+}
+
+function stockDashboardSetEditorState(editorState) {
+  stockConsumableItems.forEach((item) => {
+    editorState[item.id] = 0;
+  });
+}
+
+function stockDashboardGetSelectedItems(editorState) {
+  return stockConsumableItems
+    .map((item) => ({ ...item, quantity: Number(editorState[item.id] || 0) }))
+    .filter((item) => item.quantity > 0);
+}
+
+function stockDashboardBuildAuditRows(request) {
+  const history = Array.isArray(request?.statusHistory) ? request.statusHistory : [];
+  if (!history.length) return "";
+
+  return history.map((entry) => `
+    <div class="stock-dashboard-audit-item">
+      ${stockDashboardEscapeHtml(stockDashboardFormatStatus(entry.status))}
+      · ${stockDashboardEscapeHtml(stockDashboardFormatDateTime(entry.updatedAt))}
+      ${entry.updatedBy ? ` · Lab user ${stockDashboardEscapeHtml(entry.updatedBy)}` : ""}
+    </div>
+  `).join("");
+}
+
+function stockDashboardRenderInventory(summary = []) {
+  renderDashboardList(stockDashboardInventoryList, summary, (row) => `
+    <div class="stock-dashboard-list-row">
+      <span>${stockDashboardEscapeHtml(row.label)}</span>
+      <strong>${Number(row.onHand || 0)} left</strong>
+    </div>
+  `);
+
+  if (stockDashboardInventoryStatus) {
+    const lowRows = summary.filter((row) => Number(row.onHand || 0) <= 0);
+    stockDashboardInventoryStatus.textContent = lowRows.length
+      ? `${lowRows.length} item${lowRows.length === 1 ? "" : "s"} are at zero or below.`
+      : "Signed-in lab users can review live stock balances here.";
+  }
+}
+
+function stockDashboardRenderReceipts(receipts = []) {
+  renderDashboardList(stockDashboardReceiptList, receipts, (receipt) => {
+    const items = Array.isArray(receipt.items) ? receipt.items : [];
+    const summary = items.map((item) => `${stockDashboardGetDisplayLabel(item)}: ${stockDashboardGetItemQuantityLabel(item)}`).join("\n");
+
+    return `
+      <div class="stock-dashboard-request-card">
+        <div class="stock-dashboard-request-top">
+          <div>
+            <p class="stock-order-kicker">${stockDashboardEscapeHtml(receipt.id || "Receipt")}</p>
+            <h4>${stockDashboardEscapeHtml(receipt.supplierName || "Supplier")}</h4>
+          </div>
+          <span class="stock-order-status-badge" data-status="received">Received</span>
+        </div>
+        <div class="stock-dashboard-request-meta">
+          <span>${stockDashboardEscapeHtml(receipt.reference || "No reference")}</span>
+          <span>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(receipt.createdAt))}</span>
+          <span>${receipt.receivedBy ? `Lab user ${stockDashboardEscapeHtml(receipt.receivedBy)}` : ""}</span>
+        </div>
+        <p class="stock-dashboard-request-items">${stockDashboardEscapeHtml(summary || "No items listed")}</p>
+        ${receipt.notes ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(receipt.notes)}</p>` : ""}
+      </div>
+    `;
+  });
+}
+
+function stockDashboardRenderEditorGrid(grid, editorState, editorKey) {
+  if (!grid) return;
+
+  grid.innerHTML = stockConsumableItems.map((item) => `
+    <article class="stock-order-card stock-order-item-card" data-dashboard-editor="${stockDashboardEscapeHtml(editorKey)}" data-dashboard-item="${stockDashboardEscapeHtml(item.id)}">
+      <div class="stock-order-item-head">
+        <span class="stock-order-item-kicker">${stockDashboardEscapeHtml(stockDashboardGetDisplayLabel(item))}</span>
+        <h3>${stockDashboardEscapeHtml(item.unitType === "tray" ? `Tray of ${item.traySize}` : item.unitType === "packet" ? `Packet of ${item.packetSize}` : "Singles")}</h3>
+      </div>
+      <div class="stock-order-qty-row">
+        <button type="button" class="stock-order-qty-btn" data-dashboard-step="${stockDashboardEscapeHtml(item.id)}" data-dashboard-direction="-1">−</button>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value="${Number(editorState[item.id] || 0)}"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          class="stock-order-qty-input"
+          data-dashboard-input="${stockDashboardEscapeHtml(item.id)}"
+          ${item.maxQuantity ? `max="${item.maxQuantity}"` : ""}
+        />
+        <button type="button" class="stock-order-qty-btn" data-dashboard-step="${stockDashboardEscapeHtml(item.id)}" data-dashboard-direction="1">+</button>
+      </div>
+      ${item.note ? `<p class="stock-order-item-copy">${stockDashboardEscapeHtml(item.note)}</p>` : ""}
+    </article>
+  `).join("");
+}
+
+function stockDashboardUpdateEditorItem(editorState, grid, itemId, quantity) {
+  const config = stockConsumableItems.find((item) => item.id === itemId);
+  const maxQuantity = Number(config?.maxQuantity || 0) || Infinity;
+  const safeQuantity = Math.min(maxQuantity, Math.max(0, Number(quantity) || 0));
+  editorState[itemId] = safeQuantity;
+  const input = grid?.querySelector(`[data-dashboard-input="${itemId}"]`);
+  if (input) {
+    input.value = String(safeQuantity);
+  }
+}
+
+function stockDashboardAttachGridEvents(grid, editorState) {
+  if (!grid) return;
+
+  grid.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest("[data-dashboard-step]");
+    if (!(button instanceof HTMLButtonElement)) return;
+    const itemId = button.getAttribute("data-dashboard-step") || "";
+    const direction = Number(button.getAttribute("data-dashboard-direction") || "0");
+    stockDashboardUpdateEditorItem(editorState, grid, itemId, Number(editorState[itemId] || 0) + direction);
+  });
+
+  grid.addEventListener("input", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const input = target?.closest("[data-dashboard-input]");
+    if (!(input instanceof HTMLInputElement)) return;
+    const itemId = input.getAttribute("data-dashboard-input") || "";
+    stockDashboardUpdateEditorItem(editorState, grid, itemId, input.value);
+  });
 }
 
 function stockDashboardGetMarker(request) {
@@ -385,6 +573,9 @@ function stockDashboardSetSession(token, user) {
   if (stockDashboardInsights) stockDashboardInsights.hidden = !isAuthenticated;
   if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = !isAuthenticated;
   if (stockDashboardUserAdminCard) stockDashboardUserAdminCard.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
+  if (stockDashboardManualEntryCard) stockDashboardManualEntryCard.hidden = !isAuthenticated;
+  if (stockDashboardReceiptCard) stockDashboardReceiptCard.hidden = !isAuthenticated;
+  if (stockDashboardInventoryCard) stockDashboardInventoryCard.hidden = !isAuthenticated;
 
   if (stockDashboardSessionUser) {
     stockDashboardSessionUser.textContent = isAuthenticated
@@ -425,6 +616,8 @@ function stockDashboardSetSession(token, user) {
     if (stockDashboardUserList) {
       stockDashboardUserList.innerHTML = "";
     }
+    if (stockDashboardInventoryList) stockDashboardInventoryList.innerHTML = "";
+    if (stockDashboardReceiptList) stockDashboardReceiptList.innerHTML = "";
     if (stockDashboardStatusCounts) stockDashboardStatusCounts.innerHTML = "";
     if (stockDashboardTopWards) stockDashboardTopWards.innerHTML = "";
     if (stockDashboardTopItems) stockDashboardTopItems.innerHTML = "";
@@ -446,7 +639,16 @@ function stockDashboardGetCredentials() {
 }
 
 function stockDashboardSetBusy(isBusy) {
-  [stockDashboardLoginBtn, stockDashboardLogoutBtn, stockDashboardRefreshBtn, stockDashboardCreateUserBtn].forEach((button) => {
+  [
+    stockDashboardLoginBtn,
+    stockDashboardLogoutBtn,
+    stockDashboardRefreshBtn,
+    stockDashboardCreateUserBtn,
+    stockDashboardManualSubmitBtn,
+    stockDashboardManualResetBtn,
+    stockDashboardReceiptSubmitBtn,
+    stockDashboardReceiptResetBtn
+  ].forEach((button) => {
     if (button instanceof HTMLButtonElement) {
       button.disabled = isBusy;
     }
@@ -574,6 +776,7 @@ async function createStockDashboardUser() {
     if (stockDashboardUserAdminStatus) {
       stockDashboardUserAdminStatus.textContent = `${displayName} (${userNumber}) created.`;
     }
+    stockDashboardSetCreateUserModalOpen(false);
     await loadStockDashboardUsers();
   } catch (error) {
     if (stockDashboardUserAdminStatus) {
@@ -582,6 +785,233 @@ async function createStockDashboardUser() {
   } finally {
     stockDashboardSetBusy(false);
   }
+}
+
+function stockDashboardPopulateWardOptions() {
+  if (!stockDashboardManualWardSelect || !Array.isArray(stockRequesterGroups)) return;
+  if (stockDashboardManualWardSelect.dataset.ready === "true") return;
+
+  stockRequesterGroups.forEach((group) => {
+    const optionGroup = document.createElement("optgroup");
+    optionGroup.label = group.label;
+
+    group.options.forEach((optionLabel) => {
+      const option = document.createElement("option");
+      option.value = optionLabel;
+      option.textContent = optionLabel;
+      optionGroup.appendChild(option);
+    });
+
+    stockDashboardManualWardSelect.appendChild(optionGroup);
+  });
+
+  stockDashboardManualWardSelect.dataset.ready = "true";
+}
+
+function stockDashboardResetManualForm() {
+  stockDashboardSetEditorState(stockDashboardManualState);
+  if (stockDashboardManualEntryForm) stockDashboardManualEntryForm.reset();
+  stockDashboardRenderEditorGrid(stockDashboardManualGrid, stockDashboardManualState, "manual");
+  if (stockDashboardManualEntryStatus) {
+    stockDashboardManualEntryStatus.textContent = "Use this when stock is collected in person and was not ordered in the app.";
+  }
+}
+
+function stockDashboardResetReceiptForm() {
+  stockDashboardSetEditorState(stockDashboardReceiptState);
+  if (stockDashboardReceiptForm) stockDashboardReceiptForm.reset();
+  stockDashboardRenderEditorGrid(stockDashboardReceiptGrid, stockDashboardReceiptState, "receipt");
+  if (stockDashboardReceiptStatus) {
+    stockDashboardReceiptStatus.textContent = "Record tubes and consumables received from suppliers.";
+  }
+}
+
+async function stockDashboardSubmitManualRequest() {
+  if (!stockDashboardSession) return;
+
+  const requestedBy = String(stockDashboardManualRequesterInput?.value || "").trim();
+  const wardUnit = String(stockDashboardManualWardSelect?.value || "").trim();
+  const notes = String(stockDashboardManualNoteInput?.value || "").trim();
+  const items = stockDashboardGetSelectedItems(stockDashboardManualState);
+
+  if (!requestedBy || !wardUnit || !items.length) {
+    if (stockDashboardManualEntryStatus) {
+      stockDashboardManualEntryStatus.textContent = "Add the requester, ward / unit, and at least one item.";
+    }
+    return;
+  }
+
+  stockDashboardSetBusy(true);
+  if (stockDashboardManualEntryStatus) {
+    stockDashboardManualEntryStatus.textContent = "Saving walk-in request...";
+  }
+
+  try {
+    const response = await fetch(STOCK_DASHBOARD_MANUAL_REQUEST_URL, {
+      method: "POST",
+      headers: stockDashboardGetHeaders(true),
+      body: JSON.stringify({
+        requestedBy,
+        wardUnit,
+        notes,
+        items: items.map((item) => ({
+          id: item.id,
+          label: item.label,
+          variantLabel: item.variantLabel || "",
+          quantity: item.quantity,
+          unitType: item.unitType,
+          traySize: item.traySize || null,
+          packetSize: item.packetSize || null,
+          formattedQuantity: stockDashboardGetItemQuantityLabel(item),
+          inventoryUnits: typeof getStockInventoryUnits === "function" ? getStockInventoryUnits(item) : Number(item.quantity || 0),
+          sheetColumnKey: item.sheetColumnKey || "",
+          sheetTrayColumnKey: item.sheetTrayColumnKey || "",
+          sheetSingleColumnKey: item.sheetSingleColumnKey || ""
+        }))
+      })
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      stockDashboardSetSession("", null);
+      return;
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || "Could not save walk-in request");
+    }
+
+    stockDashboardResetManualForm();
+    await loadStockDashboard();
+    if (stockDashboardManualEntryStatus) {
+      stockDashboardManualEntryStatus.textContent = payload?.request?.id
+        ? `Walk-in request ${payload.request.id} saved.`
+        : "Walk-in request saved.";
+    }
+  } catch (error) {
+    if (stockDashboardManualEntryStatus) {
+      stockDashboardManualEntryStatus.textContent = error instanceof Error ? error.message : "Could not save walk-in request.";
+    }
+  } finally {
+    stockDashboardSetBusy(false);
+  }
+}
+
+async function stockDashboardSubmitReceipt() {
+  if (!stockDashboardSession) return;
+
+  const supplierName = String(stockDashboardReceiptSupplierInput?.value || "").trim();
+  const reference = String(stockDashboardReceiptReferenceInput?.value || "").trim();
+  const notes = String(stockDashboardReceiptNoteInput?.value || "").trim();
+  const items = stockDashboardGetSelectedItems(stockDashboardReceiptState);
+
+  if (!supplierName || !items.length) {
+    if (stockDashboardReceiptStatus) {
+      stockDashboardReceiptStatus.textContent = "Add the supplier and at least one item.";
+    }
+    return;
+  }
+
+  stockDashboardSetBusy(true);
+  if (stockDashboardReceiptStatus) {
+    stockDashboardReceiptStatus.textContent = "Saving received stock...";
+  }
+
+  try {
+    const response = await fetch(STOCK_DASHBOARD_RECEIPTS_URL, {
+      method: "POST",
+      headers: stockDashboardGetHeaders(true),
+      body: JSON.stringify({
+        supplierName,
+        reference,
+        notes,
+        items: items.map((item) => ({
+          id: item.id,
+          label: item.label,
+          variantLabel: item.variantLabel || "",
+          quantity: item.quantity,
+          unitType: item.unitType,
+          traySize: item.traySize || null,
+          packetSize: item.packetSize || null,
+          formattedQuantity: stockDashboardGetItemQuantityLabel(item),
+          inventoryUnits: typeof getStockInventoryUnits === "function" ? getStockInventoryUnits(item) : Number(item.quantity || 0),
+          sheetColumnKey: item.sheetColumnKey || "",
+          sheetTrayColumnKey: item.sheetTrayColumnKey || "",
+          sheetSingleColumnKey: item.sheetSingleColumnKey || ""
+        }))
+      })
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      stockDashboardSetSession("", null);
+      return;
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || "Could not save received stock");
+    }
+
+    stockDashboardResetReceiptForm();
+    await loadStockInventory();
+    if (stockDashboardReceiptStatus) {
+      stockDashboardReceiptStatus.textContent = payload?.receipt?.id
+        ? `Supplier receipt ${payload.receipt.id} saved.`
+        : "Received stock saved.";
+    }
+  } catch (error) {
+    if (stockDashboardReceiptStatus) {
+      stockDashboardReceiptStatus.textContent = error instanceof Error ? error.message : "Could not save received stock.";
+    }
+  } finally {
+    stockDashboardSetBusy(false);
+  }
+}
+
+async function loadStockInventory() {
+  if (!stockDashboardSession) return;
+
+  try {
+    const response = await fetch(STOCK_DASHBOARD_INVENTORY_URL, {
+      cache: "no-store",
+      headers: stockDashboardGetHeaders()
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      stockDashboardSetSession("", null);
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Could not load inventory");
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    stockDashboardRenderInventory(Array.isArray(payload?.summary) ? payload.summary : []);
+    stockDashboardRenderReceipts(Array.isArray(payload?.recentReceipts) ? payload.recentReceipts : []);
+  } catch {
+    if (stockDashboardInventoryStatus) {
+      stockDashboardInventoryStatus.textContent = "Could not load inventory.";
+    }
+    if (stockDashboardInventoryList) {
+      stockDashboardInventoryList.innerHTML = '<p class="stock-dashboard-empty">Inventory is not available yet.</p>';
+    }
+    if (stockDashboardReceiptList) {
+      stockDashboardReceiptList.innerHTML = '<p class="stock-dashboard-empty">No supplier receipts yet.</p>';
+    }
+  }
+}
+
+function initStockDashboardTools() {
+  if (!Array.isArray(stockConsumableItems)) return;
+
+  stockDashboardSetEditorState(stockDashboardManualState);
+  stockDashboardSetEditorState(stockDashboardReceiptState);
+  stockDashboardPopulateWardOptions();
+  stockDashboardRenderEditorGrid(stockDashboardManualGrid, stockDashboardManualState, "manual");
+  stockDashboardRenderEditorGrid(stockDashboardReceiptGrid, stockDashboardReceiptState, "receipt");
+  stockDashboardAttachGridEvents(stockDashboardManualGrid, stockDashboardManualState);
+  stockDashboardAttachGridEvents(stockDashboardReceiptGrid, stockDashboardReceiptState);
 }
 
 function renderDashboardList(container, rows, renderRow) {
@@ -639,7 +1069,17 @@ function renderStockDashboardRequests(requests) {
   stockDashboardRequestList.innerHTML = activeRequests.map((request) => {
     const safeStatus = stockDashboardNormalizeStatus(request?.status);
     const items = Array.isArray(request.items) ? request.items : [];
-    const itemSummary = items.map((item) => `${item.label}: ${item.formattedQuantity || item.quantity}`).join("\n");
+    const itemSummary = items.map((item) => {
+      const label = item.variantLabel ? `${item.label} - ${item.variantLabel}` : item.label;
+      return `${label}: ${item.formattedQuantity || item.quantity}`;
+    }).join("\n");
+    const updateMeta = request.statusUpdatedAt || request.updatedAt
+      ? `Last update ${stockDashboardFormatDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
+      : "";
+    const sourceLabel = request.source === "lab-manual-entry"
+      ? `Walk-in entry by lab user ${request.enteredBy || ""}`.trim()
+      : "Ordered in app";
+    const auditRows = stockDashboardBuildAuditRows(request);
     const statusButtons = STOCK_DASHBOARD_STATUS_ORDER.map((status) => `
       <button
         type="button"
@@ -663,9 +1103,12 @@ function renderStockDashboardRequests(requests) {
         <div class="stock-dashboard-request-meta">
           <span>${stockDashboardEscapeHtml(request.wardUnit || "No ward set")}</span>
           <span>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(request.createdAt))}</span>
+          <span>${stockDashboardEscapeHtml(sourceLabel)}</span>
         </div>
         <p class="stock-dashboard-request-items">${stockDashboardEscapeHtml(itemSummary || "No items listed")}</p>
+        ${updateMeta ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(updateMeta)}</p>` : ""}
         ${request.notes ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(request.notes)}</p>` : ""}
+        ${auditRows ? `<div class="stock-dashboard-audit-list">${auditRows}</div>` : ""}
         <div class="stock-dashboard-status-row">
           ${statusButtons}
         </div>
@@ -684,26 +1127,34 @@ async function loadStockDashboard(options = {}) {
   }
 
   try {
-    const [statsResponse, requestsResponse] = await Promise.all([
+    const [statsResponse, requestsResponse, inventoryResponse] = await Promise.all([
       fetch(STOCK_DASHBOARD_STATS_URL, { cache: "no-store", headers: stockDashboardGetHeaders() }),
-      fetch(STOCK_DASHBOARD_REQUESTS_URL, { cache: "no-store", headers: stockDashboardGetHeaders() })
+      fetch(STOCK_DASHBOARD_REQUESTS_URL, { cache: "no-store", headers: stockDashboardGetHeaders() }),
+      fetch(STOCK_DASHBOARD_INVENTORY_URL, { cache: "no-store", headers: stockDashboardGetHeaders() })
     ]);
 
-    if (statsResponse.status === 401 || requestsResponse.status === 401) {
+    if (
+      statsResponse.status === 401 || statsResponse.status === 403
+      || requestsResponse.status === 401 || requestsResponse.status === 403
+      || inventoryResponse.status === 401 || inventoryResponse.status === 403
+    ) {
       stockDashboardSetSession("", null);
       return;
     }
 
-    if (!statsResponse.ok || !requestsResponse.ok) {
+    if (!statsResponse.ok || !requestsResponse.ok || !inventoryResponse.ok) {
       throw new Error("Could not load dashboard data");
     }
 
     const statsPayload = await statsResponse.json();
     const requestsPayload = await requestsResponse.json();
+    const inventoryPayload = await inventoryResponse.json();
     const requests = requestsPayload.requests || [];
 
     renderStockDashboardStats(statsPayload.stats || {});
     renderStockDashboardRequests(requests);
+    stockDashboardRenderInventory(Array.isArray(inventoryPayload?.summary) ? inventoryPayload.summary : []);
+    stockDashboardRenderReceipts(Array.isArray(inventoryPayload?.recentReceipts) ? inventoryPayload.recentReceipts : []);
     stockDashboardProcessNotifications(requests, { fromPoll });
     if (!silent) {
       stockDashboardStatus.textContent = `Updated ${stockDashboardFormatDateTime(new Date().toISOString())}`;
@@ -723,6 +1174,16 @@ async function loadStockDashboard(options = {}) {
 async function updateStockDashboardRequestStatus(requestId, status) {
   if (!requestId || !status || !stockDashboardStatus || !stockDashboardSession) return;
 
+  const safeStatus = String(status || "").trim().toLowerCase();
+  if (safeStatus === "collected") {
+    const confirmed = window.confirm("Mark this order as collected? Use this only when the ward has physically collected it.");
+    if (!confirmed) return;
+  }
+  if (safeStatus === "completed") {
+    const confirmed = window.confirm("Mark this order as completed? This should only be done once it has been fully issued or distributed.");
+    if (!confirmed) return;
+  }
+
   stockDashboardStatus.textContent = `Updating ${requestId}...`;
 
   try {
@@ -732,16 +1193,20 @@ async function updateStockDashboardRequestStatus(requestId, status) {
       body: JSON.stringify({ status })
     });
 
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       stockDashboardSetSession("", null);
       return;
     }
 
+    const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error("Could not update request status");
+      throw new Error(payload?.error || "Could not update request status");
     }
 
     await loadStockDashboard();
+    if (payload?.sheetSync && payload.sheetSync.ok === false) {
+      stockDashboardStatus.textContent = `Updated ${requestId}, but Google Sheets still needs attention.`;
+    }
   } catch {
     stockDashboardStatus.textContent = `Could not update ${requestId}.`;
   }

@@ -167,7 +167,7 @@ let lastSectionBrowseModalTrigger = null;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
 const CLINICAL_WORKUP_DISCLAIMER = "Reference-only test support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.";
 const RACK_HINT_STORAGE_KEY = "fmt-rack-hint-dismissed";
-const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transfusion"]);
+const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transfusion", "ACTH"]);
 const selectedClinicalChipIds = new Set();
 let hasDismissedRackHint = false;
 let lastLegalModalTrigger = null;
@@ -176,6 +176,9 @@ const stockOrderState = Object.create(null);
 let stockOrderStatusMode = "draft";
 let isSubmittingStockOrder = false;
 let submittedStockOrderRecord = null;
+let stockOrderTrackingPollTimer = 0;
+let hasLoadedStockTrackingOnce = false;
+const stockTrackedRequestStatuses = Object.create(null);
 const currentPageParams = new URLSearchParams(window.location.search);
 const currentAppPage = currentPageParams.get("tool") === "find-my-test"
   ? "find-my-test"
@@ -906,7 +909,7 @@ function renderStockTrackingList(requests) {
     const normalizedStatus = normalizeStockRequestStatus(request?.status);
     const items = Array.isArray(request.items) ? request.items : [];
     const orderedItems = items
-      .map((item) => `${escapeHtml(item.label || "")}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
+      .map((item) => `${escapeHtml(getStockDisplayLabel(item))}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
       .join("\n");
     const statusLabel = normalizedStatus
       .replace(/-/g, " ")
@@ -926,6 +929,7 @@ function renderStockTrackingList(requests) {
           <span>${escapeHtml(formatStockRequestDateTime(request.createdAt))}</span>
         </div>
         <p class="stock-dashboard-request-items">${orderedItems || "No items listed"}</p>
+        ${updateMeta ? `<p class="stock-dashboard-request-note">${escapeHtml(updateMeta)}</p>` : ""}
       </article>
     `;
   }).join("");
@@ -946,6 +950,7 @@ async function loadStockTrackingList() {
 
     const payload = await response.json();
     const requests = Array.isArray(payload?.requests) ? payload.requests : [];
+    syncTrackedStockRequestStatuses(requests);
     renderStockTrackingList(requests);
     stockOrderTrackingMeta.textContent = requests.length
       ? `${requests.length} recent request${requests.length === 1 ? "" : "s"} shown.`
@@ -963,6 +968,21 @@ function getSelectedStockConsumables() {
   return stockConsumableItems
     .map((item) => ({ ...item, quantity: Number(stockOrderState[item.id] || 0) }))
     .filter((item) => item.quantity > 0);
+}
+
+function getStockInventoryUnits(item) {
+  const quantity = Math.max(0, Number(item?.quantity) || 0);
+  if (!quantity) return 0;
+
+  if (item.unitType === "tray") {
+    return quantity * Math.max(0, Number(item.traySize) || 0);
+  }
+
+  if (item.unitType === "packet") {
+    return quantity * Math.max(0, Number(item.packetSize) || 0);
+  }
+
+  return quantity;
 }
 
 // Formats a consumables quantity line.
@@ -994,16 +1014,21 @@ function buildStockOrderPayload() {
     wardUnit: requesterWard,
     notes,
     lineItemCount: selectedItems.length,
-    totalRequestedQuantity: selectedItems.reduce((sum, item) => sum + item.quantity, 0),
+    totalRequestedQuantity: selectedItems.reduce((sum, item) => sum + getStockInventoryUnits(item), 0),
     requestText: buildStockOrderRequestText(),
     items: selectedItems.map((item) => ({
       id: item.id,
       label: item.label,
+      variantLabel: item.variantLabel || "",
       quantity: item.quantity,
       unitType: item.unitType,
       traySize: item.traySize || null,
       packetSize: item.packetSize || null,
-      formattedQuantity: formatStockQuantity(item)
+      formattedQuantity: formatStockQuantity(item),
+      inventoryUnits: getStockInventoryUnits(item),
+      sheetColumnKey: item.sheetColumnKey || "",
+      sheetTrayColumnKey: item.sheetTrayColumnKey || "",
+      sheetSingleColumnKey: item.sheetSingleColumnKey || ""
     }))
   };
 }
@@ -1030,6 +1055,7 @@ function getStockOrderStatusLabel() {
     const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
     if (submittedStatus === "received") return "Received";
     if (submittedStatus === "packed") return "Packed";
+    if (submittedStatus === "collected") return "Collected";
     if (submittedStatus === "completed") return "Completed";
     if (submittedStatus === "cancelled") return "Cancelled";
     return "Submitted";
@@ -1046,7 +1072,7 @@ function getStockOrderItemsSummary(selectedItems = getSelectedStockConsumables()
   if (!selectedItems.length) return "No items selected";
 
   return selectedItems
-    .map((item) => `${item.label} x ${formatStockQuantity(item)}`)
+    .map((item) => `${getStockDisplayLabel(item)} x ${formatStockQuantity(item)}`)
     .join("\n");
 }
 
@@ -1070,7 +1096,7 @@ function buildStockOrderRequestText() {
     lines.push("");
     lines.push("Items:");
     selectedItems.forEach((item) => {
-      lines.push(`- ${item.label}: ${formatStockQuantity(item)}`);
+      lines.push(`- ${getStockDisplayLabel(item)}: ${formatStockQuantity(item)}`);
     });
   }
 
@@ -1089,7 +1115,7 @@ function updateStockOrderPreview() {
   const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
-  const itemCount = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const itemCount = selectedItems.reduce((sum, item) => sum + getStockInventoryUnits(item), 0);
   const hasRequest = Boolean(requesterName && requesterWard && selectedItems.length);
   const requestText = buildStockOrderRequestText();
   const statusLabel = getStockOrderStatusLabel();
@@ -1150,6 +1176,24 @@ function setStockItemQuantity(itemId, quantity) {
   updateStockOrderPreview();
 }
 
+// Binds a control for both mobile taps and standard clicks without double-firing.
+function bindPressAction(target, handler) {
+  if (!target || typeof handler !== "function") return;
+
+  let lastTouchPressAt = 0;
+
+  target.addEventListener("pointerup", (event) => {
+    if (!(event instanceof PointerEvent) || event.pointerType === "mouse") return;
+    lastTouchPressAt = Date.now();
+    handler(event);
+  });
+
+  target.addEventListener("click", (event) => {
+    if (Date.now() - lastTouchPressAt < 700) return;
+    handler(event);
+  });
+}
+
 // Syncs disabled and visual max state for a stock item card.
 function syncStockOrderItemState(itemId) {
   if (!stockOrderGrid) return;
@@ -1179,14 +1223,23 @@ function renderStockOrderItems() {
 
   stockOrderGrid.innerHTML = stockConsumableItems
     .map((item) => {
-      const cardLabel = item.unitType === "tray"
-        ? item.label.replace(/\s+tubes$/i, "")
-        : item.label;
+      const cardLabel = getStockDisplayLabel(item);
+      const cardKicker = item.variantLabel
+        ? item.unitType === "tray"
+          ? `${item.variantLabel} · Tray of ${item.traySize}`
+          : item.unitType === "packet"
+          ? `${item.variantLabel} · Packet of ${item.packetSize}`
+          : item.variantLabel
+        : item.unitType === "tray"
+        ? `Tray of ${item.traySize}`
+        : item.unitType === "packet"
+        ? `Packet of ${item.packetSize}`
+        : "Each";
 
       return `
       <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}">
         <div class="stock-order-item-head">
-          <span class="stock-order-item-kicker">${item.unitType === "tray" ? `Tray of ${item.traySize}` : item.unitType === "packet" ? `Packet of ${item.packetSize}` : "Each"}</span>
+          <span class="stock-order-item-kicker">${cardKicker}</span>
           <h3>${cardLabel}</h3>
         </div>
         <div class="stock-order-qty-row">
@@ -1204,6 +1257,8 @@ function renderStockOrderItems() {
             min="0"
             step="1"
             value="0"
+            inputmode="numeric"
+            pattern="[0-9]*"
             class="stock-order-qty-input"
             data-stock-qty-input="${item.id}"
             ${item.maxQuantity ? `max="${item.maxQuantity}"` : ""}
@@ -1219,13 +1274,14 @@ function renderStockOrderItems() {
             +
           </button>
         </div>
+        ${item.note ? `<p class="stock-order-item-copy">${item.note}</p>` : ""}
       </article>
     `;
     })
     .join("");
 
   stockOrderGrid.querySelectorAll("[data-stock-qty-step]").forEach((button) => {
-    button.addEventListener("click", () => {
+    bindPressAction(button, () => {
       const itemId = button.getAttribute("data-stock-qty-step") || "";
       const direction = Number(button.getAttribute("data-stock-qty-direction") || "0");
       const currentValue = Number(stockOrderState[itemId] || 0);
@@ -1237,6 +1293,17 @@ function renderStockOrderItems() {
     input.addEventListener("input", () => {
       const itemId = input.getAttribute("data-stock-qty-input") || "";
       setStockItemQuantity(itemId, input.value);
+    });
+  });
+
+  stockOrderGrid.querySelectorAll("[data-stock-item]").forEach((card) => {
+    bindPressAction(card, (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target || target.closest("[data-stock-qty-step], [data-stock-qty-input]")) return;
+
+      const itemId = card.getAttribute("data-stock-item") || "";
+      const currentValue = Number(stockOrderState[itemId] || 0);
+      setStockItemQuantity(itemId, currentValue + 1);
     });
   });
 
@@ -1299,6 +1366,10 @@ function initStockOrderPanel() {
   renderStockOrderItems();
   updateStockOrderPreview();
   loadStockTrackingList();
+  window.clearInterval(stockOrderTrackingPollTimer);
+  stockOrderTrackingPollTimer = window.setInterval(() => {
+    loadStockTrackingList();
+  }, STOCK_ORDER_TRACKING_POLL_MS);
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
@@ -1323,7 +1394,7 @@ function initStockOrderPanel() {
     updateStockOrderPreview();
   });
 
-  submitStockOrderBtn?.addEventListener("click", async () => {
+  bindPressAction(submitStockOrderBtn, async () => {
     if (isSubmittingStockOrder) return;
 
     const blockedReason = getStockSubmitBlockedReason();
@@ -1345,7 +1416,7 @@ function initStockOrderPanel() {
       const response = await fetch(STOCK_ORDER_SUBMIT_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain;charset=utf-8"
+          "Content-Type": "application/json; charset=utf-8"
         },
         body: JSON.stringify(payload)
       });
@@ -1358,9 +1429,12 @@ function initStockOrderPanel() {
       const result = await response.json().catch(() => ({}));
       submittedStockOrderRecord = result?.request || null;
       stockOrderStatusMode = "submitted";
+      const sheetSyncWarning = result?.sheetSync && result.sheetSync.ok === false
+        ? " Order saved, but Google Sheets still needs attention."
+        : "";
       showSelectionNotice(submittedStockOrderRecord?.id
-        ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.`
-        : "Consumables request submitted.");
+        ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.${sheetSyncWarning}`
+        : `Consumables request submitted.${sheetSyncWarning}`);
       resetStockOrderForm();
       loadStockTrackingList();
     } catch (error) {
@@ -1376,7 +1450,7 @@ function initStockOrderPanel() {
     }
   });
 
-  copyStockOrderBtn?.addEventListener("click", async () => {
+  bindPressAction(copyStockOrderBtn, async () => {
     const requestText = buildStockOrderRequestText();
     if (copyStockOrderBtn.disabled) return;
 
@@ -1400,11 +1474,11 @@ function initStockOrderPanel() {
     updateStockOrderPreview();
   });
 
-  resetStockOrderBtn?.addEventListener("click", () => {
+  bindPressAction(resetStockOrderBtn, () => {
     resetStockOrderForm();
   });
 
-  refreshStockTrackingBtn?.addEventListener("click", () => {
+  bindPressAction(refreshStockTrackingBtn, () => {
     loadStockTrackingList();
   });
 }
@@ -1809,14 +1883,60 @@ const stockRequesterGroups = [
   }
 ];
 
+function createTubeConsumableItems(colorKey, label, options = {}) {
+  const {
+    traySize = 100,
+    maxTrays = 1,
+    maxSingles = 99,
+    note = "",
+    singlesOnly = false
+  } = options;
+  const sheetPrefix = `${colorKey}Tube`;
+  const items = [];
+
+  if (!singlesOnly) {
+    items.push({
+      id: `${colorKey}-tubes-tray`,
+      label,
+      variantLabel: "Tray",
+      unitType: "tray",
+      traySize,
+      maxQuantity: maxTrays,
+      note: `${note} Tray orders are limited to ${maxTrays} ${maxTrays === 1 ? "tray" : "trays"}.`,
+      sheetColumnKey: `${colorKey}Tubes`,
+      sheetTrayColumnKey: `${sheetPrefix}Trays`
+    });
+  }
+
+  items.push({
+    id: `${colorKey}-tubes-single`,
+    label,
+    variantLabel: "Singles",
+    unitType: "each",
+    maxQuantity: maxSingles,
+    note: singlesOnly
+      ? `${note} Maximum ${maxSingles} tube${maxSingles === 1 ? "" : "s"} per request.`
+      : "Order single tubes when a full tray is not needed.",
+    sheetColumnKey: `${colorKey}Tubes`,
+    sheetSingleColumnKey: `${sheetPrefix}Singles`
+  });
+
+  return items;
+}
+
 const stockConsumableItems = [
-  { id: "yellow-tubes", label: "Yellow (Gel) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Serum tubes ordered per tray." },
-  { id: "grey-tubes", label: "Grey (Fluoride) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Fluoride tubes ordered per tray." },
-  { id: "purple-tubes", label: "Purple (EDTA) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "EDTA tubes ordered per tray." },
-  { id: "green-tubes", label: "Green (Heparin) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Heparin tubes ordered per tray." },
-  { id: "blue-tubes", label: "Blue (Citrate) tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Citrate tubes ordered per tray." },
-  { id: "pearl-tubes", label: "Pearl tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Pearl/PPT tubes ordered per tray." },
-  { id: "tan-tubes", label: "Tan tubes", unitType: "tray", traySize: 100, maxQuantity: 2, note: "Tan tubes ordered per tray." },
+  ...createTubeConsumableItems("yellow", "Yellow (Gel) tubes", { maxTrays: 2, note: "Serum tubes." }),
+  ...createTubeConsumableItems("grey", "Grey (Fluoride) tubes", { note: "Fluoride tubes." }),
+  ...createTubeConsumableItems("purple", "Purple (EDTA) tubes", { note: "EDTA tubes." }),
+  ...createTubeConsumableItems("green", "Green (Heparin) tubes", { note: "Heparin tubes." }),
+  ...createTubeConsumableItems("blue", "Blue (Citrate) tubes", { note: "Citrate tubes." }),
+  ...createTubeConsumableItems("pearl", "Pearl tubes", { note: "Pearl/PPT tubes." }),
+  ...createTubeConsumableItems("tan", "Tan tubes", { note: "Tan tubes." }),
+  ...createTubeConsumableItems("pink", "Pink (Blood Bank) tubes", {
+    singlesOnly: true,
+    maxSingles: 5,
+    note: "Blood bank tubes must go with the blood bank form."
+  }),
   { id: "specimen-jars", label: "Specimen jars", unitType: "each", maxQuantity: 50, note: "Requested individually." },
   { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, note: "Packed in 50s." },
   { id: "blood-culture-bottles", label: "Blood culture bottles", unitType: "each", note: "Requested individually." },
@@ -2522,6 +2642,12 @@ const aliasByName = {
     "Thy funct",
     "TSH+T4",
     "T4+TSH"
+  ],
+  "ACTH": [
+    "Adrenocorticotropic hormone",
+    "Adreno corticotropic hormone",
+    "Corticotropin",
+    "ACTH hormone"
   ],
   "DIC Screen": ["DIC", "DIC profile", "Disseminated intravascular coagulation"],
   "Coagulation Studies": ["Coag profile", "Coagulation profile", "Clotting profile"],
@@ -5729,6 +5855,9 @@ function getTestGrouping(testOrName) {
     name.includes("menopausal profile") ||
     name.includes("menopause screen") ||
     name.includes("menopausal screen") ||
+    name.includes("acth") ||
+    name.includes("adrenocorticotropic") ||
+    name.includes("corticotropin") ||
     name.includes("dexamethasone suppression") ||
     name.includes("thyroid function test") ||
     /\btft\b/.test(name) ||

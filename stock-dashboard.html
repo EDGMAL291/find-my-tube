@@ -132,8 +132,23 @@
           </div>
           <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review lab user logins.</p>
         </div>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardOpenCreateUserBtn">Create User</button>
+        </div>
 
-        <form class="stock-dashboard-auth-form" id="stockDashboardCreateUserForm">
+        <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardManualEntryCard" hidden aria-labelledby="stockDashboardManualEntryTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Lab manual entry</p>
+            <h3 id="stockDashboardManualEntryTitle">Capture walk-in requests</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardManualEntryStatus">Use this when stock is collected in person and was not ordered in the app.</p>
+        </div>
+
+        <form class="stock-order-form" id="stockDashboardManualEntryForm">
           <label class="stock-order-field">
             <span class="stock-order-field-label">Display name</span>
             <input type="text" id="stockDashboardCreateUserNameInput" autocomplete="name" placeholder="Name" />
@@ -145,16 +160,76 @@
           </label>
 
           <label class="stock-order-field">
-            <span class="stock-order-field-label">New 4-digit PIN</span>
-            <input type="password" id="stockDashboardCreateUserPinInput" inputmode="numeric" maxlength="4" placeholder="4 digits" />
+            <span class="stock-order-field-label">Ward / unit</span>
+            <select id="stockDashboardManualWardSelect">
+              <option value="">Select clinic, sickbay, or ward</option>
+            </select>
           </label>
 
-          <div class="stock-dashboard-auth-actions">
-            <button type="submit" class="quick-tool-launch-btn" id="stockDashboardCreateUserBtn">Create User</button>
-          </div>
+          <label class="stock-order-field stock-order-field-wide">
+            <span class="stock-order-field-label">Notes</span>
+            <textarea id="stockDashboardManualNoteInput" rows="2" placeholder="Optional note for the walk-in request"></textarea>
+          </label>
         </form>
 
-        <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
+        <div class="stock-order-grid stock-dashboard-stock-grid" id="stockDashboardManualGrid" aria-label="Walk-in request items"></div>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardManualSubmitBtn">Save walk-in request</button>
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardManualResetBtn">Clear</button>
+        </div>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardReceiptCard" hidden aria-labelledby="stockDashboardReceiptTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Supplier intake</p>
+            <h3 id="stockDashboardReceiptTitle">Add received stock</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardReceiptStatus">Record tubes and consumables received from suppliers.</p>
+        </div>
+
+        <form class="stock-order-form" id="stockDashboardReceiptForm">
+          <label class="stock-order-field">
+            <span class="stock-order-field-label">Supplier</span>
+            <input type="text" id="stockDashboardReceiptSupplierInput" placeholder="Supplier name" autocomplete="organization" />
+          </label>
+
+          <label class="stock-order-field">
+            <span class="stock-order-field-label">Reference</span>
+            <input type="text" id="stockDashboardReceiptReferenceInput" placeholder="Delivery note or invoice number" />
+          </label>
+
+          <label class="stock-order-field stock-order-field-wide">
+            <span class="stock-order-field-label">Notes</span>
+            <textarea id="stockDashboardReceiptNoteInput" rows="2" placeholder="Optional note about the delivery"></textarea>
+          </label>
+        </form>
+
+        <div class="stock-order-grid stock-dashboard-stock-grid" id="stockDashboardReceiptGrid" aria-label="Received stock items"></div>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardReceiptSubmitBtn">Save received stock</button>
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardReceiptResetBtn">Clear</button>
+        </div>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardInventoryCard" hidden aria-labelledby="stockDashboardInventoryTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Stock on hand</p>
+            <h3 id="stockDashboardInventoryTitle">Current inventory</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardInventoryStatus">Signed-in lab users can review live stock balances here.</p>
+        </div>
+
+        <div class="stock-dashboard-list" id="stockDashboardInventoryList"></div>
+
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Recent deliveries</p>
+            <h3>Supplier receipts</h3>
+          </div>
+        </div>
+        <div class="stock-dashboard-list" id="stockDashboardReceiptList"></div>
       </section>
 
       <section class="stock-order-request-card stock-dashboard-hero">
@@ -282,6 +357,39 @@
         <button type="button" class="profile-modal-close-btn" id="closeLegalModalBtn">Close</button>
       </div>
       <div class="legal-modal-body" id="legalModalBody"></div>
+    </div>
+  </section>
+
+  <section class="profile-modal" id="stockDashboardCreateUserModal" hidden>
+    <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="stockDashboardCreateUserModalTitle">
+      <div class="profile-modal-head">
+        <div>
+          <p class="draw-cart-kicker">Admin only</p>
+          <h3 id="stockDashboardCreateUserModalTitle">Create User</h3>
+        </div>
+        <button type="button" class="profile-modal-close-btn" id="stockDashboardCloseCreateUserModalBtn">Close</button>
+      </div>
+
+      <form class="stock-dashboard-auth-form" id="stockDashboardCreateUserForm">
+        <label class="stock-order-field stock-order-field-wide">
+          <span class="stock-order-field-label">User name</span>
+          <input type="text" id="stockDashboardCreateUserNameInput" autocomplete="name" placeholder="Full name" />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">New user number</span>
+          <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" placeholder="e.g. 102" />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">New 4-digit PIN</span>
+          <input type="password" id="stockDashboardCreateUserPinInput" inputmode="numeric" maxlength="4" placeholder="4 digits" />
+        </label>
+
+        <div class="stock-dashboard-auth-actions">
+          <button type="submit" class="quick-tool-launch-btn" id="stockDashboardCreateUserBtn">Create User</button>
+        </div>
+      </form>
     </div>
   </section>
 
