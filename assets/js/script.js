@@ -216,11 +216,17 @@ let currentTheme = ALLOWED_THEME_MODES.has(document.documentElement.dataset.them
 const STOCK_API_CONFIGURED_BASE_URL = typeof window !== "undefined"
   ? String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim()
   : "";
-const STOCK_ORDER_TRACKING_POLL_MS = 30000;
+const STOCK_API_CONFIGURED_SUBMIT_URL = typeof window !== "undefined"
+  ? String(window.FMT_APP_CONFIG?.stockOrderSubmitUrl || "").trim()
+  : "";
 
 // Resolves the local stock API origin for both direct backend use and static preview ports.
 function getStockApiBaseUrl() {
   if (typeof window === "undefined") return "";
+
+  if (STOCK_API_CONFIGURED_BASE_URL) {
+    return STOCK_API_CONFIGURED_BASE_URL.replace(/\/+$/g, "");
+  }
 
   const currentOrigin = window.location.origin || "";
   const currentHostname = window.location.hostname || "";
@@ -230,15 +236,7 @@ function getStockApiBaseUrl() {
     || currentHostname.endsWith(".local")
     || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(currentHostname);
 
-  if (isDirectBackendOrigin) {
-    return currentOrigin;
-  }
-
-  if (STOCK_API_CONFIGURED_BASE_URL) {
-    return STOCK_API_CONFIGURED_BASE_URL.replace(/\/+$/g, "");
-  }
-
-  if (!isLikelyLocalHost) {
+  if (isDirectBackendOrigin || !isLikelyLocalHost) {
     return currentOrigin;
   }
 
@@ -250,12 +248,14 @@ function buildStockApiUrl(path) {
   return `${getStockApiBaseUrl()}${safePath}`;
 }
 
-const STOCK_ORDER_SUBMIT_URL = buildStockApiUrl("/api/stock-requests");
+const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
+  ? String(STOCK_API_CONFIGURED_SUBMIT_URL || buildStockApiUrl("/api/stock-requests")).trim()
+  : "";
 const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=12");
 
 function stockRequestsNeedConfiguredBackend() {
   if (typeof window === "undefined") return false;
-  if (STOCK_API_CONFIGURED_BASE_URL) return false;
+  if (STOCK_API_CONFIGURED_BASE_URL || STOCK_API_CONFIGURED_SUBMIT_URL) return false;
 
   const hostname = window.location.hostname || "";
   const port = window.location.port || "";
@@ -884,80 +884,20 @@ function formatStockRequestDateTime(value) {
   }).format(date);
 }
 
+// Normalizes legacy stock request statuses to the current UI model.
 function normalizeStockRequestStatus(status) {
-  const safeStatus = String(status || "received").trim().toLowerCase();
+  const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "completed";
   return safeStatus || "received";
-}
-
-function formatStockStatusLabel(status) {
-  const safeStatus = normalizeStockRequestStatus(status);
-  return safeStatus
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function getStockDisplayLabel(item) {
-  const label = String(item?.label || "").trim();
-  const variantLabel = String(item?.variantLabel || "").trim();
-  return variantLabel ? `${label} - ${variantLabel}` : label;
-}
-
-function getStockRequestUpdateMeta(request) {
-  const updatedAt = request?.statusUpdatedAt || request?.updatedAt || "";
-  const updatedBy = String(request?.statusUpdatedBy || "").trim();
-  if (!updatedAt) return "";
-
-  const timeLabel = formatStockRequestDateTime(updatedAt);
-  if (!updatedBy) {
-    return `Last update ${timeLabel}`;
-  }
-
-  return `Last update ${timeLabel} by lab user ${updatedBy}`;
-}
-
-function syncTrackedStockRequestStatuses(requests) {
-  const changes = [];
-  const nextStatuses = Object.create(null);
-
-  requests.forEach((request) => {
-    const requestId = String(request?.id || "").trim();
-    if (!requestId) return;
-
-    const nextStatus = normalizeStockRequestStatus(request.status);
-    const previousStatus = stockTrackedRequestStatuses[requestId] || "";
-    nextStatuses[requestId] = nextStatus;
-
-    if (!hasLoadedStockTrackingOnce || !previousStatus || previousStatus === nextStatus) {
-      return;
-    }
-
-    if (["packed", "collected", "completed", "cancelled"].includes(nextStatus)) {
-      changes.push({
-        id: requestId,
-        status: nextStatus
-      });
-    }
-  });
-
-  Object.keys(stockTrackedRequestStatuses).forEach((requestId) => {
-    delete stockTrackedRequestStatuses[requestId];
-  });
-  Object.assign(stockTrackedRequestStatuses, nextStatuses);
-
-  if (hasLoadedStockTrackingOnce && changes.length) {
-    const latestChange = changes[0];
-    showSelectionNotice(`Request ${latestChange.id} is now ${formatStockStatusLabel(latestChange.status)}.`);
-  }
-
-  hasLoadedStockTrackingOnce = true;
 }
 
 // Renders the stock tracking list on the order page.
 function renderStockTrackingList(requests) {
   if (!stockOrderTrackingList) return;
 
-  const activeRequests = Array.isArray(requests) ? requests : [];
+  const activeRequests = Array.isArray(requests)
+    ? requests.filter((request) => normalizeStockRequestStatus(request?.status) !== "completed")
+    : [];
 
   if (!activeRequests.length) {
     stockOrderTrackingList.innerHTML = `
@@ -967,13 +907,14 @@ function renderStockTrackingList(requests) {
   }
 
   stockOrderTrackingList.innerHTML = activeRequests.map((request) => {
+    const normalizedStatus = normalizeStockRequestStatus(request?.status);
     const items = Array.isArray(request.items) ? request.items : [];
     const orderedItems = items
       .map((item) => `${escapeHtml(getStockDisplayLabel(item))}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
       .join("\n");
-    const normalizedStatus = normalizeStockRequestStatus(request.status);
-    const statusLabel = formatStockStatusLabel(normalizedStatus);
-    const updateMeta = getStockRequestUpdateMeta(request);
+    const statusLabel = normalizedStatus
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
 
     return `
       <article class="stock-dashboard-request-card">

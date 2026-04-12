@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: find-my-tube-api
+    runtime: node
+    plan: starter
+    autoDeploy: true
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data/find-my-tube
+    disk:
+      name: find-my-tube-data
+      mountPath: /var/data
+      sizeGB: 1
