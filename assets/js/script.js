@@ -890,6 +890,14 @@ function normalizeStockRequestStatus(status) {
   return safeStatus || "received";
 }
 
+// Gets a consistent stock item label for cards, summaries, and payload previews.
+function getStockDisplayLabel(item) {
+  const label = String(item?.label || "").trim();
+  const variantLabel = String(item?.variantLabel || "").trim();
+  if (label && variantLabel) return `${label} - ${variantLabel}`;
+  return label || "Stock item";
+}
+
 // Renders the stock tracking list on the order page.
 function renderStockTrackingList(requests) {
   if (!stockOrderTrackingList) return;
@@ -911,6 +919,9 @@ function renderStockTrackingList(requests) {
     const orderedItems = items
       .map((item) => `${escapeHtml(getStockDisplayLabel(item))}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
       .join("\n");
+    const updateMeta = request?.statusUpdatedAt || request?.updatedAt
+      ? `Last update ${formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
+      : "";
     const statusLabel = normalizedStatus
       .replace(/-/g, " ")
       .replace(/\b\w/g, (char) => char.toUpperCase());
