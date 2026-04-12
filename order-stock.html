@@ -352,6 +352,11 @@
             border-color: var(--tube-accent-border, rgba(15, 118, 110, 0.42));
             color: inherit !important;
           }
+          #menuToggleBtn,
+          #brandHomeBtn,
+          #submitStockOrderBtn {
+            pointer-events: auto !important;
+          }
         `;
         document.head.appendChild(style);
       }
@@ -609,6 +614,37 @@
             if (typeof updateStockOrderPreview === "function") updateStockOrderPreview();
           }
         });
+      }
+
+      function attachCoreControlFallbacks() {
+        const menuBtn = document.getElementById("menuToggleBtn");
+        const menuPanel = document.getElementById("siteMenuPanel");
+        if (menuBtn instanceof HTMLButtonElement && menuPanel instanceof HTMLElement && menuBtn.dataset.menuFallbackBound !== "1") {
+          menuBtn.dataset.menuFallbackBound = "1";
+          menuBtn.addEventListener("click", () => {
+            if (typeof setSiteMenuOpen === "function") {
+              const expanded = menuBtn.getAttribute("aria-expanded") === "true";
+              setSiteMenuOpen(!expanded);
+              return;
+            }
+
+            const isHidden = menuPanel.hasAttribute("hidden");
+            if (isHidden) {
+              menuPanel.removeAttribute("hidden");
+            } else {
+              menuPanel.setAttribute("hidden", "");
+            }
+            menuBtn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+          });
+        }
+
+        const homeBtn = document.getElementById("brandHomeBtn");
+        if (homeBtn instanceof HTMLButtonElement && homeBtn.dataset.homeFallbackBound !== "1") {
+          homeBtn.dataset.homeFallbackBound = "1";
+          homeBtn.addEventListener("click", () => {
+            window.location.assign("./index.html");
+          });
+        }
       }
 
       function buildTubeTitleMarkup(label, key) {
@@ -959,6 +995,7 @@
         patchTrackingListRenderer();
         patchSubmitGuardForHostedApi();
         attachSubmitRequestFallback();
+        attachCoreControlFallbacks();
         patchQuantizedFiveStepCounts();
         patchPreviewQuantityWording();
         renameSinglesToEach();
