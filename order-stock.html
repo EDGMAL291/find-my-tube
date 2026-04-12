@@ -551,8 +551,12 @@
         if (!(submitBtn instanceof HTMLButtonElement)) return;
         if (submitBtn.dataset.submitFallbackBound === "1") return;
         submitBtn.dataset.submitFallbackBound = "1";
+        let lastSubmitTs = 0;
 
-        submitBtn.addEventListener("click", async () => {
+        const runSubmit = async () => {
+          if (Date.now() - lastSubmitTs < 700) return;
+          lastSubmitTs = Date.now();
+
           if (typeof isSubmittingStockOrder !== "undefined" && isSubmittingStockOrder) return;
           if (typeof buildStockOrderPayload !== "function") return;
           if (!STOCK_ORDER_SUBMIT_URL) return;
@@ -569,17 +573,28 @@
             if (typeof isSubmittingStockOrder !== "undefined") isSubmittingStockOrder = true;
             if (typeof updateStockOrderPreview === "function") updateStockOrderPreview();
 
-            const response = await fetch(STOCK_ORDER_SUBMIT_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json; charset=utf-8"
-              },
-              body: JSON.stringify(payload)
-            });
+            const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+            const timeoutId = window.setTimeout(() => {
+              controller?.abort();
+            }, 15000);
 
-            if (!response.ok) {
-              const result = await response.json().catch(() => null);
-              throw new Error(result?.error || `Submit failed with status ${response.status}`);
+            let response;
+            try {
+              response = await fetch(STOCK_ORDER_SUBMIT_URL, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json; charset=utf-8"
+                },
+                body: JSON.stringify(payload),
+                signal: controller?.signal
+              });
+            } finally {
+              window.clearTimeout(timeoutId);
+            }
+
+            if (!response || !response.ok) {
+              const result = await response?.json().catch(() => null);
+              throw new Error(result?.error || `Submit failed with status ${response?.status || "unknown"}`);
             }
 
             const result = await response.json().catch(() => ({}));
@@ -600,8 +615,11 @@
                 : `Consumables request submitted.${sheetSyncWarning}`);
             }
 
+            if (typeof loadStockTrackingList === "function") {
+              loadStockTrackingList();
+              window.setTimeout(() => loadStockTrackingList(), 1200);
+            }
             if (typeof resetStockOrderForm === "function") resetStockOrderForm();
-            if (typeof loadStockTrackingList === "function") loadStockTrackingList();
           } catch (error) {
             if (typeof submittedStockOrderRecord !== "undefined") submittedStockOrderRecord = null;
             if (typeof stockOrderStatusMode !== "undefined") stockOrderStatusMode = "submit-failed";
@@ -613,7 +631,16 @@
             if (typeof isSubmittingStockOrder !== "undefined") isSubmittingStockOrder = false;
             if (typeof updateStockOrderPreview === "function") updateStockOrderPreview();
           }
-        });
+        };
+
+        const interceptAndSubmit = (event) => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          runSubmit();
+        };
+
+        submitBtn.addEventListener("pointerup", interceptAndSubmit, true);
+        submitBtn.addEventListener("click", interceptAndSubmit, true);
       }
 
       function attachCoreControlFallbacks() {
