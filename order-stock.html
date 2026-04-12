@@ -541,6 +541,49 @@
         return `${base.replace(/\/+$/g, "")}/api/stock-requests?limit=12`;
       }
 
+      function renderTrackingFallbackTable(requests = []) {
+        const trackingList = document.getElementById("stockOrderTrackingList");
+        if (!trackingList) return;
+
+        if (!Array.isArray(requests) || !requests.length) {
+          trackingList.innerHTML = '<p class="stock-dashboard-empty">No requests yet. Once you submit an order, it will appear here.</p>';
+          return;
+        }
+
+        const rowsMarkup = requests.map((request) => {
+          const requestedBy = escapeTrackingValue(request?.requestedBy || "Unknown requester");
+          const wardUnit = escapeTrackingValue(request?.wardUnit || "Ward not set");
+          const dateValue = request?.createdAt
+            ? new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(request.createdAt))
+            : "Unknown time";
+          const date = escapeTrackingValue(dateValue);
+          const statusMeta = getTrackingStatusMeta(request?.status);
+
+          return `
+            <div class="stock-order-track-row" role="row">
+              <span class="stock-order-track-cell" data-label="Requested by">${requestedBy}</span>
+              <span class="stock-order-track-cell" data-label="Ward / Unit">${wardUnit}</span>
+              <span class="stock-order-track-cell" data-label="Date">${date}</span>
+              <span class="stock-order-track-cell" data-label="Status">
+                <span class="stock-order-track-status-badge" data-stage="${escapeTrackingValue(statusMeta.stage)}">${escapeTrackingValue(statusMeta.label)}</span>
+              </span>
+            </div>
+          `;
+        }).join("");
+
+        trackingList.innerHTML = `
+          <div class="stock-order-track-table" role="table" aria-label="Recent stock orders">
+            <div class="stock-order-track-header" role="row">
+              <span>Requested by</span>
+              <span>Ward / Unit</span>
+              <span>Date</span>
+              <span>Status</span>
+            </div>
+            ${rowsMarkup}
+          </div>
+        `;
+      }
+
       async function loadTrackingFallback() {
         const trackingMeta = document.getElementById("stockOrderTrackingMeta");
         const trackingUrl = getTrackingFallbackUrl();
@@ -564,21 +607,18 @@
 
           const payload = await response.json().catch(() => ({}));
           const requests = Array.isArray(payload?.requests) ? payload.requests : [];
-          if (typeof renderStockTrackingList === "function") {
-            renderStockTrackingList(requests);
-          }
+          renderTrackingFallbackTable(requests);
 
           if (trackingMeta) {
             trackingMeta.textContent = requests.length
               ? `${requests.length} recent request${requests.length === 1 ? "" : "s"} shown.`
               : "No requests yet. Once you submit an order, it will appear here.";
           }
-        } catch {
-          if (typeof renderStockTrackingList === "function") {
-            renderStockTrackingList([]);
-          }
+        } catch (error) {
+          renderTrackingFallbackTable([]);
           if (trackingMeta) {
-            trackingMeta.textContent = "Could not load recent requests yet.";
+            const message = error instanceof Error ? error.message : "Could not load recent requests yet.";
+            trackingMeta.textContent = `Could not load recent requests yet. (${message})`;
           }
         }
       }
