@@ -535,6 +535,62 @@
         }
       }
 
+      function getTrackingFallbackUrl() {
+        const configuredBase = String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim();
+        const base = configuredBase || "https://find-my-tube-api.onrender.com";
+        return `${base.replace(/\/+$/g, "")}/api/stock-requests?limit=12`;
+      }
+
+      async function loadTrackingFallback() {
+        const trackingMeta = document.getElementById("stockOrderTrackingMeta");
+        const trackingUrl = getTrackingFallbackUrl();
+
+        try {
+          const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+          const timeoutId = window.setTimeout(() => controller?.abort(), 10000);
+          let response;
+          try {
+            response = await fetch(trackingUrl, {
+              cache: "no-store",
+              signal: controller?.signal
+            });
+          } finally {
+            window.clearTimeout(timeoutId);
+          }
+
+          if (!response || !response.ok) {
+            throw new Error(`Tracking fetch failed with status ${response?.status || "unknown"}`);
+          }
+
+          const payload = await response.json().catch(() => ({}));
+          const requests = Array.isArray(payload?.requests) ? payload.requests : [];
+          if (typeof renderStockTrackingList === "function") {
+            renderStockTrackingList(requests);
+          }
+
+          if (trackingMeta) {
+            trackingMeta.textContent = requests.length
+              ? `${requests.length} recent request${requests.length === 1 ? "" : "s"} shown.`
+              : "No requests yet. Once you submit an order, it will appear here.";
+          }
+        } catch {
+          if (typeof renderStockTrackingList === "function") {
+            renderStockTrackingList([]);
+          }
+          if (trackingMeta) {
+            trackingMeta.textContent = "Could not load recent requests yet.";
+          }
+        }
+      }
+
+      function startTrackingFallback() {
+        loadTrackingFallback();
+        window.clearInterval(window.__fmtTrackingFallbackTimer || 0);
+        window.__fmtTrackingFallbackTimer = window.setInterval(() => {
+          loadTrackingFallback();
+        }, 30000);
+      }
+
       function patchSubmitGuardForHostedApi() {
         if (typeof getStockSubmitBlockedReason !== "function") return;
         if (getStockSubmitBlockedReason.__hostedSubmitPatched) return;
@@ -1020,6 +1076,7 @@
         ensureTubeIconStyles();
         ensureTrackingListStyles();
         patchTrackingListRenderer();
+        startTrackingFallback();
         patchSubmitGuardForHostedApi();
         attachSubmitRequestFallback();
         attachCoreControlFallbacks();
