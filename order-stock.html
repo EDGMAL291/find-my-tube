@@ -352,17 +352,6 @@
             border-color: var(--tube-accent-border, rgba(15, 118, 110, 0.42));
             color: inherit !important;
           }
-          #stockOrderGrid [data-stock-item],
-          #stockOrderGrid [data-stock-unified-tube] {
-            pointer-events: none;
-          }
-          #stockOrderGrid [data-stock-item] [data-stock-qty-step],
-          #stockOrderGrid [data-stock-item] [data-stock-qty-input],
-          #stockOrderGrid [data-stock-unified-tube] [data-stock-unified-step],
-          #stockOrderGrid [data-stock-unified-tube] [data-stock-unified-input="true"],
-          #stockOrderGrid [data-stock-unified-tube] [data-stock-mode] {
-            pointer-events: auto;
-          }
         `;
         document.head.appendChild(style);
       }
@@ -643,12 +632,6 @@
         input.readOnly = true;
         input.setAttribute("readonly", "readonly");
         input.setAttribute("aria-readonly", "true");
-        input.inputMode = "none";
-
-        input.addEventListener("keydown", (event) => event.preventDefault());
-        input.addEventListener("beforeinput", (event) => event.preventDefault());
-        input.addEventListener("paste", (event) => event.preventDefault());
-        input.addEventListener("wheel", (event) => event.preventDefault(), { passive: false });
       }
 
       function enforcePlusMinusOnlyChanges() {
