@@ -716,6 +716,8 @@
               window.setTimeout(() => loadStockTrackingList(), 1200);
             }
             if (typeof resetStockOrderForm === "function") resetStockOrderForm();
+            resetUnifiedTubeModesToDefault();
+            syncUnifiedTubeInputs();
           } catch (error) {
             if (typeof submittedStockOrderRecord !== "undefined") submittedStockOrderRecord = null;
             if (typeof stockOrderStatusMode !== "undefined") stockOrderStatusMode = "submit-failed";
@@ -1112,6 +1114,44 @@
         });
       }
 
+      function resetUnifiedTubeModesToDefault() {
+        document.querySelectorAll("[data-stock-unified-tube]").forEach((card) => {
+          if (!(card instanceof HTMLElement)) return;
+          const tubeKey = card.getAttribute("data-stock-unified-tube") || "";
+          const trayId = `${tubeKey}-tubes-tray`;
+          const eachId = `${tubeKey}-tubes-single`;
+
+          card.dataset.mode = "tray";
+
+          const trayBtn = card.querySelector('[data-stock-mode="tray"]');
+          const eachBtn = card.querySelector('[data-stock-mode="each"]');
+          const quantityInput = card.querySelector('[data-stock-unified-input="true"]');
+          const trayConfig = Array.isArray(stockConsumableItems)
+            ? stockConsumableItems.find((item) => item.id === trayId)
+            : null;
+
+          if (trayBtn instanceof HTMLButtonElement) {
+            trayBtn.classList.add("active");
+            trayBtn.setAttribute("aria-pressed", "true");
+          }
+          if (eachBtn instanceof HTMLButtonElement) {
+            eachBtn.classList.remove("active");
+            eachBtn.setAttribute("aria-pressed", "false");
+          }
+
+          if (quantityInput instanceof HTMLInputElement) {
+            quantityInput.value = "0";
+            quantityInput.step = "1";
+            quantityInput.max = String(Math.max(1, Number(trayConfig?.maxQuantity) || 1));
+          }
+
+          if (typeof setStockItemQuantity === "function") {
+            setStockItemQuantity(trayId, 0);
+            setStockItemQuantity(eachId, 0);
+          }
+        });
+      }
+
       function bootUnifiedTubeUi() {
         ensureTubeIconStyles();
         ensureTrackingListStyles();
@@ -1135,6 +1175,7 @@
 
         const resetBtn = document.getElementById("resetStockOrderBtn");
         resetBtn?.addEventListener("click", () => {
+          window.setTimeout(resetUnifiedTubeModesToDefault, 0);
           window.setTimeout(syncUnifiedTubeInputs, 0);
           window.setTimeout(setSpecimenJarInputStep, 0);
           window.setTimeout(enforceLabBagLimit, 0);
