@@ -529,6 +529,87 @@
         }
       }
 
+      function patchSubmitGuardForHostedApi() {
+        if (typeof getStockSubmitBlockedReason !== "function") return;
+        if (getStockSubmitBlockedReason.__hostedSubmitPatched) return;
+
+        const originalBlockedReason = getStockSubmitBlockedReason;
+        const patchedBlockedReason = () => "";
+        patchedBlockedReason.__hostedSubmitPatched = true;
+        patchedBlockedReason.__originalGetStockSubmitBlockedReason = originalBlockedReason;
+        getStockSubmitBlockedReason = patchedBlockedReason;
+      }
+
+      function attachSubmitRequestFallback() {
+        const submitBtn = document.getElementById("submitStockOrderBtn");
+        if (!(submitBtn instanceof HTMLButtonElement)) return;
+        if (submitBtn.dataset.submitFallbackBound === "1") return;
+        submitBtn.dataset.submitFallbackBound = "1";
+
+        submitBtn.addEventListener("click", async () => {
+          if (typeof isSubmittingStockOrder !== "undefined" && isSubmittingStockOrder) return;
+          if (typeof buildStockOrderPayload !== "function") return;
+          if (!STOCK_ORDER_SUBMIT_URL) return;
+
+          const payload = buildStockOrderPayload();
+          if (!payload.requestedBy || !payload.wardUnit || !Array.isArray(payload.items) || !payload.items.length) {
+            if (typeof showSelectionNotice === "function") {
+              showSelectionNotice("Add your name, ward / unit, and at least one item first.");
+            }
+            return;
+          }
+
+          try {
+            if (typeof isSubmittingStockOrder !== "undefined") isSubmittingStockOrder = true;
+            if (typeof updateStockOrderPreview === "function") updateStockOrderPreview();
+
+            const response = await fetch(STOCK_ORDER_SUBMIT_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json; charset=utf-8"
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              const result = await response.json().catch(() => null);
+              throw new Error(result?.error || `Submit failed with status ${response.status}`);
+            }
+
+            const result = await response.json().catch(() => ({}));
+            if (typeof submittedStockOrderRecord !== "undefined") {
+              submittedStockOrderRecord = result?.request || null;
+            }
+            if (typeof stockOrderStatusMode !== "undefined") {
+              stockOrderStatusMode = "submitted";
+            }
+
+            const sheetSyncWarning = result?.sheetSync && result.sheetSync.ok === false
+              ? " Order saved, but Google Sheets still needs attention."
+              : "";
+
+            if (typeof showSelectionNotice === "function") {
+              showSelectionNotice(submittedStockOrderRecord?.id
+                ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.${sheetSyncWarning}`
+                : `Consumables request submitted.${sheetSyncWarning}`);
+            }
+
+            if (typeof resetStockOrderForm === "function") resetStockOrderForm();
+            if (typeof loadStockTrackingList === "function") loadStockTrackingList();
+          } catch (error) {
+            if (typeof submittedStockOrderRecord !== "undefined") submittedStockOrderRecord = null;
+            if (typeof stockOrderStatusMode !== "undefined") stockOrderStatusMode = "submit-failed";
+            if (typeof showSelectionNotice === "function") {
+              const message = error instanceof Error ? error.message : "Could not submit the consumables request.";
+              showSelectionNotice(`Could not submit the consumables request. ${message}`);
+            }
+          } finally {
+            if (typeof isSubmittingStockOrder !== "undefined") isSubmittingStockOrder = false;
+            if (typeof updateStockOrderPreview === "function") updateStockOrderPreview();
+          }
+        });
+      }
+
       function buildTubeTitleMarkup(label, key) {
         const iconClass = tubeIconClassByKey[key] || "";
         return `<span class="stock-tube-title-row"><span class="stock-tube-mini-icon ${iconClass}" aria-hidden="true"></span><span>${label}</span></span>`;
@@ -908,6 +989,8 @@
         ensureTubeIconStyles();
         ensureTrackingListStyles();
         patchTrackingListRenderer();
+        patchSubmitGuardForHostedApi();
+        attachSubmitRequestFallback();
         patchQuantizedFiveStepCounts();
         patchPreviewQuantityWording();
         renameSinglesToEach();
