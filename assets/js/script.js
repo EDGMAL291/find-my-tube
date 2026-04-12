@@ -67,6 +67,7 @@ const stockOrderForm = document.getElementById("stockOrderForm");
 const stockOrderRequesterNameInput = document.getElementById("stockOrderRequesterNameInput");
 const stockOrderRequesterSelect = document.getElementById("stockOrderRequesterSelect");
 const stockOrderNoteInput = document.getElementById("stockOrderNoteInput");
+const stockOrderTubeToggleList = document.getElementById("stockOrderTubeToggleList");
 const stockOrderGrid = document.getElementById("stockOrderGrid");
 const stockOrderStatusBadge = document.getElementById("stockOrderStatusBadge");
 const stockOrderRequestMeta = document.getElementById("stockOrderRequestMeta");
@@ -1097,6 +1098,77 @@ function getStockConsumableItem(itemId) {
   return stockConsumableItems.find((item) => item.id === itemId) || null;
 }
 
+function getStockTubeToggleItems() {
+  const orderedColors = ["yellow", "grey", "purple", "green", "blue", "pearl", "tan", "pink"];
+  const byColor = new Map();
+
+  stockConsumableItems.forEach((item) => {
+    const match = String(item.id || "").match(/^([a-z]+)-tubes-single$/);
+    if (!match) return;
+    byColor.set(match[1], item);
+  });
+
+  const orderedItems = [];
+  orderedColors.forEach((colorKey) => {
+    const item = byColor.get(colorKey);
+    if (!item) return;
+    orderedItems.push(item);
+    byColor.delete(colorKey);
+  });
+
+  byColor.forEach((item) => orderedItems.push(item));
+  return orderedItems;
+}
+
+function getStockTubeToggleLabel(item) {
+  const raw = String(item?.label || "").replace(/\s*tubes?$/i, "").trim();
+  return raw || "Tube";
+}
+
+function updateStockTubeToggleButtons() {
+  if (!stockOrderTubeToggleList) return;
+
+  stockOrderTubeToggleList.querySelectorAll("[data-stock-tube-toggle]").forEach((button) => {
+    const itemId = button.getAttribute("data-stock-tube-toggle") || "";
+    const isActive = Number(stockOrderState[itemId] || 0) > 0;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+}
+
+function renderStockTubeToggles() {
+  if (!stockOrderTubeToggleList) return;
+
+  const tubeToggleItems = getStockTubeToggleItems();
+  if (!tubeToggleItems.length) {
+    stockOrderTubeToggleList.innerHTML = "";
+    return;
+  }
+
+  stockOrderTubeToggleList.innerHTML = tubeToggleItems
+    .map((item) => `
+      <button
+        type="button"
+        class="group-chip"
+        data-stock-tube-toggle="${item.id}"
+        aria-pressed="false"
+      >
+        ${escapeHtml(getStockTubeToggleLabel(item))}
+      </button>
+    `)
+    .join("");
+
+  stockOrderTubeToggleList.querySelectorAll("[data-stock-tube-toggle]").forEach((button) => {
+    bindPressAction(button, () => {
+      const itemId = button.getAttribute("data-stock-tube-toggle") || "";
+      const currentValue = Number(stockOrderState[itemId] || 0);
+      setStockItemQuantity(itemId, currentValue > 0 ? 0 : 1);
+    });
+  });
+
+  updateStockTubeToggleButtons();
+}
+
 // Gets the maximum allowed quantity for a stock item.
 function getStockItemMaxQuantity(itemId) {
   const item = getStockConsumableItem(itemId);
@@ -1232,6 +1304,7 @@ function setStockItemQuantity(itemId, quantity) {
   }
 
   syncStockOrderItemState(itemId);
+  updateStockTubeToggleButtons();
   updateStockOrderPreview();
 }
 
@@ -1408,6 +1481,7 @@ function resetStockOrderForm() {
     });
   }
 
+  updateStockTubeToggleButtons();
   updateStockOrderPreview();
 }
 
@@ -1423,6 +1497,7 @@ function initStockOrderPanel() {
 
   populateStockRequesterOptions();
   renderStockOrderItems();
+  renderStockTubeToggles();
   updateStockOrderPreview();
   loadStockTrackingList();
   window.clearInterval(stockOrderTrackingPollTimer);
