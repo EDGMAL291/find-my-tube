@@ -106,6 +106,7 @@ function stockDashboardBuildApiUrl(path) {
 }
 
 const STOCK_DASHBOARD_REQUESTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests?limit=30");
+const STOCK_DASHBOARD_PUBLIC_REQUESTS_URL = stockDashboardBuildApiUrl("/api/stock-requests?limit=30");
 const STOCK_DASHBOARD_STATS_URL = stockDashboardBuildApiUrl("/api/lab/stock-stats");
 const STOCK_DASHBOARD_SESSION_URL = stockDashboardBuildApiUrl("/api/stock-auth/session");
 const STOCK_DASHBOARD_LOGIN_URL = stockDashboardBuildApiUrl("/api/stock-auth/login");
@@ -571,7 +572,7 @@ function stockDashboardSetSession(token, user) {
   if (stockDashboardSessionCard) stockDashboardSessionCard.hidden = !isAuthenticated;
   if (stockDashboardMetrics) stockDashboardMetrics.hidden = !isAuthenticated;
   if (stockDashboardInsights) stockDashboardInsights.hidden = !isAuthenticated;
-  if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = !isAuthenticated;
+  if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = false;
   if (stockDashboardUserAdminCard) stockDashboardUserAdminCard.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
   if (stockDashboardManualEntryCard) stockDashboardManualEntryCard.hidden = !isAuthenticated;
   if (stockDashboardReceiptCard) stockDashboardReceiptCard.hidden = !isAuthenticated;
@@ -608,10 +609,10 @@ function stockDashboardSetSession(token, user) {
     stockDashboardUnreadCount = 0;
     stockDashboardStopPolling();
     if (stockDashboardStatus) {
-      stockDashboardStatus.textContent = "Dashboard is locked until you log in.";
+      stockDashboardStatus.textContent = "Sign in to manage requests. Showing recent submitted requests below.";
     }
     if (stockDashboardRequestList) {
-      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Log in to view and manage requests.</p>';
+      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Loading recent submitted requests...</p>';
     }
     if (stockDashboardUserList) {
       stockDashboardUserList.innerHTML = "";
@@ -625,10 +626,36 @@ function stockDashboardSetSession(token, user) {
     if (stockDashboardOpenRequests) stockDashboardOpenRequests.textContent = "0";
     if (stockDashboardLineItems) stockDashboardLineItems.textContent = "0";
     if (stockDashboardUnitsRequested) stockDashboardUnitsRequested.textContent = "0";
+    loadPublicStockDashboardRequests();
   } else {
     stockDashboardUpdateNotificationPermissionUi();
     stockDashboardRenderNotificationState();
     stockDashboardStartPolling();
+  }
+}
+
+async function loadPublicStockDashboardRequests() {
+  if (!stockDashboardRequestList) return;
+
+  try {
+    const response = await fetch(STOCK_DASHBOARD_PUBLIC_REQUESTS_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Public requests failed with status ${response.status}`);
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    const requests = Array.isArray(payload?.requests) ? payload.requests : [];
+    renderStockDashboardRequests(requests);
+
+    if (stockDashboardStatus && !stockDashboardSession) {
+      stockDashboardStatus.textContent = requests.length
+        ? `Showing ${requests.length} recent submitted request${requests.length === 1 ? "" : "s"}. Sign in to manage statuses.`
+        : "No requests have been submitted yet.";
+    }
+  } catch {
+    if (stockDashboardRequestList) {
+      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No requests available yet.</p>';
+    }
   }
 }
 
@@ -1118,7 +1145,12 @@ function renderStockDashboardRequests(requests) {
 }
 
 async function loadStockDashboard(options = {}) {
-  if (!stockDashboardStatus || !stockDashboardSession) return;
+  if (!stockDashboardStatus || !stockDashboardSession) {
+    if (!stockDashboardSession) {
+      loadPublicStockDashboardRequests();
+    }
+    return;
+  }
   const { silent = false, fromPoll = false } = options;
 
   if (!silent) {
@@ -1161,9 +1193,7 @@ async function loadStockDashboard(options = {}) {
     }
   } catch {
     stockDashboardStatus.textContent = "Could not load dashboard data.";
-    if (stockDashboardRequestList) {
-      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">The local backend is not available yet.</p>';
-    }
+    loadPublicStockDashboardRequests();
   } finally {
     if (!silent) {
       stockDashboardSetBusy(false);
