@@ -653,7 +653,8 @@
 
             const isStepButton = Boolean(target.closest("[data-stock-qty-step], [data-stock-unified-step]"));
             const isQuantityInput = Boolean(target.closest('[data-stock-qty-input], [data-stock-unified-input="true"]'));
-            if (isStepButton || isQuantityInput) return;
+            const isModeToggle = Boolean(target.closest("[data-stock-mode]"));
+            if (isStepButton || isQuantityInput || isModeToggle) return;
 
             event.preventDefault();
             event.stopPropagation();
@@ -665,7 +666,8 @@
 
             const isStepButton = Boolean(target.closest("[data-stock-qty-step], [data-stock-unified-step]"));
             const isQuantityInput = Boolean(target.closest('[data-stock-qty-input], [data-stock-unified-input="true"]'));
-            if (isStepButton || isQuantityInput) return;
+            const isModeToggle = Boolean(target.closest("[data-stock-mode]"));
+            if (isStepButton || isQuantityInput || isModeToggle) return;
 
             event.preventDefault();
             event.stopPropagation();
