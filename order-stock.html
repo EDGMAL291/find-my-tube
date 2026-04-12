@@ -25,6 +25,18 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260402b" />
+  <style>
+    #stockOrderSummaryItems {
+      display: block;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      max-height: none;
+    }
+
+    #stockOrderSummaryGrid .stock-order-summary-item-wide {
+      align-content: start;
+    }
+  </style>
 </head>
 <body data-app-page="stock-order">
   <div class="container">
@@ -125,11 +137,6 @@
         </label>
       </form>
 
-      <section class="group-hints" aria-labelledby="stockOrderTubeToggleLabel">
-        <h3 id="stockOrderTubeToggleLabel">Tube selection</h3>
-        <div class="group-chips" id="stockOrderTubeToggleList" aria-label="Select tubes to include"></div>
-      </section>
-
       <div class="stock-order-grid" id="stockOrderGrid" aria-label="Consumables available to order"></div>
 
       <section class="stock-order-request-card" aria-labelledby="stockOrderRequestTitle">
@@ -162,6 +169,8 @@
           class="stock-order-request-preview"
           readonly
           aria-label="Consumables request preview"
+          hidden
+          aria-hidden="true"
         ></textarea>
         <div class="stock-order-request-actions">
           <button type="button" class="quick-tool-launch-btn" id="submitStockOrderBtn">Submit Request</button>
@@ -239,6 +248,695 @@
   <script src="assets/data/data.js?v=20260323a"></script>
   <script src="assets/js/app-config.js?v=20260402b"></script>
   <script src="assets/js/script.js?v=20260402b"></script>
+  <script>
+    (() => {
+      if (document.body?.dataset?.appPage !== "stock-order") return;
+
+      const tubeConfigs = [
+        { key: "yellow", helper: "Serum tubes.", trayMax: 2 },
+        { key: "grey", helper: "Fluoride tubes.", trayMax: 1 },
+        { key: "purple", helper: "EDTA tubes.", trayMax: 1 },
+        { key: "green", helper: "Heparin tubes.", trayMax: 1 },
+        { key: "blue", helper: "Citrate tubes.", trayMax: 1 },
+        { key: "pearl", helper: "Pearl/PPT tubes.", trayMax: 1 },
+        { key: "tan", helper: "Tan tubes.", trayMax: 1 }
+      ];
+      const tubeIconClassByKey = {
+        yellow: "stock-tube-mini-icon--yellow",
+        grey: "stock-tube-mini-icon--grey",
+        purple: "stock-tube-mini-icon--purple",
+        green: "stock-tube-mini-icon--green",
+        blue: "stock-tube-mini-icon--blue",
+        pearl: "stock-tube-mini-icon--pearl",
+        tan: "stock-tube-mini-icon--tan",
+        pink: "stock-tube-mini-icon--pink"
+      };
+      const tubeAccentByKey = {
+        yellow: { bg: "rgba(250, 204, 21, 0.28)", border: "rgba(180, 120, 8, 0.42)" },
+        grey: { bg: "rgba(156, 163, 175, 0.24)", border: "rgba(107, 114, 128, 0.42)" },
+        purple: { bg: "rgba(168, 85, 247, 0.22)", border: "rgba(126, 34, 206, 0.42)" },
+        green: { bg: "rgba(34, 197, 94, 0.2)", border: "rgba(22, 163, 74, 0.42)" },
+        blue: { bg: "rgba(147, 197, 253, 0.28)", border: "rgba(96, 165, 250, 0.44)" },
+        pearl: { bg: "rgba(229, 231, 235, 0.7)", border: "rgba(148, 163, 184, 0.5)" },
+        tan: { bg: "rgba(212, 163, 115, 0.24)", border: "rgba(180, 125, 76, 0.42)" },
+        pink: { bg: "rgba(236, 72, 153, 0.2)", border: "rgba(219, 39, 119, 0.42)" }
+      };
+
+      function ensureTubeIconStyles() {
+        if (document.getElementById("stockTubeMiniIconStyles")) return;
+
+        const style = document.createElement("style");
+        style.id = "stockTubeMiniIconStyles";
+        style.textContent = `
+          .stock-tube-title-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .stock-tube-mini-icon {
+            --tube-cap: #94a3b8;
+            position: relative;
+            width: 10px;
+            height: 20px;
+            flex: 0 0 10px;
+            border-radius: 4px 4px 6px 6px;
+            border: 1px solid rgba(76, 102, 118, 0.32);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(229, 240, 246, 0.9));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+          }
+          .stock-tube-mini-icon::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -4px;
+            width: 12px;
+            height: 6px;
+            transform: translateX(-50%);
+            border-radius: 4px 4px 2px 2px;
+            background: var(--tube-cap);
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+          }
+          .stock-tube-mini-icon::after {
+            content: "";
+            position: absolute;
+            left: 2px;
+            top: 5px;
+            width: 2px;
+            height: 10px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.6);
+          }
+          .stock-tube-mini-icon--yellow { --tube-cap: #facc15; }
+          .stock-tube-mini-icon--grey { --tube-cap: #9ca3af; }
+          .stock-tube-mini-icon--purple { --tube-cap: #a855f7; }
+          .stock-tube-mini-icon--green { --tube-cap: #22c55e; }
+          .stock-tube-mini-icon--blue { --tube-cap: #93c5fd; }
+          .stock-tube-mini-icon--pearl { --tube-cap: #e5e7eb; }
+          .stock-tube-mini-icon--tan { --tube-cap: #d4a373; }
+          .stock-tube-mini-icon--pink { --tube-cap: #ec4899; }
+          .stock-tube-mode-toggle {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+          }
+          .stock-tube-mode-toggle .group-chip {
+            flex: 1 1 0;
+            min-width: 0;
+            white-space: nowrap;
+            text-align: center;
+            padding: 8px 10px;
+          }
+          .stock-tube-mode-toggle .group-chip.active {
+            background: var(--tube-accent-bg, rgba(15, 118, 110, 0.18));
+            border-color: var(--tube-accent-border, rgba(15, 118, 110, 0.42));
+            color: inherit !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      function ensureTrackingListStyles() {
+        if (document.getElementById("stockOrderTrackingListStyles")) return;
+
+        const style = document.createElement("style");
+        style.id = "stockOrderTrackingListStyles";
+        style.textContent = `
+          .stock-order-track-table {
+            display: grid;
+            gap: 8px;
+          }
+          .stock-order-track-header,
+          .stock-order-track-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr) auto;
+            gap: 10px;
+            align-items: center;
+          }
+          .stock-order-track-header {
+            padding: 0 10px;
+            color: #5a6d79;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+          .stock-order-track-row {
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(15, 118, 110, 0.14);
+            background: rgba(255, 255, 255, 0.72);
+          }
+          .stock-order-track-cell {
+            min-width: 0;
+            color: #17343a;
+            font-size: 0.84rem;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+          }
+          .stock-order-track-status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(15, 118, 110, 0.24);
+            background: rgba(240, 253, 250, 0.92);
+            color: #0d605a;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1.1;
+            white-space: nowrap;
+          }
+          .stock-order-track-status-badge[data-stage="pending"] {
+            background: rgba(250, 204, 21, 0.2);
+            border-color: rgba(202, 138, 4, 0.34);
+            color: #7c4a03;
+          }
+          .stock-order-track-status-badge[data-stage="in-progress"] {
+            background: rgba(59, 130, 246, 0.16);
+            border-color: rgba(37, 99, 235, 0.34);
+            color: #1d4ed8;
+          }
+          .stock-order-track-status-badge[data-stage="completed"] {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(22, 163, 74, 0.34);
+            color: #166534;
+          }
+          .stock-order-track-status-badge[data-stage="issue"] {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(220, 38, 38, 0.34);
+            color: #991b1b;
+          }
+          @media (max-width: 760px) {
+            .stock-order-track-header {
+              display: none;
+            }
+            .stock-order-track-row {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 8px 12px;
+            }
+            .stock-order-track-cell {
+              display: grid;
+              gap: 2px;
+            }
+            .stock-order-track-cell::before {
+              content: attr(data-label);
+              font-size: 0.64rem;
+              font-weight: 800;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: #5a6d79;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      function escapeTrackingValue(value) {
+        if (typeof escapeHtml === "function") return escapeHtml(value);
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function getTrackingStatusMeta(status) {
+        const normalized = typeof normalizeStockRequestStatus === "function"
+          ? normalizeStockRequestStatus(status)
+          : String(status || "").trim().toLowerCase();
+        const safe = normalized || "received";
+        const label = safe.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+        if (safe === "completed") return { label, stage: "completed" };
+        if (safe === "cancelled" || safe === "rejected" || safe === "failed") return { label, stage: "issue" };
+        if (safe === "packed" || safe === "collected" || safe === "in-progress" || safe === "processing") {
+          return { label, stage: "in-progress" };
+        }
+        return { label, stage: "pending" };
+      }
+
+      function patchTrackingListRenderer() {
+        const patchedRenderer = (requests) => {
+          const trackingList = document.getElementById("stockOrderTrackingList");
+          if (!trackingList) return;
+
+          const rows = Array.isArray(requests) ? requests : [];
+          if (!rows.length) {
+            trackingList.innerHTML = '<p class="stock-dashboard-empty">No requests yet. Once you submit an order, it will appear here.</p>';
+            return;
+          }
+
+          const headerMarkup = `
+            <div class="stock-order-track-header" role="row">
+              <span>Requested by</span>
+              <span>Ward / Unit</span>
+              <span>Date</span>
+              <span>Status</span>
+            </div>
+          `;
+
+          const rowsMarkup = rows.map((request) => {
+            const requestedBy = escapeTrackingValue(request?.requestedBy || "Unknown requester");
+            const wardUnit = escapeTrackingValue(request?.wardUnit || "Ward not set");
+            const dateValue = typeof formatStockRequestDateTime === "function"
+              ? formatStockRequestDateTime(request?.createdAt)
+              : String(request?.createdAt || "Unknown time");
+            const date = escapeTrackingValue(dateValue);
+            const statusMeta = getTrackingStatusMeta(request?.status);
+
+            return `
+              <div class="stock-order-track-row" role="row">
+                <span class="stock-order-track-cell" data-label="Requested by">${requestedBy}</span>
+                <span class="stock-order-track-cell" data-label="Ward / Unit">${wardUnit}</span>
+                <span class="stock-order-track-cell" data-label="Date">${date}</span>
+                <span class="stock-order-track-cell" data-label="Status">
+                  <span class="stock-order-track-status-badge" data-stage="${escapeTrackingValue(statusMeta.stage)}">${escapeTrackingValue(statusMeta.label)}</span>
+                </span>
+              </div>
+            `;
+          }).join("");
+
+          trackingList.innerHTML = `<div class="stock-order-track-table" role="table" aria-label="Recent stock orders">${headerMarkup}${rowsMarkup}</div>`;
+        };
+
+        window.renderStockTrackingList = patchedRenderer;
+        try {
+          renderStockTrackingList = patchedRenderer;
+        } catch {
+          // no-op
+        }
+      }
+
+      function buildTubeTitleMarkup(label, key) {
+        const iconClass = tubeIconClassByKey[key] || "";
+        return `<span class="stock-tube-title-row"><span class="stock-tube-mini-icon ${iconClass}" aria-hidden="true"></span><span>${label}</span></span>`;
+      }
+
+      function applyTubeAccent(card, key) {
+        const accent = tubeAccentByKey[key];
+        if (!accent || !(card instanceof HTMLElement)) return;
+        card.style.setProperty("--tube-accent-bg", accent.bg);
+        card.style.setProperty("--tube-accent-border", accent.border);
+      }
+
+      function isTubeItemId(itemId) {
+        return /-tubes-(tray|single)$/.test(String(itemId || ""));
+      }
+
+      function isTubeEachItemId(itemId) {
+        return /-tubes-single$/.test(String(itemId || ""));
+      }
+
+      function isQuantizedByFiveItem(itemId) {
+        const safeItemId = String(itemId || "");
+        return safeItemId === "specimen-jars" || isTubeEachItemId(safeItemId);
+      }
+
+      function getQuantizedMaxByFive(itemId) {
+        if (typeof getStockItemMaxQuantity !== "function") return Infinity;
+        const rawMax = Number(getStockItemMaxQuantity(itemId));
+        if (!Number.isFinite(rawMax)) return Infinity;
+        return Math.max(0, Math.floor(rawMax / 5) * 5);
+      }
+
+      function patchQuantizedFiveStepCounts() {
+        if (typeof setStockItemQuantity !== "function") return;
+        if (setStockItemQuantity.__quantizedFivePatched) return;
+
+        const originalSetStockItemQuantity = setStockItemQuantity;
+        const patchedSetStockItemQuantity = (itemId, quantity) => {
+          const safeItemId = String(itemId || "");
+          let requested = Number(quantity);
+          if (Number.isNaN(requested)) requested = 0;
+
+          if (isQuantizedByFiveItem(safeItemId)) {
+            const current = Math.max(0, Number(stockOrderState?.[safeItemId] || 0));
+
+            // Keep +/- button interaction in exact steps of 5.
+            if (requested === current + 1) {
+              requested = current + 5;
+            } else if (requested === current - 1) {
+              requested = current - 5;
+            } else {
+              requested = Math.round(requested / 5) * 5;
+            }
+
+            const maxByFive = getQuantizedMaxByFive(safeItemId);
+            requested = Number.isFinite(maxByFive)
+              ? Math.min(maxByFive, Math.max(0, requested))
+              : Math.max(0, requested);
+          }
+
+          return originalSetStockItemQuantity(safeItemId, requested);
+        };
+
+        patchedSetStockItemQuantity.__quantizedFivePatched = true;
+        patchedSetStockItemQuantity.__originalSetStockItemQuantity = originalSetStockItemQuantity;
+        setStockItemQuantity = patchedSetStockItemQuantity;
+      }
+
+      function setSpecimenJarInputStep() {
+        const specimenInput = document.querySelector('[data-stock-qty-input="specimen-jars"]');
+        if (specimenInput instanceof HTMLInputElement) {
+          specimenInput.step = "5";
+          specimenInput.inputMode = "numeric";
+          specimenInput.pattern = "[0-9]*";
+        }
+      }
+
+      function enforceLabBagLimit() {
+        if (Array.isArray(stockConsumableItems)) {
+          const labBagItem = stockConsumableItems.find((item) => item.id === "lab-bags");
+          if (labBagItem) {
+            labBagItem.maxQuantity = 4;
+          }
+        }
+
+        const labBagInput = document.querySelector('[data-stock-qty-input="lab-bags"]');
+        if (labBagInput instanceof HTMLInputElement) {
+          labBagInput.max = "4";
+        }
+
+        if (typeof setStockItemQuantity === "function" && Number(stockOrderState?.["lab-bags"] || 0) > 4) {
+          setStockItemQuantity("lab-bags", 4);
+        }
+      }
+
+      function lockInputToButtonsOnly(input) {
+        if (!(input instanceof HTMLInputElement)) return;
+
+        input.readOnly = true;
+        input.setAttribute("readonly", "readonly");
+        input.setAttribute("aria-readonly", "true");
+        input.inputMode = "none";
+
+        input.addEventListener("keydown", (event) => event.preventDefault());
+        input.addEventListener("beforeinput", (event) => event.preventDefault());
+        input.addEventListener("paste", (event) => event.preventDefault());
+        input.addEventListener("wheel", (event) => event.preventDefault(), { passive: false });
+      }
+
+      function enforcePlusMinusOnlyChanges() {
+        const grid = document.getElementById("stockOrderGrid");
+        if (!grid) return;
+
+        grid.querySelectorAll('[data-stock-qty-input], [data-stock-unified-input="true"]').forEach((input) => {
+          lockInputToButtonsOnly(input);
+        });
+
+        if (!grid.dataset.blockCardTapIncrement) {
+          grid.addEventListener("click", (event) => {
+            const target = event.target instanceof Element ? event.target : null;
+            if (!target) return;
+
+            const isStepButton = Boolean(target.closest("[data-stock-qty-step], [data-stock-unified-step]"));
+            const isQuantityInput = Boolean(target.closest('[data-stock-qty-input], [data-stock-unified-input="true"]'));
+            if (isStepButton || isQuantityInput) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+          }, true);
+
+          grid.addEventListener("pointerup", (event) => {
+            const target = event.target instanceof Element ? event.target : null;
+            if (!target) return;
+
+            const isStepButton = Boolean(target.closest("[data-stock-qty-step], [data-stock-unified-step]"));
+            const isQuantityInput = Boolean(target.closest('[data-stock-qty-input], [data-stock-unified-input="true"]'));
+            if (isStepButton || isQuantityInput) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+          }, true);
+
+          grid.dataset.blockCardTapIncrement = "1";
+        }
+      }
+
+      function patchPreviewQuantityWording() {
+        if (typeof formatStockQuantity !== "function") return;
+        if (formatStockQuantity.__tubeOrderPatched) return;
+
+        const originalFormatStockQuantity = formatStockQuantity;
+        const patchedFormatStockQuantity = (item) => {
+          const itemId = String(item?.id || "");
+          if (!isTubeItemId(itemId)) {
+            return originalFormatStockQuantity(item);
+          }
+
+          const quantity = Math.max(0, Number(item?.quantity) || 0);
+          if (String(item?.unitType || "") === "tray") {
+            return `${quantity} tray${quantity === 1 ? "" : "s"}`;
+          }
+          return `${quantity} each`;
+        };
+
+        patchedFormatStockQuantity.__tubeOrderPatched = true;
+        formatStockQuantity = patchedFormatStockQuantity;
+      }
+
+      function renameSinglesToEach() {
+        if (!Array.isArray(stockConsumableItems)) return;
+
+        stockConsumableItems.forEach((item) => {
+          if (!String(item?.id || "").endsWith("-tubes-single")) return;
+          item.variantLabel = "Each";
+        });
+      }
+
+      function getQuantityFromState(itemId) {
+        return Math.max(0, Number(stockOrderState?.[itemId] || 0));
+      }
+
+      function applyUnifiedTubeUi() {
+        const grid = document.getElementById("stockOrderGrid");
+        if (!grid || !Array.isArray(stockConsumableItems) || typeof setStockItemQuantity !== "function") return false;
+
+        grid.querySelectorAll("[data-stock-unified-tube]").forEach((node) => node.remove());
+
+        tubeConfigs.forEach((config) => {
+          const trayId = `${config.key}-tubes-tray`;
+          const eachId = `${config.key}-tubes-single`;
+          const trayItem = stockConsumableItems.find((item) => item.id === trayId);
+          const eachItem = stockConsumableItems.find((item) => item.id === eachId);
+          if (!trayItem || !eachItem) return;
+
+          const trayCard = grid.querySelector(`[data-stock-item="${trayId}"]`);
+          const eachCard = grid.querySelector(`[data-stock-item="${eachId}"]`);
+          if (!trayCard || !eachCard) return;
+
+          trayCard.style.display = "none";
+          eachCard.style.display = "none";
+
+          const card = document.createElement("article");
+          card.className = "stock-order-card stock-order-item-card";
+          card.setAttribute("data-stock-unified-tube", config.key);
+          card.dataset.mode = "tray";
+          applyTubeAccent(card, config.key);
+
+          const eachMax = Math.max(1, Number(eachItem.maxQuantity) || 99);
+          const trayMax = Math.max(1, Number(config.trayMax) || 1);
+
+          card.innerHTML = `
+            <div class="stock-order-item-head">
+              <h3>${buildTubeTitleMarkup(trayItem.label, config.key)}</h3>
+              <p class="stock-order-item-copy">${config.helper}</p>
+            </div>
+            <div class="group-chips stock-tube-mode-toggle" role="group" aria-label="${trayItem.label} mode">
+              <button type="button" class="group-chip active" data-stock-mode="tray" aria-pressed="true">Tray (100)</button>
+              <button type="button" class="group-chip" data-stock-mode="each" aria-pressed="false">Each</button>
+            </div>
+            <div class="stock-order-qty-row">
+              <button
+                type="button"
+                class="stock-order-qty-btn"
+                data-stock-unified-step="-1"
+                aria-label="Reduce ${trayItem.label}"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                class="stock-order-qty-input"
+                data-stock-unified-input="true"
+                aria-label="${trayItem.label} quantity"
+              />
+              <button
+                type="button"
+                class="stock-order-qty-btn"
+                data-stock-unified-step="1"
+                aria-label="Increase ${trayItem.label}"
+              >
+                +
+              </button>
+            </div>
+          `;
+
+          const trayToggleBtn = card.querySelector('[data-stock-mode="tray"]');
+          const eachToggleBtn = card.querySelector('[data-stock-mode="each"]');
+          const quantityInput = card.querySelector('[data-stock-unified-input="true"]');
+
+          function getActiveItemId() {
+            return card.dataset.mode === "each" ? eachId : trayId;
+          }
+
+          function getActiveMax() {
+            return card.dataset.mode === "each" ? eachMax : trayMax;
+          }
+
+          function syncToggleUi() {
+            const isTray = card.dataset.mode !== "each";
+            const accentBg = getComputedStyle(card).getPropertyValue("--tube-accent-bg").trim() || "rgba(15, 118, 110, 0.18)";
+            const accentBorder = getComputedStyle(card).getPropertyValue("--tube-accent-border").trim() || "rgba(15, 118, 110, 0.42)";
+            const resetButtonStyle = (button) => {
+              if (!(button instanceof HTMLButtonElement)) return;
+              button.style.background = "";
+              button.style.borderColor = "";
+            };
+            const applyActiveButtonStyle = (button) => {
+              if (!(button instanceof HTMLButtonElement)) return;
+              button.style.background = accentBg;
+              button.style.borderColor = accentBorder;
+            };
+
+            if (trayToggleBtn) {
+              trayToggleBtn.classList.toggle("active", isTray);
+              trayToggleBtn.setAttribute("aria-pressed", isTray ? "true" : "false");
+              if (isTray) {
+                applyActiveButtonStyle(trayToggleBtn);
+              } else {
+                resetButtonStyle(trayToggleBtn);
+              }
+            }
+            if (eachToggleBtn) {
+              eachToggleBtn.classList.toggle("active", !isTray);
+              eachToggleBtn.setAttribute("aria-pressed", !isTray ? "true" : "false");
+              if (!isTray) {
+                applyActiveButtonStyle(eachToggleBtn);
+              } else {
+                resetButtonStyle(eachToggleBtn);
+              }
+            }
+          }
+
+          function syncInputUi() {
+            if (!(quantityInput instanceof HTMLInputElement)) return;
+            const currentQuantity = getQuantityFromState(getActiveItemId());
+            quantityInput.value = String(currentQuantity);
+            quantityInput.max = String(getActiveMax());
+            quantityInput.step = card.dataset.mode === "each" ? "5" : "1";
+            quantityInput.inputMode = "numeric";
+            quantityInput.pattern = "[0-9]*";
+          }
+
+          function setMode(nextMode) {
+            const normalized = nextMode === "each" ? "each" : "tray";
+            if (card.dataset.mode === normalized) return;
+            card.dataset.mode = normalized;
+            setStockItemQuantity(trayId, 0);
+            setStockItemQuantity(eachId, 0);
+            syncToggleUi();
+            syncInputUi();
+          }
+
+          function setActiveQuantity(quantity) {
+            const max = getActiveMax();
+            const safeQuantity = Math.min(max, Math.max(0, Number(quantity) || 0));
+            const activeItemId = getActiveItemId();
+            const inactiveItemId = activeItemId === trayId ? eachId : trayId;
+            setStockItemQuantity(inactiveItemId, 0);
+            setStockItemQuantity(activeItemId, safeQuantity);
+            syncInputUi();
+          }
+
+          trayToggleBtn?.addEventListener("click", () => setMode("tray"));
+          eachToggleBtn?.addEventListener("click", () => setMode("each"));
+
+          card.querySelectorAll("[data-stock-unified-step]").forEach((button) => {
+            button.addEventListener("click", () => {
+              const direction = Number(button.getAttribute("data-stock-unified-step") || "0");
+              const current = getQuantityFromState(getActiveItemId());
+              setActiveQuantity(current + direction);
+            });
+          });
+
+          quantityInput?.addEventListener("input", () => {
+            setActiveQuantity(quantityInput.value);
+          });
+
+          syncToggleUi();
+          syncInputUi();
+
+          trayCard.insertAdjacentElement("beforebegin", card);
+        });
+
+        const pinkSingleItem = stockConsumableItems.find((item) => item.id === "pink-tubes-single");
+        if (pinkSingleItem) {
+          pinkSingleItem.variantLabel = "Each";
+          const pinkCard = grid.querySelector('[data-stock-item="pink-tubes-single"]');
+          const pinkHeading = pinkCard?.querySelector(".stock-order-item-head h3");
+          if (pinkHeading && !pinkHeading.dataset.tubeIconApplied) {
+            const label = String(pinkHeading.textContent || pinkSingleItem.label || "Pink (Blood Bank) tubes").trim();
+            pinkHeading.innerHTML = buildTubeTitleMarkup(label, "pink");
+            pinkHeading.dataset.tubeIconApplied = "1";
+          }
+        }
+
+        return true;
+      }
+
+      function syncUnifiedTubeInputs() {
+        document.querySelectorAll("[data-stock-unified-tube]").forEach((card) => {
+          const mode = card.dataset.mode === "each" ? "each" : "tray";
+          const tubeKey = card.getAttribute("data-stock-unified-tube") || "";
+          const itemId = `${tubeKey}-tubes-${mode === "each" ? "single" : "tray"}`;
+          const input = card.querySelector('[data-stock-unified-input="true"]');
+          if (input instanceof HTMLInputElement) {
+            input.value = String(getQuantityFromState(itemId));
+          }
+        });
+      }
+
+      function bootUnifiedTubeUi() {
+        ensureTubeIconStyles();
+        ensureTrackingListStyles();
+        patchTrackingListRenderer();
+        patchQuantizedFiveStepCounts();
+        patchPreviewQuantityWording();
+        renameSinglesToEach();
+        const applied = applyUnifiedTubeUi();
+        if (!applied) {
+          window.setTimeout(bootUnifiedTubeUi, 80);
+          return;
+        }
+
+        setSpecimenJarInputStep();
+        enforceLabBagLimit();
+        enforcePlusMinusOnlyChanges();
+
+        const resetBtn = document.getElementById("resetStockOrderBtn");
+        resetBtn?.addEventListener("click", () => {
+          window.setTimeout(syncUnifiedTubeInputs, 0);
+          window.setTimeout(setSpecimenJarInputStep, 0);
+          window.setTimeout(enforceLabBagLimit, 0);
+          window.setTimeout(enforcePlusMinusOnlyChanges, 0);
+        });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootUnifiedTubeUi, { once: true });
+      } else {
+        bootUnifiedTubeUi();
+      }
+    })();
+  </script>
   <script>
     if ("serviceWorker" in navigator) {
       const APP_VERSION = "2026-04-02.2";
