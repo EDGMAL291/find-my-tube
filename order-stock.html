@@ -352,6 +352,17 @@
             border-color: var(--tube-accent-border, rgba(15, 118, 110, 0.42));
             color: inherit !important;
           }
+          #stockOrderGrid [data-stock-item],
+          #stockOrderGrid [data-stock-unified-tube] {
+            pointer-events: none;
+          }
+          #stockOrderGrid [data-stock-item] [data-stock-qty-step],
+          #stockOrderGrid [data-stock-item] [data-stock-qty-input],
+          #stockOrderGrid [data-stock-unified-tube] [data-stock-unified-step],
+          #stockOrderGrid [data-stock-unified-tube] [data-stock-unified-input="true"],
+          #stockOrderGrid [data-stock-unified-tube] [data-stock-mode] {
+            pointer-events: auto;
+          }
         `;
         document.head.appendChild(style);
       }
@@ -647,36 +658,6 @@
         grid.querySelectorAll('[data-stock-qty-input], [data-stock-unified-input="true"]').forEach((input) => {
           lockInputToButtonsOnly(input);
         });
-
-        if (!grid.dataset.blockCardTapIncrement) {
-          grid.addEventListener("click", (event) => {
-            const target = event.target instanceof Element ? event.target : null;
-            if (!target) return;
-
-            const isStepButton = Boolean(target.closest("[data-stock-qty-step], [data-stock-unified-step]"));
-            const isQuantityInput = Boolean(target.closest('[data-stock-qty-input], [data-stock-unified-input="true"]'));
-            const isModeToggle = Boolean(target.closest("[data-stock-mode]"));
-            if (isStepButton || isQuantityInput || isModeToggle) return;
-
-            event.preventDefault();
-            event.stopPropagation();
-          }, true);
-
-          grid.addEventListener("pointerup", (event) => {
-            const target = event.target instanceof Element ? event.target : null;
-            if (!target) return;
-
-            const isStepButton = Boolean(target.closest("[data-stock-qty-step], [data-stock-unified-step]"));
-            const isQuantityInput = Boolean(target.closest('[data-stock-qty-input], [data-stock-unified-input="true"]'));
-            const isModeToggle = Boolean(target.closest("[data-stock-mode]"));
-            if (isStepButton || isQuantityInput || isModeToggle) return;
-
-            event.preventDefault();
-            event.stopPropagation();
-          }, true);
-
-          grid.dataset.blockCardTapIncrement = "1";
-        }
       }
 
       function patchPreviewQuantityWording() {
