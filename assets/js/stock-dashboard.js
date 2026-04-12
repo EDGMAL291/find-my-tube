@@ -1390,8 +1390,26 @@ stockDashboardCreateUserForm?.addEventListener("submit", (event) => {
   createStockDashboardUser();
 });
 
+stockDashboardOpenCreateUserBtn?.addEventListener("click", () => {
+  if (!stockDashboardSession?.isOwner) return;
+  stockDashboardSetCreateUserModalOpen(true);
+});
+
+stockDashboardCloseCreateUserModalBtn?.addEventListener("click", () => {
+  stockDashboardSetCreateUserModalOpen(false);
+});
+
+stockDashboardCreateUserModal?.addEventListener("click", (event) => {
+  if (event.target !== stockDashboardCreateUserModal) return;
+  stockDashboardSetCreateUserModalOpen(false);
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  if (!stockDashboardCreateUserModal?.hidden) {
+    stockDashboardSetCreateUserModalOpen(false);
+    return;
+  }
   if (stockDashboardAccessCard?.hidden) return;
   stockDashboardReturnToPreviousPage();
 });
