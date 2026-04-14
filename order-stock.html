@@ -745,15 +745,10 @@
       function attachCoreControlFallbacks() {
         const menuBtn = document.getElementById("menuToggleBtn");
         const menuPanel = document.getElementById("siteMenuPanel");
-        if (menuBtn instanceof HTMLButtonElement && menuPanel instanceof HTMLElement && menuBtn.dataset.menuFallbackBound !== "1") {
+        const hasCoreMenuController = typeof setSiteMenuOpen === "function";
+        if (!hasCoreMenuController && menuBtn instanceof HTMLButtonElement && menuPanel instanceof HTMLElement && menuBtn.dataset.menuFallbackBound !== "1") {
           menuBtn.dataset.menuFallbackBound = "1";
           menuBtn.addEventListener("click", () => {
-            if (typeof setSiteMenuOpen === "function") {
-              const expanded = menuBtn.getAttribute("aria-expanded") === "true";
-              setSiteMenuOpen(!expanded);
-              return;
-            }
-
             const isHidden = menuPanel.hasAttribute("hidden");
             if (isHidden) {
               menuPanel.removeAttribute("hidden");
@@ -765,12 +760,26 @@
         }
 
         const homeBtn = document.getElementById("brandHomeBtn");
-        if (homeBtn instanceof HTMLButtonElement && homeBtn.dataset.homeFallbackBound !== "1") {
+        const hasCoreHomeController = typeof goHome === "function";
+        if (!hasCoreHomeController && homeBtn instanceof HTMLButtonElement && homeBtn.dataset.homeFallbackBound !== "1") {
           homeBtn.dataset.homeFallbackBound = "1";
           homeBtn.addEventListener("click", () => {
             window.location.assign("./index.html");
           });
         }
+      }
+
+      function hideLegacyTubeCards() {
+        const grid = document.getElementById("stockOrderGrid");
+        if (!grid) return;
+
+        grid.querySelectorAll('[data-stock-item$="-tubes-tray"], [data-stock-item$="-tubes-single"]').forEach((card) => {
+          if (!(card instanceof HTMLElement)) return;
+          const itemId = card.getAttribute("data-stock-item") || "";
+          if (itemId === "pink-tubes-single") return;
+          card.style.display = "none";
+          card.setAttribute("aria-hidden", "true");
+        });
       }
 
       function buildTubeTitleMarkup(label, key) {
@@ -1162,6 +1171,9 @@
           patchSubmitGuardForHostedApi();
           attachSubmitRequestFallback();
           attachCoreControlFallbacks();
+          if (typeof setSiteMenuOpen === "function") {
+            setSiteMenuOpen(false);
+          }
           patchQuantizedFiveStepCounts();
           patchPreviewQuantityWording();
           renameSinglesToEach();
@@ -1175,6 +1187,7 @@
           }
 
           unifiedTubeBootRetries = 0;
+          hideLegacyTubeCards();
           setSpecimenJarInputStep();
           enforceLabBagLimit();
           enforcePlusMinusOnlyChanges();

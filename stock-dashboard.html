@@ -119,77 +119,18 @@
           <h3 id="stockDashboardSessionUser">Lab user</h3>
         </div>
         <div class="stock-dashboard-session-actions">
-          <button type="button" class="quick-tool-clear-btn" id="clearStockDataBtn" hidden>Clear request data</button>
           <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn">Log out</button>
         </div>
       </section>
 
-      <section class="stock-order-request-card" id="stockDashboardUserAdminCard" hidden aria-labelledby="stockDashboardUserAdminTitle">
+      <section class="stock-order-request-card" id="stockDashboardRequestsCard" hidden>
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Admin only</p>
-            <h3 id="stockDashboardUserAdminTitle">Manage lab users</h3>
-          </div>
-          <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review lab user logins.</p>
-        </div>
-        <div class="stock-dashboard-inline-actions">
-          <button type="button" class="quick-tool-launch-btn" id="stockDashboardOpenCreateUserBtn">Create User</button>
-        </div>
-
-        <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
-      </section>
-
-      <section class="stock-order-request-card" id="stockDashboardReceiptCard" hidden aria-labelledby="stockDashboardReceiptTitle">
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Supplier intake</p>
-            <h3 id="stockDashboardReceiptTitle">Add received stock</h3>
-          </div>
-          <p class="stock-dashboard-status" id="stockDashboardReceiptStatus">Record tubes and consumables received from suppliers.</p>
-        </div>
-
-        <form class="stock-order-form" id="stockDashboardReceiptForm">
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">Supplier</span>
-            <input type="text" id="stockDashboardReceiptSupplierInput" placeholder="Supplier name" autocomplete="organization" />
-          </label>
-
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">Reference</span>
-            <input type="text" id="stockDashboardReceiptReferenceInput" placeholder="Delivery note or invoice number" />
-          </label>
-
-          <label class="stock-order-field stock-order-field-wide">
-            <span class="stock-order-field-label">Notes</span>
-            <textarea id="stockDashboardReceiptNoteInput" rows="2" placeholder="Optional note about the delivery"></textarea>
-          </label>
-        </form>
-
-        <div class="stock-order-grid stock-dashboard-stock-grid" id="stockDashboardReceiptGrid" aria-label="Received stock items"></div>
-        <div class="stock-dashboard-inline-actions">
-          <button type="button" class="quick-tool-launch-btn" id="stockDashboardReceiptSubmitBtn">Save received stock</button>
-          <button type="button" class="quick-tool-clear-btn" id="stockDashboardReceiptResetBtn">Clear</button>
-        </div>
-      </section>
-
-      <section class="stock-order-request-card" id="stockDashboardInventoryCard" hidden aria-labelledby="stockDashboardInventoryTitle">
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Stock on hand</p>
-            <h3 id="stockDashboardInventoryTitle">Current inventory</h3>
-          </div>
-          <p class="stock-dashboard-status" id="stockDashboardInventoryStatus">Signed-in lab users can review live stock balances here.</p>
-        </div>
-
-        <div class="stock-dashboard-list" id="stockDashboardInventoryList"></div>
-
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Recent deliveries</p>
-            <h3>Supplier receipts</h3>
+            <p class="stock-order-kicker">Work queue</p>
+            <h3>Recent consumables requests</h3>
           </div>
         </div>
-        <div class="stock-dashboard-list" id="stockDashboardReceiptList"></div>
+        <div class="stock-dashboard-request-list" id="stockDashboardRequestList"></div>
       </section>
 
       <section class="stock-order-request-card stock-dashboard-hero">
@@ -205,7 +146,7 @@
         </div>
       </section>
 
-      <section class="stock-order-request-card" id="stockDashboardNotificationCard" hidden aria-labelledby="stockDashboardNotificationTitle">
+      <section class="stock-order-request-card stock-dashboard-notification-card" id="stockDashboardNotificationCard" hidden aria-labelledby="stockDashboardNotificationTitle">
         <div class="stock-order-request-head">
           <div>
             <p class="stock-order-kicker">Lab notifications</p>
@@ -271,14 +212,72 @@
         </article>
       </section>
 
-      <section class="stock-order-request-card" id="stockDashboardRequestsCard" hidden>
+      <section class="stock-order-request-card" id="stockDashboardReceiptCard" hidden aria-labelledby="stockDashboardReceiptTitle">
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Requests</p>
-            <h3>Recent consumables requests</h3>
+            <p class="stock-order-kicker">Supplier intake</p>
+            <h3 id="stockDashboardReceiptTitle">Add received stock</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardReceiptStatus">Record tubes and consumables received from suppliers.</p>
+        </div>
+
+        <form class="stock-order-form" id="stockDashboardReceiptForm">
+          <label class="stock-order-field">
+            <span class="stock-order-field-label">Supplier</span>
+            <input type="text" id="stockDashboardReceiptSupplierInput" placeholder="Supplier name" autocomplete="organization" />
+          </label>
+
+          <label class="stock-order-field">
+            <span class="stock-order-field-label">Reference</span>
+            <input type="text" id="stockDashboardReceiptReferenceInput" placeholder="Delivery note or invoice number" />
+          </label>
+
+          <label class="stock-order-field stock-order-field-wide">
+            <span class="stock-order-field-label">Notes</span>
+            <textarea id="stockDashboardReceiptNoteInput" rows="2" placeholder="Optional note about the delivery"></textarea>
+          </label>
+        </form>
+
+        <div class="stock-order-grid stock-dashboard-stock-grid" id="stockDashboardReceiptGrid" aria-label="Received stock items"></div>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardReceiptSubmitBtn">Save received stock</button>
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardReceiptResetBtn">Clear</button>
+        </div>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardInventoryCard" hidden aria-labelledby="stockDashboardInventoryTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Stock on hand</p>
+            <h3 id="stockDashboardInventoryTitle">Current inventory</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardInventoryStatus">Signed-in lab users can review live stock balances here.</p>
+        </div>
+
+        <div class="stock-dashboard-list" id="stockDashboardInventoryList"></div>
+
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Recent deliveries</p>
+            <h3>Supplier receipts</h3>
           </div>
         </div>
-        <div class="stock-dashboard-request-list" id="stockDashboardRequestList"></div>
+        <div class="stock-dashboard-list" id="stockDashboardReceiptList"></div>
+      </section>
+
+      <section class="stock-order-request-card" id="stockDashboardUserAdminCard" hidden aria-labelledby="stockDashboardUserAdminTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Admin only</p>
+            <h3 id="stockDashboardUserAdminTitle">Manage lab users</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review lab user logins.</p>
+        </div>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardOpenCreateUserBtn">Create User</button>
+        </div>
+
+        <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
       </section>
     </main>
 

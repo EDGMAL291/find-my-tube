@@ -164,6 +164,16 @@ function stockDashboardNormalizeStatus(status) {
   return safeStatus || "received";
 }
 
+function stockDashboardGetQueueStatusMeta(status) {
+  const safeStatus = stockDashboardNormalizeStatus(status);
+  if (safeStatus === "received") return { label: "New", stage: "new" };
+  if (safeStatus === "processing" || safeStatus === "in-progress") return { label: "In progress", stage: "in-progress" };
+  if (safeStatus === "packed") return { label: "Packed", stage: "packed" };
+  if (safeStatus === "collected" || safeStatus === "completed") return { label: "Delivered", stage: "delivered" };
+  if (safeStatus === "cancelled" || safeStatus === "rejected" || safeStatus === "failed") return { label: "Cancelled", stage: "cancelled" };
+  return { label: "In progress", stage: "in-progress" };
+}
+
 function stockDashboardGetHeaders(includeJson = false) {
   const headers = {};
   if (includeJson) {
@@ -648,11 +658,11 @@ async function loadPublicStockDashboardRequests() {
     if (stockDashboardStatus && !stockDashboardSession) {
       stockDashboardStatus.textContent = requests.length
         ? `Showing ${requests.length} recent submitted request${requests.length === 1 ? "" : "s"}. Sign in to manage statuses.`
-        : "No requests have been submitted yet.";
+        : "No consumables requests yet. New ward requests will appear here automatically.";
     }
   } catch {
     if (stockDashboardRequestList) {
-      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No requests available yet.</p>';
+      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Dashboard data could not load. Please check your connection or refresh the page.</p>';
     }
   }
 }
@@ -755,8 +765,7 @@ async function loadStockDashboardUsers() {
     stockDashboardUserList.innerHTML = users.length
       ? users.map((user) => `
         <div class="stock-dashboard-list-row">
-          <span>${stockDashboardEscapeHtml(stockDashboardGetDisplayName(user) || `Lab user ${user.userNumber}`)}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}<br /><small>${stockDashboardEscapeHtml(user.userNumber)}</small></span>
-          <strong>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(user.createdAt))}</strong>
+          <span>${stockDashboardEscapeHtml(stockDashboardGetDisplayName(user) || "Lab user")}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}</span>
         </div>
       `).join("")
       : '<p class="stock-dashboard-empty">No lab users yet.</p>';
@@ -1091,29 +1100,21 @@ function renderStockDashboardStats(stats) {
 function renderStockDashboardRequests(requests) {
   if (!stockDashboardRequestList) return;
 
-  const activeRequests = Array.isArray(requests)
-    ? requests.filter((request) => stockDashboardNormalizeStatus(request?.status) !== "completed")
-    : [];
+  const activeRequests = Array.isArray(requests) ? requests : [];
 
   if (!activeRequests.length) {
-    stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No requests have been submitted yet.</p>';
+    stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No consumables requests yet. New ward requests will appear here automatically.</p>';
     return;
   }
 
-  stockDashboardRequestList.innerHTML = activeRequests.map((request) => {
+  const queueRows = activeRequests.map((request) => {
     const safeStatus = stockDashboardNormalizeStatus(request?.status);
+    const statusMeta = stockDashboardGetQueueStatusMeta(safeStatus);
     const items = Array.isArray(request.items) ? request.items : [];
     const itemSummary = items.map((item) => {
       const label = item.variantLabel ? `${item.label} - ${item.variantLabel}` : item.label;
       return `${label}: ${item.formattedQuantity || item.quantity}`;
-    }).join("\n");
-    const updateMeta = request.statusUpdatedAt || request.updatedAt
-      ? `Last update ${stockDashboardFormatDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
-      : "";
-    const sourceLabel = request.source === "lab-manual-entry"
-      ? `Walk-in entry by lab user ${request.enteredBy || ""}`.trim()
-      : "Ordered in app";
-    const auditRows = stockDashboardBuildAuditRows(request);
+    }).join(" | ");
     const statusButtons = STOCK_DASHBOARD_STATUS_ORDER.map((status) => `
       <button
         type="button"
@@ -1126,29 +1127,33 @@ function renderStockDashboardRequests(requests) {
     `).join("");
 
     return `
-      <article class="stock-dashboard-request-card" data-dashboard-request="${stockDashboardEscapeHtml(request.id)}">
-        <div class="stock-dashboard-request-top">
-          <div>
-            <p class="stock-order-kicker">${stockDashboardEscapeHtml(request.id)}</p>
-            <h4>${stockDashboardEscapeHtml(request.requestedBy || "Unknown requester")}</h4>
-          </div>
-          <span class="stock-order-status-badge" data-status="${stockDashboardEscapeHtml(safeStatus)}">${stockDashboardEscapeHtml(stockDashboardFormatStatus(safeStatus))}</span>
+      <div class="stock-dashboard-queue-row" role="row" data-dashboard-request="${stockDashboardEscapeHtml(request.id)}">
+        <div class="stock-dashboard-queue-cell" data-label="Requested by">${stockDashboardEscapeHtml(request.requestedBy || "Unknown requester")}</div>
+        <div class="stock-dashboard-queue-cell" data-label="Ward / Unit">${stockDashboardEscapeHtml(request.wardUnit || "No ward set")}</div>
+        <div class="stock-dashboard-queue-cell" data-label="Date / Time">${stockDashboardEscapeHtml(stockDashboardFormatDateTime(request.createdAt))}</div>
+        <div class="stock-dashboard-queue-cell stock-dashboard-queue-items" data-label="Items requested">${stockDashboardEscapeHtml(itemSummary || "No items listed")}</div>
+        <div class="stock-dashboard-queue-cell" data-label="Status">
+          <span class="stock-dashboard-queue-status-badge" data-stage="${stockDashboardEscapeHtml(statusMeta.stage)}">${stockDashboardEscapeHtml(statusMeta.label)}</span>
         </div>
-        <div class="stock-dashboard-request-meta">
-          <span>${stockDashboardEscapeHtml(request.wardUnit || "No ward set")}</span>
-          <span>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(request.createdAt))}</span>
-          <span>${stockDashboardEscapeHtml(sourceLabel)}</span>
-        </div>
-        <p class="stock-dashboard-request-items">${stockDashboardEscapeHtml(itemSummary || "No items listed")}</p>
-        ${updateMeta ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(updateMeta)}</p>` : ""}
-        ${request.notes ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(request.notes)}</p>` : ""}
-        ${auditRows ? `<div class="stock-dashboard-audit-list">${auditRows}</div>` : ""}
-        <div class="stock-dashboard-status-row">
+        <div class="stock-dashboard-queue-actions">
           ${statusButtons}
         </div>
-      </article>
+      </div>
     `;
   }).join("");
+
+  stockDashboardRequestList.innerHTML = `
+    <div class="stock-dashboard-queue" role="table" aria-label="Recent consumables requests queue">
+      <div class="stock-dashboard-queue-head" role="row">
+        <span>Requested by</span>
+        <span>Ward / Unit</span>
+        <span>Date / Time</span>
+        <span>Items requested</span>
+        <span>Status</span>
+      </div>
+      ${queueRows}
+    </div>
+  `;
 }
 
 async function loadStockDashboard(options = {}) {
@@ -1199,7 +1204,10 @@ async function loadStockDashboard(options = {}) {
       stockDashboardStatus.textContent = `Updated ${stockDashboardFormatDateTime(new Date().toISOString())}`;
     }
   } catch {
-    stockDashboardStatus.textContent = "Could not load dashboard data.";
+    stockDashboardStatus.textContent = "Dashboard data could not load. Please check your connection or refresh the page.";
+    if (stockDashboardRequestList) {
+      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Dashboard data could not load. Please check your connection or refresh the page.</p>';
+    }
     loadPublicStockDashboardRequests();
   } finally {
     if (!silent) {
