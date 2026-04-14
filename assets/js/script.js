@@ -1121,7 +1121,7 @@ function buildStockOrderRequestText() {
 
 // Updates the consumables request preview.
 function updateStockOrderPreview() {
-  if (!stockOrderRequestPreview || !stockOrderRequestMeta || !copyStockOrderBtn || !shareStockOrderWhatsappBtn) return;
+  if (!stockOrderRequestPreview || !stockOrderRequestMeta) return;
 
   const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
@@ -1159,13 +1159,17 @@ function updateStockOrderPreview() {
     submitStockOrderBtn.textContent = isSubmittingStockOrder ? "Submitting..." : "Submit Request";
     submitStockOrderBtn.setAttribute("aria-disabled", submitStockOrderBtn.disabled ? "true" : "false");
   }
-  copyStockOrderBtn.disabled = !hasRequest;
-  shareStockOrderWhatsappBtn.classList.toggle("is-disabled", !hasRequest);
-  shareStockOrderWhatsappBtn.setAttribute("aria-disabled", hasRequest ? "false" : "true");
-  shareStockOrderWhatsappBtn.href = hasRequest
-    ? `https://wa.me/?text=${encodeURIComponent(requestText)}`
-    : "#";
-  shareStockOrderWhatsappBtn.tabIndex = hasRequest ? 0 : -1;
+  if (copyStockOrderBtn) {
+    copyStockOrderBtn.disabled = !hasRequest;
+  }
+  if (shareStockOrderWhatsappBtn) {
+    shareStockOrderWhatsappBtn.classList.toggle("is-disabled", !hasRequest);
+    shareStockOrderWhatsappBtn.setAttribute("aria-disabled", hasRequest ? "false" : "true");
+    shareStockOrderWhatsappBtn.href = hasRequest
+      ? `https://wa.me/?text=${encodeURIComponent(requestText)}`
+      : "#";
+    shareStockOrderWhatsappBtn.tabIndex = hasRequest ? 0 : -1;
+  }
 }
 
 // Sets a consumables quantity.

@@ -282,6 +282,7 @@
         tan: { bg: "rgba(212, 163, 115, 0.24)", border: "rgba(180, 125, 76, 0.42)" },
         pink: { bg: "rgba(236, 72, 153, 0.2)", border: "rgba(219, 39, 119, 0.42)" }
       };
+      let unifiedTubeBootRetries = 0;
 
       function ensureTubeIconStyles() {
         if (document.getElementById("stockTubeMiniIconStyles")) return;
@@ -731,9 +732,9 @@
           }
         };
 
-        const interceptAndSubmit = (event) => {
-          event.preventDefault();
-          event.stopImmediatePropagation();
+        // Keep fallback submit lightweight and non-blocking.
+        // We do not cancel the native event chain so core handlers remain responsive.
+        const interceptAndSubmit = () => {
           runSubmit();
         };
 
@@ -1153,34 +1154,42 @@
       }
 
       function bootUnifiedTubeUi() {
-        ensureTubeIconStyles();
-        ensureTrackingListStyles();
-        patchTrackingListRenderer();
-        startTrackingFallback();
-        patchSubmitGuardForHostedApi();
-        attachSubmitRequestFallback();
-        attachCoreControlFallbacks();
-        patchQuantizedFiveStepCounts();
-        patchPreviewQuantityWording();
-        renameSinglesToEach();
-        const applied = applyUnifiedTubeUi();
-        if (!applied) {
-          window.setTimeout(bootUnifiedTubeUi, 80);
-          return;
+        try {
+          ensureTubeIconStyles();
+          ensureTrackingListStyles();
+          patchTrackingListRenderer();
+          startTrackingFallback();
+          patchSubmitGuardForHostedApi();
+          attachSubmitRequestFallback();
+          attachCoreControlFallbacks();
+          patchQuantizedFiveStepCounts();
+          patchPreviewQuantityWording();
+          renameSinglesToEach();
+          const applied = applyUnifiedTubeUi();
+          if (!applied) {
+            unifiedTubeBootRetries += 1;
+            if (unifiedTubeBootRetries <= 80) {
+              window.setTimeout(bootUnifiedTubeUi, 80);
+            }
+            return;
+          }
+
+          unifiedTubeBootRetries = 0;
+          setSpecimenJarInputStep();
+          enforceLabBagLimit();
+          enforcePlusMinusOnlyChanges();
+
+          const resetBtn = document.getElementById("resetStockOrderBtn");
+          resetBtn?.addEventListener("click", () => {
+            window.setTimeout(resetUnifiedTubeModesToDefault, 0);
+            window.setTimeout(syncUnifiedTubeInputs, 0);
+            window.setTimeout(setSpecimenJarInputStep, 0);
+            window.setTimeout(enforceLabBagLimit, 0);
+            window.setTimeout(enforcePlusMinusOnlyChanges, 0);
+          });
+        } catch (error) {
+          console.error("Order Stock UI boot failed", error);
         }
-
-        setSpecimenJarInputStep();
-        enforceLabBagLimit();
-        enforcePlusMinusOnlyChanges();
-
-        const resetBtn = document.getElementById("resetStockOrderBtn");
-        resetBtn?.addEventListener("click", () => {
-          window.setTimeout(resetUnifiedTubeModesToDefault, 0);
-          window.setTimeout(syncUnifiedTubeInputs, 0);
-          window.setTimeout(setSpecimenJarInputStep, 0);
-          window.setTimeout(enforceLabBagLimit, 0);
-          window.setTimeout(enforcePlusMinusOnlyChanges, 0);
-        });
       }
 
       if (document.readyState === "loading") {

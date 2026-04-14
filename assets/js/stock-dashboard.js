@@ -1205,10 +1205,6 @@ async function updateStockDashboardRequestStatus(requestId, status) {
   if (!requestId || !status || !stockDashboardStatus || !stockDashboardSession) return;
 
   const safeStatus = String(status || "").trim().toLowerCase();
-  if (safeStatus === "collected") {
-    const confirmed = window.confirm("Mark this order as collected? Use this only when the ward has physically collected it.");
-    if (!confirmed) return;
-  }
   if (safeStatus === "completed") {
     const confirmed = window.confirm("Mark this order as completed? This should only be done once it has been fully issued or distributed.");
     if (!confirmed) return;
