@@ -139,46 +139,6 @@
         <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
       </section>
 
-      <section class="stock-order-request-card" id="stockDashboardManualEntryCard" hidden aria-labelledby="stockDashboardManualEntryTitle">
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Lab manual entry</p>
-            <h3 id="stockDashboardManualEntryTitle">Capture walk-in requests</h3>
-          </div>
-          <p class="stock-dashboard-status" id="stockDashboardManualEntryStatus">Use this when stock is collected in person and was not ordered in the app.</p>
-        </div>
-
-        <form class="stock-order-form" id="stockDashboardManualEntryForm">
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">Display name</span>
-            <input type="text" id="stockDashboardCreateUserNameInput" autocomplete="name" placeholder="Name" />
-          </label>
-
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">New user number</span>
-            <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" placeholder="e.g. 102" />
-          </label>
-
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">Ward / unit</span>
-            <select id="stockDashboardManualWardSelect">
-              <option value="">Select clinic, sickbay, or ward</option>
-            </select>
-          </label>
-
-          <label class="stock-order-field stock-order-field-wide">
-            <span class="stock-order-field-label">Notes</span>
-            <textarea id="stockDashboardManualNoteInput" rows="2" placeholder="Optional note for the walk-in request"></textarea>
-          </label>
-        </form>
-
-        <div class="stock-order-grid stock-dashboard-stock-grid" id="stockDashboardManualGrid" aria-label="Walk-in request items"></div>
-        <div class="stock-dashboard-inline-actions">
-          <button type="button" class="quick-tool-launch-btn" id="stockDashboardManualSubmitBtn">Save walk-in request</button>
-          <button type="button" class="quick-tool-clear-btn" id="stockDashboardManualResetBtn">Clear</button>
-        </div>
-      </section>
-
       <section class="stock-order-request-card" id="stockDashboardReceiptCard" hidden aria-labelledby="stockDashboardReceiptTitle">
         <div class="stock-order-request-head">
           <div>

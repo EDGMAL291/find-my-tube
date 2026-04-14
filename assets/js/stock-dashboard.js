@@ -67,6 +67,7 @@ const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "collected", "comple
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
+const STOCK_DASHBOARD_OWNER_SEEN_KEY = "fmt-stock-owner-seen";
 const STOCK_DASHBOARD_POLL_MS = 30000;
 
 let stockDashboardSession = null;
@@ -147,26 +148,14 @@ function stockDashboardGetDisplayName(user) {
 
 function stockDashboardGetUserHeading(user) {
   const displayName = stockDashboardGetDisplayName(user);
-  const userNumber = String(user?.userNumber || "").trim();
-  const roleLabel = user?.isOwner ? "Admin" : "Lab user";
-  if (displayName && userNumber) return `${displayName} (${userNumber}) · ${roleLabel}`;
-  if (displayName) return `${displayName} · ${roleLabel}`;
-  if (userNumber) return `Lab user ${userNumber} · ${roleLabel}`;
-  return "Lab user";
+  if (user?.isOwner) return displayName ? `${displayName} · Admin` : "Admin";
+  return displayName || "Lab user";
 }
 
 function stockDashboardGetSignedInLabel(user) {
   const displayName = stockDashboardGetDisplayName(user);
-  const userNumber = String(user?.userNumber || "").trim();
-  if (displayName && userNumber) {
-    return user?.isOwner
-      ? `Signed in as ${displayName} (${userNumber}) · Admin.`
-      : `Signed in as ${displayName} (${userNumber}).`;
-  }
-
-  return user?.isOwner
-    ? `Signed in as admin lab user ${userNumber}.`
-    : `Signed in as lab user ${userNumber}.`;
+  if (user?.isOwner) return displayName ? `Signed in as ${displayName} (Admin).` : "Signed in as Admin.";
+  return displayName ? `Signed in as ${displayName}.` : "Signed in.";
 }
 
 function stockDashboardNormalizeStatus(status) {
@@ -565,6 +554,9 @@ function stockDashboardSetSession(token, user) {
   } else {
     localStorage.removeItem(STOCK_DASHBOARD_TOKEN_KEY);
   }
+  if (stockDashboardSession?.isOwner) {
+    localStorage.setItem(STOCK_DASHBOARD_OWNER_SEEN_KEY, "1");
+  }
 
   const isAuthenticated = Boolean(stockDashboardSession);
   stockDashboardSetAccessModalOpen(!isAuthenticated);
@@ -574,9 +566,15 @@ function stockDashboardSetSession(token, user) {
   if (stockDashboardInsights) stockDashboardInsights.hidden = !isAuthenticated;
   if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = false;
   if (stockDashboardUserAdminCard) stockDashboardUserAdminCard.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
+  if (stockDashboardOpenCreateUserBtn) {
+    stockDashboardOpenCreateUserBtn.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
+  }
   if (stockDashboardManualEntryCard) stockDashboardManualEntryCard.hidden = !isAuthenticated;
   if (stockDashboardReceiptCard) stockDashboardReceiptCard.hidden = !isAuthenticated;
   if (stockDashboardInventoryCard) stockDashboardInventoryCard.hidden = !isAuthenticated;
+  if (!isAuthenticated || !stockDashboardSession?.isOwner) {
+    stockDashboardSetCreateUserModalOpen(false);
+  }
 
   if (stockDashboardSessionUser) {
     stockDashboardSessionUser.textContent = isAuthenticated
@@ -703,7 +701,16 @@ async function stockDashboardSendAuthRequest(url) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload?.token || !payload?.user) {
-      throw new Error(payload?.error || (stockDashboardSetupRequired ? "Could not create admin." : "Could not sign in"));
+      const errorMessage = payload?.error || (stockDashboardSetupRequired ? "Could not create admin." : "Could not sign in");
+      const setupAlreadyConfigured = url === STOCK_DASHBOARD_BOOTSTRAP_URL
+        && response.status === 403
+        && /already been configured/i.test(String(errorMessage));
+      if (setupAlreadyConfigured) {
+        stockDashboardSetupRequired = false;
+        await stockDashboardSendAuthRequest(STOCK_DASHBOARD_LOGIN_URL);
+        return;
+      }
+      throw new Error(errorMessage);
     }
 
     stockDashboardSetupRequired = false;
@@ -1247,6 +1254,10 @@ async function checkStockDashboardSession() {
     const payload = await response.json().catch(() => ({}));
 
     stockDashboardSetupRequired = Boolean(payload?.setupRequired);
+    const ownerSeenBefore = localStorage.getItem(STOCK_DASHBOARD_OWNER_SEEN_KEY) === "1";
+    if (stockDashboardSetupRequired && ownerSeenBefore) {
+      stockDashboardSetupRequired = false;
+    }
 
     if (!response.ok || !payload?.authenticated || !payload?.user) {
       stockDashboardSetSession("", null);
