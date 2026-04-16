@@ -27,6 +27,7 @@ const stockDashboardCreateUserNameInput = document.getElementById("stockDashboar
 const stockDashboardCreateUserNumberInput = document.getElementById("stockDashboardCreateUserNumberInput");
 const stockDashboardCreateUserPinInput = document.getElementById("stockDashboardCreateUserPinInput");
 const stockDashboardCreateUserRoleInput = document.getElementById("stockDashboardCreateUserRoleInput");
+const stockDashboardCreateUserModalStatus = document.getElementById("stockDashboardCreateUserModalStatus");
 const stockDashboardCreateUserBtn = document.getElementById("stockDashboardCreateUserBtn");
 const stockDashboardUserList = document.getElementById("stockDashboardUserList");
 const stockDashboardManualEntryCard = document.getElementById("stockDashboardManualEntryCard");
@@ -221,6 +222,9 @@ function stockDashboardSetCreateUserModalOpen(isOpen) {
 
   if (nextState) {
     stockDashboardLastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (stockDashboardCreateUserModalStatus) {
+      stockDashboardCreateUserModalStatus.textContent = "Use a display name, the same 2- or 3-digit eLab user number, and a 4-digit PIN.";
+    }
     window.requestAnimationFrame(() => {
       stockDashboardCreateUserNameInput?.focus();
     });
@@ -232,6 +236,16 @@ function stockDashboardSetCreateUserModalOpen(isOpen) {
     stockDashboardLastFocusedElement.focus();
   }
   stockDashboardLastFocusedElement = null;
+}
+
+function stockDashboardSetCreateUserMessage(message) {
+  const text = String(message || "").trim();
+  if (stockDashboardCreateUserModalStatus) {
+    stockDashboardCreateUserModalStatus.textContent = text;
+  }
+  if (stockDashboardUserAdminStatus && text) {
+    stockDashboardUserAdminStatus.textContent = text;
+  }
 }
 
 function stockDashboardGetDisplayLabel(item) {
@@ -901,23 +915,30 @@ async function loadStockDashboardUsers() {
 }
 
 async function createStockDashboardUser() {
-  if (!stockDashboardSession?.isOwner) return;
+  if (!stockDashboardSession?.isOwner) {
+    stockDashboardSetCreateUserMessage("Only Admin users can create users.");
+    return;
+  }
 
   const displayName = String(stockDashboardCreateUserNameInput?.value || "").replace(/\s+/g, " ").trim().slice(0, 120);
   const userNumber = String(stockDashboardCreateUserNumberInput?.value || "").trim();
   const pin = String(stockDashboardCreateUserPinInput?.value || "").trim();
   const role = stockDashboardNormalizeUserRole(stockDashboardCreateUserRoleInput?.value || "labUser");
-  if (displayName.length < 2 || !stockDashboardIsValidElabUserNumber(userNumber) || !stockDashboardIsValidPin(pin)) {
-    if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = "Use a display name, an eLab user number (2 or 3 digits), and a 4-digit PIN.";
-    }
+  if (!displayName) {
+    stockDashboardSetCreateUserMessage("Enter a user name.");
+    return;
+  }
+  if (!stockDashboardIsValidElabUserNumber(userNumber)) {
+    stockDashboardSetCreateUserMessage("Enter a valid 2- or 3-digit eLab user number.");
+    return;
+  }
+  if (!stockDashboardIsValidPin(pin)) {
+    stockDashboardSetCreateUserMessage("Enter a valid 4-digit PIN.");
     return;
   }
 
   stockDashboardSetBusy(true);
-  if (stockDashboardUserAdminStatus) {
-    stockDashboardUserAdminStatus.textContent = "Creating user...";
-  }
+  stockDashboardSetCreateUserMessage("Creating user...");
 
   try {
     const response = await fetch(STOCK_DASHBOARD_USERS_URL, {
@@ -937,15 +958,14 @@ async function createStockDashboardUser() {
     }
 
     if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
-    if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = `${displayName} (${userNumber}) created.`;
-    }
+    stockDashboardSetCreateUserMessage("User created.");
+    if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created.";
     stockDashboardSetCreateUserModalOpen(false);
     await loadStockDashboardUsers();
+    if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created.";
   } catch (error) {
-    if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = error instanceof Error ? error.message : "Could not create user.";
-    }
+    const message = error instanceof Error ? error.message : "Could not create user.";
+    stockDashboardSetCreateUserMessage(message);
   } finally {
     stockDashboardSetBusy(false);
   }
@@ -1519,7 +1539,10 @@ stockDashboardAuthForm?.addEventListener("submit", (event) => {
 
 stockDashboardCreateUserForm?.addEventListener("submit", (event) => {
   event.preventDefault();
-  createStockDashboardUser();
+  createStockDashboardUser().catch((error) => {
+    const message = error instanceof Error ? error.message : "Could not create user.";
+    stockDashboardSetCreateUserMessage(message);
+  });
 });
 
 stockDashboardOpenCreateUserBtn?.addEventListener("click", () => {
