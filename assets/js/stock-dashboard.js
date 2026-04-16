@@ -45,7 +45,9 @@ const stockDashboardReceiptForm = document.getElementById("stockDashboardReceipt
 const stockDashboardReceiptSupplierInput = document.getElementById("stockDashboardReceiptSupplierInput");
 const stockDashboardReceiptReferenceInput = document.getElementById("stockDashboardReceiptReferenceInput");
 const stockDashboardReceiptNoteInput = document.getElementById("stockDashboardReceiptNoteInput");
-const stockDashboardReceiptGrid = document.getElementById("stockDashboardReceiptGrid");
+const stockDashboardReceiptAddItemBtn = document.getElementById("stockDashboardReceiptAddItemBtn");
+const stockDashboardReceiptItemsRows = document.getElementById("stockDashboardReceiptItemsRows");
+const stockDashboardReceiptSummaryList = document.getElementById("stockDashboardReceiptSummaryList");
 const stockDashboardReceiptSubmitBtn = document.getElementById("stockDashboardReceiptSubmitBtn");
 const stockDashboardReceiptResetBtn = document.getElementById("stockDashboardReceiptResetBtn");
 const stockDashboardInventoryCard = document.getElementById("stockDashboardInventoryCard");
@@ -65,7 +67,7 @@ const stockDashboardTopItems = document.getElementById("stockDashboardTopItems")
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
 const STOCK_DASHBOARD_TOKEN_KEY = "fmt-stock-lab-token";
-const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "collected", "completed", "cancelled"];
+const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "collected", "cancelled"];
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
@@ -127,6 +129,12 @@ const STOCK_DASHBOARD_BOOTSTRAP_URL = stockDashboardBuildApiUrl("/api/stock-auth
 const STOCK_DASHBOARD_LOGOUT_URL = stockDashboardBuildApiUrl("/api/stock-auth/logout");
 const STOCK_DASHBOARD_CLEAR_DATA_URL = stockDashboardBuildApiUrl("/api/lab/stock-data");
 const STOCK_DASHBOARD_USERS_URL = stockDashboardBuildApiUrl("/api/lab/users");
+const STOCK_DASHBOARD_MANUAL_REQUEST_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests/manual");
+const STOCK_DASHBOARD_RECEIPTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-receipts");
+const STOCK_DASHBOARD_INVENTORY_URL = stockDashboardBuildApiUrl("/api/lab/stock-inventory");
+
+const stockDashboardManualState = Object.create(null);
+const stockDashboardReceiptRows = [];
 
 function stockDashboardEscapeHtml(value) {
   return String(value || "")
@@ -139,6 +147,10 @@ function stockDashboardEscapeHtml(value) {
 
 function stockDashboardFormatStatus(status) {
   const safeStatus = String(status || "received").trim().toLowerCase();
+  if (safeStatus === "received") return "Submitted";
+  if (safeStatus === "packed") return "Ready for Collection";
+  if (safeStatus === "ready") return "Ready for Collection";
+  if (safeStatus === "collected" || safeStatus === "completed" || safeStatus === "sent") return "Collected";
   return safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 }
 
@@ -188,18 +200,20 @@ function stockDashboardGetSignedInLabel(user) {
 
 function stockDashboardNormalizeStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
-  if (safeStatus === "sent") return "completed";
+  if (safeStatus === "sent") return "collected";
+  if (safeStatus === "completed") return "collected";
   return safeStatus || "received";
 }
 
 function stockDashboardGetQueueStatusMeta(status) {
   const safeStatus = stockDashboardNormalizeStatus(status);
-  if (safeStatus === "received") return { label: "New", stage: "new" };
-  if (safeStatus === "processing" || safeStatus === "in-progress") return { label: "In progress", stage: "in-progress" };
-  if (safeStatus === "packed") return { label: "Packed", stage: "packed" };
-  if (safeStatus === "collected" || safeStatus === "completed") return { label: "Delivered", stage: "delivered" };
+  if (safeStatus === "received") return { label: "Submitted", stage: "submitted" };
+  if (safeStatus === "processing" || safeStatus === "in-progress") return { label: "Ready for Collection", stage: "ready" };
+  if (safeStatus === "packed") return { label: "Ready for Collection", stage: "ready" };
+  if (safeStatus === "ready") return { label: "Ready for Collection", stage: "ready" };
+  if (safeStatus === "collected") return { label: "Collected", stage: "collected" };
   if (safeStatus === "cancelled" || safeStatus === "rejected" || safeStatus === "failed") return { label: "Cancelled", stage: "cancelled" };
-  return { label: "In progress", stage: "in-progress" };
+  return { label: "Submitted", stage: "submitted" };
 }
 
 function stockDashboardGetHeaders(includeJson = false) {
@@ -273,6 +287,270 @@ function stockDashboardGetSelectedItems(editorState) {
     .filter((item) => item.quantity > 0);
 }
 
+function stockDashboardBuildReceiptItemCatalog() {
+  if (!Array.isArray(stockConsumableItems)) return [];
+
+  const rows = [];
+  const byLabel = new Map();
+
+  stockConsumableItems.forEach((item) => {
+    const label = String(item?.label || "").trim();
+    if (!label) return;
+
+    let row = byLabel.get(label);
+    if (!row) {
+      row = {
+        key: label,
+        label,
+        options: []
+      };
+      byLabel.set(label, row);
+      rows.push(row);
+    }
+
+    if (item.unitType === "tray") {
+      row.options.push({
+        value: "tray",
+        sourceItem: item,
+        label: `Tray (${Number(item.traySize || 0) || 100} each)`
+      });
+      return;
+    }
+
+    if (item.unitType === "packet") {
+      row.options.push({
+        value: "packet",
+        sourceItem: item,
+        label: `Packet (${Number(item.packetSize || 0) || 50} each)`
+      });
+      return;
+    }
+
+    row.options.push({
+      value: "each",
+      sourceItem: item,
+      label: "Each"
+    });
+  });
+
+  return rows.map((entry) => {
+    const trayOption = entry.options.find((option) => option.value === "tray");
+    const eachOption = entry.options.find((option) => option.value === "each");
+    const packetOption = entry.options.find((option) => option.value === "packet");
+    const options = [];
+    if (trayOption) options.push(trayOption);
+    if (eachOption) options.push(eachOption);
+    if (packetOption) options.push(packetOption);
+
+    return {
+      ...entry,
+      options,
+      defaultUnit: options[0]?.value || "each"
+    };
+  }).filter((entry) => entry.options.length > 0);
+}
+
+const stockDashboardReceiptItemCatalog = stockDashboardBuildReceiptItemCatalog();
+
+function stockDashboardGetReceiptCatalogItem(itemKey) {
+  const safeKey = String(itemKey || "");
+  return stockDashboardReceiptItemCatalog.find((item) => item.key === safeKey) || null;
+}
+
+function stockDashboardGetReceiptUnitOption(catalogItem, unitType) {
+  if (!catalogItem) return null;
+  const safeUnitType = String(unitType || "");
+  return catalogItem.options.find((option) => option.value === safeUnitType) || catalogItem.options[0] || null;
+}
+
+function stockDashboardEnsureReceiptRows() {
+  if (stockDashboardReceiptRows.length) return;
+  if (!stockDashboardReceiptItemCatalog.length) return;
+
+  stockDashboardReceiptRows.push({
+    id: `receipt-row-${Date.now()}-0`,
+    itemKey: stockDashboardReceiptItemCatalog[0].key,
+    unitType: stockDashboardReceiptItemCatalog[0].defaultUnit,
+    quantity: ""
+  });
+}
+
+function stockDashboardAddReceiptRow(initialValues = {}) {
+  const fallback = stockDashboardReceiptItemCatalog[0] || null;
+  if (!fallback) return;
+
+  const itemKey = stockDashboardGetReceiptCatalogItem(initialValues.itemKey)?.key || fallback.key;
+  const catalogItem = stockDashboardGetReceiptCatalogItem(itemKey) || fallback;
+  const nextUnitType = stockDashboardGetReceiptUnitOption(catalogItem, initialValues.unitType)?.value || catalogItem.defaultUnit;
+
+  stockDashboardReceiptRows.push({
+    id: `receipt-row-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    itemKey,
+    unitType: nextUnitType,
+    quantity: String(initialValues.quantity || "").trim()
+  });
+}
+
+function stockDashboardRenderReceiptSummaryRows(summaryRows = []) {
+  if (!stockDashboardReceiptSummaryList) return;
+
+  if (!summaryRows.length) {
+    stockDashboardReceiptSummaryList.innerHTML = '<p class="stock-dashboard-empty">Add items to see a live summary before saving.</p>';
+    return;
+  }
+
+  stockDashboardReceiptSummaryList.innerHTML = summaryRows.map((row) => `
+    <div class="stock-dashboard-list-row">
+      <span>${stockDashboardEscapeHtml(row.label)} · ${stockDashboardEscapeHtml(row.quantityLabel)} · ${stockDashboardEscapeHtml(row.unitLabel)}</span>
+      <strong>${stockDashboardEscapeHtml(`${row.totalUnits} units`)}</strong>
+    </div>
+  `).join("");
+}
+
+function stockDashboardRenderReceiptItemRows() {
+  if (!stockDashboardReceiptItemsRows) return;
+
+  stockDashboardEnsureReceiptRows();
+
+  if (!stockDashboardReceiptRows.length) {
+    stockDashboardReceiptItemsRows.innerHTML = '<p class="stock-dashboard-empty">No stock items configured.</p>';
+    stockDashboardRenderReceiptSummaryRows([]);
+    return;
+  }
+
+  stockDashboardReceiptItemsRows.innerHTML = stockDashboardReceiptRows.map((row, index) => {
+    const catalogItem = stockDashboardGetReceiptCatalogItem(row.itemKey) || stockDashboardReceiptItemCatalog[0];
+    const selectedUnit = stockDashboardGetReceiptUnitOption(catalogItem, row.unitType);
+    const unitOptions = (catalogItem?.options || []).map((option) => `
+      <option value="${stockDashboardEscapeHtml(option.value)}"${selectedUnit?.value === option.value ? " selected" : ""}>
+        ${stockDashboardEscapeHtml(option.label)}
+      </option>
+    `).join("");
+    const safeQuantity = String(row.quantity || "");
+
+    return `
+      <div class="stock-dashboard-receipt-item-row" data-receipt-row-id="${stockDashboardEscapeHtml(row.id)}">
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Stock item</span>
+          <select data-receipt-field="item">
+            ${(stockDashboardReceiptItemCatalog || []).map((item) => `
+              <option value="${stockDashboardEscapeHtml(item.key)}"${item.key === catalogItem?.key ? " selected" : ""}>
+                ${stockDashboardEscapeHtml(item.label)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Quantity received</span>
+          <input type="number" min="1" step="1" inputmode="numeric" pattern="[0-9]*" data-receipt-field="quantity" value="${stockDashboardEscapeHtml(safeQuantity)}" placeholder="0" />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Unit</span>
+          <select data-receipt-field="unit">
+            ${unitOptions}
+          </select>
+        </label>
+
+        <div class="stock-dashboard-receipt-row-actions">
+          <button type="button" class="quick-tool-clear-btn" data-receipt-remove-row="${stockDashboardEscapeHtml(row.id)}"${stockDashboardReceiptRows.length <= 1 ? " disabled" : ""}>Remove</button>
+          <p class="stock-dashboard-status">Row ${index + 1}</p>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const preview = stockDashboardBuildReceiptPayload({ validate: false });
+  stockDashboardRenderReceiptSummaryRows(preview.summaryRows);
+}
+
+function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
+  const errors = [];
+  const mergedItems = new Map();
+  const summaryRows = [];
+
+  if (!stockDashboardReceiptRows.length) {
+    if (validate) errors.push("Add at least one received item.");
+    return { items: [], summaryRows, errors };
+  }
+
+  stockDashboardReceiptRows.forEach((row) => {
+    const catalogItem = stockDashboardGetReceiptCatalogItem(row.itemKey);
+    const unitOption = stockDashboardGetReceiptUnitOption(catalogItem, row.unitType);
+    if (!catalogItem || !unitOption?.sourceItem) {
+      if (validate) errors.push("Select a stock item for every row.");
+      return;
+    }
+
+    const quantity = Number(String(row.quantity || "").trim());
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      if (validate) errors.push("Enter a positive whole number for every quantity.");
+      return;
+    }
+
+    const sourceItem = unitOption.sourceItem;
+    const itemForTotals = {
+      ...sourceItem,
+      quantity
+    };
+    const inventoryUnits = typeof getStockInventoryUnits === "function"
+      ? getStockInventoryUnits(itemForTotals)
+      : (sourceItem.unitType === "tray"
+        ? quantity * Math.max(0, Number(sourceItem.traySize || 0))
+        : sourceItem.unitType === "packet"
+          ? quantity * Math.max(0, Number(sourceItem.packetSize || 0))
+          : quantity);
+    const mergedKey = sourceItem.id;
+
+    if (!mergedItems.has(mergedKey)) {
+      mergedItems.set(mergedKey, {
+        id: sourceItem.id,
+        label: sourceItem.label,
+        variantLabel: sourceItem.variantLabel || "",
+        quantity: 0,
+        unitType: sourceItem.unitType,
+        traySize: sourceItem.traySize || null,
+        packetSize: sourceItem.packetSize || null,
+        formattedQuantity: "",
+        inventoryUnits: 0,
+        sheetColumnKey: sourceItem.sheetColumnKey || "",
+        sheetTrayColumnKey: sourceItem.sheetTrayColumnKey || "",
+        sheetSingleColumnKey: sourceItem.sheetSingleColumnKey || ""
+      });
+    }
+
+    const merged = mergedItems.get(mergedKey);
+    merged.quantity += quantity;
+    merged.inventoryUnits += inventoryUnits;
+    merged.formattedQuantity = typeof formatStockQuantity === "function"
+      ? formatStockQuantity({ ...sourceItem, quantity: merged.quantity })
+      : String(merged.quantity);
+  });
+
+  if (!mergedItems.size) {
+    if (validate && !errors.length) errors.push("Add at least one received item.");
+    return { items: [], summaryRows, errors };
+  }
+
+  const items = Array.from(mergedItems.values());
+  items.forEach((item) => {
+    const unitLabel = item.unitType === "tray"
+      ? `Tray (${Number(item.traySize || 0) || 100} each)`
+      : item.unitType === "packet"
+        ? `Packet (${Number(item.packetSize || 0) || 50} each)`
+        : "Each";
+    summaryRows.push({
+      label: stockDashboardGetDisplayLabel(item),
+      quantityLabel: String(item.quantity),
+      unitLabel,
+      totalUnits: Number(item.inventoryUnits || 0)
+    });
+  });
+
+  return { items, summaryRows, errors };
+}
+
 function stockDashboardBuildAuditRows(request) {
   const history = Array.isArray(request?.statusHistory) ? request.statusHistory : [];
   if (!history.length) return "";
@@ -306,20 +584,29 @@ function stockDashboardRenderReceipts(receipts = []) {
   renderDashboardList(stockDashboardReceiptList, receipts, (receipt) => {
     const items = Array.isArray(receipt.items) ? receipt.items : [];
     const summary = items.map((item) => `${stockDashboardGetDisplayLabel(item)}: ${stockDashboardGetItemQuantityLabel(item)}`).join("\n");
+    const totalUnitsAdded = items.reduce((sum, item) => sum + Math.max(0, Number(item.inventoryUnits || 0)), 0);
+    const receivedBy = String(receipt?.receivedBy || "").trim();
+    const supplier = String(receipt?.supplierName || "").trim();
+    const reference = String(receipt?.reference || "").trim();
+    const metaBits = [
+      stockDashboardFormatDateTime(receipt.createdAt),
+      supplier ? `Supplier: ${supplier}` : "",
+      reference ? `Reference: ${reference}` : "",
+      receivedBy ? `Received by: Medical Technologist ${receivedBy}` : "",
+      `Total units added: ${totalUnitsAdded}`
+    ].filter(Boolean);
 
     return `
       <div class="stock-dashboard-request-card">
         <div class="stock-dashboard-request-top">
           <div>
             <p class="stock-order-kicker">${stockDashboardEscapeHtml(receipt.id || "Receipt")}</p>
-            <h4>${stockDashboardEscapeHtml(receipt.supplierName || "Supplier")}</h4>
+            <h4>${stockDashboardEscapeHtml(supplier || "Received stock")}</h4>
           </div>
           <span class="stock-order-status-badge" data-status="received">Received</span>
         </div>
         <div class="stock-dashboard-request-meta">
-          <span>${stockDashboardEscapeHtml(receipt.reference || "No reference")}</span>
-          <span>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(receipt.createdAt))}</span>
-          <span>${receipt.receivedBy ? `Medical Technologist ${stockDashboardEscapeHtml(receipt.receivedBy)}` : ""}</span>
+          ${metaBits.map((value) => `<span>${stockDashboardEscapeHtml(value)}</span>`).join("")}
         </div>
         <p class="stock-dashboard-request-items">${stockDashboardEscapeHtml(summary || "No items listed")}</p>
         ${receipt.notes ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(receipt.notes)}</p>` : ""}
@@ -814,6 +1101,7 @@ function stockDashboardSetBusy(isBusy) {
     stockDashboardCreateUserBtn,
     stockDashboardManualSubmitBtn,
     stockDashboardManualResetBtn,
+    stockDashboardReceiptAddItemBtn,
     stockDashboardReceiptSubmitBtn,
     stockDashboardReceiptResetBtn
   ].forEach((button) => {
@@ -1002,9 +1290,10 @@ function stockDashboardResetManualForm() {
 }
 
 function stockDashboardResetReceiptForm() {
-  stockDashboardSetEditorState(stockDashboardReceiptState);
+  stockDashboardReceiptRows.length = 0;
   if (stockDashboardReceiptForm) stockDashboardReceiptForm.reset();
-  stockDashboardRenderEditorGrid(stockDashboardReceiptGrid, stockDashboardReceiptState, "receipt");
+  stockDashboardEnsureReceiptRows();
+  stockDashboardRenderReceiptItemRows();
   if (stockDashboardReceiptStatus) {
     stockDashboardReceiptStatus.textContent = "Record tubes and consumables received from suppliers.";
   }
@@ -1087,11 +1376,12 @@ async function stockDashboardSubmitReceipt() {
   const supplierName = String(stockDashboardReceiptSupplierInput?.value || "").trim();
   const reference = String(stockDashboardReceiptReferenceInput?.value || "").trim();
   const notes = String(stockDashboardReceiptNoteInput?.value || "").trim();
-  const items = stockDashboardGetSelectedItems(stockDashboardReceiptState);
+  const receiptPayload = stockDashboardBuildReceiptPayload({ validate: true });
+  const items = receiptPayload.items;
 
-  if (!supplierName || !items.length) {
+  if (receiptPayload.errors.length) {
     if (stockDashboardReceiptStatus) {
-      stockDashboardReceiptStatus.textContent = "Add the supplier and at least one item.";
+      stockDashboardReceiptStatus.textContent = receiptPayload.errors[0];
     }
     return;
   }
@@ -1139,9 +1429,7 @@ async function stockDashboardSubmitReceipt() {
     stockDashboardResetReceiptForm();
     await loadStockInventory();
     if (stockDashboardReceiptStatus) {
-      stockDashboardReceiptStatus.textContent = payload?.receipt?.id
-        ? `Supplier receipt ${payload.receipt.id} saved.`
-        : "Received stock saved.";
+      stockDashboardReceiptStatus.textContent = "Received stock recorded.";
     }
   } catch (error) {
     if (stockDashboardReceiptStatus) {
@@ -1181,7 +1469,7 @@ async function loadStockInventory() {
       stockDashboardInventoryList.innerHTML = '<p class="stock-dashboard-empty">Inventory is not available yet.</p>';
     }
     if (stockDashboardReceiptList) {
-      stockDashboardReceiptList.innerHTML = '<p class="stock-dashboard-empty">No supplier receipts yet.</p>';
+      stockDashboardReceiptList.innerHTML = '<p class="stock-dashboard-empty">No received stock records yet.</p>';
     }
   }
 }
@@ -1190,12 +1478,11 @@ function initStockDashboardTools() {
   if (!Array.isArray(stockConsumableItems)) return;
 
   stockDashboardSetEditorState(stockDashboardManualState);
-  stockDashboardSetEditorState(stockDashboardReceiptState);
   stockDashboardPopulateWardOptions();
   stockDashboardRenderEditorGrid(stockDashboardManualGrid, stockDashboardManualState, "manual");
-  stockDashboardRenderEditorGrid(stockDashboardReceiptGrid, stockDashboardReceiptState, "receipt");
+  stockDashboardEnsureReceiptRows();
+  stockDashboardRenderReceiptItemRows();
   stockDashboardAttachGridEvents(stockDashboardManualGrid, stockDashboardManualState);
-  stockDashboardAttachGridEvents(stockDashboardReceiptGrid, stockDashboardReceiptState);
 }
 
 function renderDashboardList(container, rows, renderRow) {
@@ -1361,8 +1648,8 @@ async function updateStockDashboardRequestStatus(requestId, status) {
   if (!requestId || !status || !stockDashboardStatus || !stockDashboardSession) return;
 
   const safeStatus = String(status || "").trim().toLowerCase();
-  if (safeStatus === "completed") {
-    const confirmed = window.confirm("Mark this order as completed? This should only be done once it has been fully issued or distributed.");
+  if (safeStatus === "collected") {
+    const confirmed = window.confirm("Mark this order as collected? Stock on hand will be deducted once.");
     if (!confirmed) return;
   }
 
@@ -1382,6 +1669,17 @@ async function updateStockDashboardRequestStatus(requestId, status) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
+      if (response.status === 409 && Array.isArray(payload?.shortages) && payload.shortages.length) {
+        const shortageLines = payload.shortages
+          .map((row) => {
+            const label = String(row?.label || "Stock item");
+            const shortBy = Number(row?.shortBy || 0);
+            const onHand = Number(row?.onHand || 0);
+            return `${label}: short by ${shortBy} (on hand: ${onHand})`;
+          })
+          .join("; ");
+        throw new Error(`${payload?.error || "Not enough stock on hand to mark this order as collected."} ${shortageLines}`);
+      }
       throw new Error(payload?.error || "Could not update request status");
     }
 
@@ -1559,6 +1857,87 @@ stockDashboardCreateUserModal?.addEventListener("click", (event) => {
   stockDashboardSetCreateUserModalOpen(false);
 });
 
+stockDashboardManualEntryForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  stockDashboardSubmitManualRequest();
+});
+
+stockDashboardManualSubmitBtn?.addEventListener("click", () => {
+  stockDashboardSubmitManualRequest();
+});
+
+stockDashboardManualResetBtn?.addEventListener("click", () => {
+  stockDashboardResetManualForm();
+});
+
+stockDashboardReceiptForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  stockDashboardSubmitReceipt();
+});
+
+stockDashboardReceiptSubmitBtn?.addEventListener("click", () => {
+  stockDashboardSubmitReceipt();
+});
+
+stockDashboardReceiptResetBtn?.addEventListener("click", () => {
+  stockDashboardResetReceiptForm();
+});
+
+stockDashboardReceiptAddItemBtn?.addEventListener("click", () => {
+  stockDashboardAddReceiptRow();
+  stockDashboardRenderReceiptItemRows();
+});
+
+stockDashboardReceiptItemsRows?.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  const removeButton = target?.closest("[data-receipt-remove-row]");
+  if (!(removeButton instanceof HTMLButtonElement)) return;
+
+  const rowId = removeButton.getAttribute("data-receipt-remove-row") || "";
+  const index = stockDashboardReceiptRows.findIndex((row) => row.id === rowId);
+  if (index === -1) return;
+
+  stockDashboardReceiptRows.splice(index, 1);
+  stockDashboardEnsureReceiptRows();
+  stockDashboardRenderReceiptItemRows();
+});
+
+stockDashboardReceiptItemsRows?.addEventListener("change", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  const rowElement = target?.closest("[data-receipt-row-id]");
+  if (!(rowElement instanceof HTMLElement)) return;
+  const row = stockDashboardReceiptRows.find((entry) => entry.id === rowElement.dataset.receiptRowId);
+  if (!row) return;
+
+  const field = target?.getAttribute("data-receipt-field");
+  if (field === "item" && target instanceof HTMLSelectElement) {
+    row.itemKey = target.value;
+    const catalogItem = stockDashboardGetReceiptCatalogItem(row.itemKey);
+    row.unitType = stockDashboardGetReceiptUnitOption(catalogItem, row.unitType)?.value || catalogItem?.defaultUnit || "each";
+    stockDashboardRenderReceiptItemRows();
+    return;
+  }
+
+  if (field === "unit" && target instanceof HTMLSelectElement) {
+    row.unitType = target.value;
+    stockDashboardRenderReceiptItemRows();
+  }
+});
+
+stockDashboardReceiptItemsRows?.addEventListener("input", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  const rowElement = target?.closest("[data-receipt-row-id]");
+  if (!(rowElement instanceof HTMLElement)) return;
+  const row = stockDashboardReceiptRows.find((entry) => entry.id === rowElement.dataset.receiptRowId);
+  if (!row) return;
+
+  const field = target?.getAttribute("data-receipt-field");
+  if (field !== "quantity" || !(target instanceof HTMLInputElement)) return;
+  row.quantity = target.value;
+  const preview = stockDashboardBuildReceiptPayload({ validate: false });
+  stockDashboardRenderReceiptSummaryRows(preview.summaryRows);
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (!stockDashboardCreateUserModal?.hidden) {
@@ -1569,4 +1948,5 @@ document.addEventListener("keydown", (event) => {
   stockDashboardReturnToPreviousPage();
 });
 
+initStockDashboardTools();
 checkStockDashboardSession();

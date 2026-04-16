@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260416a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260416e" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -246,9 +246,9 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260416a"></script>
-  <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260416a"></script>
+  <script src="assets/data/data.js?v=20260416e"></script>
+  <script src="assets/js/app-config.js?v=20260416e"></script>
+  <script src="assets/js/script.js?v=20260416e"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -474,11 +474,17 @@
           ? normalizeStockRequestStatus(status)
           : String(status || "").trim().toLowerCase();
         const safe = normalized || "received";
-        const label = safe.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+        const label = safe === "received"
+          ? "Submitted"
+          : safe === "packed" || safe === "ready" || safe === "in-progress" || safe === "processing"
+            ? "Ready for Collection"
+            : safe === "collected" || safe === "completed"
+              ? "Collected"
+              : safe.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
-        if (safe === "completed") return { label, stage: "completed" };
+        if (safe === "collected" || safe === "completed") return { label, stage: "completed" };
         if (safe === "cancelled" || safe === "rejected" || safe === "failed") return { label, stage: "issue" };
-        if (safe === "packed" || safe === "collected" || safe === "in-progress" || safe === "processing") {
+        if (safe === "packed" || safe === "ready" || safe === "in-progress" || safe === "processing") {
           return { label, stage: "in-progress" };
         }
         return { label, stage: "pending" };
@@ -1290,7 +1296,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-16.1";
+      const APP_VERSION = "2026-04-16.5";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1311,7 +1317,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260416a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260416e", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

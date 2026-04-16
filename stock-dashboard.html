@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260416a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260416e" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -147,21 +147,6 @@
         </div>
       </section>
 
-      <section class="stock-order-request-card stock-dashboard-notification-card" id="stockDashboardNotificationCard" hidden aria-labelledby="stockDashboardNotificationTitle">
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Lab notifications</p>
-            <h3 id="stockDashboardNotificationTitle">No new requests</h3>
-          </div>
-          <div class="stock-dashboard-notification-actions">
-            <span class="stock-dashboard-alert-badge" id="stockDashboardAlertBadge" hidden>0 new</span>
-            <button type="button" class="quick-tool-launch-btn" id="stockDashboardEnableAlertsBtn">Enable browser alerts</button>
-            <button type="button" class="quick-tool-clear-btn" id="stockDashboardMarkSeenBtn" hidden>Mark seen</button>
-          </div>
-        </div>
-        <p class="stock-dashboard-status" id="stockDashboardNotificationStatus">Alerts work for signed-in Medical Technologists while this dashboard stays open.</p>
-      </section>
-
       <section class="stock-dashboard-metrics" id="stockDashboardMetrics" aria-label="Stock request metrics" hidden>
         <article class="stock-order-summary-item">
           <span class="stock-order-summary-label">Total requests</span>
@@ -216,13 +201,13 @@
       <section class="stock-order-request-card" id="stockDashboardReceiptCard" hidden aria-labelledby="stockDashboardReceiptTitle">
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Supplier intake</p>
-            <h3 id="stockDashboardReceiptTitle">Add received stock</h3>
+            <p class="stock-order-kicker">Received Stock</p>
+            <h3 id="stockDashboardReceiptTitle">Record received stock</h3>
           </div>
           <p class="stock-dashboard-status" id="stockDashboardReceiptStatus">Record tubes and consumables received from suppliers.</p>
         </div>
 
-        <form class="stock-order-form" id="stockDashboardReceiptForm">
+        <form class="stock-order-form" id="stockDashboardReceiptForm" autocomplete="off">
           <label class="stock-order-field">
             <span class="stock-order-field-label">Supplier</span>
             <input type="text" id="stockDashboardReceiptSupplierInput" placeholder="Supplier name" autocomplete="organization" />
@@ -237,13 +222,25 @@
             <span class="stock-order-field-label">Notes</span>
             <textarea id="stockDashboardReceiptNoteInput" rows="2" placeholder="Optional note about the delivery"></textarea>
           </label>
-        </form>
 
-        <div class="stock-order-grid stock-dashboard-stock-grid" id="stockDashboardReceiptGrid" aria-label="Received stock items"></div>
-        <div class="stock-dashboard-inline-actions">
-          <button type="button" class="quick-tool-launch-btn" id="stockDashboardReceiptSubmitBtn">Save received stock</button>
-          <button type="button" class="quick-tool-clear-btn" id="stockDashboardReceiptResetBtn">Clear</button>
-        </div>
+          <div class="stock-dashboard-receipt-items-block stock-order-field stock-order-field-wide">
+            <div class="stock-dashboard-receipt-items-head">
+              <span class="stock-order-field-label">Received items</span>
+              <button type="button" class="quick-tool-clear-btn" id="stockDashboardReceiptAddItemBtn">Add item</button>
+            </div>
+            <div class="stock-dashboard-receipt-item-rows" id="stockDashboardReceiptItemsRows" aria-label="Received stock item rows"></div>
+          </div>
+
+          <div class="stock-dashboard-receipt-summary stock-order-field stock-order-field-wide">
+            <span class="stock-order-field-label">Summary before saving</span>
+            <div class="stock-dashboard-list" id="stockDashboardReceiptSummaryList"></div>
+          </div>
+
+          <div class="stock-dashboard-inline-actions">
+            <button type="submit" class="quick-tool-launch-btn" id="stockDashboardReceiptSubmitBtn">Save received stock</button>
+            <button type="button" class="quick-tool-clear-btn" id="stockDashboardReceiptResetBtn">Clear</button>
+          </div>
+        </form>
       </section>
 
       <section class="stock-order-request-card" id="stockDashboardInventoryCard" hidden aria-labelledby="stockDashboardInventoryTitle">
@@ -259,8 +256,8 @@
 
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Recent deliveries</p>
-            <h3>Supplier receipts</h3>
+            <p class="stock-order-kicker">Recent received stock</p>
+            <h3>Recent received stock</h3>
           </div>
         </div>
         <div class="stock-dashboard-list" id="stockDashboardReceiptList"></div>
@@ -362,13 +359,13 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260416a"></script>
-  <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260416a"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260416a"></script>
+  <script src="assets/data/data.js?v=20260416e"></script>
+  <script src="assets/js/app-config.js?v=20260416e"></script>
+  <script src="assets/js/script.js?v=20260416e"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260416e"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-16.1";
+      const APP_VERSION = "2026-04-16.5";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -400,7 +397,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260416a", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260416e", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

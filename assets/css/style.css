@@ -1194,6 +1194,25 @@ body.find-my-test-page .about-panel {
   background: rgba(220, 245, 238, 0.98);
 }
 
+.stock-order-status-badge[data-status="received"] {
+  border-color: rgba(37, 99, 235, 0.32);
+  background: rgba(219, 234, 254, 0.72);
+  color: #1e3a8a;
+}
+
+.stock-order-status-badge[data-status="packed"] {
+  border-color: rgba(124, 58, 237, 0.32);
+  background: rgba(233, 213, 255, 0.52);
+  color: #6b21a8;
+}
+
+.stock-order-status-badge[data-status="collected"],
+.stock-order-status-badge[data-status="completed"] {
+  border-color: rgba(22, 163, 74, 0.34);
+  background: rgba(187, 247, 208, 0.5);
+  color: #166534;
+}
+
 .stock-order-status-badge[data-status="copied"],
 .stock-order-status-badge[data-status="shared"] {
   border-color: rgba(13, 166, 90, 0.24);
@@ -6274,6 +6293,41 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
   margin-top: 0.9rem;
 }
 
+.stock-dashboard-receipt-items-block,
+.stock-dashboard-receipt-summary {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.stock-dashboard-receipt-items-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.stock-dashboard-receipt-item-rows {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.stock-dashboard-receipt-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(130px, 0.7fr) minmax(150px, 0.8fr) auto;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.stock-dashboard-receipt-row-actions {
+  display: grid;
+  align-content: end;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
 .stock-dashboard-inline-actions {
   display: flex;
   flex-wrap: wrap;
@@ -6478,7 +6532,8 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
   white-space: nowrap;
 }
 
-.stock-dashboard-queue-status-badge[data-stage="new"] {
+.stock-dashboard-queue-status-badge[data-stage="new"],
+.stock-dashboard-queue-status-badge[data-stage="submitted"] {
   border-color: rgba(37, 99, 235, 0.32);
   background: rgba(59, 130, 246, 0.16);
   color: #1e3a8a;
@@ -6496,10 +6551,17 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
   color: #5b21b6;
 }
 
-.stock-dashboard-queue-status-badge[data-stage="delivered"] {
+.stock-dashboard-queue-status-badge[data-stage="delivered"],
+.stock-dashboard-queue-status-badge[data-stage="collected"] {
   border-color: rgba(22, 163, 74, 0.34);
   background: rgba(134, 239, 172, 0.3);
   color: #166534;
+}
+
+.stock-dashboard-queue-status-badge[data-stage="ready"] {
+  border-color: rgba(8, 145, 178, 0.32);
+  background: rgba(165, 243, 252, 0.34);
+  color: #0e7490;
 }
 
 .stock-dashboard-queue-status-badge[data-stage="cancelled"] {
@@ -6527,7 +6589,8 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
 html[data-theme="dark"] .stock-dashboard-list-row,
 html[data-theme="dark"] .stock-dashboard-request-card,
 html[data-theme="dark"] .stock-dashboard-status-btn,
-html[data-theme="dark"] .stock-dashboard-session-card {
+html[data-theme="dark"] .stock-dashboard-session-card,
+html[data-theme="dark"] .stock-dashboard-receipt-item-row {
   background: rgba(11, 24, 31, 0.88);
   border-color: rgba(107, 141, 152, 0.22);
 }
@@ -6571,6 +6634,14 @@ html[data-theme="neutral"] .stock-dashboard-chip {
   .stock-dashboard-request-top {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .stock-dashboard-receipt-item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stock-dashboard-receipt-row-actions {
+    justify-items: start;
   }
 
   .stock-dashboard-queue-head {

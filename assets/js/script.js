@@ -886,7 +886,7 @@ function formatStockRequestDateTime(value) {
 // Normalizes legacy stock request statuses to the current UI model.
 function normalizeStockRequestStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
-  if (safeStatus === "sent") return "completed";
+  if (safeStatus === "sent" || safeStatus === "completed") return "collected";
   return safeStatus || "received";
 }
 
@@ -903,7 +903,10 @@ function renderStockTrackingList(requests) {
   if (!stockOrderTrackingList) return;
 
   const activeRequests = Array.isArray(requests)
-    ? requests.filter((request) => normalizeStockRequestStatus(request?.status) !== "completed")
+    ? requests.filter((request) => {
+      const normalized = normalizeStockRequestStatus(request?.status);
+      return normalized !== "collected" && normalized !== "cancelled";
+    })
     : [];
 
   if (!activeRequests.length) {
@@ -922,9 +925,15 @@ function renderStockTrackingList(requests) {
     const updateMeta = request?.statusUpdatedAt || request?.updatedAt
       ? `Last update ${formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
       : "";
-    const statusLabel = normalizedStatus
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (char) => char.toUpperCase());
+    const statusLabel = normalizedStatus === "received"
+      ? "Submitted"
+      : normalizedStatus === "packed"
+        ? "Ready for Collection"
+      : normalizedStatus === "ready"
+        ? "Ready for Collection"
+        : normalizedStatus === "collected"
+          ? "Collected"
+          : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
     return `
       <article class="stock-dashboard-request-card">
@@ -1064,10 +1073,10 @@ function getStockOrderStatusLabel() {
   if (isSubmittingStockOrder) return "Submitting";
   if (stockOrderStatusMode === "submitted") {
     const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
-    if (submittedStatus === "received") return "Received";
-    if (submittedStatus === "packed") return "Packed";
+    if (submittedStatus === "received") return "Submitted";
+    if (submittedStatus === "packed") return "Ready for Collection";
+    if (submittedStatus === "ready") return "Ready for Collection";
     if (submittedStatus === "collected") return "Collected";
-    if (submittedStatus === "completed") return "Completed";
     if (submittedStatus === "cancelled") return "Cancelled";
     return "Submitted";
   }
@@ -1954,7 +1963,10 @@ const stockConsumableItems = [
   }),
   { id: "specimen-jars", label: "Specimen jars", unitType: "each", maxQuantity: 50, note: "Requested individually." },
   { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, note: "Packed in 50s." },
-  { id: "blood-culture-bottles", label: "Blood culture bottles", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-aerobic", label: "Blood culture bottle - Aerobic", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-anaerobic", label: "Blood culture bottle - Anaerobic", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-fungal-mycology", label: "Blood culture bottle - Fungal / Mycology", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-mycobacterial-tb", label: "Blood culture bottle - Mycobacterial / TB", unitType: "each", note: "Requested individually." },
   { id: "blood-gas-syringes", label: "Blood gas syringes", unitType: "each", note: "Requested individually." },
   { id: "swabs-transport-media", label: "Swabs with transport media", unitType: "each", note: "Requested individually." }
 ];

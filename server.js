@@ -21,7 +21,7 @@ const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
 ).trim();
 const MAX_BODY_BYTES = 1024 * 1024;
-const VALID_REQUEST_STATUSES = new Set(["received", "packed", "collected", "completed", "cancelled"]);
+const VALID_REQUEST_STATUSES = new Set(["received", "packed", "ready", "collected", "completed", "cancelled"]);
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const STOCK_SHEETS_COLUMN_DEFAULTS = Object.freeze({
   yellowTubes: 0,
@@ -218,7 +218,13 @@ function slugifyStatus(status) {
 }
 
 function formatStatusLabel(status) {
-  return slugifyStatus(status)
+  const safeStatus = slugifyStatus(status);
+  if (safeStatus === "received") return "Submitted";
+  if (safeStatus === "packed") return "Ready for Collection";
+  if (safeStatus === "ready") return "Ready for Collection";
+  if (safeStatus === "collected" || safeStatus === "completed") return "Collected";
+  if (safeStatus === "cancelled") return "Cancelled";
+  return safeStatus
     .split("-")
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
@@ -537,7 +543,7 @@ function getStockInventorySummary(receipts, requests) {
   });
 
   requests
-    .filter((request) => slugifyStatus(request?.status) === "completed")
+    .filter((request) => isRequestInventoryDeducted(request))
     .forEach((request) => {
       const updatedAt = sanitizeString(request?.updatedAt || request?.createdAt, 40);
       (Array.isArray(request?.items) ? request.items : []).forEach((item) => {
@@ -556,6 +562,76 @@ function getStockInventorySummary(receipts, requests) {
       onHand: row.received - row.issued
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function isRequestInventoryDeducted(request) {
+  if (request?.inventoryDeducted === true) return true;
+  if (request?.inventoryDeducted === false) return false;
+
+  const status = slugifyStatus(request?.status);
+  if (status === "completed") return true;
+  if (status === "collected" && (request?.collectedAt || request?.collectedBy)) return true;
+  return false;
+}
+
+function getInventoryMapFromRecords(receipts, requests, options = {}) {
+  const map = new Map();
+  const excludeRequestId = sanitizeString(options.excludeRequestId, 80);
+
+  function touch(item) {
+    const key = getStockInventoryKey(item);
+    if (!key) return null;
+    const existing = map.get(key) || {
+      key,
+      label: getStockInventoryLabel(item),
+      onHand: 0
+    };
+    if (!existing.label) existing.label = getStockInventoryLabel(item);
+    map.set(key, existing);
+    return existing;
+  }
+
+  receipts.forEach((receipt) => {
+    (Array.isArray(receipt?.items) ? receipt.items : []).forEach((item) => {
+      const row = touch(item);
+      if (!row) return;
+      row.onHand += getItemInventoryUnits(item);
+    });
+  });
+
+  requests
+    .filter((request) => isRequestInventoryDeducted(request))
+    .filter((request) => !excludeRequestId || sanitizeString(request?.id, 80) !== excludeRequestId)
+    .forEach((request) => {
+      (Array.isArray(request?.items) ? request.items : []).forEach((item) => {
+        const row = touch(item);
+        if (!row) return;
+        row.onHand -= getItemInventoryUnits(item);
+      });
+    });
+
+  return map;
+}
+
+function buildCollectionShortages(request, inventoryMap) {
+  const shortages = [];
+  const items = Array.isArray(request?.items) ? request.items : [];
+
+  items.forEach((item) => {
+    const key = getStockInventoryKey(item);
+    const requiredUnits = getItemInventoryUnits(item);
+    const onHand = Math.max(0, Number(inventoryMap.get(key)?.onHand || 0));
+    if (requiredUnits <= onHand) return;
+    shortages.push({
+      key,
+      label: getStockInventoryLabel(item),
+      requiredUnits,
+      onHand,
+      shortBy: requiredUnits - onHand
+    });
+  });
+
+  return shortages;
 }
 
 function appendStatusAudit(record, status, userNumber, timestamp) {
@@ -578,6 +654,10 @@ function appendStatusAudit(record, status, userNumber, timestamp) {
   if (safeStatus === "packed") {
     record.packedAt = safeTimestamp;
     record.packedBy = safeUserNumber;
+  }
+  if (safeStatus === "ready") {
+    record.readyAt = safeTimestamp;
+    record.readyBy = safeUserNumber;
   }
   if (safeStatus === "collected") {
     record.collectedAt = safeTimestamp;
@@ -801,7 +881,7 @@ function buildStockStats(records) {
   const totalRequests = requests.length;
   const totalLineItems = requests.reduce((sum, request) => sum + Number(request.lineItemCount || 0), 0);
   const totalUnitsRequested = requests.reduce((sum, request) => sum + Number(request.totalRequestedQuantity || 0), 0);
-  const openRequests = requests.filter((request) => !["completed", "cancelled"].includes(slugifyStatus(request.status))).length;
+  const openRequests = requests.filter((request) => !["collected", "completed", "cancelled"].includes(slugifyStatus(request.status))).length;
   const statusCounts = {};
   const wards = new Map();
   const items = new Map();
@@ -1270,10 +1350,10 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const cleanPayload = sanitizeStockReceiptPayload(payload);
-    if (!cleanPayload.supplierName || !cleanPayload.items.length) {
+    if (!cleanPayload.items.length) {
       sendJson(res, 400, {
         ok: false,
-        error: "Supplier name and at least one item are required"
+        error: "At least one item is required"
       });
       return;
     }
@@ -1492,12 +1572,56 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       }
 
       const previousStatus = slugifyStatus(target.status);
+      const wasDeducted = isRequestInventoryDeducted(target);
+      const shouldDeductInventory = nextStatus === "collected" && !wasDeducted;
+
+      if (shouldDeductInventory) {
+        const receipts = await readStockReceipts();
+        const inventoryMap = getInventoryMapFromRecords(receipts, existing, { excludeRequestId: requestId });
+        const shortages = buildCollectionShortages(target, inventoryMap);
+        if (shortages.length) {
+          return {
+            error: "insufficient-stock",
+            shortages
+          };
+        }
+      }
+
       const now = new Date().toISOString();
       target.status = nextStatus;
       target.updatedAt = now;
       target.statusUpdatedAt = target.updatedAt;
       target.statusUpdatedBy = session.userNumber;
       appendStatusAudit(target, nextStatus, session.userNumber, now);
+
+      if (shouldDeductInventory) {
+        const deductedItems = (Array.isArray(target.items) ? target.items : []).map((item) => ({
+          id: sanitizeString(item?.id, 80),
+          label: sanitizeString(item?.label, 120),
+          variantLabel: sanitizeString(item?.variantLabel, 80),
+          quantity: Math.max(0, Number(item?.quantity) || 0),
+          unitType: sanitizeString(item?.unitType, 40),
+          traySize: Number(item?.traySize) || null,
+          packetSize: Number(item?.packetSize) || null,
+          formattedQuantity: sanitizeString(item?.formattedQuantity, 120),
+          inventoryUnits: getItemInventoryUnits(item)
+        }));
+        const totalUnitsDeducted = deductedItems.reduce((sum, item) => sum + Math.max(0, Number(item.inventoryUnits || 0)), 0);
+        target.inventoryDeducted = true;
+        target.inventoryDeductedAt = now;
+        target.inventoryDeductedBy = session.userNumber;
+        target.collectionRecord = {
+          orderId: target.id,
+          collectedAt: now,
+          requestedBy: sanitizeString(target.requestedBy, 120),
+          wardUnit: sanitizeString(target.wardUnit, 120),
+          markedCollectedBy: session.userNumber,
+          collectedBy: sanitizeString(target.requestedBy, 120),
+          items: deductedItems,
+          totalUnitsDeducted
+        };
+      }
+
       await writeStockRequests(existing);
       return {
         record: target,
@@ -1506,6 +1630,14 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     });
 
     if (!updatedResult?.record) {
+      if (updatedResult?.error === "insufficient-stock") {
+        sendJson(res, 409, {
+          ok: false,
+          error: "Not enough stock on hand to mark this order as collected.",
+          shortages: updatedResult.shortages || []
+        });
+        return;
+      }
       sendJson(res, 404, { ok: false, error: "Request not found" });
       return;
     }
@@ -1524,7 +1656,9 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         statusLabel: formatStatusLabel(updatedRecord.status),
         updatedAt: updatedRecord.updatedAt,
         statusUpdatedAt: updatedRecord.statusUpdatedAt || updatedRecord.updatedAt,
-        statusUpdatedBy: updatedRecord.statusUpdatedBy || ""
+        statusUpdatedBy: updatedRecord.statusUpdatedBy || "",
+        inventoryDeducted: Boolean(updatedRecord.inventoryDeducted),
+        collectionRecord: updatedRecord.collectionRecord || null
       },
       sheetSync
     });
