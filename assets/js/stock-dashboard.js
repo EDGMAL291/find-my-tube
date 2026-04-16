@@ -1262,10 +1262,6 @@ async function checkStockDashboardSession() {
     const payload = await response.json().catch(() => ({}));
 
     stockDashboardSetupRequired = Boolean(payload?.setupRequired);
-    const ownerSeenBefore = localStorage.getItem(STOCK_DASHBOARD_OWNER_SEEN_KEY) === "1";
-    if (stockDashboardSetupRequired && ownerSeenBefore) {
-      stockDashboardSetupRequired = false;
-    }
 
     if (!response.ok || !payload?.authenticated || !payload?.user) {
       stockDashboardSetSession("", null);

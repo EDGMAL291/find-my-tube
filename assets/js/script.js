@@ -6752,12 +6752,14 @@ function bindEvents() {
   }
 
   if (brandHomeBtn) {
+    brandHomeBtn.dataset.coreBound = "1";
     brandHomeBtn.addEventListener("click", () => {
       goHome();
     });
   }
 
   if (menuToggleBtn) {
+    menuToggleBtn.dataset.coreBound = "1";
     menuToggleBtn.addEventListener("click", () => {
       setThemePanelOpen(false);
       setSiteMenuOpen(!isSiteMenuOpen);

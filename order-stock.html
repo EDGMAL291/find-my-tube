@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260413b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260416a" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -246,9 +246,9 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260413b"></script>
-  <script src="assets/js/app-config.js?v=20260413b"></script>
-  <script src="assets/js/script.js?v=20260413b"></script>
+  <script src="assets/data/data.js?v=20260416a"></script>
+  <script src="assets/js/app-config.js?v=20260416a"></script>
+  <script src="assets/js/script.js?v=20260416a"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -745,28 +745,105 @@
       function attachCoreControlFallbacks() {
         const menuBtn = document.getElementById("menuToggleBtn");
         const menuPanel = document.getElementById("siteMenuPanel");
-        const hasCoreMenuController = typeof setSiteMenuOpen === "function";
-        if (!hasCoreMenuController && menuBtn instanceof HTMLButtonElement && menuPanel instanceof HTMLElement && menuBtn.dataset.menuFallbackBound !== "1") {
+        const hasCoreMenuBinding = menuBtn instanceof HTMLButtonElement && menuBtn.dataset.coreBound === "1";
+        if (!hasCoreMenuBinding && menuBtn instanceof HTMLButtonElement && menuPanel instanceof HTMLElement && menuBtn.dataset.menuFallbackBound !== "1") {
           menuBtn.dataset.menuFallbackBound = "1";
           menuBtn.addEventListener("click", () => {
-            const isHidden = menuPanel.hasAttribute("hidden");
-            if (isHidden) {
-              menuPanel.removeAttribute("hidden");
-            } else {
-              menuPanel.setAttribute("hidden", "");
+            if (typeof setSiteMenuOpen === "function") {
+              const isExpanded = menuBtn.getAttribute("aria-expanded") === "true";
+              if (typeof setThemePanelOpen === "function") {
+                setThemePanelOpen(false);
+              }
+              setSiteMenuOpen(!isExpanded);
+              return;
             }
+
+            const isHidden = menuPanel.hasAttribute("hidden");
+            if (isHidden) menuPanel.removeAttribute("hidden");
+            else menuPanel.setAttribute("hidden", "");
             menuBtn.setAttribute("aria-expanded", isHidden ? "true" : "false");
           });
         }
 
         const homeBtn = document.getElementById("brandHomeBtn");
-        const hasCoreHomeController = typeof goHome === "function";
-        if (!hasCoreHomeController && homeBtn instanceof HTMLButtonElement && homeBtn.dataset.homeFallbackBound !== "1") {
+        const hasCoreHomeBinding = homeBtn instanceof HTMLButtonElement && homeBtn.dataset.coreBound === "1";
+        if (!hasCoreHomeBinding && homeBtn instanceof HTMLButtonElement && homeBtn.dataset.homeFallbackBound !== "1") {
           homeBtn.dataset.homeFallbackBound = "1";
           homeBtn.addEventListener("click", () => {
+            if (typeof goHome === "function") {
+              goHome();
+              return;
+            }
             window.location.assign("./index.html");
           });
         }
+      }
+
+      function forceMenuClosedState() {
+        const menuBtn = document.getElementById("menuToggleBtn");
+        const menuPanel = document.getElementById("siteMenuPanel");
+        const backdrop = document.getElementById("surfacePanelBackdrop");
+
+        if (typeof setSiteMenuOpen === "function") {
+          setSiteMenuOpen(false);
+          return;
+        }
+
+        if (menuPanel instanceof HTMLElement) {
+          menuPanel.setAttribute("hidden", "");
+        }
+        if (menuBtn instanceof HTMLButtonElement) {
+          menuBtn.setAttribute("aria-expanded", "false");
+          menuBtn.setAttribute("aria-label", "Open menu");
+          menuBtn.classList.remove("active");
+        }
+        if (backdrop instanceof HTMLElement) {
+          backdrop.setAttribute("hidden", "");
+        }
+        document.body.classList.remove("surface-panel-open");
+      }
+
+      function attachMenuActionFallbacks() {
+        const links = document.querySelectorAll("#siteMenuPanel [data-menu-action]");
+        const themePanel = document.getElementById("themeSwitcherPanel");
+        links.forEach((link) => {
+          if (!(link instanceof HTMLButtonElement)) return;
+          if (link.dataset.menuActionFallbackBound === "1") return;
+          link.dataset.menuActionFallbackBound = "1";
+
+          link.addEventListener("click", () => {
+            const action = String(link.getAttribute("data-menu-action") || "").trim();
+            forceMenuClosedState();
+
+            if (action === "home" || action === "tube" || action === "draw") {
+              window.location.assign("./index.html");
+              return;
+            }
+            if (action === "find-my-test") {
+              window.location.assign("./index.html?tool=find-my-test");
+              return;
+            }
+            if (action === "stock") {
+              window.location.assign("./order-stock.html");
+              return;
+            }
+            if (action === "stock-dashboard") {
+              window.location.assign("./stock-dashboard.html");
+              return;
+            }
+            if (action === "settings") {
+              if (typeof setThemePanelOpen === "function") {
+                setThemePanelOpen(true);
+              } else if (themePanel instanceof HTMLElement) {
+                themePanel.hidden = false;
+              }
+              return;
+            }
+            if (action === "about") {
+              window.location.assign("./index.html#about");
+            }
+          });
+        });
       }
 
       function hideLegacyTubeCards() {
@@ -1171,9 +1248,8 @@
           patchSubmitGuardForHostedApi();
           attachSubmitRequestFallback();
           attachCoreControlFallbacks();
-          if (typeof setSiteMenuOpen === "function") {
-            setSiteMenuOpen(false);
-          }
+          attachMenuActionFallbacks();
+          forceMenuClosedState();
           patchQuantizedFiveStepCounts();
           patchPreviewQuantityWording();
           renameSinglesToEach();
@@ -1214,7 +1290,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-13.2";
+      const APP_VERSION = "2026-04-16.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1235,7 +1311,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260413b", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260416a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
