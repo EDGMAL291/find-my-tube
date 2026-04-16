@@ -24,18 +24,16 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260416a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260416g" />
 </head>
 <body data-app-page="home">
   <div class="container">
     <header class="header">
       <h1>
         <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>tube</span>
+          <span class="brand-word">Find</span>
+          <span class="brand-word">My</span>
+          <span class="brand-word">Tube</span>
         </button>
       </h1>
       <p id="headerIntroText">
@@ -58,7 +56,10 @@
           </span>
         </button>
         <div class="site-menu-panel" id="siteMenuPanel" hidden>
-          <p class="site-menu-title">Menu</p>
+          <div class="site-menu-head">
+            <p class="site-menu-title">Menu</p>
+            <button type="button" class="site-menu-close-btn" aria-label="Close menu">Close</button>
+          </div>
           <div class="site-menu-list" role="menu" aria-label="Site menu">
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
@@ -68,6 +69,14 @@
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
             <button type="button" class="site-menu-link" data-menu-action="settings" role="menuitem">Settings</button>
             <button type="button" class="site-menu-link" data-menu-action="about" role="menuitem">About</button>
+          </div>
+          <div class="site-menu-theme-group" aria-label="Theme options">
+            <p class="site-menu-theme-title">Theme</p>
+            <div class="site-menu-theme-buttons" role="group" aria-label="Choose theme">
+              <button type="button" class="theme-switcher-btn" data-theme-mode="light" aria-pressed="false">Light</button>
+              <button type="button" class="theme-switcher-btn" data-theme-mode="neutral" aria-pressed="false">Neutral</button>
+              <button type="button" class="theme-switcher-btn" data-theme-mode="dark" aria-pressed="false">Dark</button>
+            </div>
           </div>
         </div>
         <div class="theme-switcher-panel" id="themeSwitcherPanel" hidden>
@@ -84,6 +93,12 @@
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
     <section class="home-hub" id="homeHub">
+      <article class="home-hero-panel" aria-label="Find My Tube quick support">
+        <p class="home-hero-kicker">Clinical Lab Reference</p>
+        <h2 class="home-hero-title">The right tube. The right test. Right now.</h2>
+        <p class="home-hero-subtitle">Quick tube guidance, draw planning, test suggestions, and lab stock support for busy clinical teams.</p>
+      </article>
+
       <div class="home-brief-grid">
         <article class="home-brief-card home-brief-card-featured">
           <div class="home-card-head">
@@ -173,102 +188,119 @@
         <form class="clinical-workup-form" id="clinicalWorkupForm">
           <h2 id="clinicalWorkupTitle" class="sr-only">Find My Test form</h2>
           <div class="clinical-workup-form-grid">
-            <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
-              <span id="clinicalDobLabel">Date of birth</span>
-              <div class="clinical-workup-dob-control" id="clinicalDobControl">
-                <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
-                  <input
-                    type="text"
-                    id="clinicalDobInput"
-                    inputmode="numeric"
-                    autocomplete="bday"
-                    maxlength="14"
-                    placeholder="DD / MM / YYYY"
-                    aria-describedby="clinicalDobAssist"
-                  />
-                  <label
-                    class="clinical-workup-field-glyph clinical-workup-field-glyph-button clinical-workup-dob-picker-label"
-                    for="clinicalDobPickerInput"
-                    aria-label="Pick date of birth from calendar"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6H8v1a1 1 0 1 1-2 0V6H5Zm3 7a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Z"></path>
-                    </svg>
+            <section class="clinical-workup-form-section clinical-workup-form-section-patient" aria-label="Patient details">
+              <h3 class="clinical-workup-section-title">Patient details</h3>
+              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
+                <span id="clinicalDobLabel">Date of birth</span>
+                <div class="clinical-workup-dob-control" id="clinicalDobControl">
+                  <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
                     <input
-                      type="date"
-                      id="clinicalDobPickerInput"
-                      class="clinical-workup-dob-picker-native"
-                      tabindex="-1"
-                      aria-hidden="true"
+                      type="text"
+                      id="clinicalDobInput"
+                      inputmode="numeric"
+                      autocomplete="bday"
+                      maxlength="14"
+                      placeholder="DD / MM / YYYY"
+                      aria-describedby="clinicalDobAssist"
                     />
-                  </label>
+                    <label
+                      class="clinical-workup-field-glyph clinical-workup-field-glyph-button clinical-workup-dob-picker-label"
+                      for="clinicalDobPickerInput"
+                      aria-label="Pick date of birth from calendar"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6H8v1a1 1 0 1 1-2 0V6H5Zm3 7a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Z"></path>
+                      </svg>
+                      <input
+                        type="date"
+                        id="clinicalDobPickerInput"
+                        class="clinical-workup-dob-picker-native"
+                        tabindex="-1"
+                        aria-hidden="true"
+                      />
+                    </label>
+                  </div>
+                  <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
                 </div>
-                <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
-              </div>
-            </label>
+              </label>
 
-            <div class="clinical-workup-context-pair">
-              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
-                <span>Sex</span>
-                <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
-                  <select id="clinicalSexSelect">
-                    <option value="unspecified">Not specified</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="other">Other</option>
+              <div class="clinical-workup-context-pair">
+                <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
+                  <span>Sex</span>
+                  <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
+                    <select id="clinicalSexSelect">
+                      <option value="unspecified">Not specified</option>
+                      <option value="female">Female</option>
+                      <option value="male">Male</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <span class="clinical-workup-field-glyph clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
+                  </div>
+                </label>
+
+                <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
+                  <span>Pregnancy</span>
+                  <select id="clinicalPregnancySelect">
+                    <option value="unknown">Unknown / not applicable</option>
+                    <option value="pregnant">Pregnant / possible pregnancy</option>
+                    <option value="not-pregnant">Not pregnant</option>
                   </select>
-                  <span class="clinical-workup-field-glyph clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
+                </label>
+              </div>
+            </section>
+
+            <section class="clinical-workup-form-section" aria-label="Symptoms">
+              <h3 class="clinical-workup-section-title">Symptoms</h3>
+              <div class="clinical-workup-field clinical-workup-field-wide">
+                <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
+                <textarea
+                  id="clinicalSymptomsInput"
+                  rows="3"
+                  placeholder="e.g. chest pain radiating to the left arm, fever, frothy urine, weight loss"
+                ></textarea>
+                <div class="clinical-workup-chip-slot">
+                  <p class="clinical-workup-chip-slot-label">Quick add common symptoms</p>
+                  <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSymptomsChipList" aria-label="Common symptoms"></div>
                 </div>
-              </label>
-
-              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
-                <span>Pregnancy</span>
-                <select id="clinicalPregnancySelect">
-                  <option value="unknown">Unknown / not applicable</option>
-                  <option value="pregnant">Pregnant / possible pregnancy</option>
-                  <option value="not-pregnant">Not pregnant</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
-              <textarea
-                id="clinicalSymptomsInput"
-                rows="3"
-                placeholder="e.g. chest pain radiating to the left arm, fever, frothy urine, weight loss"
-              ></textarea>
-              <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add common symptoms</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSymptomsChipList" aria-label="Common symptoms"></div>
               </div>
-            </div>
+            </section>
 
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
-              <textarea
-                id="clinicalSignsInput"
-                rows="3"
-                placeholder="e.g. pallor, jaundice, oedema, hypotension, tachycardia"
-              ></textarea>
-              <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add common signs</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSignsChipList" aria-label="Common signs"></div>
+            <section class="clinical-workup-form-section" aria-label="Signs">
+              <h3 class="clinical-workup-section-title">Signs</h3>
+              <div class="clinical-workup-field clinical-workup-field-wide">
+                <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
+                <textarea
+                  id="clinicalSignsInput"
+                  rows="3"
+                  placeholder="e.g. pallor, jaundice, oedema, hypotension, tachycardia"
+                ></textarea>
+                <div class="clinical-workup-chip-slot">
+                  <p class="clinical-workup-chip-slot-label">Quick add common signs</p>
+                  <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalSignsChipList" aria-label="Common signs"></div>
+                </div>
               </div>
-            </div>
+            </section>
 
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
-              <input
-                type="text"
-                id="clinicalConcernInput"
-                placeholder="e.g. ACS, heart failure, CKD, infertility, autoimmune disease"
-              />
-              <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add common concerns</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalConcernChipList" aria-label="Common clinical concerns"></div>
+            <section class="clinical-workup-form-section" aria-label="Clinical concern">
+              <h3 class="clinical-workup-section-title">Clinical concern</h3>
+              <div class="clinical-workup-field clinical-workup-field-wide">
+                <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
+                <input
+                  type="text"
+                  id="clinicalConcernInput"
+                  placeholder="e.g. ACS, heart failure, CKD, infertility, autoimmune disease"
+                />
+                <div class="clinical-workup-chip-slot">
+                  <p class="clinical-workup-chip-slot-label">Quick add common concerns</p>
+                  <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalConcernChipList" aria-label="Common clinical concerns"></div>
+                </div>
               </div>
-            </div>
+            </section>
+
+            <section class="clinical-workup-form-section" aria-label="Suggested tests">
+              <h3 class="clinical-workup-section-title">Suggested tests</h3>
+              <p class="clinical-workup-section-copy">Submit the details to generate suggested tests below. You can then add selected tests to your Tube Plan.</p>
+            </section>
 
           </div>
 
@@ -318,7 +350,12 @@
           rel="noopener noreferrer"
           aria-label="Send feedback on WhatsApp"
         >
-          WhatsApp Feedback
+          <span class="footer-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+              <path fill="currentColor" d="M19.11 17.6c-.31-.16-1.85-.91-2.13-1.01-.29-.1-.5-.16-.72.16-.21.31-.82 1.01-1 1.22-.18.21-.37.24-.68.08-.31-.16-1.32-.49-2.51-1.57-.93-.83-1.56-1.86-1.74-2.17-.18-.31-.02-.48.14-.64.14-.14.31-.37.47-.55.16-.18.21-.31.31-.53.1-.21.05-.4-.03-.55-.08-.16-.72-1.73-.99-2.37-.26-.63-.52-.55-.72-.56-.18 0-.4-.01-.61-.01-.21 0-.55.08-.84.4-.29.31-1.1 1.08-1.1 2.63 0 1.55 1.13 3.04 1.29 3.25.16.21 2.22 3.39 5.38 4.75.75.32 1.33.51 1.79.65.75.24 1.43.2 1.97.12.6-.09 1.85-.76 2.11-1.49.26-.74.26-1.37.18-1.49-.08-.11-.29-.18-.6-.34Zm-3.03 10.06h-.01a12 12 0 0 1-6.09-1.66l-.44-.26-4.53 1.18 1.21-4.42-.29-.46a11.97 11.97 0 0 1 10.14-18.4c6.61 0 12 5.38 12 11.99 0 6.61-5.39 11.99-11.99 11.99Zm10.2-22.19A14.41 14.41 0 0 0 16.08 1.2c-7.96 0-14.43 6.47-14.43 14.42 0 2.54.67 5.02 1.93 7.2L1.2 30.8l8.2-2.16a14.39 14.39 0 0 0 6.68 1.69h.01c7.95 0 14.43-6.47 14.43-14.42 0-3.85-1.5-7.47-4.24-10.2Z" />
+            </svg>
+          </span>
+          <span class="footer-link-label">Feedback</span>
         </a>
         <button type="button" class="footer-link-btn" data-legal-doc="privacy">Privacy Policy</button>
         <button type="button" class="footer-link-btn" data-legal-doc="terms">Terms of Use</button>
@@ -406,13 +443,13 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260416a"></script>
-  <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260416a"></script>
-  <script src="assets/js/find-my-test.js?v=20260416a"></script>
+  <script src="assets/data/data.js?v=20260416g"></script>
+  <script src="assets/js/app-config.js?v=20260416g"></script>
+  <script src="assets/js/script.js?v=20260416g"></script>
+  <script src="assets/js/find-my-test.js?v=20260416g"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-16.1";
+      const APP_VERSION = "2026-04-16.7";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -433,7 +470,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260416a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260416g", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

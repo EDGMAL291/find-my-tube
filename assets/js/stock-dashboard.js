@@ -565,12 +565,27 @@ function stockDashboardBuildAuditRows(request) {
 }
 
 function stockDashboardRenderInventory(summary = []) {
-  renderDashboardList(stockDashboardInventoryList, summary, (row) => `
-    <div class="stock-dashboard-list-row">
-      <span>${stockDashboardEscapeHtml(row.label)}</span>
-      <strong>${Number(row.onHand || 0)} left</strong>
-    </div>
-  `);
+  const getLevel = (onHand) => {
+    const safeOnHand = Number(onHand || 0);
+    if (safeOnHand <= 0) return { label: "Out of stock", tone: "out" };
+    if (safeOnHand <= 20) return { label: "Critical", tone: "critical" };
+    if (safeOnHand <= 60) return { label: "Low stock", tone: "low" };
+    return { label: "High stock", tone: "high" };
+  };
+
+  renderDashboardList(stockDashboardInventoryList, summary, (row) => {
+    const onHand = Number(row.onHand || 0);
+    const level = getLevel(onHand);
+    return `
+      <div class="stock-dashboard-list-row stock-dashboard-list-row-inventory">
+        <span>${stockDashboardEscapeHtml(row.label)}</span>
+        <div class="stock-dashboard-inventory-meta">
+          <span class="stock-dashboard-level-badge" data-level="${stockDashboardEscapeHtml(level.tone)}">${stockDashboardEscapeHtml(level.label)}</span>
+          <strong>${onHand} left</strong>
+        </div>
+      </div>
+    `;
+  });
 
   if (stockDashboardInventoryStatus) {
     const lowRows = summary.filter((row) => Number(row.onHand || 0) <= 0);

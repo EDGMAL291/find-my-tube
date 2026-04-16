@@ -24,18 +24,16 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260416e" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260416g" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
     <header class="header">
       <h1>
         <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>tube</span>
+          <span class="brand-word">Find</span>
+          <span class="brand-word">My</span>
+          <span class="brand-word">Tube</span>
         </button>
       </h1>
       <p id="headerIntroText">Local request dashboard, status tracking, and quick stats.</p>
@@ -56,7 +54,10 @@
           </span>
         </button>
         <div class="site-menu-panel" id="siteMenuPanel" hidden>
-          <p class="site-menu-title">Menu</p>
+          <div class="site-menu-head">
+            <p class="site-menu-title">Menu</p>
+            <button type="button" class="site-menu-close-btn" aria-label="Close menu">Close</button>
+          </div>
           <div class="site-menu-list" role="menu" aria-label="Site menu">
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
@@ -66,6 +67,14 @@
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
             <button type="button" class="site-menu-link" data-menu-action="settings" role="menuitem">Settings</button>
             <button type="button" class="site-menu-link" data-menu-action="about" role="menuitem">About</button>
+          </div>
+          <div class="site-menu-theme-group" aria-label="Theme options">
+            <p class="site-menu-theme-title">Theme</p>
+            <div class="site-menu-theme-buttons" role="group" aria-label="Choose theme">
+              <button type="button" class="theme-switcher-btn" data-theme-mode="light" aria-pressed="false">Light</button>
+              <button type="button" class="theme-switcher-btn" data-theme-mode="neutral" aria-pressed="false">Neutral</button>
+              <button type="button" class="theme-switcher-btn" data-theme-mode="dark" aria-pressed="false">Dark</button>
+            </div>
           </div>
         </div>
         <div class="theme-switcher-panel" id="themeSwitcherPanel" hidden>
@@ -295,7 +304,12 @@
           rel="noopener noreferrer"
           aria-label="Send feedback on WhatsApp"
         >
-          WhatsApp Feedback
+          <span class="footer-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+              <path fill="currentColor" d="M19.11 17.6c-.31-.16-1.85-.91-2.13-1.01-.29-.1-.5-.16-.72.16-.21.31-.82 1.01-1 1.22-.18.21-.37.24-.68.08-.31-.16-1.32-.49-2.51-1.57-.93-.83-1.56-1.86-1.74-2.17-.18-.31-.02-.48.14-.64.14-.14.31-.37.47-.55.16-.18.21-.31.31-.53.1-.21.05-.4-.03-.55-.08-.16-.72-1.73-.99-2.37-.26-.63-.52-.55-.72-.56-.18 0-.4-.01-.61-.01-.21 0-.55.08-.84.4-.29.31-1.1 1.08-1.1 2.63 0 1.55 1.13 3.04 1.29 3.25.16.21 2.22 3.39 5.38 4.75.75.32 1.33.51 1.79.65.75.24 1.43.2 1.97.12.6-.09 1.85-.76 2.11-1.49.26-.74.26-1.37.18-1.49-.08-.11-.29-.18-.6-.34Zm-3.03 10.06h-.01a12 12 0 0 1-6.09-1.66l-.44-.26-4.53 1.18 1.21-4.42-.29-.46a11.97 11.97 0 0 1 10.14-18.4c6.61 0 12 5.38 12 11.99 0 6.61-5.39 11.99-11.99 11.99Zm10.2-22.19A14.41 14.41 0 0 0 16.08 1.2c-7.96 0-14.43 6.47-14.43 14.42 0 2.54.67 5.02 1.93 7.2L1.2 30.8l8.2-2.16a14.39 14.39 0 0 0 6.68 1.69h.01c7.95 0 14.43-6.47 14.43-14.42 0-3.85-1.5-7.47-4.24-10.2Z" />
+            </svg>
+          </span>
+          <span class="footer-link-label">Feedback</span>
         </a>
         <button type="button" class="footer-link-btn" data-legal-doc="privacy">Privacy Policy</button>
         <button type="button" class="footer-link-btn" data-legal-doc="terms">Terms of Use</button>
@@ -359,13 +373,13 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260416e"></script>
-  <script src="assets/js/app-config.js?v=20260416e"></script>
-  <script src="assets/js/script.js?v=20260416e"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260416e"></script>
+  <script src="assets/data/data.js?v=20260416g"></script>
+  <script src="assets/js/app-config.js?v=20260416g"></script>
+  <script src="assets/js/script.js?v=20260416g"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260416g"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-16.5";
+      const APP_VERSION = "2026-04-16.7";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -397,7 +411,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260416e", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260416g", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

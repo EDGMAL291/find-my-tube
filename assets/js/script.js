@@ -6,6 +6,7 @@ const headerSettings = document.getElementById("headerSettings");
 const menuToggleBtn = document.getElementById("menuToggleBtn");
 const siteMenuPanel = document.getElementById("siteMenuPanel");
 const siteMenuLinks = document.querySelectorAll("[data-menu-action]");
+const siteMenuCloseButtons = document.querySelectorAll(".site-menu-close-btn");
 const themeSettingsBtn = document.getElementById("themeSettingsBtn");
 const themeSwitcherPanel = document.getElementById("themeSwitcherPanel");
 const surfacePanelBackdrop = document.getElementById("surfacePanelBackdrop");
@@ -6637,6 +6638,7 @@ function renderCards(filteredTests) {
       const wasAddedToPlan = !wasSelected && selectedTestNames.has(test.name);
       if (wasAddedToPlan && sourceRect) {
         animateAddToPlanFeedback({ sourceRect, tubeColorValue: test.tubeColor });
+        showSelectionNotice("Added to Tube Plan.");
       }
       if (shouldRestoreSearchFocus && wasAddedToPlan) {
         clearSearchForNextPlanEntry();
@@ -6822,6 +6824,14 @@ function bindEvents() {
         if (action === "about") {
           openAboutSection();
         }
+      });
+    });
+  }
+
+  if (siteMenuCloseButtons.length) {
+    siteMenuCloseButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        setSiteMenuOpen(false);
       });
     });
   }
