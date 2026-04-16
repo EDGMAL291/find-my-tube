@@ -92,17 +92,18 @@
             <button type="button" class="profile-modal-close-btn" id="stockDashboardAccessCloseBtn">Back</button>
           </div>
           <p class="stock-dashboard-status stock-dashboard-login-status" id="stockDashboardAuthStatus">Sign in to view dashboard data and update request status.</p>
+          <p class="stock-dashboard-status">For shared computers, do not save login details in the browser.</p>
 
           <div class="stock-dashboard-auth-shell" id="stockDashboardAuthShell">
-            <form class="stock-dashboard-auth-form" id="stockDashboardAuthForm">
+            <form class="stock-dashboard-auth-form" id="stockDashboardAuthForm" autocomplete="off">
               <label class="stock-order-field">
-                <span class="stock-order-field-label">Lab user number</span>
-                <input type="text" id="stockDashboardUserNumberInput" inputmode="numeric" autocomplete="username" placeholder="Choose or enter your number" />
+                <span class="stock-order-field-label">eLab user number</span>
+                <input type="text" id="stockDashboardUserNumberInput" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="Use the same user number you use on eLab." />
               </label>
 
               <label class="stock-order-field">
                 <span class="stock-order-field-label">4-digit PIN</span>
-                <input type="password" id="stockDashboardPinInput" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="4 digits" />
+                <input type="password" id="stockDashboardPinInput" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="4 digits" />
               </label>
 
               <div class="stock-dashboard-auth-actions">
@@ -116,7 +117,7 @@
       <section class="stock-order-request-card stock-dashboard-session-card" id="stockDashboardSessionCard" hidden>
         <div>
           <p class="stock-order-kicker">Signed in</p>
-          <h3 id="stockDashboardSessionUser">Lab user</h3>
+          <h3 id="stockDashboardSessionUser">Medical Technologist</h3>
         </div>
         <div class="stock-dashboard-session-actions">
           <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn">Log out</button>
@@ -158,7 +159,7 @@
             <button type="button" class="quick-tool-clear-btn" id="stockDashboardMarkSeenBtn" hidden>Mark seen</button>
           </div>
         </div>
-        <p class="stock-dashboard-status" id="stockDashboardNotificationStatus">Alerts work for signed-in lab users while this dashboard stays open.</p>
+        <p class="stock-dashboard-status" id="stockDashboardNotificationStatus">Alerts work for signed-in Medical Technologists while this dashboard stays open.</p>
       </section>
 
       <section class="stock-dashboard-metrics" id="stockDashboardMetrics" aria-label="Stock request metrics" hidden>
@@ -251,7 +252,7 @@
             <p class="stock-order-kicker">Stock on hand</p>
             <h3 id="stockDashboardInventoryTitle">Current inventory</h3>
           </div>
-          <p class="stock-dashboard-status" id="stockDashboardInventoryStatus">Signed-in lab users can review live stock balances here.</p>
+          <p class="stock-dashboard-status" id="stockDashboardInventoryStatus">Signed-in Medical Technologists can review live stock balances here.</p>
         </div>
 
         <div class="stock-dashboard-list" id="stockDashboardInventoryList"></div>
@@ -269,9 +270,9 @@
         <div class="stock-order-request-head">
           <div>
             <p class="stock-order-kicker">Admin only</p>
-            <h3 id="stockDashboardUserAdminTitle">Manage lab users</h3>
+            <h3 id="stockDashboardUserAdminTitle">Manage users</h3>
           </div>
-          <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review lab user logins.</p>
+          <p class="stock-dashboard-status" id="stockDashboardUserAdminStatus">Create and review Admin and Medical Technologist logins.</p>
         </div>
         <div class="stock-dashboard-inline-actions">
           <button type="button" class="quick-tool-launch-btn" id="stockDashboardOpenCreateUserBtn">Create User</button>
@@ -329,20 +330,28 @@
         <button type="button" class="profile-modal-close-btn" id="stockDashboardCloseCreateUserModalBtn">Close</button>
       </div>
 
-      <form class="stock-dashboard-auth-form" id="stockDashboardCreateUserForm">
+      <form class="stock-dashboard-auth-form" id="stockDashboardCreateUserForm" autocomplete="off">
         <label class="stock-order-field stock-order-field-wide">
           <span class="stock-order-field-label">User name</span>
           <input type="text" id="stockDashboardCreateUserNameInput" autocomplete="name" placeholder="Full name" />
         </label>
 
         <label class="stock-order-field">
-          <span class="stock-order-field-label">New user number</span>
-          <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" placeholder="e.g. 102" />
+          <span class="stock-order-field-label">New eLab user number</span>
+          <input type="text" id="stockDashboardCreateUserNumberInput" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="Use the same user number you use on eLab." />
         </label>
 
         <label class="stock-order-field">
           <span class="stock-order-field-label">New 4-digit PIN</span>
-          <input type="password" id="stockDashboardCreateUserPinInput" inputmode="numeric" maxlength="4" placeholder="4 digits" />
+          <input type="password" id="stockDashboardCreateUserPinInput" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="4 digits" />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Role</span>
+          <select id="stockDashboardCreateUserRoleInput">
+            <option value="admin">Admin</option>
+            <option value="labUser" selected>Medical Technologist</option>
+          </select>
         </label>
 
         <div class="stock-dashboard-auth-actions">

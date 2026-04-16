@@ -251,6 +251,23 @@ function sanitizePin(value) {
   return String(value || "").replace(/\D+/g, "").slice(0, 4);
 }
 
+function normalizeElabUserNumber(value) {
+  const raw = String(value || "").trim();
+  return /^\d{2,3}$/.test(raw) ? raw : "";
+}
+
+function normalizePin(value) {
+  const raw = String(value || "").trim();
+  return /^\d{4}$/.test(raw) ? raw : "";
+}
+
+function normalizeUserRole(value) {
+  const safeRole = String(value || "").trim().toLowerCase();
+  if (safeRole === "admin") return "admin";
+  if (safeRole === "labuser" || safeRole === "lab-user" || safeRole === "medical-technologist") return "labUser";
+  return "labUser";
+}
+
 function getStoredUserDisplayName(user) {
   return sanitizeDisplayName(user?.displayName || user?.name || "");
 }
@@ -318,9 +335,27 @@ function requireLabSession(req, res) {
   return session;
 }
 
+function getEffectiveUserRole(user, ownerUserNumber = "") {
+  const safeOwnerUserNumber = sanitizeUserNumber(ownerUserNumber);
+  const safeUserNumber = sanitizeUserNumber(user?.userNumber || "");
+  if (safeOwnerUserNumber && safeUserNumber && safeOwnerUserNumber === safeUserNumber) {
+    return "admin";
+  }
+
+  return normalizeUserRole(user?.role);
+}
+
 async function isOwnerUserNumber(userNumber) {
+  const safeUserNumber = sanitizeUserNumber(userNumber);
+  if (!safeUserNumber) return false;
+
   const ownerUserNumber = await getResolvedOwnerUserNumber();
-  return Boolean(ownerUserNumber && ownerUserNumber === sanitizeUserNumber(userNumber));
+  if (ownerUserNumber && ownerUserNumber === safeUserNumber) {
+    return true;
+  }
+
+  const user = await getUserRecord(safeUserNumber);
+  return normalizeUserRole(user?.role) === "admin";
 }
 
 async function getUserRecord(userNumber) {
@@ -907,14 +942,16 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const user = await findStockUserByNumber(session.userNumber);
-    const isOwner = await isOwnerUserNumber(session.userNumber);
-    const userRecord = await getUserRecord(session.userNumber);
+    const ownerUserNumber = await getResolvedOwnerUserNumber();
+    const role = getEffectiveUserRole(user || { userNumber: session.userNumber }, ownerUserNumber);
+    const isOwner = role === "admin";
     sendJson(res, 200, {
       ok: true,
       authenticated: true,
       user: {
         userNumber: session.userNumber,
         displayName: getStoredUserDisplayName(user),
+        role,
         isOwner
       }
     });
@@ -938,20 +975,22 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const userNumber = sanitizeUserNumber(payload.userNumber);
-    const pin = sanitizePin(payload.pin);
+    const userNumber = normalizeElabUserNumber(payload.userNumber);
+    const pin = normalizePin(payload.pin);
     const user = await findStockUserByNumber(userNumber);
 
-    if (!user || pin.length !== 4 || !verifyPin(pin, user.salt, user.pinHash)) {
+    if (!user || !pin || !verifyPin(pin, user.salt, user.pinHash)) {
       sendJson(res, 401, {
         ok: false,
-        error: "Incorrect user number or PIN"
+        error: "Incorrect eLab user number or PIN"
       });
       return;
     }
 
     const session = createLabSession(userNumber);
-    const isOwner = await isOwnerUserNumber(userNumber);
+    const ownerUserNumber = await getResolvedOwnerUserNumber();
+    const role = getEffectiveUserRole(user || { userNumber }, ownerUserNumber);
+    const isOwner = role === "admin";
     sendJson(res, 200, {
       ok: true,
       authenticated: true,
@@ -959,6 +998,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       user: {
         userNumber,
         displayName: getStoredUserDisplayName(user),
+        role,
         isOwner
       }
     });
@@ -990,13 +1030,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const userNumber = sanitizeUserNumber(payload.userNumber);
-    const pin = sanitizePin(payload.pin);
+    const userNumber = normalizeElabUserNumber(payload.userNumber);
+    const pin = normalizePin(payload.pin);
     const displayName = sanitizeDisplayName(payload.displayName);
-    if (userNumber.length < 3 || pin.length !== 4) {
+    if (!userNumber || !pin) {
       sendJson(res, 400, {
         ok: false,
-        error: "Use a user number of at least 3 digits and a 4-digit PIN"
+        error: "Use an eLab user number (2 or 3 digits) and a 4-digit PIN"
       });
       return;
     }
@@ -1006,6 +1046,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     await writeStockUsers([{
       userNumber,
       displayName,
+      role: "admin",
       salt,
       pinHash: hash,
       createdAt: now,
@@ -1021,6 +1062,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       user: {
         userNumber,
         displayName,
+        role: "admin",
         isOwner: true
       }
     });
@@ -1044,10 +1086,12 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     if (!session) return;
 
     const users = await readStockUsers();
+    const ownerUserNumber = await getResolvedOwnerUserNumber();
     sendJson(res, 200, {
       users: users.map((user) => ({
         userNumber: sanitizeUserNumber(user.userNumber),
         displayName: getStoredUserDisplayName(user),
+        role: getEffectiveUserRole(user, ownerUserNumber),
         createdAt: user.createdAt || "",
         updatedAt: user.updatedAt || ""
       }))
@@ -1075,14 +1119,14 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const userNumber = sanitizeUserNumber(payload.userNumber);
-    const fullName = sanitizePersonName(payload.fullName);
-    const pin = sanitizePin(payload.pin);
+    const userNumber = normalizeElabUserNumber(payload.userNumber);
+    const pin = normalizePin(payload.pin);
     const displayName = sanitizeDisplayName(payload.displayName);
-    if (userNumber.length < 3 || pin.length !== 4 || displayName.length < 2) {
+    const role = normalizeUserRole(payload.role);
+    if (!userNumber || !pin || displayName.length < 2) {
       sendJson(res, 400, {
         ok: false,
-        error: "Use a display name, a user number of at least 3 digits, and a 4-digit PIN"
+        error: "Use a display name, an eLab user number (2 or 3 digits), and a 4-digit PIN"
       });
       return;
     }
@@ -1091,7 +1135,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     if (users.some((user) => sanitizeUserNumber(user.userNumber) === userNumber)) {
       sendJson(res, 409, {
         ok: false,
-        error: "That lab user number already exists"
+        error: "That eLab user number already exists"
       });
       return;
     }
@@ -1101,6 +1145,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     users.push({
       userNumber,
       displayName,
+      role,
       salt,
       pinHash: hash,
       createdAt: now,
@@ -1113,6 +1158,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       user: {
         userNumber,
         displayName,
+        role,
         createdAt: now
       }
     });

@@ -26,6 +26,7 @@ const stockDashboardCreateUserForm = document.getElementById("stockDashboardCrea
 const stockDashboardCreateUserNameInput = document.getElementById("stockDashboardCreateUserNameInput");
 const stockDashboardCreateUserNumberInput = document.getElementById("stockDashboardCreateUserNumberInput");
 const stockDashboardCreateUserPinInput = document.getElementById("stockDashboardCreateUserPinInput");
+const stockDashboardCreateUserRoleInput = document.getElementById("stockDashboardCreateUserRoleInput");
 const stockDashboardCreateUserBtn = document.getElementById("stockDashboardCreateUserBtn");
 const stockDashboardUserList = document.getElementById("stockDashboardUserList");
 const stockDashboardManualEntryCard = document.getElementById("stockDashboardManualEntryCard");
@@ -69,6 +70,10 @@ const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
 const STOCK_DASHBOARD_OWNER_SEEN_KEY = "fmt-stock-owner-seen";
 const STOCK_DASHBOARD_POLL_MS = 30000;
+const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
+const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
+const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
+const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out due to inactivity.";
 
 let stockDashboardSession = null;
 let stockDashboardToken = localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "";
@@ -77,6 +82,12 @@ let stockDashboardLatestRequestMarker = "";
 let stockDashboardUnreadCount = 0;
 let stockDashboardSetupRequired = false;
 let stockDashboardLoginModalFocusTimer = 0;
+let stockDashboardInactivityWarningTimer = 0;
+let stockDashboardInactivityLogoutTimer = 0;
+let stockDashboardInactivityWarningShown = false;
+let stockDashboardStatusBeforeInactivityWarning = "";
+let stockDashboardLastActivityResetAt = 0;
+let stockDashboardInactivityHandlersBound = false;
 
 function stockDashboardGetApiBaseUrl() {
   if (typeof window === "undefined") return "";
@@ -146,16 +157,32 @@ function stockDashboardGetDisplayName(user) {
   return String(user?.displayName || "").trim();
 }
 
+function stockDashboardNormalizeUserRole(role, isAdmin = false) {
+  if (isAdmin) return "admin";
+  const safeRole = String(role || "").trim().toLowerCase();
+  if (safeRole === "admin") return "admin";
+  if (safeRole === "labuser" || safeRole === "lab-user" || safeRole === "medical-technologist") return "labUser";
+  return "labUser";
+}
+
+function stockDashboardGetRoleLabel(role, isAdmin = false) {
+  return stockDashboardNormalizeUserRole(role, isAdmin) === "admin"
+    ? "Admin"
+    : "Medical Technologist";
+}
+
 function stockDashboardGetUserHeading(user) {
   const displayName = stockDashboardGetDisplayName(user);
-  if (user?.isOwner) return displayName ? `${displayName} · Admin` : "Admin";
-  return displayName || "Lab user";
+  const roleLabel = stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner));
+  if (displayName) return `${displayName} · ${roleLabel}`;
+  return roleLabel;
 }
 
 function stockDashboardGetSignedInLabel(user) {
   const displayName = stockDashboardGetDisplayName(user);
-  if (user?.isOwner) return displayName ? `Signed in as ${displayName} (Admin).` : "Signed in as Admin.";
-  return displayName ? `Signed in as ${displayName}.` : "Signed in.";
+  const roleLabel = stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner));
+  if (displayName) return `Signed in as ${displayName} (${roleLabel}).`;
+  return `Signed in as ${roleLabel}.`;
 }
 
 function stockDashboardNormalizeStatus(status) {
@@ -240,7 +267,7 @@ function stockDashboardBuildAuditRows(request) {
     <div class="stock-dashboard-audit-item">
       ${stockDashboardEscapeHtml(stockDashboardFormatStatus(entry.status))}
       · ${stockDashboardEscapeHtml(stockDashboardFormatDateTime(entry.updatedAt))}
-      ${entry.updatedBy ? ` · Lab user ${stockDashboardEscapeHtml(entry.updatedBy)}` : ""}
+      ${entry.updatedBy ? ` · Medical Technologist ${stockDashboardEscapeHtml(entry.updatedBy)}` : ""}
     </div>
   `).join("");
 }
@@ -257,7 +284,7 @@ function stockDashboardRenderInventory(summary = []) {
     const lowRows = summary.filter((row) => Number(row.onHand || 0) <= 0);
     stockDashboardInventoryStatus.textContent = lowRows.length
       ? `${lowRows.length} item${lowRows.length === 1 ? "" : "s"} are at zero or below.`
-      : "Signed-in lab users can review live stock balances here.";
+      : "Signed-in Medical Technologists can review live stock balances here.";
   }
 }
 
@@ -278,7 +305,7 @@ function stockDashboardRenderReceipts(receipts = []) {
         <div class="stock-dashboard-request-meta">
           <span>${stockDashboardEscapeHtml(receipt.reference || "No reference")}</span>
           <span>${stockDashboardEscapeHtml(stockDashboardFormatDateTime(receipt.createdAt))}</span>
-          <span>${receipt.receivedBy ? `Lab user ${stockDashboardEscapeHtml(receipt.receivedBy)}` : ""}</span>
+          <span>${receipt.receivedBy ? `Medical Technologist ${stockDashboardEscapeHtml(receipt.receivedBy)}` : ""}</span>
         </div>
         <p class="stock-dashboard-request-items">${stockDashboardEscapeHtml(summary || "No items listed")}</p>
         ${receipt.notes ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(receipt.notes)}</p>` : ""}
@@ -446,6 +473,84 @@ function stockDashboardStopPolling() {
   stockDashboardPollTimer = 0;
 }
 
+function stockDashboardClearInactivityTimers() {
+  window.clearTimeout(stockDashboardInactivityWarningTimer);
+  window.clearTimeout(stockDashboardInactivityLogoutTimer);
+  stockDashboardInactivityWarningTimer = 0;
+  stockDashboardInactivityLogoutTimer = 0;
+}
+
+function stockDashboardShowInactivityWarning() {
+  if (!stockDashboardSession) return;
+  stockDashboardInactivityWarningShown = true;
+  if (stockDashboardStatus) {
+    stockDashboardStatusBeforeInactivityWarning = String(stockDashboardStatus.textContent || "");
+    stockDashboardStatus.textContent = STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT;
+  }
+}
+
+function stockDashboardCancelInactivityWarning() {
+  if (!stockDashboardInactivityWarningShown) return;
+  stockDashboardInactivityWarningShown = false;
+  if (stockDashboardStatus?.textContent === STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT) {
+    stockDashboardStatus.textContent = stockDashboardStatusBeforeInactivityWarning || "Session active.";
+  }
+  stockDashboardStatusBeforeInactivityWarning = "";
+}
+
+async function stockDashboardAutoLogoutForInactivity() {
+  if (!stockDashboardSession) return;
+  stockDashboardClearInactivityTimers();
+  stockDashboardInactivityWarningShown = false;
+  stockDashboardStatusBeforeInactivityWarning = "";
+  await logoutStockDashboard();
+  if (stockDashboardAuthStatus) {
+    stockDashboardAuthStatus.textContent = STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT;
+  }
+  if (stockDashboardStatus) {
+    stockDashboardStatus.textContent = STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT;
+  }
+}
+
+function stockDashboardResetInactivityWatch() {
+  if (!stockDashboardSession) return;
+  stockDashboardClearInactivityTimers();
+  stockDashboardCancelInactivityWarning();
+
+  stockDashboardInactivityWarningTimer = window.setTimeout(() => {
+    stockDashboardShowInactivityWarning();
+  }, STOCK_DASHBOARD_INACTIVITY_WARNING_MS);
+
+  stockDashboardInactivityLogoutTimer = window.setTimeout(() => {
+    stockDashboardAutoLogoutForInactivity();
+  }, STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS);
+}
+
+function stockDashboardHandleActivity(event) {
+  if (!stockDashboardSession) return;
+  const now = Date.now();
+  if (event?.type === "mousemove" && !stockDashboardInactivityWarningShown && now - stockDashboardLastActivityResetAt < 1000) {
+    return;
+  }
+  stockDashboardLastActivityResetAt = now;
+  stockDashboardResetInactivityWatch();
+}
+
+function stockDashboardBindInactivityHandlers() {
+  if (stockDashboardInactivityHandlersBound) return;
+  stockDashboardInactivityHandlersBound = true;
+
+  [
+    "mousemove",
+    "click",
+    "keydown",
+    "scroll",
+    "touchstart"
+  ].forEach((eventName) => {
+    document.addEventListener(eventName, stockDashboardHandleActivity, { passive: true });
+  });
+}
+
 function stockDashboardRenderNotificationState() {
   if (stockDashboardNotificationCard) {
     stockDashboardNotificationCard.hidden = !stockDashboardSession;
@@ -453,7 +558,7 @@ function stockDashboardRenderNotificationState() {
 
   if (!stockDashboardSession) {
     if (stockDashboardNotificationTitle) stockDashboardNotificationTitle.textContent = "No new requests";
-    if (stockDashboardNotificationStatus) stockDashboardNotificationStatus.textContent = "Alerts work for signed-in lab users while this dashboard stays open.";
+    if (stockDashboardNotificationStatus) stockDashboardNotificationStatus.textContent = "Alerts work for signed-in Medical Technologists while this dashboard stays open.";
     if (stockDashboardAlertBadge) stockDashboardAlertBadge.hidden = true;
     if (stockDashboardMarkSeenBtn) stockDashboardMarkSeenBtn.hidden = true;
     return;
@@ -476,7 +581,7 @@ function stockDashboardRenderNotificationState() {
   } else {
     if (stockDashboardNotificationTitle) stockDashboardNotificationTitle.textContent = "No new requests";
     if (stockDashboardNotificationStatus) {
-      stockDashboardNotificationStatus.textContent = "Alerts work for signed-in lab users while this dashboard stays open.";
+      stockDashboardNotificationStatus.textContent = "Alerts work for signed-in Medical Technologists while this dashboard stays open.";
     }
     if (stockDashboardAlertBadge) stockDashboardAlertBadge.hidden = true;
     if (stockDashboardMarkSeenBtn) stockDashboardMarkSeenBtn.hidden = true;
@@ -556,6 +661,7 @@ function stockDashboardSetSession(token, user) {
   stockDashboardSession = user ? {
     userNumber: user.userNumber,
     displayName: stockDashboardGetDisplayName(user),
+    role: stockDashboardNormalizeUserRole(user.role, Boolean(user.isOwner)),
     isOwner: Boolean(user.isOwner)
   } : null;
 
@@ -589,7 +695,7 @@ function stockDashboardSetSession(token, user) {
   if (stockDashboardSessionUser) {
     stockDashboardSessionUser.textContent = isAuthenticated
       ? stockDashboardGetUserHeading(stockDashboardSession)
-      : "Lab user";
+      : "Medical Technologist";
   }
 
   if (clearStockDataBtn) {
@@ -600,7 +706,7 @@ function stockDashboardSetSession(token, user) {
     stockDashboardAuthStatus.textContent = isAuthenticated
       ? stockDashboardGetSignedInLabel(stockDashboardSession)
       : stockDashboardSetupRequired
-        ? "No lab admin is set up yet. Enter a user number and 4-digit PIN to create the first admin."
+        ? "No lab admin is set up yet. Enter your eLab user number (2 or 3 digits) and 4-digit PIN to create the first admin."
         : "Sign in to view dashboard data and update request status.";
   }
 
@@ -613,6 +719,9 @@ function stockDashboardSetSession(token, user) {
   }
 
   if (!isAuthenticated) {
+    stockDashboardClearInactivityTimers();
+    stockDashboardInactivityWarningShown = false;
+    stockDashboardStatusBeforeInactivityWarning = "";
     stockDashboardLatestRequestMarker = "";
     stockDashboardUnreadCount = 0;
     stockDashboardStopPolling();
@@ -636,6 +745,8 @@ function stockDashboardSetSession(token, user) {
     if (stockDashboardUnitsRequested) stockDashboardUnitsRequested.textContent = "0";
     loadPublicStockDashboardRequests();
   } else {
+    stockDashboardBindInactivityHandlers();
+    stockDashboardResetInactivityWatch();
     stockDashboardUpdateNotificationPermissionUi();
     stockDashboardRenderNotificationState();
     stockDashboardStartPolling();
@@ -668,9 +779,17 @@ async function loadPublicStockDashboardRequests() {
 }
 
 function stockDashboardGetCredentials() {
-  const userNumber = String(stockDashboardUserNumberInput?.value || "").replace(/\D+/g, "").slice(0, 12);
-  const pin = String(stockDashboardPinInput?.value || "").replace(/\D+/g, "").slice(0, 4);
+  const userNumber = String(stockDashboardUserNumberInput?.value || "").trim();
+  const pin = String(stockDashboardPinInput?.value || "").trim();
   return { userNumber, pin };
+}
+
+function stockDashboardIsValidElabUserNumber(userNumber) {
+  return /^\d{2,3}$/.test(String(userNumber || "").trim());
+}
+
+function stockDashboardIsValidPin(pin) {
+  return /^\d{4}$/.test(String(pin || "").trim());
 }
 
 function stockDashboardSetBusy(isBusy) {
@@ -692,9 +811,9 @@ function stockDashboardSetBusy(isBusy) {
 
 async function stockDashboardSendAuthRequest(url) {
   const { userNumber, pin } = stockDashboardGetCredentials();
-  if (userNumber.length < 3 || pin.length !== 4) {
+  if (!stockDashboardIsValidElabUserNumber(userNumber) || !stockDashboardIsValidPin(pin)) {
     if (stockDashboardAuthStatus) {
-      stockDashboardAuthStatus.textContent = "Use a lab user number of at least 3 digits and a 4-digit PIN.";
+      stockDashboardAuthStatus.textContent = "Use your eLab user number (2 or 3 digits) and a 4-digit PIN.";
     }
     return;
   }
@@ -742,7 +861,7 @@ async function loadStockDashboardUsers() {
   if (!stockDashboardSession?.isOwner || !stockDashboardUserList) return;
 
   if (stockDashboardUserAdminStatus) {
-    stockDashboardUserAdminStatus.textContent = "Loading lab users...";
+    stockDashboardUserAdminStatus.textContent = "Loading users...";
   }
 
   try {
@@ -757,7 +876,7 @@ async function loadStockDashboardUsers() {
     }
 
     if (!response.ok) {
-      throw new Error("Could not load lab users");
+      throw new Error("Could not load users");
     }
 
     const payload = await response.json();
@@ -765,17 +884,18 @@ async function loadStockDashboardUsers() {
     stockDashboardUserList.innerHTML = users.length
       ? users.map((user) => `
         <div class="stock-dashboard-list-row">
-          <span>${stockDashboardEscapeHtml(stockDashboardGetDisplayName(user) || "Lab user")}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}</span>
+          <span>${stockDashboardEscapeHtml(stockDashboardGetDisplayName(user) || "Medical Technologist")}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}</span>
+          <strong>${stockDashboardEscapeHtml(stockDashboardGetRoleLabel(user?.role, user?.role === "admin"))}</strong>
         </div>
       `).join("")
-      : '<p class="stock-dashboard-empty">No lab users yet.</p>';
+      : '<p class="stock-dashboard-empty">No users yet.</p>';
 
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = `${users.length} lab user${users.length === 1 ? "" : "s"} saved.`;
+      stockDashboardUserAdminStatus.textContent = `${users.length} user${users.length === 1 ? "" : "s"} saved.`;
     }
   } catch {
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = "Could not load lab users.";
+      stockDashboardUserAdminStatus.textContent = "Could not load users.";
     }
   }
 }
@@ -784,25 +904,26 @@ async function createStockDashboardUser() {
   if (!stockDashboardSession?.isOwner) return;
 
   const displayName = String(stockDashboardCreateUserNameInput?.value || "").replace(/\s+/g, " ").trim().slice(0, 120);
-  const userNumber = String(stockDashboardCreateUserNumberInput?.value || "").replace(/\D+/g, "").slice(0, 12);
-  const pin = String(stockDashboardCreateUserPinInput?.value || "").replace(/\D+/g, "").slice(0, 4);
-  if (displayName.length < 2 || userNumber.length < 3 || pin.length !== 4) {
+  const userNumber = String(stockDashboardCreateUserNumberInput?.value || "").trim();
+  const pin = String(stockDashboardCreateUserPinInput?.value || "").trim();
+  const role = stockDashboardNormalizeUserRole(stockDashboardCreateUserRoleInput?.value || "labUser");
+  if (displayName.length < 2 || !stockDashboardIsValidElabUserNumber(userNumber) || !stockDashboardIsValidPin(pin)) {
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = "Use a display name, a user number of at least 3 digits, and a 4-digit PIN.";
+      stockDashboardUserAdminStatus.textContent = "Use a display name, an eLab user number (2 or 3 digits), and a 4-digit PIN.";
     }
     return;
   }
 
   stockDashboardSetBusy(true);
   if (stockDashboardUserAdminStatus) {
-    stockDashboardUserAdminStatus.textContent = "Creating lab user...";
+    stockDashboardUserAdminStatus.textContent = "Creating user...";
   }
 
   try {
     const response = await fetch(STOCK_DASHBOARD_USERS_URL, {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
-      body: JSON.stringify({ displayName, userNumber, pin })
+      body: JSON.stringify({ displayName, userNumber, pin, role })
     });
 
     if (response.status === 401 || response.status === 403) {
@@ -812,7 +933,7 @@ async function createStockDashboardUser() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload?.error || "Could not create lab user");
+      throw new Error(payload?.error || "Could not create user");
     }
 
     if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
@@ -823,7 +944,7 @@ async function createStockDashboardUser() {
     await loadStockDashboardUsers();
   } catch (error) {
     if (stockDashboardUserAdminStatus) {
-      stockDashboardUserAdminStatus.textContent = error instanceof Error ? error.message : "Could not create lab user.";
+      stockDashboardUserAdminStatus.textContent = error instanceof Error ? error.message : "Could not create user.";
     }
   } finally {
     stockDashboardSetBusy(false);
