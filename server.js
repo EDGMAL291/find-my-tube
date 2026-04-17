@@ -21,7 +21,6 @@ const STOCK_OWNER_FILE = path.join(DATA_DIR, "stock-owner.json");
 const STOCK_USER_AUDIT_FILE = path.join(DATA_DIR, "stock-user-audit.json");
 const STOCK_USERS_BACKUP_DIR = path.join(DATA_DIR, "stock-users-backups");
 const STOCK_USERS_BACKUP_KEEP = 5;
-const ALLOW_STOCK_USER_DELETE = String(process.env.ALLOW_STOCK_USER_DELETE || "").trim().toLowerCase() === "true";
 const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_ORDER_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
@@ -179,9 +178,7 @@ async function readStockUsers() {
   try {
     const parsed = JSON.parse(raw);
     const users = Array.isArray(parsed) ? parsed : [];
-    const normalizedUsers = users
-      .map((entry) => normalizeStoredStockUser(entry))
-      .filter(Boolean);
+    const normalizedUsers = normalizeStockUsersForStorage(users);
     const changed = JSON.stringify(users) !== JSON.stringify(normalizedUsers);
     if (changed) {
       await writeStockUsers(normalizedUsers);
@@ -196,6 +193,7 @@ function validateStockUserRecords(records) {
   if (!Array.isArray(records)) {
     return "Users payload must be an array.";
   }
+  const seenIds = new Set();
   for (const user of records) {
     const id = sanitizeString(user?.id, 80);
     const displayName = getStoredUserDisplayName(user);
@@ -209,6 +207,8 @@ function validateStockUserRecords(records) {
     if (!normalizedElabUserNumber) return "Each user must include a normalized eLab user number.";
     if (!role) return "Each user must include a role.";
     if (!status) return "Each user must include a status.";
+    if (seenIds.has(id)) return "Each user must have a unique id.";
+    seenIds.add(id);
   }
   return "";
 }
@@ -231,7 +231,8 @@ async function backupCurrentUsersFile(raw) {
 
 async function writeStockUsers(records, { createBackup = true } = {}) {
   await ensureStockRequestsFile();
-  const validationError = validateStockUserRecords(records);
+  const normalizedRecords = normalizeStockUsersForStorage(records);
+  const validationError = validateStockUserRecords(normalizedRecords);
   if (validationError) {
     throw new Error(validationError);
   }
@@ -249,7 +250,7 @@ async function writeStockUsers(records, { createBackup = true } = {}) {
   }
 
   try {
-    await fs.writeFile(tempFile, `${JSON.stringify(records, null, 2)}\n`, "utf8");
+    await fs.writeFile(tempFile, `${JSON.stringify(normalizedRecords, null, 2)}\n`, "utf8");
     await fs.rename(tempFile, STOCK_USERS_FILE);
   } catch (error) {
     await fs.unlink(tempFile).catch(() => {});
@@ -410,11 +411,12 @@ function getStoredNormalizedElabUserNumber(user) {
   return normalizeElabUserNumber(user?.userNumber, { allowAnyLength: true });
 }
 
+function createStockUserId() {
+  return `usr-${Date.now().toString(36)}-${crypto.randomBytes(5).toString("hex")}`;
+}
+
 function buildStockUserId(user) {
-  const existing = sanitizeString(user?.id, 80);
-  if (existing) return existing;
-  const normalized = getStoredNormalizedElabUserNumber(user);
-  return normalized ? `usr-${normalized}` : "";
+  return sanitizeString(user?.id, 80);
 }
 
 function normalizeStoredStockUser(rawUser) {
@@ -429,7 +431,7 @@ function normalizeStoredStockUser(rawUser) {
 
   return {
     ...rawUser,
-    id: buildStockUserId(rawUser) || `usr-${normalizedElabUserNumber}`,
+    id: buildStockUserId(rawUser),
     userNumber: normalizedElabUserNumber,
     displayElabUserNumber,
     normalizedElabUserNumber,
@@ -438,6 +440,27 @@ function normalizeStoredStockUser(rawUser) {
     role,
     status
   };
+}
+
+function normalizeStockUsersForStorage(rawUsers) {
+  const users = Array.isArray(rawUsers) ? rawUsers : [];
+  const normalizedUsers = users
+    .map((entry) => normalizeStoredStockUser(entry))
+    .filter(Boolean);
+
+  const seenIds = new Set();
+  for (const user of normalizedUsers) {
+    let safeId = sanitizeString(user?.id, 80);
+    if (!safeId || seenIds.has(safeId)) {
+      do {
+        safeId = createStockUserId();
+      } while (seenIds.has(safeId));
+    }
+    user.id = safeId;
+    seenIds.add(safeId);
+  }
+
+  return normalizedUsers;
 }
 
 async function findStockUserByNumber(userNumber) {
@@ -1242,7 +1265,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         durabilityWarning: getStorageDurabilityWarning()
       },
       userSafety: {
-        allowDelete: ALLOW_STOCK_USER_DELETE
+        allowDelete: true
       },
       api: {
         baseUrl
@@ -1416,7 +1439,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const now = new Date().toISOString();
     await writeStockUsers([{
-      id: `usr-${userNumber}`,
+      id: createStockUserId(),
       userNumber,
       displayElabUserNumber: displayElabUserNumber || userNumber,
       normalizedElabUserNumber: userNumber,
@@ -1579,7 +1602,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const now = new Date().toISOString();
     users.push({
-      id: `usr-${userNumber}`,
+      id: createStockUserId(),
       userNumber,
       displayElabUserNumber: displayElabUserNumber || userNumber,
       normalizedElabUserNumber: userNumber,
@@ -1608,7 +1631,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     sendJson(res, 201, {
       ok: true,
       user: {
-        id: `usr-${userNumber}`,
+        id: users[users.length - 1]?.id || "",
         userNumber,
         displayElabUserNumber: displayElabUserNumber || userNumber,
         displayName,
@@ -1623,23 +1646,20 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   if ((req.method === "PATCH" || req.method === "DELETE") && pathname.startsWith("/api/lab/users/")) {
     const session = await requireOwnerSession(req, res);
     if (!session) return;
-    if (req.method === "DELETE" && !ALLOW_STOCK_USER_DELETE) {
-      sendJson(res, 403, {
-        ok: false,
-        error: "User deletion is disabled in safe mode. Disable users instead."
-      });
-      return;
-    }
 
-    const match = pathname.match(/^\/api\/lab\/users\/([^/]+)$/);
-    if (!match) {
+    const byIdMatch = pathname.match(/^\/api\/lab\/users\/by-id\/([^/]+)$/);
+    const byNumberMatch = pathname.match(/^\/api\/lab\/users\/([^/]+)$/);
+    if (!byIdMatch && !byNumberMatch) {
       sendJson(res, 404, { ok: false, error: "Not found" });
       return;
     }
 
-    const targetUserNumber = normalizeElabUserNumber(decodeURIComponent(match[1]), { allowAnyLength: true });
-    if (!targetUserNumber) {
-      sendJson(res, 400, { ok: false, error: "Invalid user number" });
+    const targetUserId = byIdMatch ? sanitizeString(decodeURIComponent(byIdMatch[1]), 80) : "";
+    const targetUserNumber = byNumberMatch
+      ? normalizeElabUserNumber(decodeURIComponent(byNumberMatch[1]), { allowAnyLength: true })
+      : "";
+    if ((byIdMatch && !targetUserId) || (!byIdMatch && !targetUserNumber)) {
+      sendJson(res, 400, { ok: false, error: byIdMatch ? "Invalid user id" : "Invalid user number" });
       return;
     }
 
@@ -1667,10 +1687,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     let auditEntry = null;
     const updated = await queueStockRequestWrite(async () => {
       const users = await readStockUsers();
-      const target = users.find((user) => getStoredNormalizedElabUserNumber(user) === targetUserNumber);
+      const target = byIdMatch
+        ? users.find((user) => sanitizeString(user?.id, 80) === targetUserId)
+        : users.find((user) => getStoredNormalizedElabUserNumber(user) === targetUserNumber);
       if (!target) {
         return { error: "not-found" };
       }
+      const targetNormalizedUserNumber = getStoredNormalizedElabUserNumber(target);
 
       const currentRole = getEffectiveUserRole(target, ownerUserNumber);
       const currentStatus = normalizeUserStatus(target?.status);
@@ -1684,12 +1707,12 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         if (currentRole === "admin" && currentStatus === "active" && activeAdminsBefore <= 1) {
           return { error: "last-admin" };
         }
-        const index = users.findIndex((user) => getStoredNormalizedElabUserNumber(user) === targetUserNumber);
+        const index = users.findIndex((user) => sanitizeString(user?.id, 80) === sanitizeString(target?.id, 80));
         users.splice(index, 1);
         await writeStockUsers(users);
         auditEntry = {
-          action: "delete",
-          targetUserNumber,
+          action: "delete user",
+          targetUserNumber: targetNormalizedUserNumber,
           targetDisplayElabUserNumber: getStoredDisplayElabUserNumber(target),
           targetName: getStoredUserDisplayName(target),
           beforeRole: currentRole,
@@ -1754,7 +1777,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
       auditEntry = {
         action,
-        targetUserNumber,
+        targetUserNumber: targetNormalizedUserNumber,
         targetDisplayElabUserNumber: getStoredDisplayElabUserNumber(target),
         targetName: getStoredUserDisplayName(target),
         beforeRole,
@@ -1778,7 +1801,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
     if (updated?.error === "last-admin") {
-      sendJson(res, 409, { ok: false, error: "Cannot remove, disable, or demote the final active Admin." });
+      sendJson(res, 409, { ok: false, error: "At least one active Admin user is required." });
       return;
     }
 
@@ -1795,7 +1818,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       sendJson(res, 200, {
         ok: true,
         deleted: true,
-        userNumber: targetUserNumber
+        userNumber: sanitizeString(auditEntry?.targetUserNumber, 20)
       });
       return;
     }

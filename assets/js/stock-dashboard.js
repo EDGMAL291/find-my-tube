@@ -368,9 +368,9 @@ function stockDashboardGetSignedInLabel(user) {
   return `Signed in as ${roleLabel}.`;
 }
 
-function stockDashboardBuildUserApiUrl(userNumber) {
-  const safeNumber = String(userNumber || "").trim();
-  return stockDashboardBuildApiUrl(`/api/lab/users/${encodeURIComponent(safeNumber)}`);
+function stockDashboardBuildUserApiUrlById(userId) {
+  const safeId = String(userId || "").trim();
+  return stockDashboardBuildApiUrl(`/api/lab/users/by-id/${encodeURIComponent(safeId)}`);
 }
 
 function stockDashboardFormatUserAuditAction(action) {
@@ -380,7 +380,7 @@ function stockDashboardFormatUserAuditAction(action) {
   if (safeAction === "re-enable") return "Re-enabled user";
   if (safeAction === "reset-pin") return "PIN reset";
   if (safeAction === "role-change") return "Role changed";
-  if (safeAction === "delete") return "Deleted user";
+  if (safeAction === "delete" || safeAction === "delete-user" || safeAction === "delete user") return "Deleted user";
   return "Updated user";
 }
 
@@ -1407,6 +1407,7 @@ async function loadStockDashboardUsers() {
     stockDashboardManagedUsers = users;
     stockDashboardUserList.innerHTML = users.length
       ? users.map((user) => {
+        const safeUserId = String(user?.id || "").trim();
         const safeUserNumber = String(user?.userNumber || "").trim();
         const isSelf = stockDashboardSession?.userNumber === safeUserNumber;
         const roleLabel = stockDashboardGetRoleLabel(user?.role, false);
@@ -1428,9 +1429,10 @@ async function loadStockDashboardUsers() {
               <span>Last login: ${stockDashboardEscapeHtml(stockDashboardFormatOptionalDate(user?.lastLoginAt))}</span>
             </div>
             <div class="stock-dashboard-inline-actions">
-              <button type="button" class="quick-tool-clear-btn" data-user-action="${isDisabled ? "enable" : "disable"}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">${isDisabled ? "Re-enable" : "Disable"}</button>
-              <button type="button" class="quick-tool-clear-btn" data-user-action="toggle-role" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">${roleLabel === "Admin" ? "Set as Medical Technologist" : "Set as Admin"}</button>
-              <button type="button" class="quick-tool-clear-btn" data-user-action="reset-pin" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">Reset PIN</button>
+              <button type="button" class="quick-tool-clear-btn" data-user-action="${isDisabled ? "enable" : "disable"}" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">${isDisabled ? "Re-enable" : "Disable"}</button>
+              <button type="button" class="quick-tool-clear-btn" data-user-action="toggle-role" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">${roleLabel === "Admin" ? "Set as Medical Technologist" : "Set as Admin"}</button>
+              <button type="button" class="quick-tool-clear-btn" data-user-action="reset-pin" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">Reset PIN</button>
+              <button type="button" class="quick-tool-clear-btn" data-user-action="delete" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">Delete</button>
             </div>
           </article>
         `;
@@ -1442,7 +1444,7 @@ async function loadStockDashboardUsers() {
         ? ` Includes ${stockDashboardLegacyUsersMigratedCount} migrated legacy user${stockDashboardLegacyUsersMigratedCount === 1 ? "" : "s"}.`
         : "";
       const durabilityWarning = String(stockDashboardApiConfig?.storage?.durabilityWarning || "").trim();
-      stockDashboardUserAdminStatus.textContent = `${users.length} user${users.length === 1 ? "" : "s"} saved.${migrationSuffix} Safe mode: delete is off; disable users instead.${durabilityWarning ? ` ${durabilityWarning}` : ""}`;
+      stockDashboardUserAdminStatus.textContent = `${users.length} user${users.length === 1 ? "" : "s"} saved.${migrationSuffix}${durabilityWarning ? ` ${durabilityWarning}` : ""}`;
     }
   } catch {
     stockDashboardManagedUsers = [];
@@ -1646,8 +1648,8 @@ async function loadStockDashboardUserAudit() {
   }
 }
 
-async function stockDashboardUpdateUserRecord(userNumber, updates, successMessage) {
-  const response = await fetch(stockDashboardBuildUserApiUrl(userNumber), {
+async function stockDashboardUpdateUserRecord(userId, updates, successMessage) {
+  const response = await fetch(stockDashboardBuildUserApiUrlById(userId), {
     method: "PATCH",
     headers: stockDashboardGetHeaders(true),
     body: JSON.stringify(updates)
@@ -1666,8 +1668,8 @@ async function stockDashboardUpdateUserRecord(userNumber, updates, successMessag
   return true;
 }
 
-async function stockDashboardDeleteUserRecord(userNumber) {
-  const response = await fetch(stockDashboardBuildUserApiUrl(userNumber), {
+async function stockDashboardDeleteUserRecord(userId) {
+  const response = await fetch(stockDashboardBuildUserApiUrlById(userId), {
     method: "DELETE",
     headers: stockDashboardGetHeaders()
   });
@@ -1685,28 +1687,29 @@ async function stockDashboardDeleteUserRecord(userNumber) {
   return true;
 }
 
-async function stockDashboardHandleUserAction(action, userNumber) {
+async function stockDashboardHandleUserAction(action, userId, userNumber) {
   if (!stockDashboardSession?.isOwner) return;
   const safeAction = String(action || "").trim();
+  const safeUserId = String(userId || "").trim();
   const safeUserNumber = String(userNumber || "").trim();
-  if (!safeAction || !safeUserNumber) return;
+  if (!safeAction || !safeUserId) return;
 
   stockDashboardSetBusy(true);
   try {
     if (safeAction === "disable") {
       const confirmed = window.confirm(`Disable user ${safeUserNumber}?`);
       if (!confirmed) return;
-      const changed = await stockDashboardUpdateUserRecord(safeUserNumber, { status: "disabled" }, "User disabled.");
+      const changed = await stockDashboardUpdateUserRecord(safeUserId, { status: "disabled" }, "User disabled.");
       if (!changed) return;
     } else if (safeAction === "enable") {
-      const changed = await stockDashboardUpdateUserRecord(safeUserNumber, { status: "active" }, "User re-enabled.");
+      const changed = await stockDashboardUpdateUserRecord(safeUserId, { status: "active" }, "User re-enabled.");
       if (!changed) return;
     } else if (safeAction === "toggle-role") {
-      const currentUser = stockDashboardManagedUsers.find((user) => String(user?.userNumber || "").trim() === safeUserNumber);
+      const currentUser = stockDashboardManagedUsers.find((user) => String(user?.id || "").trim() === safeUserId);
       const currentRole = stockDashboardNormalizeUserRole(currentUser?.role || "labUser");
       const willSetAdmin = currentRole !== "admin";
       const changed = await stockDashboardUpdateUserRecord(
-        safeUserNumber,
+        safeUserId,
         { role: willSetAdmin ? "admin" : "labUser" },
         willSetAdmin ? "Role updated to Admin." : "Role updated to Medical Technologist."
       );
@@ -1717,10 +1720,13 @@ async function stockDashboardHandleUserAction(action, userNumber) {
       if (!stockDashboardIsValidPin(pin)) {
         throw new Error("Use a 4-digit PIN.");
       }
-      const changed = await stockDashboardUpdateUserRecord(safeUserNumber, { pin: String(pin).trim() }, "PIN reset.");
+      const changed = await stockDashboardUpdateUserRecord(safeUserId, { pin: String(pin).trim() }, "PIN reset.");
       if (!changed) return;
     } else if (safeAction === "delete") {
-      throw new Error("User deletion is disabled in safe mode. Disable users instead.");
+      const confirmed = window.confirm("Are you sure you want to permanently delete this user? This cannot be undone.");
+      if (!confirmed) return;
+      const deleted = await stockDashboardDeleteUserRecord(safeUserId);
+      if (!deleted) return;
     } else {
       return;
     }
@@ -2380,11 +2386,12 @@ stockDashboardRefreshUserAuditBtn?.addEventListener("click", () => {
 
 stockDashboardUserList?.addEventListener("click", (event) => {
   const target = event.target instanceof Element ? event.target : null;
-  const actionButton = target?.closest("[data-user-action][data-user-number]");
+  const actionButton = target?.closest("[data-user-action][data-user-id]");
   if (!(actionButton instanceof HTMLButtonElement)) return;
   const action = actionButton.getAttribute("data-user-action") || "";
+  const userId = actionButton.getAttribute("data-user-id") || "";
   const userNumber = actionButton.getAttribute("data-user-number") || "";
-  stockDashboardHandleUserAction(action, userNumber);
+  stockDashboardHandleUserAction(action, userId, userNumber);
 });
 
 stockDashboardRequestList?.addEventListener("click", (event) => {
