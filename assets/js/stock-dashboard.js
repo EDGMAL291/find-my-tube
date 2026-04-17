@@ -383,8 +383,9 @@ function stockDashboardGetHeaders(includeJson = false) {
   if (includeJson) {
     headers["Content-Type"] = "application/json";
   }
-  if (stockDashboardToken) {
-    headers.Authorization = `Bearer ${stockDashboardToken}`;
+  const token = String(stockDashboardToken || localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "").trim();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
   return headers;
 }
@@ -2366,15 +2367,26 @@ async function logoutStockDashboard() {
     stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
   }
   stockDashboardSetBusy(true);
+  const tokenSnapshot = String(stockDashboardToken || localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "").trim();
+  const logoutHeaders = tokenSnapshot
+    ? { Authorization: `Bearer ${tokenSnapshot}` }
+    : {};
+
+  stockDashboardLatestRequestMarker = "";
+  stockDashboardUnreadCount = 0;
+  stockDashboardSetSession("", null);
+
   try {
     await fetch(STOCK_DASHBOARD_LOGOUT_URL, {
       method: "POST",
-      headers: stockDashboardGetHeaders()
+      headers: logoutHeaders
     });
+    if (!tokenSnapshot) {
+      console.warn("[stock-dashboard] Logout request sent without a local session token.");
+    }
+  } catch (error) {
+    console.error("[stock-dashboard] Logout request failed, local session still cleared.", error);
   } finally {
-    stockDashboardLatestRequestMarker = "";
-    stockDashboardUnreadCount = 0;
-    stockDashboardSetSession("", null);
     stockDashboardSetBusy(false);
   }
 }

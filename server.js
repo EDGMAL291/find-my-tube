@@ -19,6 +19,9 @@ const STOCK_RECEIPTS_FILE = path.join(DATA_DIR, "stock-receipts.json");
 const STOCK_USERS_FILE = path.join(DATA_DIR, "stock-users.json");
 const STOCK_OWNER_FILE = path.join(DATA_DIR, "stock-owner.json");
 const STOCK_USER_AUDIT_FILE = path.join(DATA_DIR, "stock-user-audit.json");
+// Session tokens persist in file storage so logout/session checks survive process restarts.
+// For true multi-instance consistency, point DATA_DIR to shared durable storage or move to Redis/DB.
+const STOCK_SESSIONS_FILE = path.join(DATA_DIR, "stock-sessions.json");
 const STOCK_USERS_BACKUP_DIR = path.join(DATA_DIR, "stock-users-backups");
 const STOCK_USERS_BACKUP_KEEP = 5;
 const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
@@ -79,7 +82,6 @@ const MIME_TYPES = {
 };
 
 let writeQueue = Promise.resolve();
-const labSessions = new Map();
 
 function getStorageDurabilityWarning() {
   const configuredDataDir = String(process.env.DATA_DIR || "").trim();
@@ -134,7 +136,29 @@ async function ensureStockRequestsFile() {
   if (!fsSync.existsSync(STOCK_USER_AUDIT_FILE)) {
     await fs.writeFile(STOCK_USER_AUDIT_FILE, "[]\n", "utf8");
   }
+  if (!fsSync.existsSync(STOCK_SESSIONS_FILE)) {
+    await fs.writeFile(STOCK_SESSIONS_FILE, "[]\n", "utf8");
+  }
   await fs.mkdir(STOCK_USERS_BACKUP_DIR, { recursive: true });
+}
+
+async function readLabSessions() {
+  await ensureStockRequestsFile();
+  const raw = await fs.readFile(STOCK_SESSIONS_FILE, "utf8");
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeLabSessions(records) {
+  await ensureStockRequestsFile();
+  const safeRecords = Array.isArray(records) ? records : [];
+  const tempFile = `${STOCK_SESSIONS_FILE}.tmp`;
+  await fs.writeFile(tempFile, `${JSON.stringify(safeRecords, null, 2)}\n`, "utf8");
+  await fs.rename(tempFile, STOCK_SESSIONS_FILE);
 }
 
 async function readStockRequests() {
@@ -495,7 +519,14 @@ function verifyPin(pin, salt, expectedHash) {
   }
 }
 
-function createLabSession(userNumber) {
+function getTokenLogLabel(token) {
+  const safeToken = String(token || "").trim();
+  if (!safeToken) return "(none)";
+  if (safeToken.length <= 10) return safeToken;
+  return `${safeToken.slice(0, 6)}...${safeToken.slice(-4)}`;
+}
+
+async function createLabSession(userNumber) {
   const token = crypto.randomBytes(24).toString("hex");
   const session = {
     token,
@@ -503,7 +534,13 @@ function createLabSession(userNumber) {
     createdAt: Date.now(),
     expiresAt: Date.now() + LAB_SESSION_TTL_MS
   };
-  labSessions.set(token, session);
+  await queueStockRequestWrite(async () => {
+    const sessions = await readLabSessions();
+    const now = Date.now();
+    const activeSessions = sessions.filter((entry) => Number(entry?.expiresAt || 0) > now);
+    activeSessions.push(session);
+    await writeLabSessions(activeSessions);
+  });
   return session;
 }
 
@@ -513,22 +550,42 @@ function getBearerToken(req) {
   return match ? match[1].trim() : "";
 }
 
-function getLabSession(req) {
+async function deleteLabSessionByToken(token) {
+  const safeToken = String(token || "").trim();
+  if (!safeToken) return false;
+
+  let removed = false;
+  await queueStockRequestWrite(async () => {
+    const sessions = await readLabSessions();
+    const nextSessions = sessions.filter((entry) => {
+      const keep = String(entry?.token || "") !== safeToken;
+      if (!keep) removed = true;
+      return keep;
+    });
+    if (removed || nextSessions.length !== sessions.length) {
+      await writeLabSessions(nextSessions);
+    }
+  });
+  return removed;
+}
+
+async function getLabSession(req) {
   const token = getBearerToken(req);
   if (!token) return null;
 
-  const session = labSessions.get(token);
+  const sessions = await readLabSessions();
+  const session = sessions.find((entry) => String(entry?.token || "") === token);
   if (!session) return null;
-  if (session.expiresAt <= Date.now()) {
-    labSessions.delete(token);
+  if (Number(session.expiresAt || 0) <= Date.now()) {
+    await deleteLabSessionByToken(token);
     return null;
   }
 
   return session;
 }
 
-function requireLabSession(req, res) {
-  const session = getLabSession(req);
+async function requireLabSession(req, res) {
+  const session = await getLabSession(req);
   if (!session) {
     sendJson(res, 401, {
       ok: false,
@@ -612,7 +669,7 @@ function getUserDisplayName(user) {
 }
 
 async function requireOwnerSession(req, res) {
-  const session = requireLabSession(req, res);
+  const session = await requireLabSession(req, res);
   if (!session) return null;
 
   if (!(await isOwnerUserNumber(session.userNumber))) {
@@ -1276,7 +1333,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "GET" && pathname === "/api/stock-auth/session") {
-    const session = getLabSession(req);
+    const token = getBearerToken(req);
+    const session = await getLabSession(req);
+    if (token && !session) {
+      console.info("[stock-auth] Session check token not found or expired", {
+        token: getTokenLogLabel(token)
+      });
+    }
     if (!session) {
       const setupRequired = await canBootstrapOwner();
       sendJson(res, 200, {
@@ -1289,7 +1352,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const user = await findStockUserByNumber(session.userNumber);
     if (!user || normalizeUserStatus(user?.status) !== "active") {
-      labSessions.delete(session.token);
+      await deleteLabSessionByToken(session.token);
       const setupRequired = await canBootstrapOwner();
       sendJson(res, 200, {
         ok: true,
@@ -1375,7 +1438,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         matchedUser.updatedAt = now;
         await writeStockUsers(users);
       });
-      const session = createLabSession(sessionUserNumber);
+      const session = await createLabSession(sessionUserNumber);
       const ownerUserNumber = await getResolvedOwnerUserNumber();
       const role = getEffectiveUserRole(user || { userNumber: sessionUserNumber }, ownerUserNumber);
       const isOwner = role === "admin";
@@ -1452,7 +1515,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }]);
     await writeStockOwner({ ownerUserNumber: userNumber });
 
-    const session = createLabSession(userNumber);
+    const session = await createLabSession(userNumber);
     sendJson(res, 201, {
       ok: true,
       authenticated: true,
@@ -1470,9 +1533,25 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "POST" && pathname === "/api/stock-auth/logout") {
+    const authorizationHeader = String(req.headers.authorization || "");
     const token = getBearerToken(req);
-    if (token) {
-      labSessions.delete(token);
+    if (!authorizationHeader.trim() || !token) {
+      console.warn("[stock-auth] Logout called without a valid Authorization bearer token", {
+        hasAuthorizationHeader: Boolean(authorizationHeader.trim())
+      });
+    } else {
+      try {
+        const removed = await deleteLabSessionByToken(token);
+        console.info("[stock-auth] Logout processed", {
+          token: getTokenLogLabel(token),
+          removed
+        });
+      } catch (error) {
+        console.error("[stock-auth] Logout failed", {
+          token: getTokenLogLabel(token),
+          error: error instanceof Error ? error.message : String(error || "Unknown error")
+        });
+      }
     }
 
     sendJson(res, 200, {
@@ -1852,7 +1931,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "GET" && pathname === "/api/lab/stock-requests") {
-    const session = requireLabSession(req, res);
+    const session = await requireLabSession(req, res);
     if (!session) return;
 
     const requests = await readStockRequests();
@@ -1871,7 +1950,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "GET" && pathname === "/api/lab/stock-stats") {
-    const session = requireLabSession(req, res);
+    const session = await requireLabSession(req, res);
     if (!session) return;
 
     const requests = await readStockRequests();
@@ -1885,7 +1964,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "GET" && pathname === "/api/lab/stock-inventory") {
-    const session = requireLabSession(req, res);
+    const session = await requireLabSession(req, res);
     if (!session) return;
 
     const [requests, receipts] = await Promise.all([
@@ -1924,7 +2003,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "POST" && pathname === "/api/lab/stock-receipts") {
-    const session = requireLabSession(req, res);
+    const session = await requireLabSession(req, res);
     if (!session) return;
 
     let bodyText = "";
@@ -1980,7 +2059,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "POST" && pathname === "/api/lab/stock-requests/manual") {
-    const session = requireLabSession(req, res);
+    const session = await requireLabSession(req, res);
     if (!session) return;
 
     let bodyText = "";
@@ -2131,7 +2210,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "PATCH" && pathname.startsWith("/api/stock-requests/")) {
-    const session = requireLabSession(req, res);
+    const session = await requireLabSession(req, res);
     if (!session) return;
 
     const match = pathname.match(/^\/api\/stock-requests\/([^/]+)\/status$/);
