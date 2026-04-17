@@ -176,7 +176,6 @@ const stockOrderState = Object.create(null);
 let stockOrderStatusMode = "draft";
 let isSubmittingStockOrder = false;
 let submittedStockOrderRecord = null;
-let stockOrderTrackingPollTimer = 0;
 let hasLoadedStockTrackingOnce = false;
 const stockTrackedRequestStatuses = Object.create(null);
 const currentPageParams = new URLSearchParams(window.location.search);
@@ -975,9 +974,10 @@ async function loadStockTrackingList() {
     stockOrderTrackingMeta.textContent = requests.length
       ? `${requests.length} recent request${requests.length === 1 ? "" : "s"} shown.`
       : "No requests yet.";
-  } catch {
+  } catch (error) {
+    console.error("Stock tracking load failed", error);
     renderStockTrackingList([]);
-    stockOrderTrackingMeta.textContent = "Could not load tracking yet.";
+    stockOrderTrackingMeta.textContent = "Tracking is unavailable right now. Use Refresh to try again.";
   } finally {
     if (refreshStockTrackingBtn) refreshStockTrackingBtn.disabled = false;
   }
@@ -1380,6 +1380,10 @@ function resetStockOrderForm() {
 function initStockOrderPanel() {
   if (!stockOrderPanel || !stockOrderRequesterNameInput || !stockOrderRequesterSelect || !stockOrderGrid) return;
 
+  stockOrderForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+  });
+
   stockConsumableItems.forEach((item) => {
     stockOrderState[item.id] = 0;
   });
@@ -1390,10 +1394,6 @@ function initStockOrderPanel() {
   renderStockOrderItems();
   updateStockOrderPreview();
   loadStockTrackingList();
-  window.clearInterval(stockOrderTrackingPollTimer);
-  stockOrderTrackingPollTimer = window.setInterval(() => {
-    loadStockTrackingList();
-  }, STOCK_ORDER_TRACKING_POLL_MS);
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {

@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260416e" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260417b" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -201,7 +201,7 @@
           </div>
           <div class="stock-order-tracking-actions">
             <p class="stock-order-request-meta" id="stockOrderTrackingMeta">Your recent stock requests will appear here.</p>
-            <button type="button" class="quick-tool-launch-btn" id="refreshStockTrackingBtn" hidden aria-hidden="true" tabindex="-1">Refresh</button>
+            <button type="button" class="quick-tool-launch-btn" id="refreshStockTrackingBtn">Refresh</button>
           </div>
         </div>
         <div class="stock-order-tracking-list" id="stockOrderTrackingList" aria-live="polite"></div>
@@ -246,9 +246,9 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260416e"></script>
-  <script src="assets/js/app-config.js?v=20260416e"></script>
-  <script src="assets/js/script.js?v=20260416e"></script>
+  <script src="assets/data/data.js?v=20260417b"></script>
+  <script src="assets/js/app-config.js?v=20260417b"></script>
+  <script src="assets/js/script.js?v=20260417b"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -282,8 +282,6 @@
         tan: { bg: "rgba(212, 163, 115, 0.24)", border: "rgba(180, 125, 76, 0.42)" },
         pink: { bg: "rgba(236, 72, 153, 0.2)", border: "rgba(219, 39, 119, 0.42)" }
       };
-      let unifiedTubeBootRetries = 0;
-
       function ensureTubeIconStyles() {
         if (document.getElementById("stockTubeMiniIconStyles")) return;
 
@@ -540,212 +538,6 @@
         } catch {
           // no-op
         }
-      }
-
-      function getTrackingFallbackUrl() {
-        const configuredBase = String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim();
-        const base = configuredBase || "https://find-my-tube-api.onrender.com";
-        return `${base.replace(/\/+$/g, "")}/api/stock-requests?limit=12`;
-      }
-
-      function renderTrackingFallbackTable(requests = []) {
-        const trackingList = document.getElementById("stockOrderTrackingList");
-        if (!trackingList) return;
-
-        if (!Array.isArray(requests) || !requests.length) {
-          trackingList.innerHTML = '<p class="stock-dashboard-empty">No requests yet. Once you submit an order, it will appear here.</p>';
-          return;
-        }
-
-        const rowsMarkup = requests.map((request) => {
-          const requestedBy = escapeTrackingValue(request?.requestedBy || "Unknown requester");
-          const wardUnit = escapeTrackingValue(request?.wardUnit || "Ward not set");
-          const dateValue = request?.createdAt
-            ? new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(request.createdAt))
-            : "Unknown time";
-          const date = escapeTrackingValue(dateValue);
-          const statusMeta = getTrackingStatusMeta(request?.status);
-
-          return `
-            <div class="stock-order-track-row" role="row">
-              <span class="stock-order-track-cell" data-label="Requested by">${requestedBy}</span>
-              <span class="stock-order-track-cell" data-label="Ward / Unit">${wardUnit}</span>
-              <span class="stock-order-track-cell" data-label="Date">${date}</span>
-              <span class="stock-order-track-cell" data-label="Status">
-                <span class="stock-order-track-status-badge" data-stage="${escapeTrackingValue(statusMeta.stage)}">${escapeTrackingValue(statusMeta.label)}</span>
-              </span>
-            </div>
-          `;
-        }).join("");
-
-        trackingList.innerHTML = `
-          <div class="stock-order-track-table" role="table" aria-label="Recent stock orders">
-            <div class="stock-order-track-header" role="row">
-              <span>Requested by</span>
-              <span>Ward / Unit</span>
-              <span>Date</span>
-              <span>Status</span>
-            </div>
-            ${rowsMarkup}
-          </div>
-        `;
-      }
-
-      async function loadTrackingFallback() {
-        const trackingMeta = document.getElementById("stockOrderTrackingMeta");
-        const trackingUrl = getTrackingFallbackUrl();
-
-        try {
-          const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-          const timeoutId = window.setTimeout(() => controller?.abort(), 10000);
-          let response;
-          try {
-            response = await fetch(trackingUrl, {
-              cache: "no-store",
-              signal: controller?.signal
-            });
-          } finally {
-            window.clearTimeout(timeoutId);
-          }
-
-          if (!response || !response.ok) {
-            throw new Error(`Tracking fetch failed with status ${response?.status || "unknown"}`);
-          }
-
-          const payload = await response.json().catch(() => ({}));
-          const requests = Array.isArray(payload?.requests) ? payload.requests : [];
-          renderTrackingFallbackTable(requests);
-
-          if (trackingMeta) {
-            trackingMeta.textContent = requests.length
-              ? `${requests.length} recent request${requests.length === 1 ? "" : "s"} shown.`
-              : "No requests yet. Once you submit an order, it will appear here.";
-          }
-        } catch (error) {
-          renderTrackingFallbackTable([]);
-          if (trackingMeta) {
-            const message = error instanceof Error ? error.message : "Could not load recent requests yet.";
-            trackingMeta.textContent = `Could not load recent requests yet. (${message})`;
-          }
-        }
-      }
-
-      function startTrackingFallback() {
-        loadTrackingFallback();
-        window.clearInterval(window.__fmtTrackingFallbackTimer || 0);
-        window.__fmtTrackingFallbackTimer = window.setInterval(() => {
-          loadTrackingFallback();
-        }, 30000);
-      }
-
-      function patchSubmitGuardForHostedApi() {
-        if (typeof getStockSubmitBlockedReason !== "function") return;
-        if (getStockSubmitBlockedReason.__hostedSubmitPatched) return;
-
-        const originalBlockedReason = getStockSubmitBlockedReason;
-        const patchedBlockedReason = () => "";
-        patchedBlockedReason.__hostedSubmitPatched = true;
-        patchedBlockedReason.__originalGetStockSubmitBlockedReason = originalBlockedReason;
-        getStockSubmitBlockedReason = patchedBlockedReason;
-      }
-
-      function attachSubmitRequestFallback() {
-        const submitBtn = document.getElementById("submitStockOrderBtn");
-        if (!(submitBtn instanceof HTMLButtonElement)) return;
-        if (submitBtn.dataset.submitFallbackBound === "1") return;
-        submitBtn.dataset.submitFallbackBound = "1";
-        let lastSubmitTs = 0;
-
-        const runSubmit = async () => {
-          if (Date.now() - lastSubmitTs < 700) return;
-          lastSubmitTs = Date.now();
-
-          if (typeof isSubmittingStockOrder !== "undefined" && isSubmittingStockOrder) return;
-          if (typeof buildStockOrderPayload !== "function") return;
-          if (!STOCK_ORDER_SUBMIT_URL) return;
-
-          const payload = buildStockOrderPayload();
-          if (!payload.requestedBy || !payload.wardUnit || !Array.isArray(payload.items) || !payload.items.length) {
-            if (typeof showSelectionNotice === "function") {
-              showSelectionNotice("Add your name, ward / unit, and at least one item first.");
-            }
-            return;
-          }
-
-          try {
-            if (typeof isSubmittingStockOrder !== "undefined") isSubmittingStockOrder = true;
-            if (typeof updateStockOrderPreview === "function") updateStockOrderPreview();
-
-            const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-            const timeoutId = window.setTimeout(() => {
-              controller?.abort();
-            }, 15000);
-
-            let response;
-            try {
-              response = await fetch(STOCK_ORDER_SUBMIT_URL, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json; charset=utf-8"
-                },
-                body: JSON.stringify(payload),
-                signal: controller?.signal
-              });
-            } finally {
-              window.clearTimeout(timeoutId);
-            }
-
-            if (!response || !response.ok) {
-              const result = await response?.json().catch(() => null);
-              throw new Error(result?.error || `Submit failed with status ${response?.status || "unknown"}`);
-            }
-
-            const result = await response.json().catch(() => ({}));
-            if (typeof submittedStockOrderRecord !== "undefined") {
-              submittedStockOrderRecord = result?.request || null;
-            }
-            if (typeof stockOrderStatusMode !== "undefined") {
-              stockOrderStatusMode = "submitted";
-            }
-
-            const sheetSyncWarning = result?.sheetSync && result.sheetSync.ok === false
-              ? " Order saved, but Google Sheets still needs attention."
-              : "";
-
-            if (typeof showSelectionNotice === "function") {
-              showSelectionNotice(submittedStockOrderRecord?.id
-                ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.${sheetSyncWarning}`
-                : `Consumables request submitted.${sheetSyncWarning}`);
-            }
-
-            if (typeof loadStockTrackingList === "function") {
-              loadStockTrackingList();
-              window.setTimeout(() => loadStockTrackingList(), 1200);
-            }
-            if (typeof resetStockOrderForm === "function") resetStockOrderForm();
-            resetUnifiedTubeModesToDefault();
-            syncUnifiedTubeInputs();
-          } catch (error) {
-            if (typeof submittedStockOrderRecord !== "undefined") submittedStockOrderRecord = null;
-            if (typeof stockOrderStatusMode !== "undefined") stockOrderStatusMode = "submit-failed";
-            if (typeof showSelectionNotice === "function") {
-              const message = error instanceof Error ? error.message : "Could not submit the consumables request.";
-              showSelectionNotice(`Could not submit the consumables request. ${message}`);
-            }
-          } finally {
-            if (typeof isSubmittingStockOrder !== "undefined") isSubmittingStockOrder = false;
-            if (typeof updateStockOrderPreview === "function") updateStockOrderPreview();
-          }
-        };
-
-        // Keep fallback submit lightweight and non-blocking.
-        // We do not cancel the native event chain so core handlers remain responsive.
-        const interceptAndSubmit = () => {
-          runSubmit();
-        };
-
-        submitBtn.addEventListener("pointerup", interceptAndSubmit, true);
-        submitBtn.addEventListener("click", interceptAndSubmit, true);
       }
 
       function attachCoreControlFallbacks() {
@@ -1250,38 +1042,31 @@
           ensureTubeIconStyles();
           ensureTrackingListStyles();
           patchTrackingListRenderer();
-          startTrackingFallback();
-          patchSubmitGuardForHostedApi();
-          attachSubmitRequestFallback();
-          attachCoreControlFallbacks();
-          attachMenuActionFallbacks();
-          forceMenuClosedState();
           patchQuantizedFiveStepCounts();
           patchPreviewQuantityWording();
           renameSinglesToEach();
           const applied = applyUnifiedTubeUi();
           if (!applied) {
-            unifiedTubeBootRetries += 1;
-            if (unifiedTubeBootRetries <= 80) {
-              window.setTimeout(bootUnifiedTubeUi, 80);
-            }
+            console.warn("Unified tube UI could not be applied yet.");
             return;
           }
 
-          unifiedTubeBootRetries = 0;
           hideLegacyTubeCards();
           setSpecimenJarInputStep();
           enforceLabBagLimit();
           enforcePlusMinusOnlyChanges();
 
           const resetBtn = document.getElementById("resetStockOrderBtn");
-          resetBtn?.addEventListener("click", () => {
-            window.setTimeout(resetUnifiedTubeModesToDefault, 0);
-            window.setTimeout(syncUnifiedTubeInputs, 0);
-            window.setTimeout(setSpecimenJarInputStep, 0);
-            window.setTimeout(enforceLabBagLimit, 0);
-            window.setTimeout(enforcePlusMinusOnlyChanges, 0);
-          });
+          if (resetBtn instanceof HTMLButtonElement && resetBtn.dataset.unifiedResetBound !== "1") {
+            resetBtn.dataset.unifiedResetBound = "1";
+            resetBtn.addEventListener("click", () => {
+              window.setTimeout(resetUnifiedTubeModesToDefault, 0);
+              window.setTimeout(syncUnifiedTubeInputs, 0);
+              window.setTimeout(setSpecimenJarInputStep, 0);
+              window.setTimeout(enforceLabBagLimit, 0);
+              window.setTimeout(enforcePlusMinusOnlyChanges, 0);
+            });
+          }
         } catch (error) {
           console.error("Order Stock UI boot failed", error);
         }
@@ -1296,7 +1081,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-16.5";
+      const APP_VERSION = "2026-04-17.2";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1317,7 +1102,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260416e", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260417b", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
@@ -1344,8 +1129,6 @@
             await resetAppCache();
             localStorage.setItem("fmt-app-version", APP_VERSION);
             sessionStorage.setItem("fmt-hard-refresh-done", "1");
-            window.location.reload();
-            return;
           }
 
           localStorage.setItem("fmt-app-version", APP_VERSION);
@@ -1354,7 +1137,7 @@
           navigator.serviceWorker.addEventListener("controllerchange", () => {
             if (hasReloadedForNewSw) return;
             hasReloadedForNewSw = true;
-            window.location.reload();
+            localStorage.setItem("fmt-app-version", APP_VERSION);
           });
         };
 
