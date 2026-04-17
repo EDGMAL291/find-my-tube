@@ -11,11 +11,17 @@ const STOCK_SHEETS_WEBHOOK_URL = process.env.STOCK_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec";
 const STOCK_SHEETS_TIMEOUT_MS = 12000;
 const ROOT_DIR = __dirname;
+// WARNING: user storage survives deploys only when DATA_DIR points to durable storage.
+// Use a mounted disk or move to a real database before production-scale use.
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT_DIR, "data"));
 const STOCK_REQUESTS_FILE = path.join(DATA_DIR, "stock-requests.json");
 const STOCK_RECEIPTS_FILE = path.join(DATA_DIR, "stock-receipts.json");
 const STOCK_USERS_FILE = path.join(DATA_DIR, "stock-users.json");
 const STOCK_OWNER_FILE = path.join(DATA_DIR, "stock-owner.json");
+const STOCK_USER_AUDIT_FILE = path.join(DATA_DIR, "stock-user-audit.json");
+const STOCK_USERS_BACKUP_DIR = path.join(DATA_DIR, "stock-users-backups");
+const STOCK_USERS_BACKUP_KEEP = 5;
+const ALLOW_STOCK_USER_DELETE = String(process.env.ALLOW_STOCK_USER_DELETE || "").trim().toLowerCase() === "true";
 const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_ORDER_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
@@ -76,6 +82,17 @@ const MIME_TYPES = {
 let writeQueue = Promise.resolve();
 const labSessions = new Map();
 
+function getStorageDurabilityWarning() {
+  const configuredDataDir = String(process.env.DATA_DIR || "").trim();
+  if (!configuredDataDir) {
+    return "Using default local data directory. Deployments may replace files unless durable storage is configured.";
+  }
+  if (!/^\/var\/data\b/.test(configuredDataDir)) {
+    return "Configured DATA_DIR may be non-durable on some hosts. Use mounted disk or database for permanent user storage.";
+  }
+  return "";
+}
+
 function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(statusCode, {
@@ -115,6 +132,10 @@ async function ensureStockRequestsFile() {
   if (!fsSync.existsSync(STOCK_OWNER_FILE)) {
     await fs.writeFile(STOCK_OWNER_FILE, `${JSON.stringify({ ownerUserNumber: "" }, null, 2)}\n`, "utf8");
   }
+  if (!fsSync.existsSync(STOCK_USER_AUDIT_FILE)) {
+    await fs.writeFile(STOCK_USER_AUDIT_FILE, "[]\n", "utf8");
+  }
+  await fs.mkdir(STOCK_USERS_BACKUP_DIR, { recursive: true });
 }
 
 async function readStockRequests() {
@@ -163,17 +184,77 @@ async function readStockUsers() {
       .filter(Boolean);
     const changed = JSON.stringify(users) !== JSON.stringify(normalizedUsers);
     if (changed) {
-      await fs.writeFile(STOCK_USERS_FILE, `${JSON.stringify(normalizedUsers, null, 2)}\n`, "utf8");
+      await writeStockUsers(normalizedUsers);
     }
     return normalizedUsers;
   } catch {
-    return [];
+    throw new Error("Could not read saved users from storage");
   }
 }
 
-async function writeStockUsers(records) {
+function validateStockUserRecords(records) {
+  if (!Array.isArray(records)) {
+    return "Users payload must be an array.";
+  }
+  for (const user of records) {
+    const id = sanitizeString(user?.id, 80);
+    const displayName = getStoredUserDisplayName(user);
+    const displayElabUserNumber = getStoredDisplayElabUserNumber(user);
+    const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(user);
+    const role = normalizeUserRole(user?.role);
+    const status = normalizeUserStatus(user?.status);
+    if (!id) return "Each user must include an id.";
+    if (!displayName) return "Each user must include a display name.";
+    if (!displayElabUserNumber) return "Each user must include an eLab user number.";
+    if (!normalizedElabUserNumber) return "Each user must include a normalized eLab user number.";
+    if (!role) return "Each user must include a role.";
+    if (!status) return "Each user must include a status.";
+  }
+  return "";
+}
+
+async function backupCurrentUsersFile(raw) {
+  const safeRaw = String(raw || "").trim();
+  if (!safeRaw) return;
+  await fs.mkdir(STOCK_USERS_BACKUP_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const backupPath = path.join(STOCK_USERS_BACKUP_DIR, `stock-users-${stamp}.json`);
+  await fs.writeFile(backupPath, `${safeRaw}\n`, "utf8");
+  const files = await fs.readdir(STOCK_USERS_BACKUP_DIR);
+  const backupFiles = files
+    .filter((file) => file.startsWith("stock-users-") && file.endsWith(".json"))
+    .sort()
+    .reverse();
+  const staleFiles = backupFiles.slice(STOCK_USERS_BACKUP_KEEP);
+  await Promise.all(staleFiles.map((file) => fs.unlink(path.join(STOCK_USERS_BACKUP_DIR, file)).catch(() => {})));
+}
+
+async function writeStockUsers(records, { createBackup = true } = {}) {
   await ensureStockRequestsFile();
-  await fs.writeFile(STOCK_USERS_FILE, `${JSON.stringify(records, null, 2)}\n`, "utf8");
+  const validationError = validateStockUserRecords(records);
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const tempFile = `${STOCK_USERS_FILE}.tmp`;
+  let previousRaw = "";
+  try {
+    previousRaw = await fs.readFile(STOCK_USERS_FILE, "utf8");
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+
+  if (createBackup) {
+    await backupCurrentUsersFile(previousRaw);
+  }
+
+  try {
+    await fs.writeFile(tempFile, `${JSON.stringify(records, null, 2)}\n`, "utf8");
+    await fs.rename(tempFile, STOCK_USERS_FILE);
+  } catch (error) {
+    await fs.unlink(tempFile).catch(() => {});
+    throw error;
+  }
 }
 
 async function readStockOwner() {
@@ -203,6 +284,9 @@ async function getResolvedOwnerUserNumber() {
   }
 
   const users = await readStockUsers();
+  if (users.length) {
+    console.warn("Stock Dashboard: owner record is missing while users exist. Recovery required; using first user as fallback owner.");
+  }
   return getStoredNormalizedElabUserNumber(users[0]) || "";
 }
 
@@ -326,18 +410,26 @@ function getStoredNormalizedElabUserNumber(user) {
   return normalizeElabUserNumber(user?.userNumber, { allowAnyLength: true });
 }
 
+function buildStockUserId(user) {
+  const existing = sanitizeString(user?.id, 80);
+  if (existing) return existing;
+  const normalized = getStoredNormalizedElabUserNumber(user);
+  return normalized ? `usr-${normalized}` : "";
+}
+
 function normalizeStoredStockUser(rawUser) {
   const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(rawUser);
   if (!normalizedElabUserNumber) return null;
 
   const displayElabUserNumber = getStoredDisplayElabUserNumber(rawUser) || normalizedElabUserNumber;
-  const displayName = getStoredUserDisplayName(rawUser);
+  const displayName = getStoredUserDisplayName(rawUser) || `Medical Technologist ${displayElabUserNumber}`;
   const role = normalizeUserRole(rawUser?.role);
   const status = normalizeUserStatus(rawUser?.status);
   const pin = normalizePin(rawUser?.pin);
 
   return {
     ...rawUser,
+    id: buildStockUserId(rawUser) || `usr-${normalizedElabUserNumber}`,
     userNumber: normalizedElabUserNumber,
     displayElabUserNumber,
     normalizedElabUserNumber,
@@ -453,6 +545,41 @@ async function getUserRecord(userNumber) {
   const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
   if (!safeUserNumber) return null;
   return users.find((entry) => getStoredNormalizedElabUserNumber(entry) === safeUserNumber) || null;
+}
+
+async function readStockUserAuditLog() {
+  await ensureStockRequestsFile();
+  const raw = await fs.readFile(STOCK_USER_AUDIT_FILE, "utf8");
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function appendStockUserAuditEntry(entry) {
+  const nextEntry = {
+    id: `audit-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`,
+    timestamp: new Date().toISOString(),
+    action: sanitizeString(entry?.action, 40),
+    targetUserNumber: sanitizeString(entry?.targetUserNumber, 20),
+    targetDisplayElabUserNumber: sanitizeString(entry?.targetDisplayElabUserNumber, 20),
+    targetName: sanitizeString(entry?.targetName, 120),
+    adminUserNumber: sanitizeString(entry?.adminUserNumber, 20),
+    adminName: sanitizeString(entry?.adminName, 120),
+    beforeRole: sanitizeString(entry?.beforeRole, 40),
+    afterRole: sanitizeString(entry?.afterRole, 40),
+    beforeStatus: sanitizeString(entry?.beforeStatus, 40),
+    afterStatus: sanitizeString(entry?.afterStatus, 40),
+    note: sanitizeString(entry?.note, 240)
+  };
+
+  await queueStockRequestWrite(async () => {
+    const log = await readStockUserAuditLog();
+    log.unshift(nextEntry);
+    await fs.writeFile(STOCK_USER_AUDIT_FILE, `${JSON.stringify(log.slice(0, 500), null, 2)}\n`, "utf8");
+  });
 }
 
 function getUserDisplayName(user) {
@@ -1095,6 +1222,36 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
+  if (req.method === "GET" && pathname === "/api/config") {
+    const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+    const hostHeader = String(req.headers.host || "").trim();
+    const protocol = forwardedProto || "http";
+    const baseUrl = hostHeader ? `${protocol}://${hostHeader}` : "";
+    sendJson(res, 200, {
+      ok: true,
+      service: "find-my-tube-local-backend",
+      environment: {
+        nodeEnv: String(process.env.NODE_ENV || "development"),
+        appEnv: String(process.env.APP_ENV || process.env.NODE_ENV || "development")
+      },
+      storage: {
+        mode: "server-file",
+        dataDir: DATA_DIR,
+        usersFile: STOCK_USERS_FILE,
+        ownerFile: STOCK_OWNER_FILE,
+        durabilityWarning: getStorageDurabilityWarning()
+      },
+      userSafety: {
+        allowDelete: ALLOW_STOCK_USER_DELETE
+      },
+      api: {
+        baseUrl
+      },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/api/stock-auth/session") {
     const session = getLabSession(req);
     if (!session) {
@@ -1108,6 +1265,16 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const user = await findStockUserByNumber(session.userNumber);
+    if (!user || normalizeUserStatus(user?.status) !== "active") {
+      labSessions.delete(session.token);
+      const setupRequired = await canBootstrapOwner();
+      sendJson(res, 200, {
+        ok: true,
+        authenticated: false,
+        setupRequired
+      });
+      return;
+    }
     const ownerUserNumber = await getResolvedOwnerUserNumber();
     const role = getEffectiveUserRole(user || { userNumber: session.userNumber }, ownerUserNumber);
     const isOwner = role === "admin";
@@ -1158,6 +1325,10 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       const user = await findStockUserByNumber(userNumber);
       if (!user) {
+        sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
+        return;
+      }
+      if (normalizeUserStatus(user?.status) !== "active") {
         sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
         return;
       }
@@ -1234,6 +1405,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const userNumber = normalizeElabUserNumber(displayElabUserNumber);
     const pin = normalizePin(payload.pin);
     const displayName = sanitizeDisplayName(payload.displayName);
+    const safeDisplayName = displayName || `Admin ${displayElabUserNumber || userNumber}`;
     if (!userNumber || !pin) {
       sendJson(res, 400, {
         ok: false,
@@ -1244,10 +1416,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const now = new Date().toISOString();
     await writeStockUsers([{
+      id: `usr-${userNumber}`,
       userNumber,
       displayElabUserNumber: displayElabUserNumber || userNumber,
       normalizedElabUserNumber: userNumber,
-      displayName,
+      displayName: safeDisplayName,
       role: "admin",
       status: "active",
       pin,
@@ -1264,7 +1437,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       user: {
         userNumber,
         displayElabUserNumber: displayElabUserNumber || userNumber,
-        displayName,
+        displayName: safeDisplayName,
         role: "admin",
         status: "active",
         isOwner: true
@@ -1293,13 +1466,15 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const ownerUserNumber = await getResolvedOwnerUserNumber();
     sendJson(res, 200, {
       users: users.map((user) => ({
+        id: buildStockUserId(user),
         userNumber: getStoredNormalizedElabUserNumber(user) || "",
         displayElabUserNumber: getStoredDisplayElabUserNumber(user) || getStoredNormalizedElabUserNumber(user) || "",
         displayName: getStoredUserDisplayName(user),
         role: getEffectiveUserRole(user, ownerUserNumber),
         status: normalizeUserStatus(user?.status),
         createdAt: user.createdAt || "",
-        updatedAt: user.updatedAt || ""
+        updatedAt: user.updatedAt || "",
+        lastLoginAt: user.lastLoginAt || ""
       }))
     });
     return;
@@ -1314,13 +1489,17 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     sendJson(res, 200, {
       storage: {
         mode: "server-file",
-        usersFile: STOCK_USERS_FILE
+        usersFile: STOCK_USERS_FILE,
+        auditFile: STOCK_USER_AUDIT_FILE,
+        backupDir: STOCK_USERS_BACKUP_DIR,
+        durabilityWarning: getStorageDurabilityWarning()
       },
       users: users.map((user) => {
         const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(user) || "";
         const role = getEffectiveUserRole(user, ownerUserNumber);
         const isOwner = role === "admin";
         return {
+          id: buildStockUserId(user),
           name: getStoredUserDisplayName(user),
           displayName: getStoredUserDisplayName(user),
           userNumber: normalizedElabUserNumber,
@@ -1337,6 +1516,17 @@ async function handleApiRequest(req, res, pathname, searchParams) {
           lastLoginAt: sanitizeString(user?.lastLoginAt, 40)
         };
       })
+    });
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/lab/users/audit") {
+    const session = await requireOwnerSession(req, res);
+    if (!session) return;
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 40));
+    const log = await readStockUserAuditLog();
+    sendJson(res, 200, {
+      entries: log.slice(0, limit)
     });
     return;
   }
@@ -1375,16 +1565,21 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const users = await readStockUsers();
-    if (users.some((user) => getStoredNormalizedElabUserNumber(user) === userNumber)) {
+    const existingUser = users.find((user) => getStoredNormalizedElabUserNumber(user) === userNumber);
+    if (existingUser) {
+      const existingStatus = normalizeUserStatus(existingUser?.status);
       sendJson(res, 409, {
         ok: false,
-        error: "That eLab user number already exists"
+        error: existingStatus === "disabled"
+          ? "That eLab user number belongs to a disabled user. Re-enable or edit the existing user."
+          : "That eLab user number already exists"
       });
       return;
     }
 
     const now = new Date().toISOString();
     users.push({
+      id: `usr-${userNumber}`,
       userNumber,
       displayElabUserNumber: displayElabUserNumber || userNumber,
       normalizedElabUserNumber: userNumber,
@@ -1396,16 +1591,226 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       updatedAt: now
     });
     await writeStockUsers(users);
+    const adminUser = await getUserRecord(session.userNumber);
+    await appendStockUserAuditEntry({
+      action: "create",
+      targetUserNumber: userNumber,
+      targetDisplayElabUserNumber: displayElabUserNumber || userNumber,
+      targetName: displayName,
+      adminUserNumber: session.userNumber,
+      adminName: getStoredUserDisplayName(adminUser),
+      beforeRole: "",
+      afterRole: role,
+      beforeStatus: "",
+      afterStatus: "active"
+    });
 
     sendJson(res, 201, {
       ok: true,
       user: {
+        id: `usr-${userNumber}`,
         userNumber,
         displayElabUserNumber: displayElabUserNumber || userNumber,
         displayName,
         role,
         status: "active",
         createdAt: now
+      }
+    });
+    return;
+  }
+
+  if ((req.method === "PATCH" || req.method === "DELETE") && pathname.startsWith("/api/lab/users/")) {
+    const session = await requireOwnerSession(req, res);
+    if (!session) return;
+    if (req.method === "DELETE" && !ALLOW_STOCK_USER_DELETE) {
+      sendJson(res, 403, {
+        ok: false,
+        error: "User deletion is disabled in safe mode. Disable users instead."
+      });
+      return;
+    }
+
+    const match = pathname.match(/^\/api\/lab\/users\/([^/]+)$/);
+    if (!match) {
+      sendJson(res, 404, { ok: false, error: "Not found" });
+      return;
+    }
+
+    const targetUserNumber = normalizeElabUserNumber(decodeURIComponent(match[1]), { allowAnyLength: true });
+    if (!targetUserNumber) {
+      sendJson(res, 400, { ok: false, error: "Invalid user number" });
+      return;
+    }
+
+    let payload = {};
+    if (req.method === "PATCH") {
+      let bodyText = "";
+      try {
+        bodyText = await collectRequestBody(req);
+      } catch (error) {
+        sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+        return;
+      }
+
+      try {
+        payload = bodyText ? JSON.parse(bodyText) : {};
+      } catch {
+        sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+        return;
+      }
+    }
+
+    const now = new Date().toISOString();
+    const ownerUserNumber = await getResolvedOwnerUserNumber();
+    let updatedUser = null;
+    let auditEntry = null;
+    const updated = await queueStockRequestWrite(async () => {
+      const users = await readStockUsers();
+      const target = users.find((user) => getStoredNormalizedElabUserNumber(user) === targetUserNumber);
+      if (!target) {
+        return { error: "not-found" };
+      }
+
+      const currentRole = getEffectiveUserRole(target, ownerUserNumber);
+      const currentStatus = normalizeUserStatus(target?.status);
+      const activeAdminsBefore = users.filter((user) => {
+        const role = getEffectiveUserRole(user, ownerUserNumber);
+        const status = normalizeUserStatus(user?.status);
+        return role === "admin" && status === "active";
+      }).length;
+
+      if (req.method === "DELETE") {
+        if (currentRole === "admin" && currentStatus === "active" && activeAdminsBefore <= 1) {
+          return { error: "last-admin" };
+        }
+        const index = users.findIndex((user) => getStoredNormalizedElabUserNumber(user) === targetUserNumber);
+        users.splice(index, 1);
+        await writeStockUsers(users);
+        auditEntry = {
+          action: "delete",
+          targetUserNumber,
+          targetDisplayElabUserNumber: getStoredDisplayElabUserNumber(target),
+          targetName: getStoredUserDisplayName(target),
+          beforeRole: currentRole,
+          afterRole: "",
+          beforeStatus: currentStatus,
+          afterStatus: ""
+        };
+        return { ok: true };
+      }
+
+      const nextRoleRaw = payload?.role;
+      const nextStatusRaw = payload?.status;
+      const nextPinRaw = payload?.pin;
+      const nextRole = nextRoleRaw === undefined ? "" : normalizeUserRole(nextRoleRaw);
+      const nextStatus = nextStatusRaw === undefined ? "" : normalizeUserStatus(nextStatusRaw);
+      const nextPin = nextPinRaw === undefined ? "" : normalizePin(nextPinRaw);
+
+      if (nextPinRaw !== undefined && !nextPin) {
+        return { error: "invalid-pin" };
+      }
+      if (!nextRole && !nextStatus && nextPinRaw === undefined) {
+        return { error: "no-change" };
+      }
+
+      const beforeRole = currentRole;
+      const beforeStatus = currentStatus;
+      let action = "update";
+
+      if (nextRole) {
+        target.role = nextRole;
+      }
+      if (nextStatus) {
+        target.status = nextStatus;
+      }
+      if (nextPinRaw !== undefined) {
+        target.pin = nextPin;
+        delete target.salt;
+        delete target.pinHash;
+        action = "reset-pin";
+      }
+
+      const effectiveRoleAfter = getEffectiveUserRole(target, ownerUserNumber);
+      const effectiveStatusAfter = normalizeUserStatus(target?.status);
+      const activeAdminsAfter = users.filter((user) => {
+        const role = getEffectiveUserRole(user, ownerUserNumber);
+        const status = normalizeUserStatus(user?.status);
+        return role === "admin" && status === "active";
+      }).length;
+      if ((beforeRole === "admin" && beforeStatus === "active") && activeAdminsAfter <= 0) {
+        return { error: "last-admin" };
+      }
+
+      target.updatedAt = now;
+      updatedUser = target;
+      await writeStockUsers(users);
+
+      if (beforeStatus !== effectiveStatusAfter) {
+        action = effectiveStatusAfter === "disabled" ? "disable" : "re-enable";
+      } else if (beforeRole !== effectiveRoleAfter) {
+        action = "role-change";
+      }
+
+      auditEntry = {
+        action,
+        targetUserNumber,
+        targetDisplayElabUserNumber: getStoredDisplayElabUserNumber(target),
+        targetName: getStoredUserDisplayName(target),
+        beforeRole,
+        afterRole: effectiveRoleAfter,
+        beforeStatus,
+        afterStatus: effectiveStatusAfter
+      };
+      return { ok: true };
+    });
+
+    if (updated?.error === "not-found") {
+      sendJson(res, 404, { ok: false, error: "User not found" });
+      return;
+    }
+    if (updated?.error === "invalid-pin") {
+      sendJson(res, 400, { ok: false, error: "Use a 4-digit PIN" });
+      return;
+    }
+    if (updated?.error === "no-change") {
+      sendJson(res, 400, { ok: false, error: "No valid user changes provided" });
+      return;
+    }
+    if (updated?.error === "last-admin") {
+      sendJson(res, 409, { ok: false, error: "Cannot remove, disable, or demote the final active Admin." });
+      return;
+    }
+
+    const adminUser = await getUserRecord(session.userNumber);
+    if (auditEntry) {
+      await appendStockUserAuditEntry({
+        ...auditEntry,
+        adminUserNumber: session.userNumber,
+        adminName: getStoredUserDisplayName(adminUser)
+      });
+    }
+
+    if (req.method === "DELETE") {
+      sendJson(res, 200, {
+        ok: true,
+        deleted: true,
+        userNumber: targetUserNumber
+      });
+      return;
+    }
+
+    const owner = await getResolvedOwnerUserNumber();
+    sendJson(res, 200, {
+      ok: true,
+      user: {
+        id: buildStockUserId(updatedUser),
+        userNumber: getStoredNormalizedElabUserNumber(updatedUser),
+        displayElabUserNumber: getStoredDisplayElabUserNumber(updatedUser),
+        displayName: getStoredUserDisplayName(updatedUser),
+        role: getEffectiveUserRole(updatedUser, owner),
+        status: normalizeUserStatus(updatedUser?.status),
+        updatedAt: updatedUser?.updatedAt || now
       }
     });
     return;

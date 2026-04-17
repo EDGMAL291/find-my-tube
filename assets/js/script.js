@@ -250,6 +250,8 @@ const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
   ? String(STOCK_API_CONFIGURED_SUBMIT_URL || buildStockApiUrl("/api/stock-requests")).trim()
   : "";
 const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=12");
+const STOCK_API_CONFIG_URL = buildStockApiUrl("/api/config");
+let stockOrderApiConfigCache = null;
 
 function stockRequestsNeedConfiguredBackend() {
   if (typeof window === "undefined") return false;
@@ -267,6 +269,46 @@ function stockRequestsNeedConfiguredBackend() {
 function getStockSubmitBlockedReason() {
   if (!stockRequestsNeedConfiguredBackend()) return "";
   return "Live stock submit needs the local backend on localhost:3000 or a configured stockApiBaseUrl.";
+}
+
+function getStockOrderEnvironmentBadgeElement() {
+  if (!headerIntroText?.parentElement) return null;
+  let badge = document.getElementById("appEnvironmentBadge");
+  if (!(badge instanceof HTMLElement)) {
+    badge = document.createElement("p");
+    badge.id = "appEnvironmentBadge";
+    badge.className = "app-env-badge";
+    badge.textContent = "Environment: Checking server connection...";
+    headerIntroText.insertAdjacentElement("afterend", badge);
+  }
+  return badge;
+}
+
+async function loadStockApiConfigForOrder() {
+  if (!isStockOrderPage) return null;
+  try {
+    const response = await fetch(STOCK_API_CONFIG_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Config fetch failed with status ${response.status}`);
+    const payload = await response.json().catch(() => ({}));
+    stockOrderApiConfigCache = payload;
+    return payload;
+  } catch (error) {
+    console.error("Could not load stock API config", error);
+    stockOrderApiConfigCache = null;
+    return null;
+  }
+}
+
+function updateStockOrderEnvironmentBadge(config) {
+  const badge = getStockOrderEnvironmentBadgeElement();
+  if (!badge) return;
+  const appEnv = String(config?.environment?.appEnv || "").trim().toLowerCase();
+  const dataDir = String(config?.storage?.dataDir || "").trim();
+  const envLabel = appEnv || "unknown";
+  badge.dataset.envMode = envLabel === "production" ? "production" : "development";
+  badge.textContent = dataDir
+    ? `Environment: ${envLabel} | Storage: ${dataDir}`
+    : `Environment: ${envLabel} | Storage: unavailable`;
 }
 
 // Updates theme meta.
@@ -1379,6 +1421,21 @@ function resetStockOrderForm() {
 // Initializes the consumables order panel.
 function initStockOrderPanel() {
   if (!stockOrderPanel || !stockOrderRequesterNameInput || !stockOrderRequesterSelect || !stockOrderGrid) return;
+
+  updateStockOrderEnvironmentBadge({
+    environment: { appEnv: "checking" },
+    storage: {}
+  });
+  loadStockApiConfigForOrder().then((config) => {
+    if (config) {
+      updateStockOrderEnvironmentBadge(config);
+      return;
+    }
+    updateStockOrderEnvironmentBadge({
+      environment: { appEnv: "unverified" },
+      storage: {}
+    });
+  });
 
   stockOrderForm?.addEventListener("submit", (event) => {
     event.preventDefault();

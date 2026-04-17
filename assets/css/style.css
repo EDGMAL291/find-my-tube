@@ -6676,7 +6676,34 @@ html[data-theme="neutral"] .stock-dashboard-chip {
     justify-content: flex-start;
   }
 
-  .stock-dashboard-notification-actions {
+.stock-dashboard-notification-actions {
     justify-content: flex-start;
   }
+}
+
+.app-env-badge {
+  margin: 0.35rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--muted-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.app-env-badge[data-env-mode="production"] {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: rgba(240, 253, 244, 0.9);
+  color: #166534;
+}
+
+.app-env-badge[data-env-mode="development"] {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: rgba(255, 247, 237, 0.9);
+  color: #9a3412;
 }
