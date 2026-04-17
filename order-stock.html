@@ -248,7 +248,7 @@
 
   <script src="assets/data/data.js?v=20260417c"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
-  <script src="assets/js/script.js?v=20260417c"></script>
+  <script src="assets/js/script.js?v=20260417i"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -1081,7 +1081,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-17.3";
+      const APP_VERSION = "2026-04-17.9";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1102,7 +1102,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260417c", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260417i", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

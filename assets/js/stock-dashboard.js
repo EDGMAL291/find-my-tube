@@ -1,5 +1,4 @@
 const stockDashboardRefreshBtn = document.getElementById("stockDashboardRefreshBtn");
-const stockDashboardHeaderIntroText = document.getElementById("headerIntroText");
 const stockDashboardStatus = document.getElementById("stockDashboardStatus");
 const stockDashboardAccessCard = document.getElementById("stockDashboardAccessCard");
 const stockDashboardAuthStatus = document.getElementById("stockDashboardAuthStatus");
@@ -18,6 +17,8 @@ const stockDashboardLogoutBtn = document.getElementById("stockDashboardLogoutBtn
 const clearStockDataBtn = document.getElementById("clearStockDataBtn");
 const stockDashboardSessionCard = document.getElementById("stockDashboardSessionCard");
 const stockDashboardSessionUser = document.getElementById("stockDashboardSessionUser");
+const stockDashboardLockedCard = document.getElementById("stockDashboardLockedCard");
+const stockDashboardLockedLoginBtn = document.getElementById("stockDashboardLockedLoginBtn");
 const stockDashboardUserAdminCard = document.getElementById("stockDashboardUserAdminCard");
 const stockDashboardUserAdminStatus = document.getElementById("stockDashboardUserAdminStatus");
 const stockDashboardOpenCreateUserBtn = document.getElementById("stockDashboardOpenCreateUserBtn");
@@ -85,8 +86,9 @@ const STOCK_DASHBOARD_LEGACY_USERS_KEYS = ["users", "fmt-stock-users", "labUsers
 const STOCK_DASHBOARD_POLL_MS = 30000;
 const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
-const STOCK_DASHBOARD_LOGIN_TIMEOUT_MS = 12000;
+const STOCK_DASHBOARD_LOGIN_TIMEOUT_MS = 5000;
 const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Login details not recognised.";
+const STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT = "Login failed. Please try again.";
 const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out due to inactivity.";
 
@@ -103,6 +105,10 @@ let stockDashboardInactivityWarningShown = false;
 let stockDashboardStatusBeforeInactivityWarning = "";
 let stockDashboardLastActivityResetAt = 0;
 let stockDashboardInactivityHandlersBound = false;
+let stockDashboardAuthState = "idle";
+let stockDashboardLoginAbortController = null;
+let stockDashboardLoginTimeoutTimer = 0;
+let stockDashboardLoginAttemptId = 0;
 
 function stockDashboardGetApiBaseUrl() {
   if (typeof window === "undefined") return "";
@@ -156,31 +162,6 @@ let stockDashboardManagedUsers = [];
 let stockDashboardApiConfig = null;
 let stockDashboardLegacyUsersMigratedCount = 0;
 
-function stockDashboardGetEnvironmentBadgeElement() {
-  if (!stockDashboardHeaderIntroText?.parentElement) return null;
-  let badge = document.getElementById("appEnvironmentBadge");
-  if (!(badge instanceof HTMLElement)) {
-    badge = document.createElement("p");
-    badge.id = "appEnvironmentBadge";
-    badge.className = "app-env-badge";
-    badge.textContent = "Environment: Checking server connection...";
-    stockDashboardHeaderIntroText.insertAdjacentElement("afterend", badge);
-  }
-  return badge;
-}
-
-function stockDashboardUpdateEnvironmentBadge(config) {
-  const badge = stockDashboardGetEnvironmentBadgeElement();
-  if (!badge) return;
-  const appEnv = String(config?.environment?.appEnv || "").trim().toLowerCase();
-  const dataDir = String(config?.storage?.dataDir || "").trim();
-  const envLabel = appEnv || "unknown";
-  badge.dataset.envMode = envLabel === "production" ? "production" : "development";
-  badge.textContent = dataDir
-    ? `Environment: ${envLabel} | Storage: ${dataDir}`
-    : `Environment: ${envLabel} | Storage: unavailable`;
-}
-
 async function stockDashboardLoadApiConfig() {
   try {
     const response = await fetch(STOCK_DASHBOARD_CONFIG_URL, {
@@ -191,15 +172,10 @@ async function stockDashboardLoadApiConfig() {
     }
     const payload = await response.json().catch(() => ({}));
     stockDashboardApiConfig = payload;
-    stockDashboardUpdateEnvironmentBadge(payload);
     return payload;
   } catch (error) {
     console.error("Could not load stock dashboard API config", error);
     stockDashboardApiConfig = null;
-    stockDashboardUpdateEnvironmentBadge({
-      environment: { appEnv: "unverified" },
-      storage: {}
-    });
     return null;
   }
 }
@@ -906,11 +882,26 @@ function stockDashboardSetAccessModalOpen(isOpen) {
   document.body.classList.toggle("stock-dashboard-login-open", isOpen);
   window.clearTimeout(stockDashboardLoginModalFocusTimer);
 
-  if (isOpen && stockDashboardUserNumberInput) {
+  if (isOpen && !stockDashboardSession && stockDashboardUserNumberInput) {
     stockDashboardLoginModalFocusTimer = window.setTimeout(() => {
       stockDashboardUserNumberInput.focus({ preventScroll: true });
     }, 40);
   }
+
+  if (isOpen && stockDashboardSession && stockDashboardAuthStatus) {
+    stockDashboardAuthStatus.textContent = `${stockDashboardGetSignedInLabel(stockDashboardSession)} Already signed in. Use Log out to switch accounts.`;
+  }
+}
+
+function stockDashboardOpenLoginModal() {
+  if (stockDashboardSession && stockDashboardAuthStatus) {
+    stockDashboardAuthStatus.textContent = `${stockDashboardGetSignedInLabel(stockDashboardSession)} Already signed in. Use Log out to switch accounts.`;
+  } else if (stockDashboardAuthStatus) {
+    stockDashboardAuthStatus.textContent = stockDashboardSetupRequired
+      ? "No lab admin is set up yet. Enter your eLab user number (2 or 3 digits) and 4-digit PIN to create the first admin."
+      : "Sign in to view dashboard data and update request status.";
+  }
+  stockDashboardSetAccessModalOpen(true);
 }
 
 function stockDashboardBrowserAlertsEnabled() {
@@ -1144,6 +1135,10 @@ function stockDashboardMarkNotificationsSeen() {
 }
 
 function stockDashboardSetSession(token, user) {
+  if (stockDashboardAuthState === "checking") {
+    stockDashboardClearLoginPendingWork();
+  }
+
   stockDashboardToken = token || "";
   stockDashboardSession = user ? {
     userNumber: user.userNumber,
@@ -1162,12 +1157,14 @@ function stockDashboardSetSession(token, user) {
   }
 
   const isAuthenticated = Boolean(stockDashboardSession);
-  stockDashboardSetAccessModalOpen(!isAuthenticated);
+  stockDashboardSetAccessModalOpen(false);
   if (stockDashboardAuthForm) stockDashboardAuthForm.hidden = isAuthenticated;
   if (stockDashboardSessionCard) stockDashboardSessionCard.hidden = !isAuthenticated;
+  if (stockDashboardLockedCard) stockDashboardLockedCard.hidden = isAuthenticated;
   if (stockDashboardMetrics) stockDashboardMetrics.hidden = !isAuthenticated;
   if (stockDashboardInsights) stockDashboardInsights.hidden = !isAuthenticated;
-  if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = false;
+  if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = !isAuthenticated;
+  if (stockDashboardRefreshBtn) stockDashboardRefreshBtn.hidden = !isAuthenticated;
   if (stockDashboardUserAdminCard) stockDashboardUserAdminCard.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
   if (stockDashboardOpenCreateUserBtn) {
     stockDashboardOpenCreateUserBtn.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
@@ -1196,6 +1193,8 @@ function stockDashboardSetSession(token, user) {
         ? "No lab admin is set up yet. Enter your eLab user number (2 or 3 digits) and 4-digit PIN to create the first admin."
         : "Sign in to view dashboard data and update request status.";
   }
+  stockDashboardSetAuthControlsDisabled(false);
+  stockDashboardAuthState = isAuthenticated ? "success" : "idle";
 
   if (stockDashboardLoginBtn) {
     stockDashboardLoginBtn.textContent = isAuthenticated
@@ -1213,10 +1212,10 @@ function stockDashboardSetSession(token, user) {
     stockDashboardUnreadCount = 0;
     stockDashboardStopPolling();
     if (stockDashboardStatus) {
-      stockDashboardStatus.textContent = "Sign in to manage requests. Showing recent submitted requests below.";
+      stockDashboardStatus.textContent = "Dashboard locked. Log in to view requests and stock insights.";
     }
     if (stockDashboardRequestList) {
-      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Loading recent submitted requests...</p>';
+      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Locked. Log in to view dashboard data.</p>';
     }
     if (stockDashboardUserList) {
       stockDashboardUserList.innerHTML = "";
@@ -1245,7 +1244,6 @@ function stockDashboardSetSession(token, user) {
     if (stockDashboardOpenRequests) stockDashboardOpenRequests.textContent = "0";
     if (stockDashboardLineItems) stockDashboardLineItems.textContent = "0";
     if (stockDashboardUnitsRequested) stockDashboardUnitsRequested.textContent = "0";
-    loadPublicStockDashboardRequests();
   } else {
     stockDashboardBindInactivityHandlers();
     stockDashboardResetInactivityWatch();
@@ -1294,6 +1292,59 @@ function stockDashboardIsValidPin(pin) {
   return /^\d{4}$/.test(String(pin || "").trim());
 }
 
+function stockDashboardNormalizeElabUserNumber(raw) {
+  const typed = String(raw || "").trim();
+  if (!/^\d+$/.test(typed)) return "";
+  return typed.replace(/^0+(?=\d)/, "");
+}
+
+function stockDashboardSetAuthControlsDisabled(isDisabled) {
+  if (stockDashboardUserNumberInput instanceof HTMLInputElement) {
+    stockDashboardUserNumberInput.disabled = isDisabled;
+  }
+  if (stockDashboardPinInput instanceof HTMLInputElement) {
+    stockDashboardPinInput.disabled = isDisabled;
+  }
+  if (stockDashboardLoginBtn instanceof HTMLButtonElement) {
+    stockDashboardLoginBtn.disabled = isDisabled;
+  }
+}
+
+function stockDashboardSetAuthState(nextState, message = "") {
+  stockDashboardAuthState = nextState;
+  if (nextState === "checking") {
+    stockDashboardSetAuthControlsDisabled(true);
+    if (stockDashboardAuthStatus) stockDashboardAuthStatus.textContent = "Checking details...";
+    return;
+  }
+
+  stockDashboardSetAuthControlsDisabled(false);
+  if (!message) return;
+  if (stockDashboardAuthStatus) stockDashboardAuthStatus.textContent = message;
+}
+
+function stockDashboardClearLoginPendingWork() {
+  if (stockDashboardLoginTimeoutTimer) {
+    window.clearTimeout(stockDashboardLoginTimeoutTimer);
+    stockDashboardLoginTimeoutTimer = 0;
+  }
+  if (stockDashboardLoginAbortController) {
+    stockDashboardLoginAbortController.abort();
+    stockDashboardLoginAbortController = null;
+  }
+}
+
+function stockDashboardCancelLoginAttempt({ message = "Login cancelled.", goIdle = true } = {}) {
+  if (stockDashboardAuthState !== "checking") return;
+  stockDashboardClearLoginPendingWork();
+  stockDashboardLoginAttemptId += 1;
+  if (goIdle) {
+    stockDashboardSetAuthState("idle", message);
+    return;
+  }
+  stockDashboardSetAuthState("error", message);
+}
+
 function stockDashboardSetBusy(isBusy) {
   [
     stockDashboardLoginBtn,
@@ -1315,32 +1366,56 @@ function stockDashboardSetBusy(isBusy) {
   });
 }
 
-async function stockDashboardSendAuthRequest(url) {
-  const { userNumber, pin } = stockDashboardGetCredentials();
-  if (!stockDashboardIsValidElabUserNumber(userNumber) || !stockDashboardIsValidPin(pin)) {
-    if (stockDashboardAuthStatus) {
-      stockDashboardAuthStatus.textContent = "Use your eLab user number (2 or 3 digits) and a 4-digit PIN.";
-    }
+async function stockDashboardSendAuthRequest(url, options = {}) {
+  const forceRelogin = Boolean(options?.forceRelogin);
+  if (stockDashboardAuthState === "checking") {
     return;
   }
 
-  stockDashboardSetBusy(true);
-  if (stockDashboardAuthStatus) stockDashboardAuthStatus.textContent = "Checking details...";
+  if (stockDashboardSession && !forceRelogin) {
+    stockDashboardSetAuthState("error", `${stockDashboardGetSignedInLabel(stockDashboardSession)} Already signed in. Use Log out to switch accounts.`);
+    return;
+  }
+
+  const { userNumber, pin } = stockDashboardGetCredentials();
+  if (!stockDashboardIsValidElabUserNumber(userNumber)) {
+    stockDashboardSetAuthState("error", "Enter a valid 2- or 3-digit eLab user number.");
+    return;
+  }
+  if (!stockDashboardIsValidPin(pin)) {
+    stockDashboardSetAuthState("error", "Enter a valid 4-digit PIN.");
+    return;
+  }
+
+  const typedUserNumber = String(userNumber || "").trim();
+  const normalizedUserNumber = stockDashboardNormalizeElabUserNumber(typedUserNumber);
+  if (!normalizedUserNumber) {
+    stockDashboardSetAuthState("error", "Enter a valid 2- or 3-digit eLab user number.");
+    return;
+  }
+
+  stockDashboardSetAuthState("checking");
+  const attemptId = ++stockDashboardLoginAttemptId;
+  const controller = new AbortController();
+  stockDashboardLoginAbortController = controller;
+  stockDashboardLoginTimeoutTimer = window.setTimeout(() => {
+    if (stockDashboardLoginAttemptId !== attemptId || stockDashboardAuthState !== "checking") return;
+    stockDashboardCancelLoginAttempt({ message: STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT, goIdle: false });
+  }, STOCK_DASHBOARD_LOGIN_TIMEOUT_MS);
 
   try {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), STOCK_DASHBOARD_LOGIN_TIMEOUT_MS);
-    let response;
-    try {
-      response = await fetch(url, {
-        method: "POST",
-        headers: stockDashboardGetHeaders(true),
-        body: JSON.stringify({ userNumber, pin }),
-        signal: controller.signal
-      });
-    } finally {
-      window.clearTimeout(timeoutId);
-    }
+    const response = await fetch(url, {
+      method: "POST",
+      headers: stockDashboardGetHeaders(true),
+      body: JSON.stringify({
+        userNumber: typedUserNumber,
+        normalizedElabUserNumber: normalizedUserNumber,
+        displayElabUserNumber: typedUserNumber,
+        pin
+      }),
+      signal: controller.signal
+    });
+    if (stockDashboardLoginAttemptId !== attemptId) return;
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload?.token || !payload?.user) {
@@ -1350,7 +1425,8 @@ async function stockDashboardSendAuthRequest(url) {
         && /already been configured/i.test(String(errorMessage));
       if (setupAlreadyConfigured) {
         stockDashboardSetupRequired = false;
-        await stockDashboardSendAuthRequest(STOCK_DASHBOARD_LOGIN_URL);
+        stockDashboardSetAuthState("idle", "Admin already exists. Checking your login details...");
+        await stockDashboardSendAuthRequest(STOCK_DASHBOARD_LOGIN_URL, options);
         return;
       }
       throw new Error(errorMessage);
@@ -1358,6 +1434,7 @@ async function stockDashboardSendAuthRequest(url) {
 
     stockDashboardSetupRequired = false;
     stockDashboardSetSession(payload.token, payload.user);
+    stockDashboardSetAuthState("success", stockDashboardGetSignedInLabel(payload.user));
     if (stockDashboardPinInput) stockDashboardPinInput.value = "";
     await stockDashboardMigrateLegacyUsersIfNeeded();
     await loadStockDashboard();
@@ -1365,18 +1442,30 @@ async function stockDashboardSendAuthRequest(url) {
     await loadStockDashboardDebugUsers();
     await loadStockDashboardUserAudit();
   } catch (error) {
-    stockDashboardSetSession("", null);
-    if (stockDashboardAuthStatus) {
-      const isAbort = error instanceof DOMException && error.name === "AbortError";
-      const fallbackMessage = stockDashboardSetupRequired
-        ? "Could not create admin."
-        : STOCK_DASHBOARD_INVALID_LOGIN_TEXT;
-      stockDashboardAuthStatus.textContent = isAbort
-        ? "Could not verify details. Please try again."
-        : (error instanceof Error ? error.message : fallbackMessage);
+    if (stockDashboardLoginAttemptId !== attemptId) return;
+    if (error instanceof DOMException && error.name === "AbortError") {
+      if (stockDashboardAuthState === "checking") {
+        stockDashboardSetAuthState("error", STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT);
+      }
+      return;
+    }
+    const fallbackMessage = stockDashboardSetupRequired ? "Could not create admin." : STOCK_DASHBOARD_INVALID_LOGIN_TEXT;
+    const message = error instanceof Error && error.message ? error.message : fallbackMessage;
+    stockDashboardSetAuthState("error", message);
+    if (!(error instanceof Error && error.message === STOCK_DASHBOARD_INVALID_LOGIN_TEXT)) {
+      console.error("Stock Dashboard login error", error);
     }
   } finally {
-    stockDashboardSetBusy(false);
+    if (stockDashboardLoginAttemptId === attemptId) {
+      if (stockDashboardLoginTimeoutTimer) {
+        window.clearTimeout(stockDashboardLoginTimeoutTimer);
+      }
+      stockDashboardLoginTimeoutTimer = 0;
+      stockDashboardLoginAbortController = null;
+      if (stockDashboardAuthState === "checking") {
+        stockDashboardSetAuthState("idle", "Sign in to view dashboard data and update request status.");
+      }
+    }
   }
 }
 
@@ -2143,9 +2232,6 @@ function renderStockDashboardRequests(requests) {
 
 async function loadStockDashboard(options = {}) {
   if (!stockDashboardStatus || !stockDashboardSession) {
-    if (!stockDashboardSession) {
-      loadPublicStockDashboardRequests();
-    }
     return;
   }
   const { silent = false, fromPoll = false } = options;
@@ -2193,7 +2279,6 @@ async function loadStockDashboard(options = {}) {
     if (stockDashboardRequestList) {
       stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Dashboard data could not load. Please check your connection or refresh the page.</p>';
     }
-    loadPublicStockDashboardRequests();
   } finally {
     if (!silent) {
       stockDashboardSetBusy(false);
@@ -2277,6 +2362,9 @@ async function checkStockDashboardSession() {
 }
 
 async function logoutStockDashboard() {
+  if (stockDashboardAuthState === "checking") {
+    stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
+  }
   stockDashboardSetBusy(true);
   try {
     await fetch(STOCK_DASHBOARD_LOGOUT_URL, {
@@ -2332,6 +2420,10 @@ async function clearStockDashboardData() {
 
 stockDashboardLoginBtn?.addEventListener("click", () => {
   stockDashboardSendAuthRequest(stockDashboardSetupRequired ? STOCK_DASHBOARD_BOOTSTRAP_URL : STOCK_DASHBOARD_LOGIN_URL);
+});
+
+stockDashboardLockedLoginBtn?.addEventListener("click", () => {
+  stockDashboardOpenLoginModal();
 });
 
 stockDashboardLogoutBtn?.addEventListener("click", () => {
@@ -2404,12 +2496,20 @@ stockDashboardRequestList?.addEventListener("click", (event) => {
 });
 
 stockDashboardAccessCloseBtn?.addEventListener("click", () => {
-  stockDashboardReturnToPreviousPage();
+  if (stockDashboardAuthState === "checking") {
+    stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
+    return;
+  }
+  stockDashboardSetAccessModalOpen(false);
 });
 
 stockDashboardAccessCard?.addEventListener("click", (event) => {
   if (event.target !== stockDashboardAccessCard) return;
-  stockDashboardReturnToPreviousPage();
+  if (stockDashboardAuthState === "checking") {
+    stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
+    return;
+  }
+  stockDashboardSetAccessModalOpen(false);
 });
 
 stockDashboardAuthForm?.addEventListener("submit", (event) => {
@@ -2531,9 +2631,5 @@ document.addEventListener("keydown", (event) => {
 });
 
 initStockDashboardTools();
-stockDashboardUpdateEnvironmentBadge({
-  environment: { appEnv: "checking" },
-  storage: {}
-});
 stockDashboardLoadApiConfig();
 checkStockDashboardSession();
