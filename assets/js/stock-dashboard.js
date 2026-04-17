@@ -20,6 +20,10 @@ const stockDashboardSessionUser = document.getElementById("stockDashboardSession
 const stockDashboardUserAdminCard = document.getElementById("stockDashboardUserAdminCard");
 const stockDashboardUserAdminStatus = document.getElementById("stockDashboardUserAdminStatus");
 const stockDashboardOpenCreateUserBtn = document.getElementById("stockDashboardOpenCreateUserBtn");
+const stockDashboardUserDebugStatus = document.getElementById("stockDashboardUserDebugStatus");
+const stockDashboardUserDebugList = document.getElementById("stockDashboardUserDebugList");
+const stockDashboardRefreshDebugUsersBtn = document.getElementById("stockDashboardRefreshDebugUsersBtn");
+const stockDashboardCopyDebugUsersBtn = document.getElementById("stockDashboardCopyDebugUsersBtn");
 const stockDashboardCreateUserModal = document.getElementById("stockDashboardCreateUserModal");
 const stockDashboardCloseCreateUserModalBtn = document.getElementById("stockDashboardCloseCreateUserModalBtn");
 const stockDashboardCreateUserForm = document.getElementById("stockDashboardCreateUserForm");
@@ -131,12 +135,14 @@ const STOCK_DASHBOARD_BOOTSTRAP_URL = stockDashboardBuildApiUrl("/api/stock-auth
 const STOCK_DASHBOARD_LOGOUT_URL = stockDashboardBuildApiUrl("/api/stock-auth/logout");
 const STOCK_DASHBOARD_CLEAR_DATA_URL = stockDashboardBuildApiUrl("/api/lab/stock-data");
 const STOCK_DASHBOARD_USERS_URL = stockDashboardBuildApiUrl("/api/lab/users");
+const STOCK_DASHBOARD_USERS_DEBUG_URL = stockDashboardBuildApiUrl("/api/lab/users/debug");
 const STOCK_DASHBOARD_MANUAL_REQUEST_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests/manual");
 const STOCK_DASHBOARD_RECEIPTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-receipts");
 const STOCK_DASHBOARD_INVENTORY_URL = stockDashboardBuildApiUrl("/api/lab/stock-inventory");
 
 const stockDashboardManualState = Object.create(null);
 const stockDashboardReceiptRows = [];
+let stockDashboardDebugUsers = [];
 
 function stockDashboardEscapeHtml(value) {
   return String(value || "")
@@ -172,6 +178,20 @@ function stockDashboardGetDisplayName(user) {
   return String(user?.displayName || "").trim();
 }
 
+function stockDashboardGetDebugElabNumber(user) {
+  const candidates = [
+    user?.displayElabUserNumber,
+    user?.eLabUserNumber,
+    user?.elabUserNumber,
+    user?.userNumber
+  ];
+  for (const candidate of candidates) {
+    const safeValue = String(candidate || "").trim();
+    if (/^\d+$/.test(safeValue)) return safeValue;
+  }
+  return "";
+}
+
 function stockDashboardNormalizeUserRole(role, isAdmin = false) {
   if (isAdmin) return "admin";
   const safeRole = String(role || "").trim().toLowerCase();
@@ -192,6 +212,19 @@ function stockDashboardGetRoleLabel(role, isAdmin = false) {
   return stockDashboardNormalizeUserRole(role, isAdmin) === "admin"
     ? "Admin"
     : "Medical Technologist";
+}
+
+function stockDashboardNormalizeUserStatus(status) {
+  const safeStatus = String(status || "").trim().toLowerCase();
+  if (safeStatus === "disabled" || safeStatus === "inactive" || safeStatus === "suspended") {
+    return "Disabled";
+  }
+  return "Active";
+}
+
+function stockDashboardFormatOptionalDate(value) {
+  if (!value) return "Not recorded";
+  return stockDashboardFormatDateTime(value);
 }
 
 function stockDashboardGetUserHeading(user) {
@@ -1045,6 +1078,13 @@ function stockDashboardSetSession(token, user) {
     if (stockDashboardUserList) {
       stockDashboardUserList.innerHTML = "";
     }
+    if (stockDashboardUserDebugList) {
+      stockDashboardUserDebugList.innerHTML = "";
+    }
+    stockDashboardDebugUsers = [];
+    if (stockDashboardUserDebugStatus) {
+      stockDashboardUserDebugStatus.textContent = "Temporary testing view. Remove this before using real staff accounts.";
+    }
     if (stockDashboardInventoryList) stockDashboardInventoryList.innerHTML = "";
     if (stockDashboardReceiptList) stockDashboardReceiptList.innerHTML = "";
     if (stockDashboardStatusCounts) stockDashboardStatusCounts.innerHTML = "";
@@ -1113,7 +1153,9 @@ function stockDashboardSetBusy(isBusy) {
     stockDashboardManualResetBtn,
     stockDashboardReceiptAddItemBtn,
     stockDashboardReceiptSubmitBtn,
-    stockDashboardReceiptResetBtn
+    stockDashboardReceiptResetBtn,
+    stockDashboardRefreshDebugUsersBtn,
+    stockDashboardCopyDebugUsersBtn
   ].forEach((button) => {
     if (button instanceof HTMLButtonElement) {
       button.disabled = isBusy;
@@ -1167,6 +1209,7 @@ async function stockDashboardSendAuthRequest(url) {
     if (stockDashboardPinInput) stockDashboardPinInput.value = "";
     await loadStockDashboard();
     await loadStockDashboardUsers();
+    await loadStockDashboardDebugUsers();
   } catch (error) {
     stockDashboardSetSession("", null);
     if (stockDashboardAuthStatus) {
@@ -1226,6 +1269,121 @@ async function loadStockDashboardUsers() {
   }
 }
 
+function stockDashboardRenderDebugUsers(users = []) {
+  if (!stockDashboardUserDebugList) return;
+
+  if (!users.length) {
+    stockDashboardUserDebugList.innerHTML = '<p class="stock-dashboard-empty">No saved users found.</p>';
+    return;
+  }
+
+  // TODO: Remove PIN display before using real staff accounts.
+  stockDashboardUserDebugList.innerHTML = users.map((user) => {
+    const name = stockDashboardGetDisplayName(user) || "Medical Technologist";
+    const displayElabUserNumber = stockDashboardGetDebugElabNumber(user);
+    const normalizedElabUserNumber = String(user?.normalizedElabUserNumber || user?.userNumber || "").trim();
+    const pin = String(user?.pin || "").trim() || "Not stored";
+    const roleLabel = stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner));
+    const statusLabel = stockDashboardNormalizeUserStatus(user?.status);
+    const createdAt = stockDashboardFormatOptionalDate(user?.createdAt);
+    const lastLoginAt = stockDashboardFormatOptionalDate(user?.lastLoginAt);
+    return `
+      <div class="stock-dashboard-list-row">
+        <span>
+          ${stockDashboardEscapeHtml(name)}
+          <br />eLab user number: ${stockDashboardEscapeHtml(displayElabUserNumber || "Not stored")}
+          <br />Normalized eLab number: ${stockDashboardEscapeHtml(normalizedElabUserNumber || "Not stored")}
+          <br />PIN: ${stockDashboardEscapeHtml(pin)}
+          <br />Role: ${stockDashboardEscapeHtml(roleLabel)}
+          <br />Status: ${stockDashboardEscapeHtml(statusLabel)}
+          <br />Created: ${stockDashboardEscapeHtml(createdAt)}
+          <br />Last login: ${stockDashboardEscapeHtml(lastLoginAt)}
+        </span>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadStockDashboardDebugUsers() {
+  if (!stockDashboardSession?.isOwner || !stockDashboardUserDebugList) return;
+
+  if (stockDashboardUserDebugStatus) {
+    stockDashboardUserDebugStatus.textContent = "Loading debug users...";
+  }
+
+  try {
+    const response = await fetch(STOCK_DASHBOARD_USERS_DEBUG_URL, {
+      cache: "no-store",
+      headers: stockDashboardGetHeaders()
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      stockDashboardSetSession("", null);
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Could not load debug users.");
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    const users = Array.isArray(payload?.users) ? payload.users : [];
+    stockDashboardDebugUsers = users;
+    stockDashboardRenderDebugUsers(users);
+    if (stockDashboardUserDebugStatus) {
+      stockDashboardUserDebugStatus.textContent = users.length
+        ? `Showing ${users.length} saved user${users.length === 1 ? "" : "s"}. Storage: server file. localStorage key ${STOCK_DASHBOARD_TOKEN_KEY} is session token only.`
+        : "No saved users found.";
+    }
+  } catch {
+    stockDashboardDebugUsers = [];
+    stockDashboardRenderDebugUsers([]);
+    if (stockDashboardUserDebugStatus) {
+      stockDashboardUserDebugStatus.textContent = "Could not load debug users.";
+    }
+  }
+}
+
+async function stockDashboardCopyDebugUsers() {
+  if (!stockDashboardSession?.isOwner) return;
+
+  const users = Array.isArray(stockDashboardDebugUsers) ? stockDashboardDebugUsers : [];
+  if (!users.length) {
+    if (stockDashboardUserDebugStatus) {
+      stockDashboardUserDebugStatus.textContent = "No saved users found.";
+    }
+    return;
+  }
+
+  const copyText = users.map((user) => {
+    const name = stockDashboardGetDisplayName(user) || "Medical Technologist";
+    const displayElabUserNumber = stockDashboardGetDebugElabNumber(user) || "Not stored";
+    const normalizedElabUserNumber = String(user?.normalizedElabUserNumber || user?.userNumber || "").trim() || "Not stored";
+    const pin = String(user?.pin || "").trim() || "Not stored";
+    const roleLabel = stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner));
+    const statusLabel = stockDashboardNormalizeUserStatus(user?.status);
+    return [
+      `Name: ${name}`,
+      `eLab user number: ${displayElabUserNumber}`,
+      `Normalized number: ${normalizedElabUserNumber}`,
+      `PIN: ${pin}`,
+      `Role: ${roleLabel}`,
+      `Status: ${statusLabel}`
+    ].join("\n");
+  }).join("\n\n");
+
+  try {
+    await navigator.clipboard.writeText(copyText);
+    if (stockDashboardUserDebugStatus) {
+      stockDashboardUserDebugStatus.textContent = "Debug users copied.";
+    }
+  } catch {
+    if (stockDashboardUserDebugStatus) {
+      stockDashboardUserDebugStatus.textContent = "Could not copy debug users.";
+    }
+  }
+}
+
 async function createStockDashboardUser() {
   if (!stockDashboardSession?.isOwner) {
     stockDashboardSetCreateUserMessage("Only Admin users can create users.");
@@ -1270,14 +1428,17 @@ async function createStockDashboardUser() {
     }
 
     if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
-    stockDashboardSetCreateUserMessage("User created.");
-    if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created.";
+    stockDashboardSetCreateUserMessage("User created and saved.");
+    if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created and saved.";
     stockDashboardSetCreateUserModalOpen(false);
     await loadStockDashboardUsers();
-    if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created.";
+    await loadStockDashboardDebugUsers();
+    if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created and saved.";
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not create user.";
-    stockDashboardSetCreateUserMessage(message);
+    stockDashboardSetCreateUserMessage("User could not be saved. Please check storage or console errors.");
+    if (stockDashboardUserAdminStatus) {
+      stockDashboardUserAdminStatus.textContent = "User could not be saved. Please check storage or console errors.";
+    }
   } finally {
     stockDashboardSetBusy(false);
   }
@@ -1735,6 +1896,7 @@ async function checkStockDashboardSession() {
     stockDashboardSetSession(stockDashboardToken, payload.user);
     await loadStockDashboard();
     await loadStockDashboardUsers();
+    await loadStockDashboardDebugUsers();
   } catch {
     stockDashboardSetSession("", null);
   }
@@ -1834,6 +1996,14 @@ stockDashboardRefreshBtn?.addEventListener("click", () => {
 
 stockDashboardMarkSeenBtn?.addEventListener("click", () => {
   stockDashboardMarkNotificationsSeen();
+});
+
+stockDashboardRefreshDebugUsersBtn?.addEventListener("click", () => {
+  loadStockDashboardDebugUsers();
+});
+
+stockDashboardCopyDebugUsersBtn?.addEventListener("click", () => {
+  stockDashboardCopyDebugUsers();
 });
 
 stockDashboardRequestList?.addEventListener("click", (event) => {

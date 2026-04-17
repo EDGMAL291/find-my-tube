@@ -276,6 +276,20 @@
         </div>
 
         <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
+
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Admin only</p>
+            <h3>User Save Debug</h3>
+          </div>
+          <p class="stock-dashboard-status" id="stockDashboardUserDebugStatus">Temporary testing view. Remove this before using real staff accounts.</p>
+        </div>
+        <p class="stock-dashboard-status">Temporary testing view. Remove this before using real staff accounts.</p>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardRefreshDebugUsersBtn">Refresh debug users</button>
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardCopyDebugUsersBtn">Copy debug users</button>
+        </div>
+        <div class="stock-dashboard-list" id="stockDashboardUserDebugList"></div>
       </section>
     </main>
 
@@ -359,13 +373,13 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260416e"></script>
-  <script src="assets/js/app-config.js?v=20260416e"></script>
-  <script src="assets/js/script.js?v=20260416e"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260416e"></script>
+  <script src="assets/data/data.js?v=20260417a"></script>
+  <script src="assets/js/app-config.js?v=20260417a"></script>
+  <script src="assets/js/script.js?v=20260417a"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260417a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-16.5";
+      const APP_VERSION = "2026-04-17.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -397,7 +411,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260416e", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260417a", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

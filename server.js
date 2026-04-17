@@ -293,6 +293,14 @@ function normalizeUserRole(value) {
   return "labUser";
 }
 
+function normalizeUserStatus(value) {
+  const safeStatus = String(value || "").trim().toLowerCase();
+  if (safeStatus === "disabled" || safeStatus === "inactive" || safeStatus === "suspended") {
+    return "disabled";
+  }
+  return "active";
+}
+
 function getStoredUserDisplayName(user) {
   return sanitizeDisplayName(user?.displayName || user?.name || "");
 }
@@ -325,6 +333,7 @@ function normalizeStoredStockUser(rawUser) {
   const displayElabUserNumber = getStoredDisplayElabUserNumber(rawUser) || normalizedElabUserNumber;
   const displayName = getStoredUserDisplayName(rawUser);
   const role = normalizeUserRole(rawUser?.role);
+  const status = normalizeUserStatus(rawUser?.status);
   const pin = normalizePin(rawUser?.pin);
 
   return {
@@ -334,7 +343,8 @@ function normalizeStoredStockUser(rawUser) {
     normalizedElabUserNumber,
     pin,
     displayName,
-    role
+    role,
+    status
   };
 }
 
@@ -1109,6 +1119,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         displayElabUserNumber: getStoredDisplayElabUserNumber(user) || session.userNumber,
         displayName: getStoredUserDisplayName(user),
         role,
+        status: normalizeUserStatus(user?.status),
+        lastLoginAt: sanitizeString(user?.lastLoginAt, 40),
         isOwner
       }
     });
@@ -1160,6 +1172,15 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       }
 
       const sessionUserNumber = getStoredNormalizedElabUserNumber(user) || userNumber;
+      const now = new Date().toISOString();
+      await queueStockRequestWrite(async () => {
+        const users = await readStockUsers();
+        const matchedUser = users.find((entry) => getStoredNormalizedElabUserNumber(entry) === sessionUserNumber);
+        if (!matchedUser) return;
+        matchedUser.lastLoginAt = now;
+        matchedUser.updatedAt = now;
+        await writeStockUsers(users);
+      });
       const session = createLabSession(sessionUserNumber);
       const ownerUserNumber = await getResolvedOwnerUserNumber();
       const role = getEffectiveUserRole(user || { userNumber: sessionUserNumber }, ownerUserNumber);
@@ -1173,6 +1194,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
           displayElabUserNumber: getStoredDisplayElabUserNumber(user) || enteredUserNumber || sessionUserNumber,
           displayName: getStoredUserDisplayName(user),
           role,
+          status: normalizeUserStatus(user?.status),
+          lastLoginAt: now,
           isOwner
         }
       });
@@ -1226,6 +1249,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       normalizedElabUserNumber: userNumber,
       displayName,
       role: "admin",
+      status: "active",
       pin,
       createdAt: now,
       updatedAt: now
@@ -1242,6 +1266,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         displayElabUserNumber: displayElabUserNumber || userNumber,
         displayName,
         role: "admin",
+        status: "active",
         isOwner: true
       }
     });
@@ -1272,9 +1297,46 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         displayElabUserNumber: getStoredDisplayElabUserNumber(user) || getStoredNormalizedElabUserNumber(user) || "",
         displayName: getStoredUserDisplayName(user),
         role: getEffectiveUserRole(user, ownerUserNumber),
+        status: normalizeUserStatus(user?.status),
         createdAt: user.createdAt || "",
         updatedAt: user.updatedAt || ""
       }))
+    });
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/lab/users/debug") {
+    const session = await requireOwnerSession(req, res);
+    if (!session) return;
+
+    const users = await readStockUsers();
+    const ownerUserNumber = await getResolvedOwnerUserNumber();
+    sendJson(res, 200, {
+      storage: {
+        mode: "server-file",
+        usersFile: STOCK_USERS_FILE
+      },
+      users: users.map((user) => {
+        const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(user) || "";
+        const role = getEffectiveUserRole(user, ownerUserNumber);
+        const isOwner = role === "admin";
+        return {
+          name: getStoredUserDisplayName(user),
+          displayName: getStoredUserDisplayName(user),
+          userNumber: normalizedElabUserNumber,
+          elabUserNumber: String(user?.elabUserNumber || ""),
+          eLabUserNumber: String(user?.eLabUserNumber || ""),
+          displayElabUserNumber: getStoredDisplayElabUserNumber(user) || normalizedElabUserNumber,
+          normalizedElabUserNumber,
+          pin: normalizePin(user?.pin),
+          role,
+          status: normalizeUserStatus(user?.status),
+          isOwner,
+          createdAt: sanitizeString(user?.createdAt, 40),
+          updatedAt: sanitizeString(user?.updatedAt, 40),
+          lastLoginAt: sanitizeString(user?.lastLoginAt, 40)
+        };
+      })
     });
     return;
   }
@@ -1328,6 +1390,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       normalizedElabUserNumber: userNumber,
       displayName,
       role,
+      status: "active",
       pin,
       createdAt: now,
       updatedAt: now
@@ -1341,6 +1404,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         displayElabUserNumber: displayElabUserNumber || userNumber,
         displayName,
         role,
+        status: "active",
         createdAt: now
       }
     });
