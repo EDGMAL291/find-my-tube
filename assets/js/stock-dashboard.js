@@ -91,6 +91,7 @@ let stockDashboardInactivityWarningShown = false;
 let stockDashboardStatusBeforeInactivityWarning = "";
 let stockDashboardLastActivityResetAt = 0;
 let stockDashboardInactivityHandlersBound = false;
+let stockDashboardLastFocusedElement = null;
 
 function stockDashboardGetApiBaseUrl() {
   if (typeof window === "undefined") return "";
@@ -1027,9 +1028,7 @@ function stockDashboardSetSession(token, user) {
   }
 
   if (stockDashboardLoginBtn) {
-    stockDashboardLoginBtn.textContent = isAuthenticated
-      ? "Log In"
-      : stockDashboardSetupRequired
+    stockDashboardLoginBtn.textContent = stockDashboardSetupRequired
         ? "Create Admin"
         : "Log In";
   }
@@ -1733,15 +1732,26 @@ async function checkStockDashboardSession() {
 
 async function logoutStockDashboard() {
   stockDashboardSetBusy(true);
+  let logoutRequestFailed = false;
   try {
-    await fetch(STOCK_DASHBOARD_LOGOUT_URL, {
+    const response = await fetch(STOCK_DASHBOARD_LOGOUT_URL, {
       method: "POST",
       headers: stockDashboardGetHeaders()
     });
+    if (!response.ok) {
+      logoutRequestFailed = true;
+    }
+  } catch {
+    logoutRequestFailed = true;
   } finally {
     stockDashboardLatestRequestMarker = "";
     stockDashboardUnreadCount = 0;
     stockDashboardSetSession("", null);
+    if (stockDashboardStatus) {
+      stockDashboardStatus.textContent = logoutRequestFailed
+        ? "Signed out locally. Could not confirm sign-out with server."
+        : "You have been logged out.";
+    }
     stockDashboardSetBusy(false);
   }
 }
@@ -1789,8 +1799,8 @@ stockDashboardLoginBtn?.addEventListener("click", () => {
   stockDashboardSendAuthRequest(stockDashboardSetupRequired ? STOCK_DASHBOARD_BOOTSTRAP_URL : STOCK_DASHBOARD_LOGIN_URL);
 });
 
-stockDashboardLogoutBtn?.addEventListener("click", () => {
-  logoutStockDashboard();
+stockDashboardLogoutBtn?.addEventListener("click", async () => {
+  await logoutStockDashboard();
 });
 
 stockDashboardEnableAlertsBtn?.addEventListener("click", async () => {

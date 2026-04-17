@@ -92,6 +92,10 @@ html[data-theme="neutral"] {
   padding: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: "Plus Jakarta Sans", "Avenir Next", "Segoe UI", sans-serif;
   color: var(--text-main);
@@ -1096,6 +1100,15 @@ body.find-my-test-page .about-panel {
 
 .stock-order-item-card.is-maxed .stock-order-item-head {
   opacity: 0.62;
+}
+
+.stock-order-grid.has-unified-tubes [data-stock-item$="-tubes-tray"],
+.stock-order-grid.has-unified-tubes [data-stock-item$="-tubes-single"] {
+  display: none !important;
+}
+
+.stock-order-grid.has-unified-tubes [data-stock-item="pink-tubes-single"] {
+  display: block !important;
 }
 
 .stock-order-item-kicker {

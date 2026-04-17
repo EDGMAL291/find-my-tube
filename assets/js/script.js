@@ -374,6 +374,12 @@ function initTheme() {
 document.body.classList.toggle("find-my-test-page", isFindMyTestPage);
 document.body.classList.toggle("find-my-tube-page", isFindMyTubePage);
 document.body.classList.toggle("stock-order-page", isStockOrderPage);
+if (clinicalWorkupPanel) {
+  clinicalWorkupPanel.hidden = !isFindMyTestPage;
+}
+if (!isFindMyTestPage && clinicalWorkupResults) {
+  clinicalWorkupResults.hidden = true;
+}
 document.title = isFindMyTestPage
   ? FIND_MY_TEST_PAGE_TITLE
   : isFindMyTubePage
@@ -6817,7 +6823,7 @@ function bindEvents() {
         }
 
         if (action === "settings") {
-          setThemePanelOpen(true);
+          setSiteMenuOpen(false);
           return;
         }
 
@@ -7104,6 +7110,7 @@ initSectionNavigation();
 renderGroupChips();
 refreshSearchPlaceholder();
 bindEvents();
+setSiteMenuOpen(false);
 initSelectionCartViewportSync();
 applyFilters();
 updateSearchClearButton();
