@@ -1964,6 +1964,7 @@ const stockConsumableItems = [
   { id: "specimen-jars", label: "Specimen jars", unitType: "each", maxQuantity: 50, note: "Requested individually." },
   { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, note: "Packed in 50s." },
   { id: "blood-culture-bottle-aerobic", label: "Blood culture bottle - Aerobic", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-paediatric-aerobic", label: "Blood culture bottle - Paediatric Aerobic", unitType: "each", note: "Requested individually." },
   { id: "blood-culture-bottle-anaerobic", label: "Blood culture bottle - Anaerobic", unitType: "each", note: "Requested individually." },
   { id: "blood-culture-bottle-fungal-mycology", label: "Blood culture bottle - Fungal / Mycology", unitType: "each", note: "Requested individually." },
   { id: "blood-culture-bottle-mycobacterial-tb", label: "Blood culture bottle - Mycobacterial / TB", unitType: "each", note: "Requested individually." },
