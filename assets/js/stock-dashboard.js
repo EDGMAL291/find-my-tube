@@ -75,6 +75,8 @@ const STOCK_DASHBOARD_OWNER_SEEN_KEY = "fmt-stock-owner-seen";
 const STOCK_DASHBOARD_POLL_MS = 30000;
 const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
+const STOCK_DASHBOARD_LOGIN_TIMEOUT_MS = 12000;
+const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Login details not recognised.";
 const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out due to inactivity.";
 
@@ -174,7 +176,15 @@ function stockDashboardNormalizeUserRole(role, isAdmin = false) {
   if (isAdmin) return "admin";
   const safeRole = String(role || "").trim().toLowerCase();
   if (safeRole === "admin") return "admin";
-  if (safeRole === "labuser" || safeRole === "lab-user" || safeRole === "medical-technologist") return "labUser";
+  if (
+    safeRole === "labuser"
+    || safeRole === "lab-user"
+    || safeRole === "medical-technologist"
+    || safeRole === "medical technologist"
+    || safeRole === "medical_technologist"
+    || safeRole === "technologist"
+    || safeRole === "user"
+  ) return "labUser";
   return "labUser";
 }
 
@@ -1124,15 +1134,23 @@ async function stockDashboardSendAuthRequest(url) {
   if (stockDashboardAuthStatus) stockDashboardAuthStatus.textContent = "Checking details...";
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: stockDashboardGetHeaders(true),
-      body: JSON.stringify({ userNumber, pin })
-    });
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), STOCK_DASHBOARD_LOGIN_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: stockDashboardGetHeaders(true),
+        body: JSON.stringify({ userNumber, pin }),
+        signal: controller.signal
+      });
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload?.token || !payload?.user) {
-      const errorMessage = payload?.error || (stockDashboardSetupRequired ? "Could not create admin." : "Could not sign in");
+      const errorMessage = payload?.error || (stockDashboardSetupRequired ? "Could not create admin." : STOCK_DASHBOARD_INVALID_LOGIN_TEXT);
       const setupAlreadyConfigured = url === STOCK_DASHBOARD_BOOTSTRAP_URL
         && response.status === 403
         && /already been configured/i.test(String(errorMessage));
@@ -1152,7 +1170,13 @@ async function stockDashboardSendAuthRequest(url) {
   } catch (error) {
     stockDashboardSetSession("", null);
     if (stockDashboardAuthStatus) {
-      stockDashboardAuthStatus.textContent = error instanceof Error ? error.message : "Could not sign in.";
+      const isAbort = error instanceof DOMException && error.name === "AbortError";
+      const fallbackMessage = stockDashboardSetupRequired
+        ? "Could not create admin."
+        : STOCK_DASHBOARD_INVALID_LOGIN_TEXT;
+      stockDashboardAuthStatus.textContent = isAbort
+        ? "Could not verify details. Please try again."
+        : (error instanceof Error ? error.message : fallbackMessage);
     }
   } finally {
     stockDashboardSetBusy(false);
@@ -1187,7 +1211,7 @@ async function loadStockDashboardUsers() {
       ? users.map((user) => `
         <div class="stock-dashboard-list-row">
           <span>${stockDashboardEscapeHtml(stockDashboardGetDisplayName(user) || "Medical Technologist")}${stockDashboardSession?.userNumber === user.userNumber ? " · You" : ""}</span>
-          <strong>${stockDashboardEscapeHtml(stockDashboardGetRoleLabel(user?.role, user?.role === "admin"))}</strong>
+          <strong>${stockDashboardEscapeHtml(stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner)))}</strong>
         </div>
       `).join("")
       : '<p class="stock-dashboard-empty">No users yet.</p>';

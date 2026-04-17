@@ -20,6 +20,7 @@ const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_ORDER_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
 ).trim();
+const STOCK_AUTH_INVALID_MESSAGE = "Login details not recognised.";
 const MAX_BODY_BYTES = 1024 * 1024;
 const VALID_REQUEST_STATUSES = new Set(["received", "packed", "ready", "collected", "completed", "cancelled"]);
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
@@ -156,7 +157,15 @@ async function readStockUsers() {
 
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const users = Array.isArray(parsed) ? parsed : [];
+    const normalizedUsers = users
+      .map((entry) => normalizeStoredStockUser(entry))
+      .filter(Boolean);
+    const changed = JSON.stringify(users) !== JSON.stringify(normalizedUsers);
+    if (changed) {
+      await fs.writeFile(STOCK_USERS_FILE, `${JSON.stringify(normalizedUsers, null, 2)}\n`, "utf8");
+    }
+    return normalizedUsers;
   } catch {
     return [];
   }
@@ -174,7 +183,7 @@ async function readStockOwner() {
   try {
     const parsed = JSON.parse(raw);
     return {
-      ownerUserNumber: sanitizeUserNumber(parsed?.ownerUserNumber || "")
+      ownerUserNumber: normalizeElabUserNumber(parsed?.ownerUserNumber, { allowAnyLength: true })
     };
   } catch {
     return { ownerUserNumber: "" };
@@ -183,7 +192,7 @@ async function readStockOwner() {
 
 async function writeStockOwner(record) {
   await ensureStockRequestsFile();
-  const ownerUserNumber = sanitizeUserNumber(record?.ownerUserNumber || "");
+  const ownerUserNumber = normalizeElabUserNumber(record?.ownerUserNumber, { allowAnyLength: true });
   await fs.writeFile(STOCK_OWNER_FILE, `${JSON.stringify({ ownerUserNumber }, null, 2)}\n`, "utf8");
 }
 
@@ -194,7 +203,7 @@ async function getResolvedOwnerUserNumber() {
   }
 
   const users = await readStockUsers();
-  return sanitizeUserNumber(users[0]?.userNumber || "");
+  return getStoredNormalizedElabUserNumber(users[0]) || "";
 }
 
 async function canBootstrapOwner() {
@@ -257,9 +266,11 @@ function sanitizePin(value) {
   return String(value || "").replace(/\D+/g, "").slice(0, 4);
 }
 
-function normalizeElabUserNumber(value) {
+function normalizeElabUserNumber(value, { allowAnyLength = false } = {}) {
   const raw = String(value || "").trim();
-  return /^\d{2,3}$/.test(raw) ? raw : "";
+  if (!raw || !/^\d+$/.test(raw)) return "";
+  if (!allowAnyLength && !/^\d{2,3}$/.test(raw)) return "";
+  return raw.replace(/^0+(?=\d)/, "");
 }
 
 function normalizePin(value) {
@@ -270,7 +281,15 @@ function normalizePin(value) {
 function normalizeUserRole(value) {
   const safeRole = String(value || "").trim().toLowerCase();
   if (safeRole === "admin") return "admin";
-  if (safeRole === "labuser" || safeRole === "lab-user" || safeRole === "medical-technologist") return "labUser";
+  if (
+    safeRole === "labuser"
+    || safeRole === "lab-user"
+    || safeRole === "medical-technologist"
+    || safeRole === "medical technologist"
+    || safeRole === "medical_technologist"
+    || safeRole === "technologist"
+    || safeRole === "user"
+  ) return "labUser";
   return "labUser";
 }
 
@@ -278,12 +297,53 @@ function getStoredUserDisplayName(user) {
   return sanitizeDisplayName(user?.displayName || user?.name || "");
 }
 
+function getStoredDisplayElabUserNumber(user) {
+  const raw = String(
+    user?.displayElabUserNumber
+    || user?.eLabUserNumber
+    || user?.elabUserNumber
+    || user?.userNumber
+    || ""
+  ).trim();
+  return /^\d+$/.test(raw) ? raw : "";
+}
+
+function getStoredNormalizedElabUserNumber(user) {
+  const explicit = normalizeElabUserNumber(user?.normalizedElabUserNumber, { allowAnyLength: true });
+  if (explicit) return explicit;
+
+  const fromDisplay = normalizeElabUserNumber(getStoredDisplayElabUserNumber(user), { allowAnyLength: true });
+  if (fromDisplay) return fromDisplay;
+
+  return normalizeElabUserNumber(user?.userNumber, { allowAnyLength: true });
+}
+
+function normalizeStoredStockUser(rawUser) {
+  const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(rawUser);
+  if (!normalizedElabUserNumber) return null;
+
+  const displayElabUserNumber = getStoredDisplayElabUserNumber(rawUser) || normalizedElabUserNumber;
+  const displayName = getStoredUserDisplayName(rawUser);
+  const role = normalizeUserRole(rawUser?.role);
+  const pin = normalizePin(rawUser?.pin);
+
+  return {
+    ...rawUser,
+    userNumber: normalizedElabUserNumber,
+    displayElabUserNumber,
+    normalizedElabUserNumber,
+    pin,
+    displayName,
+    role
+  };
+}
+
 async function findStockUserByNumber(userNumber) {
-  const safeUserNumber = sanitizeUserNumber(userNumber);
+  const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
   if (!safeUserNumber) return null;
 
   const users = await readStockUsers();
-  return users.find((entry) => sanitizeUserNumber(entry.userNumber) === safeUserNumber) || null;
+  return users.find((entry) => getStoredNormalizedElabUserNumber(entry) === safeUserNumber) || null;
 }
 
 function createPinHash(pin, salt = crypto.randomBytes(16).toString("hex")) {
@@ -292,8 +352,22 @@ function createPinHash(pin, salt = crypto.randomBytes(16).toString("hex")) {
 }
 
 function verifyPin(pin, salt, expectedHash) {
-  const calculated = crypto.scryptSync(pin, salt, 64).toString("hex");
-  return crypto.timingSafeEqual(Buffer.from(calculated, "hex"), Buffer.from(expectedHash, "hex"));
+  const safePin = String(pin || "");
+  const safeSalt = String(salt || "");
+  const safeExpectedHash = String(expectedHash || "");
+  if (!safePin || !safeSalt || !safeExpectedHash) return false;
+
+  try {
+    const calculated = crypto.scryptSync(safePin, safeSalt, 64).toString("hex");
+    const calculatedBuffer = Buffer.from(calculated, "hex");
+    const expectedBuffer = Buffer.from(safeExpectedHash, "hex");
+    if (!calculatedBuffer.length || !expectedBuffer.length || calculatedBuffer.length !== expectedBuffer.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(calculatedBuffer, expectedBuffer);
+  } catch {
+    return false;
+  }
 }
 
 function createLabSession(userNumber) {
@@ -342,8 +416,8 @@ function requireLabSession(req, res) {
 }
 
 function getEffectiveUserRole(user, ownerUserNumber = "") {
-  const safeOwnerUserNumber = sanitizeUserNumber(ownerUserNumber);
-  const safeUserNumber = sanitizeUserNumber(user?.userNumber || "");
+  const safeOwnerUserNumber = normalizeElabUserNumber(ownerUserNumber, { allowAnyLength: true });
+  const safeUserNumber = getStoredNormalizedElabUserNumber(user);
   if (safeOwnerUserNumber && safeUserNumber && safeOwnerUserNumber === safeUserNumber) {
     return "admin";
   }
@@ -352,7 +426,7 @@ function getEffectiveUserRole(user, ownerUserNumber = "") {
 }
 
 async function isOwnerUserNumber(userNumber) {
-  const safeUserNumber = sanitizeUserNumber(userNumber);
+  const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
   if (!safeUserNumber) return false;
 
   const ownerUserNumber = await getResolvedOwnerUserNumber();
@@ -366,7 +440,9 @@ async function isOwnerUserNumber(userNumber) {
 
 async function getUserRecord(userNumber) {
   const users = await readStockUsers();
-  return users.find((entry) => sanitizeUserNumber(entry.userNumber) === sanitizeUserNumber(userNumber)) || null;
+  const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
+  if (!safeUserNumber) return null;
+  return users.find((entry) => getStoredNormalizedElabUserNumber(entry) === safeUserNumber) || null;
 }
 
 function getUserDisplayName(user) {
@@ -1029,7 +1105,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       ok: true,
       authenticated: true,
       user: {
-        userNumber: session.userNumber,
+        userNumber: getStoredNormalizedElabUserNumber(user) || session.userNumber,
+        displayElabUserNumber: getStoredDisplayElabUserNumber(user) || session.userNumber,
         displayName: getStoredUserDisplayName(user),
         role,
         isOwner
@@ -1055,33 +1132,53 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const userNumber = normalizeElabUserNumber(payload.userNumber);
+    const enteredUserNumber = String(payload?.userNumber || "").trim();
+    const userNumber = normalizeElabUserNumber(enteredUserNumber);
     const pin = normalizePin(payload.pin);
-    const user = await findStockUserByNumber(userNumber);
-
-    if (!user || !pin || !verifyPin(pin, user.salt, user.pinHash)) {
-      sendJson(res, 401, {
+    if (!userNumber || !pin) {
+      sendJson(res, 400, {
         ok: false,
-        error: "Incorrect eLab user number or PIN"
+        error: "Use an eLab user number (2 or 3 digits) and a 4-digit PIN"
       });
       return;
     }
 
-    const session = createLabSession(userNumber);
-    const ownerUserNumber = await getResolvedOwnerUserNumber();
-    const role = getEffectiveUserRole(user || { userNumber }, ownerUserNumber);
-    const isOwner = role === "admin";
-    sendJson(res, 200, {
-      ok: true,
-      authenticated: true,
-      token: session.token,
-      user: {
-        userNumber,
-        displayName: getStoredUserDisplayName(user),
-        role,
-        isOwner
+    try {
+      const user = await findStockUserByNumber(userNumber);
+      if (!user) {
+        sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
+        return;
       }
-    });
+
+      const storedPin = normalizePin(user?.pin);
+      const pinMatches = storedPin
+        ? pin === storedPin
+        : verifyPin(pin, user?.salt, user?.pinHash);
+      if (!pinMatches) {
+        sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
+        return;
+      }
+
+      const sessionUserNumber = getStoredNormalizedElabUserNumber(user) || userNumber;
+      const session = createLabSession(sessionUserNumber);
+      const ownerUserNumber = await getResolvedOwnerUserNumber();
+      const role = getEffectiveUserRole(user || { userNumber: sessionUserNumber }, ownerUserNumber);
+      const isOwner = role === "admin";
+      sendJson(res, 200, {
+        ok: true,
+        authenticated: true,
+        token: session.token,
+        user: {
+          userNumber: sessionUserNumber,
+          displayElabUserNumber: getStoredDisplayElabUserNumber(user) || enteredUserNumber || sessionUserNumber,
+          displayName: getStoredUserDisplayName(user),
+          role,
+          isOwner
+        }
+      });
+    } catch {
+      sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
+    }
     return;
   }
 
@@ -1110,7 +1207,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const userNumber = normalizeElabUserNumber(payload.userNumber);
+    const displayElabUserNumber = String(payload?.userNumber || "").trim();
+    const userNumber = normalizeElabUserNumber(displayElabUserNumber);
     const pin = normalizePin(payload.pin);
     const displayName = sanitizeDisplayName(payload.displayName);
     if (!userNumber || !pin) {
@@ -1122,13 +1220,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const now = new Date().toISOString();
-    const { salt, hash } = createPinHash(pin);
     await writeStockUsers([{
       userNumber,
+      displayElabUserNumber: displayElabUserNumber || userNumber,
+      normalizedElabUserNumber: userNumber,
       displayName,
       role: "admin",
-      salt,
-      pinHash: hash,
+      pin,
       createdAt: now,
       updatedAt: now
     }]);
@@ -1141,6 +1239,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       token: session.token,
       user: {
         userNumber,
+        displayElabUserNumber: displayElabUserNumber || userNumber,
         displayName,
         role: "admin",
         isOwner: true
@@ -1169,7 +1268,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const ownerUserNumber = await getResolvedOwnerUserNumber();
     sendJson(res, 200, {
       users: users.map((user) => ({
-        userNumber: sanitizeUserNumber(user.userNumber),
+        userNumber: getStoredNormalizedElabUserNumber(user) || "",
+        displayElabUserNumber: getStoredDisplayElabUserNumber(user) || getStoredNormalizedElabUserNumber(user) || "",
         displayName: getStoredUserDisplayName(user),
         role: getEffectiveUserRole(user, ownerUserNumber),
         createdAt: user.createdAt || "",
@@ -1199,7 +1299,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const userNumber = normalizeElabUserNumber(payload.userNumber);
+    const displayElabUserNumber = String(payload?.userNumber || "").trim();
+    const userNumber = normalizeElabUserNumber(displayElabUserNumber);
     const pin = normalizePin(payload.pin);
     const displayName = sanitizeDisplayName(payload.displayName);
     const role = normalizeUserRole(payload.role);
@@ -1212,7 +1313,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const users = await readStockUsers();
-    if (users.some((user) => sanitizeUserNumber(user.userNumber) === userNumber)) {
+    if (users.some((user) => getStoredNormalizedElabUserNumber(user) === userNumber)) {
       sendJson(res, 409, {
         ok: false,
         error: "That eLab user number already exists"
@@ -1220,14 +1321,14 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const { salt, hash } = createPinHash(pin);
     const now = new Date().toISOString();
     users.push({
       userNumber,
+      displayElabUserNumber: displayElabUserNumber || userNumber,
+      normalizedElabUserNumber: userNumber,
       displayName,
       role,
-      salt,
-      pinHash: hash,
+      pin,
       createdAt: now,
       updatedAt: now
     });
@@ -1237,6 +1338,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       ok: true,
       user: {
         userNumber,
+        displayElabUserNumber: displayElabUserNumber || userNumber,
         displayName,
         role,
         createdAt: now

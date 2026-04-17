@@ -1,7 +1,6 @@
 const fs = require("fs/promises");
 const fsSync = require("fs");
 const path = require("path");
-const crypto = require("crypto");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const DATA_DIR = path.join(ROOT_DIR, "data");
@@ -13,8 +12,15 @@ function readArg(flag) {
   return index >= 0 ? process.argv[index + 1] || "" : "";
 }
 
-function sanitizeUserNumber(value) {
-  return String(value || "").replace(/\D+/g, "").slice(0, 12);
+function normalizeElabUserNumber(value) {
+  const raw = String(value || "").trim();
+  if (!/^\d{2,3}$/.test(raw)) return "";
+  return raw.replace(/^0+(?=\d)/, "");
+}
+
+function sanitizeDisplayElabUserNumber(value) {
+  const raw = String(value || "").trim();
+  return /^\d{2,3}$/.test(raw) ? raw : "";
 }
 
 function sanitizePin(value) {
@@ -26,11 +32,6 @@ function sanitizeDisplayName(value) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 120);
-}
-
-function createPinHash(pin, salt = crypto.randomBytes(16).toString("hex")) {
-  const hash = crypto.scryptSync(pin, salt, 64).toString("hex");
-  return { salt, hash };
 }
 
 async function ensureFiles() {
@@ -56,11 +57,12 @@ async function readJsonArray(filePath) {
 }
 
 async function main() {
-  const userNumber = sanitizeUserNumber(readArg("--user"));
+  const displayElabUserNumber = sanitizeDisplayElabUserNumber(readArg("--user"));
+  const normalizedElabUserNumber = normalizeElabUserNumber(displayElabUserNumber);
   const pin = sanitizePin(readArg("--pin"));
   const displayName = sanitizeDisplayName(readArg("--name"));
 
-  if (userNumber.length < 3 || pin.length !== 4) {
+  if (!normalizedElabUserNumber || pin.length !== 4) {
     console.error("Usage: npm run admin:set -- --user 001 --pin 1234 [--name 'Lab Admin']");
     process.exit(1);
   }
@@ -68,29 +70,33 @@ async function main() {
   await ensureFiles();
   const users = await readJsonArray(STOCK_USERS_FILE);
   const now = new Date().toISOString();
-  const { salt, hash } = createPinHash(pin);
-  const existing = users.find((user) => sanitizeUserNumber(user.userNumber) === userNumber);
+  const existing = users.find((user) => normalizeElabUserNumber(user.normalizedElabUserNumber || user.userNumber) === normalizedElabUserNumber);
 
   if (existing) {
     existing.displayName = displayName || existing.displayName || "";
-    existing.salt = salt;
-    existing.pinHash = hash;
+    existing.pin = pin;
+    existing.userNumber = normalizedElabUserNumber;
+    existing.displayElabUserNumber = displayElabUserNumber;
+    existing.normalizedElabUserNumber = normalizedElabUserNumber;
+    existing.role = "admin";
     existing.updatedAt = now;
   } else {
     users.unshift({
-      userNumber,
+      userNumber: normalizedElabUserNumber,
+      displayElabUserNumber,
+      normalizedElabUserNumber,
       displayName,
-      salt,
-      pinHash: hash,
+      pin,
+      role: "admin",
       createdAt: now,
       updatedAt: now
     });
   }
 
   await fs.writeFile(STOCK_USERS_FILE, `${JSON.stringify(users, null, 2)}\n`, "utf8");
-  await fs.writeFile(STOCK_OWNER_FILE, `${JSON.stringify({ ownerUserNumber: userNumber }, null, 2)}\n`, "utf8");
+  await fs.writeFile(STOCK_OWNER_FILE, `${JSON.stringify({ ownerUserNumber: normalizedElabUserNumber }, null, 2)}\n`, "utf8");
 
-  console.log(`Admin set to lab user ${userNumber}`);
+  console.log(`Admin set to lab user ${displayElabUserNumber} (normalized: ${normalizedElabUserNumber})`);
 }
 
 main().catch((error) => {
