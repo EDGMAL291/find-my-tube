@@ -29,6 +29,10 @@
   --page-orb-find-my-test-amber: rgba(180, 83, 9, 0.08);
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html[data-theme="dark"] {
   color-scheme: dark;
   --text-main: #ecf7fa;
@@ -6210,11 +6214,26 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.05rem;
-  border-radius: 18px;
-  border: 1px solid rgba(15, 118, 110, 0.18);
-  background: rgba(255, 255, 255, 0.72);
+  gap: 1.25rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 42%),
+    rgba(255, 255, 255, 0.76);
+}
+
+.stock-dashboard-session-card #stockDashboardSessionUser {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.stock-dashboard-session-card #stockDashboardSessionMessage {
+  max-width: 62ch;
+}
+
+.stock-dashboard-session-card .stock-order-kicker {
+  margin-bottom: 0.2rem;
 }
 
 .stock-dashboard-session-actions {
@@ -6256,6 +6275,22 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
 .stock-dashboard-session-card h3 {
   margin: 0.22rem 0 0;
   color: var(--heading-color);
+}
+
+.stock-dashboard-stats-controls .stock-order-request-head {
+  align-items: center;
+}
+
+.stock-dashboard-stats-controls h3 {
+  margin: 0.2rem 0 0;
+}
+
+.stock-dashboard-stats-panel {
+  gap: 1rem;
+}
+
+.stock-dashboard-stats-panel[hidden] {
+  display: none !important;
 }
 
 .stock-dashboard-hero-actions {
@@ -6335,6 +6370,10 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
   margin-top: 0.9rem;
 }
 
+.stock-dashboard-receipt-toggle {
+  margin-top: 0.2rem;
+}
+
 .stock-dashboard-notification-card {
   padding: 0.9rem 1rem;
 }
@@ -6349,17 +6388,6 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
 
 .stock-dashboard-notification-card .stock-dashboard-status {
   font-size: 0.8rem;
-}
-
-.stock-dashboard-audit-list {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0;
-}
-
-.stock-dashboard-audit-item {
-  font-size: 0.84rem;
-  color: var(--muted-text);
 }
 
 .stock-dashboard-chip-list {
@@ -6670,6 +6698,7 @@ html[data-theme="neutral"] .stock-dashboard-chip {
   .stock-dashboard-session-card {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.9rem;
   }
 
   .stock-dashboard-session-actions {

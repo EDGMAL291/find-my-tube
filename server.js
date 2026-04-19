@@ -1,37 +1,61 @@
+require("dotenv").config();
+
 const http = require("http");
 const https = require("https");
 const fs = require("fs/promises");
 const fsSync = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { createClient } = require("@supabase/supabase-js");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
-const STOCK_SHEETS_WEBHOOK_URL = process.env.STOCK_SHEETS_WEBHOOK_URL
-  ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec";
-const STOCK_SHEETS_TIMEOUT_MS = 12000;
 const ROOT_DIR = __dirname;
-// WARNING: user storage survives deploys only when DATA_DIR points to durable storage.
-// Use a mounted disk or move to a real database before production-scale use.
-const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT_DIR, "data"));
-const STOCK_REQUESTS_FILE = path.join(DATA_DIR, "stock-requests.json");
-const STOCK_RECEIPTS_FILE = path.join(DATA_DIR, "stock-receipts.json");
-const STOCK_USERS_FILE = path.join(DATA_DIR, "stock-users.json");
-const STOCK_OWNER_FILE = path.join(DATA_DIR, "stock-owner.json");
-const STOCK_USER_AUDIT_FILE = path.join(DATA_DIR, "stock-user-audit.json");
-// Session tokens persist in file storage so logout/session checks survive process restarts.
-// For true multi-instance consistency, point DATA_DIR to shared durable storage or move to Redis/DB.
-const STOCK_SESSIONS_FILE = path.join(DATA_DIR, "stock-sessions.json");
-const STOCK_USERS_BACKUP_DIR = path.join(DATA_DIR, "stock-users-backups");
-const STOCK_USERS_BACKUP_KEEP = 5;
+const STOCK_SHEETS_WEBHOOK_URL = String(
+  process.env.STOCK_SHEETS_WEBHOOK_URL
+  ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
+).trim();
 const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_ORDER_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
 ).trim();
+const STOCK_SHEETS_TIMEOUT_MS = 12000;
 const STOCK_AUTH_INVALID_MESSAGE = "Login details not recognised.";
 const MAX_BODY_BYTES = 1024 * 1024;
-const VALID_REQUEST_STATUSES = new Set(["received", "packed", "ready", "collected", "completed", "cancelled"]);
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
+const AUTH_COOKIE_NAME = "fmt_lab_session";
+const VALID_REQUEST_STATUSES = new Set(["received", "packed", "ready", "collected", "completed", "cancelled"]);
+
+const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
+const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+const SUPABASE_ANON_KEY = String(process.env.SUPABASE_ANON_KEY || "").trim();
+const HAS_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+
+const supabase = HAS_SUPABASE
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  })
+  : null;
+
+const MIME_TYPES = {
+  ".css": "text/css; charset=utf-8",
+  ".gif": "image/gif",
+  ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".txt": "text/plain; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".xml": "application/xml; charset=utf-8"
+};
+
 const STOCK_SHEETS_COLUMN_DEFAULTS = Object.freeze({
   yellowTubes: 0,
   greyTubes: 0,
@@ -58,48 +82,32 @@ const STOCK_SHEETS_COLUMN_DEFAULTS = Object.freeze({
   tanTubeSingles: 0,
   pinkTubeSingles: 0
 });
+
 const STOCK_REQUEST_ITEM_LIMITS = Object.freeze({
   "pink-tubes-single": 5
 });
 
-const MIME_TYPES = {
-  ".css": "text/css; charset=utf-8",
-  ".gif": "image/gif",
-  ".html": "text/html; charset=utf-8",
-  ".ico": "image/x-icon",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".js": "application/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".md": "text/markdown; charset=utf-8",
-  ".png": "image/png",
-  ".svg": "image/svg+xml",
-  ".txt": "text/plain; charset=utf-8",
-  ".webmanifest": "application/manifest+json; charset=utf-8",
-  ".woff": "font/woff",
-  ".woff2": "font/woff2",
-  ".xml": "application/xml; charset=utf-8"
-};
-
-let writeQueue = Promise.resolve();
-
-function getStorageDurabilityWarning() {
-  const configuredDataDir = String(process.env.DATA_DIR || "").trim();
-  if (!configuredDataDir) {
-    return "Using default local data directory. Deployments may replace files unless durable storage is configured.";
-  }
-  if (!/^\/var\/data\b/.test(configuredDataDir)) {
-    return "Configured DATA_DIR may be non-durable on some hosts. Use mounted disk or database for permanent user storage.";
-  }
-  return "";
+function getAllowedOrigin(req) {
+  const origin = String(req.headers.origin || "").trim();
+  if (!origin) return "*";
+  return origin;
 }
 
-function sendJson(res, statusCode, payload) {
+function setCorsHeaders(req, res) {
+  const origin = getAllowedOrigin(req);
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (origin !== "*") {
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+}
+
+function sendJson(req, res, statusCode, payload) {
   const body = JSON.stringify(payload);
+  setCorsHeaders(req, res);
   res.writeHead(statusCode, {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(body)
@@ -107,245 +115,14 @@ function sendJson(res, statusCode, payload) {
   res.end(body);
 }
 
-function sendText(res, statusCode, message) {
+function sendText(req, res, statusCode, message) {
+  setCorsHeaders(req, res);
   res.writeHead(statusCode, {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Content-Type": "text/plain; charset=utf-8",
     "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(message)
   });
   res.end(message);
-}
-
-async function ensureStockRequestsFile() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  if (!fsSync.existsSync(STOCK_REQUESTS_FILE)) {
-    await fs.writeFile(STOCK_REQUESTS_FILE, "[]\n", "utf8");
-  }
-  if (!fsSync.existsSync(STOCK_RECEIPTS_FILE)) {
-    await fs.writeFile(STOCK_RECEIPTS_FILE, "[]\n", "utf8");
-  }
-  if (!fsSync.existsSync(STOCK_USERS_FILE)) {
-    await fs.writeFile(STOCK_USERS_FILE, "[]\n", "utf8");
-  }
-  if (!fsSync.existsSync(STOCK_OWNER_FILE)) {
-    await fs.writeFile(STOCK_OWNER_FILE, `${JSON.stringify({ ownerUserNumber: "" }, null, 2)}\n`, "utf8");
-  }
-  if (!fsSync.existsSync(STOCK_USER_AUDIT_FILE)) {
-    await fs.writeFile(STOCK_USER_AUDIT_FILE, "[]\n", "utf8");
-  }
-  if (!fsSync.existsSync(STOCK_SESSIONS_FILE)) {
-    await fs.writeFile(STOCK_SESSIONS_FILE, "[]\n", "utf8");
-  }
-  await fs.mkdir(STOCK_USERS_BACKUP_DIR, { recursive: true });
-}
-
-async function readLabSessions() {
-  await ensureStockRequestsFile();
-  const raw = await fs.readFile(STOCK_SESSIONS_FILE, "utf8");
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeLabSessions(records) {
-  await ensureStockRequestsFile();
-  const safeRecords = Array.isArray(records) ? records : [];
-  const tempFile = `${STOCK_SESSIONS_FILE}.tmp`;
-  await fs.writeFile(tempFile, `${JSON.stringify(safeRecords, null, 2)}\n`, "utf8");
-  await fs.rename(tempFile, STOCK_SESSIONS_FILE);
-}
-
-async function readStockRequests() {
-  await ensureStockRequestsFile();
-  const raw = await fs.readFile(STOCK_REQUESTS_FILE, "utf8");
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeStockRequests(records) {
-  await ensureStockRequestsFile();
-  await fs.writeFile(STOCK_REQUESTS_FILE, `${JSON.stringify(records, null, 2)}\n`, "utf8");
-}
-
-async function readStockReceipts() {
-  await ensureStockRequestsFile();
-  const raw = await fs.readFile(STOCK_RECEIPTS_FILE, "utf8");
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeStockReceipts(records) {
-  await ensureStockRequestsFile();
-  await fs.writeFile(STOCK_RECEIPTS_FILE, `${JSON.stringify(records, null, 2)}\n`, "utf8");
-}
-
-async function readStockUsers() {
-  await ensureStockRequestsFile();
-  const raw = await fs.readFile(STOCK_USERS_FILE, "utf8");
-
-  try {
-    const parsed = JSON.parse(raw);
-    const users = Array.isArray(parsed) ? parsed : [];
-    const normalizedUsers = normalizeStockUsersForStorage(users);
-    const changed = JSON.stringify(users) !== JSON.stringify(normalizedUsers);
-    if (changed) {
-      await writeStockUsers(normalizedUsers);
-    }
-    return normalizedUsers;
-  } catch {
-    throw new Error("Could not read saved users from storage");
-  }
-}
-
-function validateStockUserRecords(records) {
-  if (!Array.isArray(records)) {
-    return "Users payload must be an array.";
-  }
-  const seenIds = new Set();
-  for (const user of records) {
-    const id = sanitizeString(user?.id, 80);
-    const displayName = getStoredUserDisplayName(user);
-    const displayElabUserNumber = getStoredDisplayElabUserNumber(user);
-    const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(user);
-    const role = normalizeUserRole(user?.role);
-    const status = normalizeUserStatus(user?.status);
-    if (!id) return "Each user must include an id.";
-    if (!displayName) return "Each user must include a display name.";
-    if (!displayElabUserNumber) return "Each user must include an eLab user number.";
-    if (!normalizedElabUserNumber) return "Each user must include a normalized eLab user number.";
-    if (!role) return "Each user must include a role.";
-    if (!status) return "Each user must include a status.";
-    if (seenIds.has(id)) return "Each user must have a unique id.";
-    seenIds.add(id);
-  }
-  return "";
-}
-
-async function backupCurrentUsersFile(raw) {
-  const safeRaw = String(raw || "").trim();
-  if (!safeRaw) return;
-  await fs.mkdir(STOCK_USERS_BACKUP_DIR, { recursive: true });
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const backupPath = path.join(STOCK_USERS_BACKUP_DIR, `stock-users-${stamp}.json`);
-  await fs.writeFile(backupPath, `${safeRaw}\n`, "utf8");
-  const files = await fs.readdir(STOCK_USERS_BACKUP_DIR);
-  const backupFiles = files
-    .filter((file) => file.startsWith("stock-users-") && file.endsWith(".json"))
-    .sort()
-    .reverse();
-  const staleFiles = backupFiles.slice(STOCK_USERS_BACKUP_KEEP);
-  await Promise.all(staleFiles.map((file) => fs.unlink(path.join(STOCK_USERS_BACKUP_DIR, file)).catch(() => {})));
-}
-
-async function writeStockUsers(records, { createBackup = true } = {}) {
-  await ensureStockRequestsFile();
-  const normalizedRecords = normalizeStockUsersForStorage(records);
-  const validationError = validateStockUserRecords(normalizedRecords);
-  if (validationError) {
-    throw new Error(validationError);
-  }
-
-  const tempFile = `${STOCK_USERS_FILE}.tmp`;
-  let previousRaw = "";
-  try {
-    previousRaw = await fs.readFile(STOCK_USERS_FILE, "utf8");
-  } catch (error) {
-    if (error?.code !== "ENOENT") throw error;
-  }
-
-  if (createBackup) {
-    await backupCurrentUsersFile(previousRaw);
-  }
-
-  try {
-    await fs.writeFile(tempFile, `${JSON.stringify(normalizedRecords, null, 2)}\n`, "utf8");
-    await fs.rename(tempFile, STOCK_USERS_FILE);
-  } catch (error) {
-    await fs.unlink(tempFile).catch(() => {});
-    throw error;
-  }
-}
-
-async function readStockOwner() {
-  await ensureStockRequestsFile();
-  const raw = await fs.readFile(STOCK_OWNER_FILE, "utf8");
-
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      ownerUserNumber: normalizeElabUserNumber(parsed?.ownerUserNumber, { allowAnyLength: true })
-    };
-  } catch {
-    return { ownerUserNumber: "" };
-  }
-}
-
-async function writeStockOwner(record) {
-  await ensureStockRequestsFile();
-  const ownerUserNumber = normalizeElabUserNumber(record?.ownerUserNumber, { allowAnyLength: true });
-  await fs.writeFile(STOCK_OWNER_FILE, `${JSON.stringify({ ownerUserNumber }, null, 2)}\n`, "utf8");
-}
-
-async function getResolvedOwnerUserNumber() {
-  const ownerRecord = await readStockOwner();
-  if (ownerRecord.ownerUserNumber) {
-    return ownerRecord.ownerUserNumber;
-  }
-
-  const users = await readStockUsers();
-  if (users.length) {
-    console.warn("Stock Dashboard: owner record is missing while users exist. Recovery required; using first user as fallback owner.");
-  }
-  return getStoredNormalizedElabUserNumber(users[0]) || "";
-}
-
-async function canBootstrapOwner() {
-  const [ownerRecord, users] = await Promise.all([
-    readStockOwner(),
-    readStockUsers()
-  ]);
-
-  return !ownerRecord.ownerUserNumber && users.length === 0;
-}
-
-function queueStockRequestWrite(task) {
-  writeQueue = writeQueue.then(task, task);
-  return writeQueue;
-}
-
-function slugifyStatus(status) {
-  const safeStatus = String(status || "").trim().toLowerCase();
-  if (safeStatus === "sent") return "completed";
-  return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "received";
-}
-
-function formatStatusLabel(status) {
-  const safeStatus = slugifyStatus(status);
-  if (safeStatus === "received") return "Submitted";
-  if (safeStatus === "packed") return "Ready for Collection";
-  if (safeStatus === "ready") return "Ready for Collection";
-  if (safeStatus === "collected" || safeStatus === "completed") return "Collected";
-  if (safeStatus === "cancelled") return "Cancelled";
-  return safeStatus
-    .split("-")
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
 }
 
 function sanitizeString(value, maxLength = 160) {
@@ -410,138 +187,63 @@ function normalizeUserStatus(value) {
   return "active";
 }
 
-function getStoredUserDisplayName(user) {
-  return sanitizeDisplayName(user?.displayName || user?.name || "");
+function slugifyStatus(status) {
+  const safeStatus = String(status || "").trim().toLowerCase();
+  if (safeStatus === "sent") return "completed";
+  return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "received";
 }
 
-function getStoredDisplayElabUserNumber(user) {
-  const raw = String(
-    user?.displayElabUserNumber
-    || user?.eLabUserNumber
-    || user?.elabUserNumber
-    || user?.userNumber
-    || ""
-  ).trim();
-  return /^\d+$/.test(raw) ? raw : "";
+function formatStatusLabel(status) {
+  const safeStatus = slugifyStatus(status);
+  if (safeStatus === "received") return "Submitted";
+  if (safeStatus === "packed") return "Ready for Collection";
+  if (safeStatus === "ready") return "Ready for Collection";
+  if (safeStatus === "collected" || safeStatus === "completed") return "Collected";
+  if (safeStatus === "cancelled") return "Cancelled";
+  return safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 }
 
-function getStoredNormalizedElabUserNumber(user) {
-  const explicit = normalizeElabUserNumber(user?.normalizedElabUserNumber, { allowAnyLength: true });
-  if (explicit) return explicit;
-
-  const fromDisplay = normalizeElabUserNumber(getStoredDisplayElabUserNumber(user), { allowAnyLength: true });
-  if (fromDisplay) return fromDisplay;
-
-  return normalizeElabUserNumber(user?.userNumber, { allowAnyLength: true });
+function createLabSessionToken() {
+  return crypto.randomBytes(24).toString("hex");
 }
 
-function createStockUserId() {
-  return `usr-${Date.now().toString(36)}-${crypto.randomBytes(5).toString("hex")}`;
+function hashSessionToken(token) {
+  return crypto.createHash("sha256").update(String(token || "")).digest("hex");
 }
 
-function buildStockUserId(user) {
-  return sanitizeString(user?.id, 80);
-}
-
-function normalizeStoredStockUser(rawUser) {
-  const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(rawUser);
-  if (!normalizedElabUserNumber) return null;
-
-  const displayElabUserNumber = getStoredDisplayElabUserNumber(rawUser) || normalizedElabUserNumber;
-  const displayName = getStoredUserDisplayName(rawUser) || `Medical Technologist ${displayElabUserNumber}`;
-  const role = normalizeUserRole(rawUser?.role);
-  const status = normalizeUserStatus(rawUser?.status);
-  const pin = normalizePin(rawUser?.pin);
-
-  return {
-    ...rawUser,
-    id: buildStockUserId(rawUser),
-    userNumber: normalizedElabUserNumber,
-    displayElabUserNumber,
-    normalizedElabUserNumber,
-    pin,
-    displayName,
-    role,
-    status
-  };
-}
-
-function normalizeStockUsersForStorage(rawUsers) {
-  const users = Array.isArray(rawUsers) ? rawUsers : [];
-  const normalizedUsers = users
-    .map((entry) => normalizeStoredStockUser(entry))
-    .filter(Boolean);
-
-  const seenIds = new Set();
-  for (const user of normalizedUsers) {
-    let safeId = sanitizeString(user?.id, 80);
-    if (!safeId || seenIds.has(safeId)) {
-      do {
-        safeId = createStockUserId();
-      } while (seenIds.has(safeId));
-    }
-    user.id = safeId;
-    seenIds.add(safeId);
-  }
-
-  return normalizedUsers;
-}
-
-async function findStockUserByNumber(userNumber) {
-  const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
-  if (!safeUserNumber) return null;
-
-  const users = await readStockUsers();
-  return users.find((entry) => getStoredNormalizedElabUserNumber(entry) === safeUserNumber) || null;
-}
-
-function createPinHash(pin, salt = crypto.randomBytes(16).toString("hex")) {
+function hashPin(pin) {
+  const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto.scryptSync(pin, salt, 64).toString("hex");
-  return { salt, hash };
+  return `scrypt$${salt}$${hash}`;
 }
 
-function verifyPin(pin, salt, expectedHash) {
-  const safePin = String(pin || "");
-  const safeSalt = String(salt || "");
-  const safeExpectedHash = String(expectedHash || "");
-  if (!safePin || !safeSalt || !safeExpectedHash) return false;
-
+function verifyPinHash(pin, pinHash) {
+  const safe = String(pinHash || "");
+  const parts = safe.split("$");
+  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
+  const salt = parts[1];
+  const expectedHash = parts[2];
+  if (!salt || !expectedHash) return false;
   try {
-    const calculated = crypto.scryptSync(safePin, safeSalt, 64).toString("hex");
-    const calculatedBuffer = Buffer.from(calculated, "hex");
-    const expectedBuffer = Buffer.from(safeExpectedHash, "hex");
-    if (!calculatedBuffer.length || !expectedBuffer.length || calculatedBuffer.length !== expectedBuffer.length) {
-      return false;
-    }
-    return crypto.timingSafeEqual(calculatedBuffer, expectedBuffer);
+    const calculated = crypto.scryptSync(pin, salt, 64).toString("hex");
+    const a = Buffer.from(calculated, "hex");
+    const b = Buffer.from(expectedHash, "hex");
+    if (!a.length || !b.length || a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
   } catch {
     return false;
   }
 }
 
-function getTokenLogLabel(token) {
-  const safeToken = String(token || "").trim();
-  if (!safeToken) return "(none)";
-  if (safeToken.length <= 10) return safeToken;
-  return `${safeToken.slice(0, 6)}...${safeToken.slice(-4)}`;
-}
-
-async function createLabSession(userNumber) {
-  const token = crypto.randomBytes(24).toString("hex");
-  const session = {
-    token,
-    userNumber,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + LAB_SESSION_TTL_MS
-  };
-  await queueStockRequestWrite(async () => {
-    const sessions = await readLabSessions();
-    const now = Date.now();
-    const activeSessions = sessions.filter((entry) => Number(entry?.expiresAt || 0) > now);
-    activeSessions.push(session);
-    await writeLabSessions(activeSessions);
+function parseCookies(req) {
+  const raw = String(req.headers.cookie || "");
+  const cookies = Object.create(null);
+  raw.split(";").forEach((pair) => {
+    const [name, ...rest] = pair.split("=");
+    if (!name) return;
+    cookies[name.trim()] = decodeURIComponent(rest.join("=").trim());
   });
-  return session;
+  return cookies;
 }
 
 function getBearerToken(req) {
@@ -550,137 +252,56 @@ function getBearerToken(req) {
   return match ? match[1].trim() : "";
 }
 
-async function deleteLabSessionByToken(token) {
-  const safeToken = String(token || "").trim();
-  if (!safeToken) return false;
-
-  let removed = false;
-  await queueStockRequestWrite(async () => {
-    const sessions = await readLabSessions();
-    const nextSessions = sessions.filter((entry) => {
-      const keep = String(entry?.token || "") !== safeToken;
-      if (!keep) removed = true;
-      return keep;
-    });
-    if (removed || nextSessions.length !== sessions.length) {
-      await writeLabSessions(nextSessions);
-    }
-  });
-  return removed;
+function getSessionToken(req) {
+  const cookies = parseCookies(req);
+  const fromCookie = String(cookies[AUTH_COOKIE_NAME] || "").trim();
+  return fromCookie;
 }
 
-async function getLabSession(req) {
-  const token = getBearerToken(req);
-  if (!token) return null;
+function buildAuthCookie(token, req, { expiresAt = null, clear = false } = {}) {
+  const attrs = [
+    `${AUTH_COOKIE_NAME}=${clear ? "" : encodeURIComponent(token)}`,
+    "Path=/",
+    "HttpOnly"
+  ];
 
-  const sessions = await readLabSessions();
-  const session = sessions.find((entry) => String(entry?.token || "") === token);
-  if (!session) return null;
-  if (Number(session.expiresAt || 0) <= Date.now()) {
-    await deleteLabSessionByToken(token);
-    return null;
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  const isSecure = forwardedProto === "https" || req.socket.encrypted || /onrender\.com$/i.test(String(req.headers.host || ""));
+  if (isSecure) attrs.push("Secure");
+
+  if (clear) {
+    attrs.push("Max-Age=0");
+    attrs.push("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+    const hasOrigin = Boolean(String(req.headers.origin || "").trim());
+    attrs.push(hasOrigin && isSecure ? "SameSite=None" : "SameSite=Lax");
+    return attrs.join("; ");
   }
 
-  return session;
-}
-
-async function requireLabSession(req, res) {
-  const session = await getLabSession(req);
-  if (!session) {
-    sendJson(res, 401, {
-      ok: false,
-      error: "Lab login required"
-    });
-    return null;
+  if (expiresAt instanceof Date) {
+    attrs.push(`Expires=${expiresAt.toUTCString()}`);
   }
 
-  return session;
+  const hasOrigin = Boolean(String(req.headers.origin || "").trim());
+  attrs.push(hasOrigin && isSecure ? "SameSite=None" : "SameSite=Lax");
+
+  return attrs.join("; ");
 }
 
-function getEffectiveUserRole(user, ownerUserNumber = "") {
-  const safeOwnerUserNumber = normalizeElabUserNumber(ownerUserNumber, { allowAnyLength: true });
-  const safeUserNumber = getStoredNormalizedElabUserNumber(user);
-  if (safeOwnerUserNumber && safeUserNumber && safeOwnerUserNumber === safeUserNumber) {
-    return "admin";
-  }
-
-  return normalizeUserRole(user?.role);
-}
-
-async function isOwnerUserNumber(userNumber) {
-  const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
-  if (!safeUserNumber) return false;
-
-  const ownerUserNumber = await getResolvedOwnerUserNumber();
-  if (ownerUserNumber && ownerUserNumber === safeUserNumber) {
-    return true;
-  }
-
-  const user = await getUserRecord(safeUserNumber);
-  return normalizeUserRole(user?.role) === "admin";
-}
-
-async function getUserRecord(userNumber) {
-  const users = await readStockUsers();
-  const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
-  if (!safeUserNumber) return null;
-  return users.find((entry) => getStoredNormalizedElabUserNumber(entry) === safeUserNumber) || null;
-}
-
-async function readStockUserAuditLog() {
-  await ensureStockRequestsFile();
-  const raw = await fs.readFile(STOCK_USER_AUDIT_FILE, "utf8");
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function appendStockUserAuditEntry(entry) {
-  const nextEntry = {
-    id: `audit-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`,
-    timestamp: new Date().toISOString(),
-    action: sanitizeString(entry?.action, 40),
-    targetUserNumber: sanitizeString(entry?.targetUserNumber, 20),
-    targetDisplayElabUserNumber: sanitizeString(entry?.targetDisplayElabUserNumber, 20),
-    targetName: sanitizeString(entry?.targetName, 120),
-    adminUserNumber: sanitizeString(entry?.adminUserNumber, 20),
-    adminName: sanitizeString(entry?.adminName, 120),
-    beforeRole: sanitizeString(entry?.beforeRole, 40),
-    afterRole: sanitizeString(entry?.afterRole, 40),
-    beforeStatus: sanitizeString(entry?.beforeStatus, 40),
-    afterStatus: sanitizeString(entry?.afterStatus, 40),
-    note: sanitizeString(entry?.note, 240)
-  };
-
-  await queueStockRequestWrite(async () => {
-    const log = await readStockUserAuditLog();
-    log.unshift(nextEntry);
-    await fs.writeFile(STOCK_USER_AUDIT_FILE, `${JSON.stringify(log.slice(0, 500), null, 2)}\n`, "utf8");
-  });
-}
-
-function getUserDisplayName(user) {
-  const fullName = sanitizePersonName(user?.fullName || "");
-  if (fullName) return fullName;
-  return sanitizeUserNumber(user?.userNumber || "") || "User";
-}
-
-async function requireOwnerSession(req, res) {
-  const session = await requireLabSession(req, res);
-  if (!session) return null;
-
-  if (!(await isOwnerUserNumber(session.userNumber))) {
-    sendJson(res, 403, {
-      ok: false,
-      error: "Admin access required"
-    });
-    return null;
-  }
-
-  return session;
+function buildAuthClearCookies(req) {
+  const primary = buildAuthCookie("", req, { clear: true });
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  const isSecure = forwardedProto === "https" || req.socket.encrypted || /onrender\.com$/i.test(String(req.headers.host || ""));
+  const fallbackParts = [
+    `${AUTH_COOKIE_NAME}=`,
+    "Path=/",
+    "HttpOnly",
+    "Max-Age=0",
+    "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    "SameSite=Lax"
+  ];
+  if (isSecure) fallbackParts.push("Secure");
+  const fallback = fallbackParts.join("; ");
+  return [primary, fallback];
 }
 
 function sanitizeItem(item) {
@@ -703,18 +324,6 @@ function sanitizeItem(item) {
   };
 }
 
-function buildRequestId() {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const suffix = crypto.randomBytes(2).toString("hex").toUpperCase();
-  return `STK-${today}-${suffix}`;
-}
-
-function buildReceiptId() {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const suffix = crypto.randomBytes(2).toString("hex").toUpperCase();
-  return `REC-${today}-${suffix}`;
-}
-
 function sanitizeStockRequestPayload(payload) {
   const items = Array.isArray(payload?.items)
     ? payload.items.map(sanitizeItem).filter(Boolean)
@@ -733,17 +342,6 @@ function sanitizeStockRequestPayload(payload) {
   };
 }
 
-function validateStockRequestItems(items = []) {
-  for (const item of items) {
-    const maxAllowed = Number(STOCK_REQUEST_ITEM_LIMITS[item?.id] || 0);
-    if (maxAllowed && Number(item?.quantity || 0) > maxAllowed) {
-      return `${sanitizeString(item?.label, 120) || "This item"} is limited to ${maxAllowed} per request.`;
-    }
-  }
-
-  return "";
-}
-
 function sanitizeStockReceiptPayload(payload) {
   const items = Array.isArray(payload?.items)
     ? payload.items.map(sanitizeItem).filter(Boolean)
@@ -760,178 +358,52 @@ function sanitizeStockReceiptPayload(payload) {
   };
 }
 
+function validateStockRequestItems(items = []) {
+  for (const item of items) {
+    const maxAllowed = Number(STOCK_REQUEST_ITEM_LIMITS[item?.id] || 0);
+    if (maxAllowed && Number(item?.quantity || 0) > maxAllowed) {
+      return `${sanitizeString(item?.label, 120) || "This item"} is limited to ${maxAllowed} per request.`;
+    }
+  }
+  return "";
+}
+
 function getItemInventoryUnits(item) {
   const explicitInventoryUnits = Math.max(0, Number(item?.inventoryUnits) || 0);
   if (explicitInventoryUnits) return explicitInventoryUnits;
 
   const quantity = Math.max(0, Number(item?.quantity) || 0);
   if (!quantity) return 0;
-  if (item?.unitType === "tray") {
-    return quantity * Math.max(0, Number(item?.traySize) || 0);
-  }
-  if (item?.unitType === "packet") {
-    return quantity * Math.max(0, Number(item?.packetSize) || 0);
-  }
+  if (item?.unitType === "tray") return quantity * Math.max(0, Number(item?.traySize) || 0);
+  if (item?.unitType === "packet") return quantity * Math.max(0, Number(item?.packetSize) || 0);
   return quantity;
 }
 
-function buildStockSheetsColumns(items = []) {
-  const columns = { ...STOCK_SHEETS_COLUMN_DEFAULTS };
+function buildRequestId() {
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const suffix = crypto.randomBytes(2).toString("hex").toUpperCase();
+  return `STK-${today}-${suffix}`;
+}
 
-  items.forEach((item) => {
-    const totalUnits = getItemInventoryUnits(item);
-    if (item.sheetColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetColumnKey)) {
-      columns[item.sheetColumnKey] += totalUnits;
-    }
-    if (item.unitType === "tray" && item.sheetTrayColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetTrayColumnKey)) {
-      columns[item.sheetTrayColumnKey] += Math.max(0, Number(item.quantity) || 0);
-    }
-    if (item.unitType === "each" && item.sheetSingleColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetSingleColumnKey)) {
-      columns[item.sheetSingleColumnKey] += Math.max(0, Number(item.quantity) || 0);
-    }
-  });
-
-  return columns;
+function buildReceiptId() {
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const suffix = crypto.randomBytes(2).toString("hex").toUpperCase();
+  return `REC-${today}-${suffix}`;
 }
 
 function getStockInventoryKey(item) {
-  return sanitizeString(item?.sheetColumnKey, 80) || sanitizeString(item?.id, 80);
+  return sanitizeString(item?.sheetColumnKey, 80) || sanitizeString(item?.id, 80) || sanitizeString(item?.label, 120);
 }
 
 function getStockInventoryLabel(item) {
   return sanitizeString(item?.label, 120) || sanitizeString(item?.id, 80) || "Item";
 }
 
-function getStockInventorySummary(receipts, requests) {
-  const rows = new Map();
-
-  function touchRow(item) {
-    const key = getStockInventoryKey(item);
-    if (!key) return null;
-    const existing = rows.get(key) || {
-      key,
-      label: getStockInventoryLabel(item),
-      received: 0,
-      issued: 0,
-      onHand: 0,
-      updatedAt: ""
-    };
-    if (!existing.label) {
-      existing.label = getStockInventoryLabel(item);
-    }
-    rows.set(key, existing);
-    return existing;
-  }
-
-  receipts.forEach((receipt) => {
-    const updatedAt = sanitizeString(receipt?.updatedAt || receipt?.createdAt, 40);
-    (Array.isArray(receipt?.items) ? receipt.items : []).forEach((item) => {
-      const row = touchRow(item);
-      if (!row) return;
-      row.received += getItemInventoryUnits(item);
-      if (updatedAt && (!row.updatedAt || updatedAt > row.updatedAt)) {
-        row.updatedAt = updatedAt;
-      }
-    });
-  });
-
-  requests
-    .filter((request) => isRequestInventoryDeducted(request))
-    .forEach((request) => {
-      const updatedAt = sanitizeString(request?.updatedAt || request?.createdAt, 40);
-      (Array.isArray(request?.items) ? request.items : []).forEach((item) => {
-        const row = touchRow(item);
-        if (!row) return;
-        row.issued += getItemInventoryUnits(item);
-        if (updatedAt && (!row.updatedAt || updatedAt > row.updatedAt)) {
-          row.updatedAt = updatedAt;
-        }
-      });
-    });
-
-  return [...rows.values()]
-    .map((row) => ({
-      ...row,
-      onHand: row.received - row.issued
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
-}
-
-function isRequestInventoryDeducted(request) {
-  if (request?.inventoryDeducted === true) return true;
-  if (request?.inventoryDeducted === false) return false;
-
-  const status = slugifyStatus(request?.status);
-  if (status === "completed") return true;
-  if (status === "collected" && (request?.collectedAt || request?.collectedBy)) return true;
-  return false;
-}
-
-function getInventoryMapFromRecords(receipts, requests, options = {}) {
-  const map = new Map();
-  const excludeRequestId = sanitizeString(options.excludeRequestId, 80);
-
-  function touch(item) {
-    const key = getStockInventoryKey(item);
-    if (!key) return null;
-    const existing = map.get(key) || {
-      key,
-      label: getStockInventoryLabel(item),
-      onHand: 0
-    };
-    if (!existing.label) existing.label = getStockInventoryLabel(item);
-    map.set(key, existing);
-    return existing;
-  }
-
-  receipts.forEach((receipt) => {
-    (Array.isArray(receipt?.items) ? receipt.items : []).forEach((item) => {
-      const row = touch(item);
-      if (!row) return;
-      row.onHand += getItemInventoryUnits(item);
-    });
-  });
-
-  requests
-    .filter((request) => isRequestInventoryDeducted(request))
-    .filter((request) => !excludeRequestId || sanitizeString(request?.id, 80) !== excludeRequestId)
-    .forEach((request) => {
-      (Array.isArray(request?.items) ? request.items : []).forEach((item) => {
-        const row = touch(item);
-        if (!row) return;
-        row.onHand -= getItemInventoryUnits(item);
-      });
-    });
-
-  return map;
-}
-
-function buildCollectionShortages(request, inventoryMap) {
-  const shortages = [];
-  const items = Array.isArray(request?.items) ? request.items : [];
-
-  items.forEach((item) => {
-    const key = getStockInventoryKey(item);
-    const requiredUnits = getItemInventoryUnits(item);
-    const onHand = Math.max(0, Number(inventoryMap.get(key)?.onHand || 0));
-    if (requiredUnits <= onHand) return;
-    shortages.push({
-      key,
-      label: getStockInventoryLabel(item),
-      requiredUnits,
-      onHand,
-      shortBy: requiredUnits - onHand
-    });
-  });
-
-  return shortages;
-}
-
 function appendStatusAudit(record, status, userNumber, timestamp) {
   const safeStatus = slugifyStatus(status);
   const safeUserNumber = sanitizeUserNumber(userNumber);
   const safeTimestamp = sanitizeString(timestamp, 40) || new Date().toISOString();
-  const history = Array.isArray(record.statusHistory) ? record.statusHistory : [];
+  const history = Array.isArray(record.statusHistory) ? [...record.statusHistory] : [];
 
   history.push({
     status: safeStatus,
@@ -964,6 +436,86 @@ function appendStatusAudit(record, status, userNumber, timestamp) {
     record.cancelledAt = safeTimestamp;
     record.cancelledBy = safeUserNumber;
   }
+}
+
+function isRequestInventoryDeducted(request) {
+  if (request?.inventoryDeducted === true) return true;
+  if (request?.inventoryDeducted === false) return false;
+
+  const status = slugifyStatus(request?.status);
+  if (status === "completed") return true;
+  if (status === "collected" && (request?.collectedAt || request?.collectedBy)) return true;
+  return false;
+}
+
+function buildStockStats(records) {
+  const requests = [...records].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const totalRequests = requests.length;
+  const totalLineItems = requests.reduce((sum, request) => sum + Number(request.lineItemCount || 0), 0);
+  const totalUnitsRequested = requests.reduce((sum, request) => sum + Number(request.totalRequestedQuantity || 0), 0);
+  const openRequests = requests.filter((request) => !["collected", "completed", "cancelled"].includes(slugifyStatus(request.status))).length;
+  const statusCounts = {};
+  const wards = new Map();
+  const items = new Map();
+  const dailyRequests = new Map();
+
+  requests.forEach((request) => {
+    const status = slugifyStatus(request.status);
+    statusCounts[status] = (statusCounts[status] || 0) + 1;
+
+    const ward = sanitizeString(request.wardUnit, 120);
+    if (ward) wards.set(ward, (wards.get(ward) || 0) + 1);
+
+    const dayKey = String(request.createdAt || "").slice(0, 10);
+    if (dayKey) dailyRequests.set(dayKey, (dailyRequests.get(dayKey) || 0) + 1);
+
+    (Array.isArray(request.items) ? request.items : []).forEach((item) => {
+      const label = sanitizeString(item.variantLabel ? `${item.label} - ${item.variantLabel}` : item.label, 120);
+      if (!label) return;
+      const current = items.get(label) || { requests: 0, quantity: 0 };
+      current.requests += 1;
+      current.quantity += getItemInventoryUnits(item);
+      items.set(label, current);
+    });
+  });
+
+  const topWards = [...wards.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count }));
+  const topItems = [...items.entries()].sort((a, b) => b[1].quantity - a[1].quantity).slice(0, 8).map(([label, counts]) => ({
+    label,
+    requests: counts.requests,
+    quantity: counts.quantity
+  }));
+  const recentDays = [...dailyRequests.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-14).map(([date, count]) => ({ date, count }));
+
+  return {
+    totalRequests,
+    openRequests,
+    totalLineItems,
+    totalUnitsRequested,
+    statusCounts,
+    topWards,
+    topItems,
+    recentDays
+  };
+}
+
+function buildStockSheetsColumns(items = []) {
+  const columns = { ...STOCK_SHEETS_COLUMN_DEFAULTS };
+
+  items.forEach((item) => {
+    const totalUnits = getItemInventoryUnits(item);
+    if (item.sheetColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetColumnKey)) {
+      columns[item.sheetColumnKey] += totalUnits;
+    }
+    if (item.unitType === "tray" && item.sheetTrayColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetTrayColumnKey)) {
+      columns[item.sheetTrayColumnKey] += Math.max(0, Number(item.quantity) || 0);
+    }
+    if (item.unitType === "each" && item.sheetSingleColumnKey && Object.prototype.hasOwnProperty.call(columns, item.sheetSingleColumnKey)) {
+      columns[item.sheetSingleColumnKey] += Math.max(0, Number(item.quantity) || 0);
+    }
+  });
+
+  return columns;
 }
 
 function buildStockSheetsPayload(record, options = {}) {
@@ -1005,7 +557,501 @@ function buildStockSheetsPayload(record, options = {}) {
   };
 }
 
-function postJson(urlString, payload, redirectCount = 0) {
+async function collectRequestBody(req) {
+  const chunks = [];
+  let totalBytes = 0;
+
+  for await (const chunk of req) {
+    totalBytes += chunk.length;
+    if (totalBytes > MAX_BODY_BYTES) {
+      throw new Error("Request body too large");
+    }
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+function mapUserFromDb(user) {
+  return {
+    id: sanitizeString(user?.id, 80),
+    userNumber: normalizeElabUserNumber(user?.user_number, { allowAnyLength: true }),
+    displayElabUserNumber: normalizeElabUserNumber(user?.user_number, { allowAnyLength: true }),
+    displayName: sanitizeDisplayName(user?.display_name),
+    role: normalizeUserRole(user?.role),
+    status: user?.is_active ? "active" : "disabled",
+    createdAt: sanitizeString(user?.created_at, 40),
+    updatedAt: sanitizeString(user?.updated_at, 40),
+    lastLoginAt: sanitizeString(user?.last_login_at, 40),
+    isOwner: normalizeUserRole(user?.role) === "admin"
+  };
+}
+
+function mapRequestItemFromDb(item) {
+  return {
+    id: sanitizeString(item?.item_id, 80),
+    label: sanitizeString(item?.item_name, 120),
+    variantLabel: sanitizeString(item?.variant_label, 80),
+    quantity: Math.max(0, Number(item?.quantity) || 0),
+    unitType: sanitizeString(item?.unit, 40),
+    traySize: Number(item?.tray_size) || null,
+    packetSize: Number(item?.packet_size) || null,
+    formattedQuantity: sanitizeString(item?.formatted_quantity, 120),
+    inventoryUnits: Math.max(0, Number(item?.inventory_units) || 0),
+    sheetColumnKey: sanitizeString(item?.sheet_column_key, 80),
+    sheetTrayColumnKey: sanitizeString(item?.sheet_tray_column_key, 80),
+    sheetSingleColumnKey: sanitizeString(item?.sheet_single_column_key, 80)
+  };
+}
+
+function mapRequestFromDb(row) {
+  const items = Array.isArray(row?.stock_request_items) ? row.stock_request_items.map(mapRequestItemFromDb) : [];
+  const statusHistory = Array.isArray(row?.status_history) ? row.status_history : [];
+  return {
+    id: sanitizeString(row?.id, 80),
+    source: sanitizeString(row?.source, 60),
+    submittedAt: sanitizeString(row?.submitted_at, 40),
+    requestedBy: sanitizeString(row?.requester_name, 120),
+    wardUnit: sanitizeString(row?.ward_or_unit, 120),
+    notes: sanitizeMultilineString(row?.notes, 500),
+    requestText: sanitizeMultilineString(row?.request_text, 4000),
+    lineItemCount: Math.max(0, Number(row?.line_item_count) || items.length),
+    totalRequestedQuantity: Math.max(0, Number(row?.total_requested_quantity) || 0),
+    createdAt: sanitizeString(row?.created_at, 40),
+    updatedAt: sanitizeString(row?.updated_at, 40),
+    status: slugifyStatus(row?.status),
+    statusUpdatedAt: sanitizeString(row?.updated_at, 40),
+    statusUpdatedBy: "",
+    enteredBy: "",
+    inventoryDeducted: Boolean(row?.inventory_deducted),
+    inventoryDeductedAt: sanitizeString(row?.inventory_deducted_at, 40),
+    inventoryDeductedBy: "",
+    collectionRecord: row?.collection_record || null,
+    statusHistory,
+    items
+  };
+}
+
+function mapReceiptFromDb(row) {
+  const items = Array.isArray(row?.received_stock_items)
+    ? row.received_stock_items.map((item) => ({
+      id: sanitizeString(item?.item_id, 80),
+      label: sanitizeString(item?.item_name, 120),
+      variantLabel: sanitizeString(item?.variant_label, 80),
+      quantity: Math.max(0, Number(item?.quantity) || 0),
+      unitType: sanitizeString(item?.unit, 40),
+      traySize: Number(item?.tray_size) || null,
+      packetSize: Number(item?.packet_size) || null,
+      formattedQuantity: sanitizeString(item?.formatted_quantity, 120),
+      inventoryUnits: Math.max(0, Number(item?.inventory_units) || 0),
+      sheetColumnKey: sanitizeString(item?.sheet_column_key, 80),
+      sheetTrayColumnKey: sanitizeString(item?.sheet_tray_column_key, 80),
+      sheetSingleColumnKey: sanitizeString(item?.sheet_single_column_key, 80)
+    }))
+    : [];
+
+  return {
+    id: sanitizeString(row?.id, 80),
+    supplierName: sanitizeString(row?.supplier, 120),
+    reference: sanitizeString(row?.reference, 120),
+    notes: sanitizeMultilineString(row?.notes, 500),
+    submittedAt: sanitizeString(row?.submitted_at, 40),
+    lineItemCount: Math.max(0, Number(row?.line_item_count) || items.length),
+    totalReceivedQuantity: Math.max(0, Number(row?.total_received_quantity) || 0),
+    createdAt: sanitizeString(row?.created_at, 40),
+    updatedAt: sanitizeString(row?.updated_at, 40),
+    receivedBy: "",
+    items
+  };
+}
+
+async function dbSingle(queryPromise) {
+  const { data, error } = await queryPromise;
+  if (error) throw new Error(error.message || "Database query failed");
+  return data;
+}
+
+async function dbMaybeSingle(queryPromise) {
+  const { data, error } = await queryPromise;
+  if (error && error.code !== "PGRST116") throw new Error(error.message || "Database query failed");
+  return data || null;
+}
+
+async function dbCreateAuditLog(actorUserId, action, targetType, targetId, details = {}) {
+  await dbSingle(
+    supabase.from("audit_logs").insert({
+      actor_user_id: actorUserId || null,
+      action: sanitizeString(action, 80),
+      target_type: sanitizeString(targetType, 80),
+      target_id: sanitizeString(targetId, 160),
+      details
+    })
+  );
+}
+
+async function dbFindUserByUserNumber(userNumber) {
+  const safeUserNumber = normalizeElabUserNumber(userNumber, { allowAnyLength: true });
+  if (!safeUserNumber) return null;
+  return dbMaybeSingle(
+    supabase
+      .from("users")
+      .select("*")
+      .eq("user_number", safeUserNumber)
+      .limit(1)
+      .maybeSingle()
+  );
+}
+
+async function dbGetSession(req) {
+  const token = getSessionToken(req);
+  if (!token) return null;
+  const tokenHash = hashSessionToken(token);
+  const nowIso = new Date().toISOString();
+  const session = await dbMaybeSingle(
+    supabase
+      .from("lab_sessions")
+      .select("id,user_id,expires_at,users(*)")
+      .eq("token_hash", tokenHash)
+      .gt("expires_at", nowIso)
+      .limit(1)
+      .maybeSingle()
+  );
+
+  if (!session) return null;
+
+  const user = session.users;
+  if (!user || !user.is_active) {
+    await dbSingle(supabase.from("lab_sessions").delete().eq("id", session.id));
+    return null;
+  }
+
+  return {
+    id: session.id,
+    user,
+    token
+  };
+}
+
+async function requireLabSession(req, res) {
+  try {
+    const session = await dbGetSession(req);
+    if (!session) {
+      sendJson(req, res, 401, {
+        ok: false,
+        error: "Lab login required"
+      });
+      return null;
+    }
+    return session;
+  } catch (error) {
+    sendJson(req, res, 500, { ok: false, error: error instanceof Error ? error.message : "Session check failed" });
+    return null;
+  }
+}
+
+async function requireOwnerSession(req, res) {
+  const session = await requireLabSession(req, res);
+  if (!session) return null;
+  if (normalizeUserRole(session.user?.role) !== "admin") {
+    sendJson(req, res, 403, {
+      ok: false,
+      error: "Admin access required"
+    });
+    return null;
+  }
+  return session;
+}
+
+async function dbListRequests(limit = 25, { includeManual = true } = {}) {
+  const rows = await dbSingle(
+    supabase
+      .from("stock_requests")
+      .select("*, stock_request_items(*)")
+      .order("created_at", { ascending: false })
+      .limit(limit)
+  );
+
+  const mapped = (rows || []).map(mapRequestFromDb);
+  if (includeManual) return mapped;
+  return mapped.filter((row) => sanitizeString(row.source, 60) !== "lab-manual-entry");
+}
+
+async function dbGetRequestById(requestId) {
+  return dbMaybeSingle(
+    supabase
+      .from("stock_requests")
+      .select("*, stock_request_items(*)")
+      .eq("id", requestId)
+      .limit(1)
+      .maybeSingle()
+  );
+}
+
+async function dbInsertRequest(payload, sessionUser = null) {
+  const nowIso = new Date().toISOString();
+  const requestId = buildRequestId();
+  const record = {
+    id: requestId,
+    source: payload.source,
+    requester_name: payload.requestedBy,
+    ward_or_unit: payload.wardUnit,
+    notes: payload.notes,
+    request_text: payload.requestText,
+    status: "received",
+    line_item_count: payload.lineItemCount,
+    total_requested_quantity: payload.totalRequestedQuantity,
+    submitted_at: payload.submittedAt || nowIso,
+    created_at: nowIso,
+    updated_at: nowIso,
+    requested_by_user_id: null,
+    entered_by_user_id: sessionUser?.id || null,
+    status_updated_by_user_id: sessionUser?.id || null,
+    status_history: [{ status: "received", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
+  };
+
+  await dbSingle(supabase.from("stock_requests").insert(record));
+
+  if (payload.items.length) {
+    await dbSingle(
+      supabase.from("stock_request_items").insert(payload.items.map((item) => ({
+        stock_request_id: requestId,
+        item_id: item.id || null,
+        item_name: item.label,
+        variant_label: item.variantLabel || null,
+        quantity: item.quantity,
+        unit: item.unitType || "each",
+        tray_size: item.traySize || null,
+        packet_size: item.packetSize || null,
+        inventory_units: getItemInventoryUnits(item),
+        formatted_quantity: item.formattedQuantity || null,
+        sheet_column_key: item.sheetColumnKey || null,
+        sheet_tray_column_key: item.sheetTrayColumnKey || null,
+        sheet_single_column_key: item.sheetSingleColumnKey || null
+      })))
+    );
+  }
+
+  const inserted = await dbGetRequestById(requestId);
+  return mapRequestFromDb(inserted);
+}
+
+async function dbListReceipts(limit = 12) {
+  const rows = await dbSingle(
+    supabase
+      .from("received_stock")
+      .select("*, received_stock_items(*)")
+      .order("created_at", { ascending: false })
+      .limit(limit)
+  );
+  return (rows || []).map(mapReceiptFromDb);
+}
+
+async function dbApplyInventoryDelta(item, delta) {
+  const key = getStockInventoryKey(item);
+  if (!key) return;
+
+  const existing = await dbMaybeSingle(
+    supabase.from("inventory_balances").select("id,item_name,quantity_on_hand").eq("item_key", key).limit(1).maybeSingle()
+  );
+
+  if (!existing) {
+    await dbSingle(
+      supabase.from("inventory_balances").insert({
+        item_key: key,
+        item_name: getStockInventoryLabel(item),
+        quantity_on_hand: Math.max(0, Number(delta) || 0),
+        updated_at: new Date().toISOString()
+      })
+    );
+    return;
+  }
+
+  const nextQty = Math.max(0, Number(existing.quantity_on_hand || 0) + Number(delta || 0));
+  await dbSingle(
+    supabase
+      .from("inventory_balances")
+      .update({
+        quantity_on_hand: nextQty,
+        item_name: getStockInventoryLabel(item),
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", existing.id)
+  );
+}
+
+async function dbGetInventoryMap() {
+  const rows = await dbSingle(supabase.from("inventory_balances").select("*").order("item_name", { ascending: true }));
+  const map = new Map();
+  (rows || []).forEach((row) => {
+    map.set(String(row.item_key || ""), {
+      key: String(row.item_key || ""),
+      label: String(row.item_name || "Item"),
+      onHand: Math.max(0, Number(row.quantity_on_hand) || 0)
+    });
+  });
+  return map;
+}
+
+async function dbListInventorySummary() {
+  const rows = await dbSingle(supabase.from("inventory_balances").select("*").order("item_name", { ascending: true }));
+  return (rows || []).map((row) => ({
+    key: String(row.item_key || ""),
+    label: String(row.item_name || "Item"),
+    received: 0,
+    issued: 0,
+    onHand: Math.max(0, Number(row.quantity_on_hand) || 0),
+    updatedAt: sanitizeString(row.updated_at, 40)
+  }));
+}
+
+async function dbInsertReceipt(payload, sessionUser) {
+  const nowIso = new Date().toISOString();
+  const receiptId = buildReceiptId();
+
+  await dbSingle(
+    supabase.from("received_stock").insert({
+      id: receiptId,
+      recorded_by_user_id: sessionUser?.id || null,
+      supplier: payload.supplierName || null,
+      reference: payload.reference || null,
+      notes: payload.notes || null,
+      line_item_count: payload.lineItemCount,
+      total_received_quantity: payload.totalReceivedQuantity,
+      submitted_at: payload.submittedAt || nowIso,
+      created_at: nowIso,
+      updated_at: nowIso
+    })
+  );
+
+  if (payload.items.length) {
+    await dbSingle(
+      supabase.from("received_stock_items").insert(payload.items.map((item) => ({
+        received_stock_id: receiptId,
+        item_id: item.id || null,
+        item_name: item.label,
+        variant_label: item.variantLabel || null,
+        quantity: item.quantity,
+        unit: item.unitType || "each",
+        tray_size: item.traySize || null,
+        packet_size: item.packetSize || null,
+        inventory_units: getItemInventoryUnits(item),
+        formatted_quantity: item.formattedQuantity || null,
+        sheet_column_key: item.sheetColumnKey || null,
+        sheet_tray_column_key: item.sheetTrayColumnKey || null,
+        sheet_single_column_key: item.sheetSingleColumnKey || null
+      })))
+    );
+  }
+
+  for (const item of payload.items) {
+    await dbApplyInventoryDelta(item, getItemInventoryUnits(item));
+  }
+
+  await dbCreateAuditLog(sessionUser?.id || null, "create-received-stock", "received_stock", receiptId, {
+    lineItemCount: payload.lineItemCount,
+    totalReceivedQuantity: payload.totalReceivedQuantity
+  });
+
+  return {
+    id: receiptId,
+    createdAt: nowIso,
+    receivedBy: normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || ""
+  };
+}
+
+async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
+  const dbRecord = await dbGetRequestById(requestId);
+  if (!dbRecord) return { error: "not-found" };
+
+  const request = mapRequestFromDb(dbRecord);
+  const previousStatus = slugifyStatus(request.status);
+  const wasDeducted = isRequestInventoryDeducted(request);
+  const shouldDeductInventory = nextStatus === "collected" && !wasDeducted;
+
+  if (shouldDeductInventory) {
+    const inventoryMap = await dbGetInventoryMap();
+    const shortages = [];
+    for (const item of request.items) {
+      const key = getStockInventoryKey(item);
+      const requiredUnits = getItemInventoryUnits(item);
+      const onHand = Math.max(0, Number(inventoryMap.get(key)?.onHand || 0));
+      if (requiredUnits > onHand) {
+        shortages.push({
+          key,
+          label: getStockInventoryLabel(item),
+          requiredUnits,
+          onHand,
+          shortBy: requiredUnits - onHand
+        });
+      }
+    }
+    if (shortages.length) {
+      return { error: "insufficient-stock", shortages };
+    }
+  }
+
+  const nowIso = new Date().toISOString();
+  request.status = nextStatus;
+  request.updatedAt = nowIso;
+  request.statusUpdatedAt = nowIso;
+  request.statusUpdatedBy = normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || "";
+  appendStatusAudit(request, nextStatus, request.statusUpdatedBy, nowIso);
+
+  const updatePayload = {
+    status: nextStatus,
+    updated_at: nowIso,
+    status_updated_by_user_id: sessionUser?.id || null,
+    status_history: request.statusHistory
+  };
+
+  if (shouldDeductInventory) {
+    const deductedItems = request.items.map((item) => ({
+      id: sanitizeString(item?.id, 80),
+      label: sanitizeString(item?.label, 120),
+      variantLabel: sanitizeString(item?.variantLabel, 80),
+      quantity: Math.max(0, Number(item?.quantity) || 0),
+      unitType: sanitizeString(item?.unitType, 40),
+      traySize: Number(item?.traySize) || null,
+      packetSize: Number(item?.packetSize) || null,
+      formattedQuantity: sanitizeString(item?.formattedQuantity, 120),
+      inventoryUnits: getItemInventoryUnits(item)
+    }));
+    const totalUnitsDeducted = deductedItems.reduce((sum, item) => sum + Math.max(0, Number(item.inventoryUnits || 0)), 0);
+
+    updatePayload.inventory_deducted = true;
+    updatePayload.inventory_deducted_at = nowIso;
+    updatePayload.inventory_deducted_by_user_id = sessionUser?.id || null;
+    updatePayload.collection_record = {
+      orderId: request.id,
+      collectedAt: nowIso,
+      requestedBy: sanitizeString(request.requestedBy, 120),
+      wardUnit: sanitizeString(request.wardUnit, 120),
+      markedCollectedBy: request.statusUpdatedBy,
+      collectedBy: sanitizeString(request.requestedBy, 120),
+      items: deductedItems,
+      totalUnitsDeducted
+    };
+
+    for (const item of request.items) {
+      await dbApplyInventoryDelta(item, -getItemInventoryUnits(item));
+    }
+  }
+
+  await dbSingle(supabase.from("stock_requests").update(updatePayload).eq("id", requestId));
+
+  await dbCreateAuditLog(sessionUser?.id || null, "update-stock-request-status", "stock_request", requestId, {
+    previousStatus,
+    nextStatus
+  });
+
+  const reloaded = await dbGetRequestById(requestId);
+  return {
+    record: mapRequestFromDb(reloaded),
+    previousStatus
+  };
+}
+
+async function postJson(urlString, payload, redirectCount = 0) {
   return new Promise((resolve, reject) => {
     const target = new URL(urlString);
     const transport = target.protocol === "https:" ? https : http;
@@ -1033,11 +1079,7 @@ function postJson(urlString, payload, redirectCount = 0) {
           resolve(postJson(new URL(location, target).toString(), payload, redirectCount + 1));
           return;
         }
-
-        resolve({
-          statusCode,
-          body: responseBody
-        });
+        resolve({ statusCode, body: responseBody });
       });
     });
 
@@ -1072,21 +1114,6 @@ async function syncStockRecordToSheets(record, options = {}) {
       error: error instanceof Error ? error.message : "Google Sheets sync failed"
     };
   }
-}
-
-async function collectRequestBody(req) {
-  const chunks = [];
-  let totalBytes = 0;
-
-  for await (const chunk of req) {
-    totalBytes += chunk.length;
-    if (totalBytes > MAX_BODY_BYTES) {
-      throw new Error("Request body too large");
-    }
-    chunks.push(chunk);
-  }
-
-  return Buffer.concat(chunks).toString("utf8");
 }
 
 function toSheetLineItems(items) {
@@ -1169,72 +1196,6 @@ async function mirrorStockRequestToGoogleSheets(record) {
   }
 }
 
-function buildStockStats(records) {
-  const requests = [...records].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  const totalRequests = requests.length;
-  const totalLineItems = requests.reduce((sum, request) => sum + Number(request.lineItemCount || 0), 0);
-  const totalUnitsRequested = requests.reduce((sum, request) => sum + Number(request.totalRequestedQuantity || 0), 0);
-  const openRequests = requests.filter((request) => !["collected", "completed", "cancelled"].includes(slugifyStatus(request.status))).length;
-  const statusCounts = {};
-  const wards = new Map();
-  const items = new Map();
-  const dailyRequests = new Map();
-
-  requests.forEach((request) => {
-    const status = slugifyStatus(request.status);
-    statusCounts[status] = (statusCounts[status] || 0) + 1;
-
-    const ward = sanitizeString(request.wardUnit, 120);
-    if (ward) {
-      wards.set(ward, (wards.get(ward) || 0) + 1);
-    }
-
-    const dayKey = String(request.createdAt || "").slice(0, 10);
-    if (dayKey) {
-      dailyRequests.set(dayKey, (dailyRequests.get(dayKey) || 0) + 1);
-    }
-
-    (Array.isArray(request.items) ? request.items : []).forEach((item) => {
-      const label = sanitizeString(item.variantLabel ? `${item.label} - ${item.variantLabel}` : item.label, 120);
-      if (!label) return;
-      const current = items.get(label) || { requests: 0, quantity: 0 };
-      current.requests += 1;
-      current.quantity += getItemInventoryUnits(item);
-      items.set(label, current);
-    });
-  });
-
-  const topWards = [...wards.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, count]) => ({ name, count }));
-
-  const topItems = [...items.entries()]
-    .sort((a, b) => b[1].quantity - a[1].quantity)
-    .slice(0, 8)
-    .map(([label, counts]) => ({
-      label,
-      requests: counts.requests,
-      quantity: counts.quantity
-    }));
-
-  const recentDays = [...dailyRequests.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .slice(-14)
-    .map(([date, count]) => ({ date, count }));
-
-  return {
-    totalRequests,
-    openRequests,
-    totalLineItems,
-    totalUnitsRequested,
-    statusCounts,
-    topWards,
-    topItems,
-    recentDays
-  };
-}
-
 function getStaticFilePath(urlPathname) {
   let pathname = decodeURIComponent(urlPathname);
   if (pathname === "/") pathname = "/index.html";
@@ -1251,24 +1212,25 @@ function getStaticFilePath(urlPathname) {
 async function serveStaticAsset(req, res, pathname) {
   const filePath = getStaticFilePath(pathname);
   if (!filePath) {
-    sendText(res, 400, "Bad request");
+    sendText(req, res, 400, "Bad request");
     return;
   }
 
-  if (filePath.startsWith(DATA_DIR) || path.basename(filePath).startsWith(".")) {
-    sendText(res, 404, "Not found");
+  if (path.basename(filePath).startsWith(".")) {
+    sendText(req, res, 404, "Not found");
     return;
   }
 
   try {
     const stat = await fs.stat(filePath);
     if (!stat.isFile()) {
-      sendText(res, 404, "Not found");
+      sendText(req, res, 404, "Not found");
       return;
     }
 
     const extension = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[extension] || "application/octet-stream";
+    setCorsHeaders(req, res);
     res.writeHead(200, {
       "Content-Type": contentType,
       "Content-Length": stat.size,
@@ -1276,16 +1238,14 @@ async function serveStaticAsset(req, res, pathname) {
     });
     fsSync.createReadStream(filePath).pipe(res);
   } catch {
-    sendText(res, 404, "Not found");
+    sendText(req, res, 404, "Not found");
   }
 }
 
 async function handleApiRequest(req, res, pathname, searchParams) {
   if (req.method === "OPTIONS") {
+    setCorsHeaders(req, res);
     res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
       "Access-Control-Max-Age": "86400",
       "Content-Length": "0"
     });
@@ -1294,9 +1254,9 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "GET" && pathname === "/api/health") {
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       ok: true,
-      service: "find-my-tube-local-backend",
+      service: "find-my-tube-backend",
       timestamp: new Date().toISOString()
     });
     return;
@@ -1307,19 +1267,18 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const hostHeader = String(req.headers.host || "").trim();
     const protocol = forwardedProto || "http";
     const baseUrl = hostHeader ? `${protocol}://${hostHeader}` : "";
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       ok: true,
-      service: "find-my-tube-local-backend",
+      service: "find-my-tube-backend",
       environment: {
         nodeEnv: String(process.env.NODE_ENV || "development"),
         appEnv: String(process.env.APP_ENV || process.env.NODE_ENV || "development")
       },
       storage: {
-        mode: "server-file",
-        dataDir: DATA_DIR,
-        usersFile: STOCK_USERS_FILE,
-        ownerFile: STOCK_OWNER_FILE,
-        durabilityWarning: getStorageDurabilityWarning()
+        mode: "supabase",
+        provider: "supabase",
+        configured: HAS_SUPABASE,
+        durabilityWarning: HAS_SUPABASE ? "" : "Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."
       },
       userSafety: {
         allowDelete: true
@@ -1327,22 +1286,33 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       api: {
         baseUrl
       },
+      supabase: {
+        hasAnonKey: Boolean(SUPABASE_ANON_KEY)
+      },
       timestamp: new Date().toISOString()
     });
     return;
   }
 
+  if (!HAS_SUPABASE) {
+    sendJson(req, res, 503, {
+      ok: false,
+      error: "Supabase is not configured",
+      requiredEnv: ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+    });
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/api/stock-auth/session") {
-    const token = getBearerToken(req);
-    const session = await getLabSession(req);
-    if (token && !session) {
-      console.info("[stock-auth] Session check token not found or expired", {
-        token: getTokenLogLabel(token)
-      });
+    const session = await dbGetSession(req);
+    const { count, error: countError } = await supabase.from("users").select("id", { count: "exact", head: true });
+    if (countError) {
+      throw new Error(countError.message || "Could not determine setup status");
     }
+    const setupRequired = Number(count || 0) === 0;
+
     if (!session) {
-      const setupRequired = await canBootstrapOwner();
-      sendJson(res, 200, {
+      sendJson(req, res, 200, {
         ok: true,
         authenticated: false,
         setupRequired
@@ -1350,32 +1320,10 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const user = await findStockUserByNumber(session.userNumber);
-    if (!user || normalizeUserStatus(user?.status) !== "active") {
-      await deleteLabSessionByToken(session.token);
-      const setupRequired = await canBootstrapOwner();
-      sendJson(res, 200, {
-        ok: true,
-        authenticated: false,
-        setupRequired
-      });
-      return;
-    }
-    const ownerUserNumber = await getResolvedOwnerUserNumber();
-    const role = getEffectiveUserRole(user || { userNumber: session.userNumber }, ownerUserNumber);
-    const isOwner = role === "admin";
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       ok: true,
       authenticated: true,
-      user: {
-        userNumber: getStoredNormalizedElabUserNumber(user) || session.userNumber,
-        displayElabUserNumber: getStoredDisplayElabUserNumber(user) || session.userNumber,
-        displayName: getStoredUserDisplayName(user),
-        role,
-        status: normalizeUserStatus(user?.status),
-        lastLoginAt: sanitizeString(user?.lastLoginAt, 40),
-        isOwner
-      }
+      user: mapUserFromDb(session.user)
     });
     return;
   }
@@ -1385,7 +1333,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       bodyText = await collectRequestBody(req);
     } catch (error) {
-      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
@@ -1393,7 +1341,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
-      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
       return;
     }
 
@@ -1401,70 +1349,57 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const userNumber = normalizeElabUserNumber(enteredUserNumber);
     const pin = normalizePin(payload.pin);
     if (!userNumber || !pin) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: "Use an eLab user number (2 or 3 digits) and a 4-digit PIN"
       });
       return;
     }
 
-    try {
-      const user = await findStockUserByNumber(userNumber);
-      if (!user) {
-        sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
-        return;
-      }
-      if (normalizeUserStatus(user?.status) !== "active") {
-        sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
-        return;
-      }
-
-      const storedPin = normalizePin(user?.pin);
-      const pinMatches = storedPin
-        ? pin === storedPin
-        : verifyPin(pin, user?.salt, user?.pinHash);
-      if (!pinMatches) {
-        sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
-        return;
-      }
-
-      const sessionUserNumber = getStoredNormalizedElabUserNumber(user) || userNumber;
-      const now = new Date().toISOString();
-      await queueStockRequestWrite(async () => {
-        const users = await readStockUsers();
-        const matchedUser = users.find((entry) => getStoredNormalizedElabUserNumber(entry) === sessionUserNumber);
-        if (!matchedUser) return;
-        matchedUser.lastLoginAt = now;
-        matchedUser.updatedAt = now;
-        await writeStockUsers(users);
-      });
-      const session = await createLabSession(sessionUserNumber);
-      const ownerUserNumber = await getResolvedOwnerUserNumber();
-      const role = getEffectiveUserRole(user || { userNumber: sessionUserNumber }, ownerUserNumber);
-      const isOwner = role === "admin";
-      sendJson(res, 200, {
-        ok: true,
-        authenticated: true,
-        token: session.token,
-        user: {
-          userNumber: sessionUserNumber,
-          displayElabUserNumber: getStoredDisplayElabUserNumber(user) || enteredUserNumber || sessionUserNumber,
-          displayName: getStoredUserDisplayName(user),
-          role,
-          status: normalizeUserStatus(user?.status),
-          lastLoginAt: now,
-          isOwner
-        }
-      });
-    } catch {
-      sendJson(res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
+    const user = await dbFindUserByUserNumber(userNumber);
+    if (!user || !user.is_active || !verifyPinHash(pin, user.pin_hash)) {
+      sendJson(req, res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
+      return;
     }
+
+    const token = createLabSessionToken();
+    const tokenHash = hashSessionToken(token);
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + LAB_SESSION_TTL_MS);
+
+    await dbSingle(
+      supabase.from("lab_sessions").insert({
+        token_hash: tokenHash,
+        user_id: user.id,
+        expires_at: expiresAt.toISOString()
+      })
+    );
+
+    await dbSingle(
+      supabase
+        .from("users")
+        .update({ last_login_at: now.toISOString(), updated_at: now.toISOString() })
+        .eq("id", user.id)
+    );
+
+    await dbCreateAuditLog(user.id, "login", "session", tokenHash, {});
+
+    res.setHeader("Set-Cookie", buildAuthCookie(token, req, { expiresAt }));
+    sendJson(req, res, 200, {
+      ok: true,
+      authenticated: true,
+      user: mapUserFromDb({ ...user, last_login_at: now.toISOString(), updated_at: now.toISOString() })
+    });
     return;
   }
 
   if (req.method === "POST" && pathname === "/api/stock-auth/bootstrap") {
-    if (!(await canBootstrapOwner())) {
-      sendJson(res, 403, {
+    const { count, error: countError } = await supabase.from("users").select("id", { count: "exact", head: true });
+    if (countError) {
+      throw new Error(countError.message || "Could not determine setup status");
+    }
+    if (Number(count || 0) > 0) {
+      sendJson(req, res, 403, {
         ok: false,
         error: "Initial admin has already been configured"
       });
@@ -1475,7 +1410,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       bodyText = await collectRequestBody(req);
     } catch (error) {
-      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
@@ -1483,78 +1418,75 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
-      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
       return;
     }
 
     const displayElabUserNumber = String(payload?.userNumber || "").trim();
     const userNumber = normalizeElabUserNumber(displayElabUserNumber);
     const pin = normalizePin(payload.pin);
-    const displayName = sanitizeDisplayName(payload.displayName);
-    const safeDisplayName = displayName || `Admin ${displayElabUserNumber || userNumber}`;
+    const displayName = sanitizeDisplayName(payload.displayName) || `Admin ${displayElabUserNumber || userNumber}`;
     if (!userNumber || !pin) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: "Use an eLab user number (2 or 3 digits) and a 4-digit PIN"
       });
       return;
     }
 
-    const now = new Date().toISOString();
-    await writeStockUsers([{
-      id: createStockUserId(),
-      userNumber,
-      displayElabUserNumber: displayElabUserNumber || userNumber,
-      normalizedElabUserNumber: userNumber,
-      displayName: safeDisplayName,
-      role: "admin",
-      status: "active",
-      pin,
-      createdAt: now,
-      updatedAt: now
-    }]);
-    await writeStockOwner({ ownerUserNumber: userNumber });
+    const nowIso = new Date().toISOString();
+    const pinHash = hashPin(pin);
+    const createdUser = await dbSingle(
+      supabase.from("users").insert({
+        user_number: userNumber,
+        display_name: displayName,
+        pin_hash: pinHash,
+        role: "admin",
+        is_active: true,
+        created_at: nowIso,
+        updated_at: nowIso,
+        last_login_at: nowIso
+      }).select("*").single()
+    );
 
-    const session = await createLabSession(userNumber);
-    sendJson(res, 201, {
+    const token = createLabSessionToken();
+    const tokenHash = hashSessionToken(token);
+    const expiresAt = new Date(Date.now() + LAB_SESSION_TTL_MS);
+    await dbSingle(
+      supabase.from("lab_sessions").insert({
+        token_hash: tokenHash,
+        user_id: createdUser.id,
+        expires_at: expiresAt.toISOString()
+      })
+    );
+
+    await dbCreateAuditLog(createdUser.id, "bootstrap-admin", "user", createdUser.id, {
+      userNumber,
+      displayName
+    });
+
+    res.setHeader("Set-Cookie", buildAuthCookie(token, req, { expiresAt }));
+    sendJson(req, res, 201, {
       ok: true,
       authenticated: true,
-      token: session.token,
-      user: {
-        userNumber,
-        displayElabUserNumber: displayElabUserNumber || userNumber,
-        displayName: safeDisplayName,
-        role: "admin",
-        status: "active",
-        isOwner: true
-      }
+      user: mapUserFromDb(createdUser)
     });
     return;
   }
 
   if (req.method === "POST" && pathname === "/api/stock-auth/logout") {
-    const authorizationHeader = String(req.headers.authorization || "");
-    const token = getBearerToken(req);
-    if (!authorizationHeader.trim() || !token) {
-      console.warn("[stock-auth] Logout called without a valid Authorization bearer token", {
-        hasAuthorizationHeader: Boolean(authorizationHeader.trim())
-      });
-    } else {
-      try {
-        const removed = await deleteLabSessionByToken(token);
-        console.info("[stock-auth] Logout processed", {
-          token: getTokenLogLabel(token),
-          removed
-        });
-      } catch (error) {
-        console.error("[stock-auth] Logout failed", {
-          token: getTokenLogLabel(token),
-          error: error instanceof Error ? error.message : String(error || "Unknown error")
-        });
-      }
+    const currentSession = await dbGetSession(req).catch(() => null);
+    const token = getSessionToken(req);
+    if (token) {
+      const tokenHash = hashSessionToken(token);
+      await dbSingle(supabase.from("lab_sessions").delete().eq("token_hash", tokenHash));
+    }
+    if (currentSession?.user?.id) {
+      await dbSingle(supabase.from("lab_sessions").delete().eq("user_id", currentSession.user.id));
     }
 
-    sendJson(res, 200, {
+    res.setHeader("Set-Cookie", buildAuthClearCookies(req));
+    sendJson(req, res, 200, {
       ok: true
     });
     return;
@@ -1564,60 +1496,15 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const session = await requireOwnerSession(req, res);
     if (!session) return;
 
-    const users = await readStockUsers();
-    const ownerUserNumber = await getResolvedOwnerUserNumber();
-    sendJson(res, 200, {
-      users: users.map((user) => ({
-        id: buildStockUserId(user),
-        userNumber: getStoredNormalizedElabUserNumber(user) || "",
-        displayElabUserNumber: getStoredDisplayElabUserNumber(user) || getStoredNormalizedElabUserNumber(user) || "",
-        displayName: getStoredUserDisplayName(user),
-        role: getEffectiveUserRole(user, ownerUserNumber),
-        status: normalizeUserStatus(user?.status),
-        createdAt: user.createdAt || "",
-        updatedAt: user.updatedAt || "",
-        lastLoginAt: user.lastLoginAt || ""
-      }))
-    });
-    return;
-  }
+    const users = await dbSingle(
+      supabase
+        .from("users")
+        .select("*")
+        .order("created_at", { ascending: false })
+    );
 
-  if (req.method === "GET" && pathname === "/api/lab/users/debug") {
-    const session = await requireOwnerSession(req, res);
-    if (!session) return;
-
-    const users = await readStockUsers();
-    const ownerUserNumber = await getResolvedOwnerUserNumber();
-    sendJson(res, 200, {
-      storage: {
-        mode: "server-file",
-        usersFile: STOCK_USERS_FILE,
-        auditFile: STOCK_USER_AUDIT_FILE,
-        backupDir: STOCK_USERS_BACKUP_DIR,
-        durabilityWarning: getStorageDurabilityWarning()
-      },
-      users: users.map((user) => {
-        const normalizedElabUserNumber = getStoredNormalizedElabUserNumber(user) || "";
-        const role = getEffectiveUserRole(user, ownerUserNumber);
-        const isOwner = role === "admin";
-        return {
-          id: buildStockUserId(user),
-          name: getStoredUserDisplayName(user),
-          displayName: getStoredUserDisplayName(user),
-          userNumber: normalizedElabUserNumber,
-          elabUserNumber: String(user?.elabUserNumber || ""),
-          eLabUserNumber: String(user?.eLabUserNumber || ""),
-          displayElabUserNumber: getStoredDisplayElabUserNumber(user) || normalizedElabUserNumber,
-          normalizedElabUserNumber,
-          pin: normalizePin(user?.pin),
-          role,
-          status: normalizeUserStatus(user?.status),
-          isOwner,
-          createdAt: sanitizeString(user?.createdAt, 40),
-          updatedAt: sanitizeString(user?.updatedAt, 40),
-          lastLoginAt: sanitizeString(user?.lastLoginAt, 40)
-        };
-      })
+    sendJson(req, res, 200, {
+      users: (users || []).map(mapUserFromDb)
     });
     return;
   }
@@ -1625,10 +1512,32 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   if (req.method === "GET" && pathname === "/api/lab/users/audit") {
     const session = await requireOwnerSession(req, res);
     if (!session) return;
+
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 40));
-    const log = await readStockUserAuditLog();
-    sendJson(res, 200, {
-      entries: log.slice(0, limit)
+    const rows = await dbSingle(
+      supabase
+        .from("audit_logs")
+        .select("*, users:actor_user_id(user_number,display_name)")
+        .order("created_at", { ascending: false })
+        .limit(limit)
+    );
+
+    sendJson(req, res, 200, {
+      entries: (rows || []).map((row) => ({
+        id: row.id,
+        timestamp: row.created_at,
+        action: row.action,
+        targetUserNumber: sanitizeString(row.details?.targetUserNumber, 20),
+        targetDisplayElabUserNumber: sanitizeString(row.details?.targetDisplayElabUserNumber, 20),
+        targetName: sanitizeString(row.details?.targetName, 120),
+        adminUserNumber: sanitizeString(row.users?.user_number, 20),
+        adminName: sanitizeString(row.users?.display_name, 120),
+        beforeRole: sanitizeString(row.details?.beforeRole, 40),
+        afterRole: sanitizeString(row.details?.afterRole, 40),
+        beforeStatus: sanitizeString(row.details?.beforeStatus, 40),
+        afterStatus: sanitizeString(row.details?.afterStatus, 40),
+        note: sanitizeString(row.details?.note, 240)
+      }))
     });
     return;
   }
@@ -1641,7 +1550,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       bodyText = await collectRequestBody(req);
     } catch (error) {
-      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
@@ -1649,7 +1558,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
-      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
       return;
     }
 
@@ -1659,65 +1568,50 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const displayName = sanitizeDisplayName(payload.displayName);
     const role = normalizeUserRole(payload.role);
     if (!userNumber || !pin || displayName.length < 2) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: "Use a display name, an eLab user number (2 or 3 digits), and a 4-digit PIN"
       });
       return;
     }
 
-    const users = await readStockUsers();
-    const existingUser = users.find((user) => getStoredNormalizedElabUserNumber(user) === userNumber);
+    const existingUser = await dbFindUserByUserNumber(userNumber);
     if (existingUser) {
-      const existingStatus = normalizeUserStatus(existingUser?.status);
-      sendJson(res, 409, {
+      sendJson(req, res, 409, {
         ok: false,
-        error: existingStatus === "disabled"
-          ? "That eLab user number belongs to a disabled user. Re-enable or edit the existing user."
-          : "That eLab user number already exists"
+        error: existingUser.is_active
+          ? "That eLab user number already exists"
+          : "That eLab user number belongs to a disabled user. Re-enable or edit the existing user."
       });
       return;
     }
 
-    const now = new Date().toISOString();
-    users.push({
-      id: createStockUserId(),
-      userNumber,
-      displayElabUserNumber: displayElabUserNumber || userNumber,
-      normalizedElabUserNumber: userNumber,
-      displayName,
-      role,
-      status: "active",
-      pin,
-      createdAt: now,
-      updatedAt: now
-    });
-    await writeStockUsers(users);
-    const adminUser = await getUserRecord(session.userNumber);
-    await appendStockUserAuditEntry({
-      action: "create",
+    const nowIso = new Date().toISOString();
+    const user = await dbSingle(
+      supabase.from("users").insert({
+        user_number: userNumber,
+        display_name: displayName,
+        pin_hash: hashPin(pin),
+        role,
+        is_active: true,
+        created_at: nowIso,
+        updated_at: nowIso
+      }).select("*").single()
+    );
+
+    await dbCreateAuditLog(session.user.id, "create", "user", String(user.id), {
       targetUserNumber: userNumber,
       targetDisplayElabUserNumber: displayElabUserNumber || userNumber,
       targetName: displayName,
-      adminUserNumber: session.userNumber,
-      adminName: getStoredUserDisplayName(adminUser),
       beforeRole: "",
       afterRole: role,
       beforeStatus: "",
       afterStatus: "active"
     });
 
-    sendJson(res, 201, {
+    sendJson(req, res, 201, {
       ok: true,
-      user: {
-        id: users[users.length - 1]?.id || "",
-        userNumber,
-        displayElabUserNumber: displayElabUserNumber || userNumber,
-        displayName,
-        role,
-        status: "active",
-        createdAt: now
-      }
+      user: mapUserFromDb(user)
     });
     return;
   }
@@ -1729,7 +1623,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const byIdMatch = pathname.match(/^\/api\/lab\/users\/by-id\/([^/]+)$/);
     const byNumberMatch = pathname.match(/^\/api\/lab\/users\/([^/]+)$/);
     if (!byIdMatch && !byNumberMatch) {
-      sendJson(res, 404, { ok: false, error: "Not found" });
+      sendJson(req, res, 404, { ok: false, error: "Not found" });
       return;
     }
 
@@ -1737,196 +1631,130 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const targetUserNumber = byNumberMatch
       ? normalizeElabUserNumber(decodeURIComponent(byNumberMatch[1]), { allowAnyLength: true })
       : "";
-    if ((byIdMatch && !targetUserId) || (!byIdMatch && !targetUserNumber)) {
-      sendJson(res, 400, { ok: false, error: byIdMatch ? "Invalid user id" : "Invalid user number" });
+
+    const target = byIdMatch
+      ? await dbMaybeSingle(supabase.from("users").select("*").eq("id", targetUserId).limit(1).maybeSingle())
+      : await dbFindUserByUserNumber(targetUserNumber);
+
+    if (!target) {
+      sendJson(req, res, 404, { ok: false, error: "User not found" });
+      return;
+    }
+
+    const currentRole = normalizeUserRole(target.role);
+    const currentStatus = target.is_active ? "active" : "disabled";
+
+    const { count: adminCount, error: adminCountError } = await supabase
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin")
+      .eq("is_active", true);
+    if (adminCountError) {
+      throw new Error(adminCountError.message || "Could not count admin users");
+    }
+    const activeAdmins = Number(adminCount || 0);
+
+    if (req.method === "DELETE") {
+      if (currentRole === "admin" && currentStatus === "active" && activeAdmins <= 1) {
+        sendJson(req, res, 409, { ok: false, error: "At least one active Admin user is required." });
+        return;
+      }
+
+      await dbSingle(supabase.from("users").delete().eq("id", target.id));
+      await dbCreateAuditLog(session.user.id, "delete user", "user", String(target.id), {
+        targetUserNumber: target.user_number,
+        targetDisplayElabUserNumber: target.user_number,
+        targetName: target.display_name,
+        beforeRole: currentRole,
+        afterRole: "",
+        beforeStatus: currentStatus,
+        afterStatus: ""
+      });
+
+      sendJson(req, res, 200, {
+        ok: true,
+        deleted: true,
+        userNumber: target.user_number
+      });
+      return;
+    }
+
+    let bodyText = "";
+    try {
+      bodyText = await collectRequestBody(req);
+    } catch (error) {
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
     let payload = {};
-    if (req.method === "PATCH") {
-      let bodyText = "";
-      try {
-        bodyText = await collectRequestBody(req);
-      } catch (error) {
-        sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
-        return;
-      }
+    try {
+      payload = bodyText ? JSON.parse(bodyText) : {};
+    } catch {
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
+      return;
+    }
 
-      try {
-        payload = bodyText ? JSON.parse(bodyText) : {};
-      } catch {
-        sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+    const nextRole = payload?.role === undefined ? "" : normalizeUserRole(payload.role);
+    const nextStatus = payload?.status === undefined ? "" : normalizeUserStatus(payload.status);
+    const nextPin = payload?.pin === undefined ? "" : normalizePin(payload.pin);
+
+    if (payload?.pin !== undefined && !nextPin) {
+      sendJson(req, res, 400, { ok: false, error: "Use a 4-digit PIN" });
+      return;
+    }
+
+    if (!nextRole && !nextStatus && payload?.pin === undefined) {
+      sendJson(req, res, 400, { ok: false, error: "No valid user changes provided" });
+      return;
+    }
+
+    const update = { updated_at: new Date().toISOString() };
+    if (nextRole) update.role = nextRole;
+    if (nextStatus) update.is_active = nextStatus === "active";
+    if (payload?.pin !== undefined) update.pin_hash = hashPin(nextPin);
+
+    const resultingRole = nextRole || currentRole;
+    const resultingStatus = nextStatus || currentStatus;
+
+    if (currentRole === "admin" && currentStatus === "active") {
+      const wouldDeactivate = resultingRole !== "admin" || resultingStatus !== "active";
+      if (wouldDeactivate && activeAdmins <= 1) {
+        sendJson(req, res, 409, { ok: false, error: "At least one active Admin user is required." });
         return;
       }
     }
 
-    const now = new Date().toISOString();
-    const ownerUserNumber = await getResolvedOwnerUserNumber();
-    let updatedUser = null;
-    let auditEntry = null;
-    const updated = await queueStockRequestWrite(async () => {
-      const users = await readStockUsers();
-      const target = byIdMatch
-        ? users.find((user) => sanitizeString(user?.id, 80) === targetUserId)
-        : users.find((user) => getStoredNormalizedElabUserNumber(user) === targetUserNumber);
-      if (!target) {
-        return { error: "not-found" };
-      }
-      const targetNormalizedUserNumber = getStoredNormalizedElabUserNumber(target);
+    const updatedUser = await dbSingle(
+      supabase.from("users").update(update).eq("id", target.id).select("*").single()
+    );
 
-      const currentRole = getEffectiveUserRole(target, ownerUserNumber);
-      const currentStatus = normalizeUserStatus(target?.status);
-      const activeAdminsBefore = users.filter((user) => {
-        const role = getEffectiveUserRole(user, ownerUserNumber);
-        const status = normalizeUserStatus(user?.status);
-        return role === "admin" && status === "active";
-      }).length;
+    let action = "update";
+    if (payload?.pin !== undefined) action = "reset-pin";
+    if (currentStatus !== resultingStatus) action = resultingStatus === "disabled" ? "disable" : "re-enable";
+    else if (currentRole !== resultingRole) action = "role-change";
 
-      if (req.method === "DELETE") {
-        if (currentRole === "admin" && currentStatus === "active" && activeAdminsBefore <= 1) {
-          return { error: "last-admin" };
-        }
-        const index = users.findIndex((user) => sanitizeString(user?.id, 80) === sanitizeString(target?.id, 80));
-        users.splice(index, 1);
-        await writeStockUsers(users);
-        auditEntry = {
-          action: "delete user",
-          targetUserNumber: targetNormalizedUserNumber,
-          targetDisplayElabUserNumber: getStoredDisplayElabUserNumber(target),
-          targetName: getStoredUserDisplayName(target),
-          beforeRole: currentRole,
-          afterRole: "",
-          beforeStatus: currentStatus,
-          afterStatus: ""
-        };
-        return { ok: true };
-      }
-
-      const nextRoleRaw = payload?.role;
-      const nextStatusRaw = payload?.status;
-      const nextPinRaw = payload?.pin;
-      const nextRole = nextRoleRaw === undefined ? "" : normalizeUserRole(nextRoleRaw);
-      const nextStatus = nextStatusRaw === undefined ? "" : normalizeUserStatus(nextStatusRaw);
-      const nextPin = nextPinRaw === undefined ? "" : normalizePin(nextPinRaw);
-
-      if (nextPinRaw !== undefined && !nextPin) {
-        return { error: "invalid-pin" };
-      }
-      if (!nextRole && !nextStatus && nextPinRaw === undefined) {
-        return { error: "no-change" };
-      }
-
-      const beforeRole = currentRole;
-      const beforeStatus = currentStatus;
-      let action = "update";
-
-      if (nextRole) {
-        target.role = nextRole;
-      }
-      if (nextStatus) {
-        target.status = nextStatus;
-      }
-      if (nextPinRaw !== undefined) {
-        target.pin = nextPin;
-        delete target.salt;
-        delete target.pinHash;
-        action = "reset-pin";
-      }
-
-      const effectiveRoleAfter = getEffectiveUserRole(target, ownerUserNumber);
-      const effectiveStatusAfter = normalizeUserStatus(target?.status);
-      const activeAdminsAfter = users.filter((user) => {
-        const role = getEffectiveUserRole(user, ownerUserNumber);
-        const status = normalizeUserStatus(user?.status);
-        return role === "admin" && status === "active";
-      }).length;
-      if ((beforeRole === "admin" && beforeStatus === "active") && activeAdminsAfter <= 0) {
-        return { error: "last-admin" };
-      }
-
-      target.updatedAt = now;
-      updatedUser = target;
-      await writeStockUsers(users);
-
-      if (beforeStatus !== effectiveStatusAfter) {
-        action = effectiveStatusAfter === "disabled" ? "disable" : "re-enable";
-      } else if (beforeRole !== effectiveRoleAfter) {
-        action = "role-change";
-      }
-
-      auditEntry = {
-        action,
-        targetUserNumber: targetNormalizedUserNumber,
-        targetDisplayElabUserNumber: getStoredDisplayElabUserNumber(target),
-        targetName: getStoredUserDisplayName(target),
-        beforeRole,
-        afterRole: effectiveRoleAfter,
-        beforeStatus,
-        afterStatus: effectiveStatusAfter
-      };
-      return { ok: true };
+    await dbCreateAuditLog(session.user.id, action, "user", String(target.id), {
+      targetUserNumber: target.user_number,
+      targetDisplayElabUserNumber: target.user_number,
+      targetName: target.display_name,
+      beforeRole: currentRole,
+      afterRole: resultingRole,
+      beforeStatus: currentStatus,
+      afterStatus: resultingStatus
     });
 
-    if (updated?.error === "not-found") {
-      sendJson(res, 404, { ok: false, error: "User not found" });
-      return;
-    }
-    if (updated?.error === "invalid-pin") {
-      sendJson(res, 400, { ok: false, error: "Use a 4-digit PIN" });
-      return;
-    }
-    if (updated?.error === "no-change") {
-      sendJson(res, 400, { ok: false, error: "No valid user changes provided" });
-      return;
-    }
-    if (updated?.error === "last-admin") {
-      sendJson(res, 409, { ok: false, error: "At least one active Admin user is required." });
-      return;
-    }
-
-    const adminUser = await getUserRecord(session.userNumber);
-    if (auditEntry) {
-      await appendStockUserAuditEntry({
-        ...auditEntry,
-        adminUserNumber: session.userNumber,
-        adminName: getStoredUserDisplayName(adminUser)
-      });
-    }
-
-    if (req.method === "DELETE") {
-      sendJson(res, 200, {
-        ok: true,
-        deleted: true,
-        userNumber: sanitizeString(auditEntry?.targetUserNumber, 20)
-      });
-      return;
-    }
-
-    const owner = await getResolvedOwnerUserNumber();
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       ok: true,
-      user: {
-        id: buildStockUserId(updatedUser),
-        userNumber: getStoredNormalizedElabUserNumber(updatedUser),
-        displayElabUserNumber: getStoredDisplayElabUserNumber(updatedUser),
-        displayName: getStoredUserDisplayName(updatedUser),
-        role: getEffectiveUserRole(updatedUser, owner),
-        status: normalizeUserStatus(updatedUser?.status),
-        updatedAt: updatedUser?.updatedAt || now
-      }
+      user: mapUserFromDb(updatedUser)
     });
     return;
   }
 
   if (req.method === "GET" && pathname === "/api/stock-requests") {
-    const requests = await readStockRequests();
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
-    const rows = [...requests]
-      .filter((record) => sanitizeString(record?.source, 60) !== "lab-manual-entry")
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, limit);
-
-    sendJson(res, 200, { requests: rows });
+    const rows = await dbListRequests(limit, { includeManual: false });
+    sendJson(req, res, 200, { requests: rows });
     return;
   }
 
@@ -1934,16 +1762,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const session = await requireLabSession(req, res);
     if (!session) return;
 
-    const requests = await readStockRequests();
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
-    const rows = [...requests]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, limit);
+    const rows = await dbListRequests(limit, { includeManual: true });
 
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       requests: rows,
       user: {
-        userNumber: session.userNumber
+        userNumber: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
       }
     });
     return;
@@ -1953,11 +1778,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const session = await requireLabSession(req, res);
     if (!session) return;
 
-    const requests = await readStockRequests();
-    sendJson(res, 200, {
-      stats: buildStockStats(requests),
+    const rows = await dbListRequests(1000, { includeManual: true });
+    sendJson(req, res, 200, {
+      stats: buildStockStats(rows),
       user: {
-        userNumber: session.userNumber
+        userNumber: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
       }
     });
     return;
@@ -1967,20 +1792,16 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const session = await requireLabSession(req, res);
     if (!session) return;
 
-    const [requests, receipts] = await Promise.all([
-      readStockRequests(),
-      readStockReceipts()
+    const [summary, recentReceipts] = await Promise.all([
+      dbListInventorySummary(),
+      dbListReceipts(12)
     ]);
-    const summary = getStockInventorySummary(receipts, requests);
-    const recentReceipts = [...receipts]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 12);
 
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       summary,
       recentReceipts,
       user: {
-        userNumber: session.userNumber
+        userNumber: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
       }
     });
     return;
@@ -1990,14 +1811,15 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const session = await requireOwnerSession(req, res);
     if (!session) return;
 
-    await queueStockRequestWrite(async () => {
-      await writeStockRequests([]);
-    });
+    await dbSingle(supabase.from("stock_request_items").delete().neq("id", "00000000-0000-0000-0000-000000000000"));
+    await dbSingle(supabase.from("stock_requests").delete().neq("id", ""));
 
-    sendJson(res, 200, {
+    await dbCreateAuditLog(session.user.id, "clear-stock-data", "stock_requests", "*", {});
+
+    sendJson(req, res, 200, {
       ok: true,
       cleared: true,
-      clearedBy: session.userNumber
+      clearedBy: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
     });
     return;
   }
@@ -2010,7 +1832,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       bodyText = await collectRequestBody(req);
     } catch (error) {
-      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
@@ -2018,42 +1840,24 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
-      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
       return;
     }
 
     const cleanPayload = sanitizeStockReceiptPayload(payload);
     if (!cleanPayload.items.length) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: "At least one item is required"
       });
       return;
     }
 
-    const receipt = await queueStockRequestWrite(async () => {
-      const existing = await readStockReceipts();
-      const now = new Date().toISOString();
-      const nextRecord = {
-        id: buildReceiptId(),
-        createdAt: now,
-        updatedAt: now,
-        receivedBy: session.userNumber,
-        ...cleanPayload
-      };
+    const receipt = await dbInsertReceipt(cleanPayload, session.user);
 
-      existing.push(nextRecord);
-      await writeStockReceipts(existing);
-      return nextRecord;
-    });
-
-    sendJson(res, 201, {
+    sendJson(req, res, 201, {
       ok: true,
-      receipt: {
-        id: receipt.id,
-        createdAt: receipt.createdAt,
-        receivedBy: receipt.receivedBy
-      }
+      receipt
     });
     return;
   }
@@ -2066,7 +1870,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       bodyText = await collectRequestBody(req);
     } catch (error) {
-      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
@@ -2074,7 +1878,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
-      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
       return;
     }
 
@@ -2084,42 +1888,27 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     });
     const itemValidationError = validateStockRequestItems(cleanPayload.items);
     if (!cleanPayload.requestedBy || !cleanPayload.wardUnit || !cleanPayload.items.length) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: "Requested by, ward / unit, and at least one item are required"
       });
       return;
     }
     if (itemValidationError) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: itemValidationError
       });
       return;
     }
 
-    const record = await queueStockRequestWrite(async () => {
-      const existing = await readStockRequests();
-      const now = new Date().toISOString();
-      const nextRecord = {
-        id: buildRequestId(),
-        createdAt: now,
-        updatedAt: now,
-        status: "received",
-        statusUpdatedAt: now,
-        statusUpdatedBy: session.userNumber,
-        enteredBy: session.userNumber,
-        ...cleanPayload
-      };
-      appendStatusAudit(nextRecord, "received", session.userNumber, now);
-
-      existing.push(nextRecord);
-      await writeStockRequests(existing);
-      return nextRecord;
+    const record = await dbInsertRequest(cleanPayload, session.user);
+    const sheetSync = await syncStockRecordToSheets(record, {
+      action: "create-request",
+      changedBy: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
     });
-    const sheetSync = await syncStockRecordToSheets(record, { action: "create-request", changedBy: session.userNumber });
 
-    sendJson(res, 201, {
+    sendJson(req, res, 201, {
       ok: true,
       request: {
         id: record.id,
@@ -2127,7 +1916,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         statusLabel: formatStatusLabel(record.status),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
-        enteredBy: record.enteredBy
+        enteredBy: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
       },
       sheetSync
     });
@@ -2139,7 +1928,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       bodyText = await collectRequestBody(req);
     } catch (error) {
-      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
@@ -2147,59 +1936,42 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
-      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
       return;
     }
 
     const cleanPayload = sanitizeStockRequestPayload(payload);
     const itemValidationError = validateStockRequestItems(cleanPayload.items);
     if (!cleanPayload.requestedBy || !cleanPayload.wardUnit || !cleanPayload.items.length) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: "Requested by, ward / unit, and at least one item are required"
       });
       return;
     }
     if (itemValidationError) {
-      sendJson(res, 400, {
+      sendJson(req, res, 400, {
         ok: false,
         error: itemValidationError
       });
       return;
     }
 
-    const record = await queueStockRequestWrite(async () => {
-      const existing = await readStockRequests();
-      const now = new Date().toISOString();
-      const nextRecord = {
-        id: buildRequestId(),
-        createdAt: now,
-        updatedAt: now,
-        status: "received",
-        statusUpdatedAt: now,
-        statusUpdatedBy: "",
-        ...cleanPayload
-      };
-      appendStatusAudit(nextRecord, "received", "", now);
-
-      existing.push(nextRecord);
-      await writeStockRequests(existing);
-      return nextRecord;
-    });
+    const record = await dbInsertRequest(cleanPayload, null);
     const sheetSync = await syncStockRecordToSheets(record, { action: "create-request" });
-
     const sheetMirror = await mirrorStockRequestToGoogleSheets(record);
     if (!sheetMirror.ok && !sheetMirror.skipped) {
       console.error(`Find My Tube: Google Sheets mirror failed for ${record.id}: ${sheetMirror.reason}`);
     }
 
-    sendJson(res, 201, {
+    sendJson(req, res, 201, {
       ok: true,
       request: {
         id: record.id,
         status: record.status,
         createdAt: record.createdAt
       },
+      sheetSync,
       sheetMirror: {
         ok: sheetMirror.ok,
         skipped: sheetMirror.skipped,
@@ -2215,7 +1987,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const match = pathname.match(/^\/api\/stock-requests\/([^/]+)\/status$/);
     if (!match) {
-      sendJson(res, 404, { ok: false, error: "Not found" });
+      sendJson(req, res, 404, { ok: false, error: "Not found" });
       return;
     }
 
@@ -2223,7 +1995,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       bodyText = await collectRequestBody(req);
     } catch (error) {
-      sendJson(res, 413, { ok: false, error: error.message || "Request body too large" });
+      sendJson(req, res, 413, { ok: false, error: error.message || "Request body too large" });
       return;
     }
 
@@ -2231,97 +2003,36 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     try {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
-      sendJson(res, 400, { ok: false, error: "Invalid JSON payload" });
+      sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
       return;
     }
 
     const nextStatus = slugifyStatus(payload.status);
     const requestId = sanitizeString(match[1], 80);
-    const updatedResult = await queueStockRequestWrite(async () => {
-      const existing = await readStockRequests();
-      const target = existing.find((record) => record.id === requestId);
-      if (!target) {
-        return null;
-      }
-
-      const previousStatus = slugifyStatus(target.status);
-      const wasDeducted = isRequestInventoryDeducted(target);
-      const shouldDeductInventory = nextStatus === "collected" && !wasDeducted;
-
-      if (shouldDeductInventory) {
-        const receipts = await readStockReceipts();
-        const inventoryMap = getInventoryMapFromRecords(receipts, existing, { excludeRequestId: requestId });
-        const shortages = buildCollectionShortages(target, inventoryMap);
-        if (shortages.length) {
-          return {
-            error: "insufficient-stock",
-            shortages
-          };
-        }
-      }
-
-      const now = new Date().toISOString();
-      target.status = nextStatus;
-      target.updatedAt = now;
-      target.statusUpdatedAt = target.updatedAt;
-      target.statusUpdatedBy = session.userNumber;
-      appendStatusAudit(target, nextStatus, session.userNumber, now);
-
-      if (shouldDeductInventory) {
-        const deductedItems = (Array.isArray(target.items) ? target.items : []).map((item) => ({
-          id: sanitizeString(item?.id, 80),
-          label: sanitizeString(item?.label, 120),
-          variantLabel: sanitizeString(item?.variantLabel, 80),
-          quantity: Math.max(0, Number(item?.quantity) || 0),
-          unitType: sanitizeString(item?.unitType, 40),
-          traySize: Number(item?.traySize) || null,
-          packetSize: Number(item?.packetSize) || null,
-          formattedQuantity: sanitizeString(item?.formattedQuantity, 120),
-          inventoryUnits: getItemInventoryUnits(item)
-        }));
-        const totalUnitsDeducted = deductedItems.reduce((sum, item) => sum + Math.max(0, Number(item.inventoryUnits || 0)), 0);
-        target.inventoryDeducted = true;
-        target.inventoryDeductedAt = now;
-        target.inventoryDeductedBy = session.userNumber;
-        target.collectionRecord = {
-          orderId: target.id,
-          collectedAt: now,
-          requestedBy: sanitizeString(target.requestedBy, 120),
-          wardUnit: sanitizeString(target.wardUnit, 120),
-          markedCollectedBy: session.userNumber,
-          collectedBy: sanitizeString(target.requestedBy, 120),
-          items: deductedItems,
-          totalUnitsDeducted
-        };
-      }
-
-      await writeStockRequests(existing);
-      return {
-        record: target,
-        previousStatus
-      };
-    });
+    const updatedResult = await dbUpdateRequestStatus(requestId, nextStatus, session.user);
 
     if (!updatedResult?.record) {
       if (updatedResult?.error === "insufficient-stock") {
-        sendJson(res, 409, {
+        sendJson(req, res, 409, {
           ok: false,
           error: "Not enough stock on hand to mark this order as collected.",
           shortages: updatedResult.shortages || []
         });
         return;
       }
-      sendJson(res, 404, { ok: false, error: "Request not found" });
+      sendJson(req, res, 404, { ok: false, error: "Request not found" });
       return;
     }
+
     const updatedRecord = updatedResult.record;
+    const changedBy = normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true });
     const sheetSync = await syncStockRecordToSheets(updatedRecord, {
       action: "update-status",
       previousStatus: updatedResult.previousStatus,
-      changedBy: session.userNumber
+      changedBy
     });
 
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       ok: true,
       request: {
         id: updatedRecord.id,
@@ -2329,7 +2040,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         statusLabel: formatStatusLabel(updatedRecord.status),
         updatedAt: updatedRecord.updatedAt,
         statusUpdatedAt: updatedRecord.statusUpdatedAt || updatedRecord.updatedAt,
-        statusUpdatedBy: updatedRecord.statusUpdatedBy || "",
+        statusUpdatedBy: changedBy || "",
         inventoryDeducted: Boolean(updatedRecord.inventoryDeducted),
         collectionRecord: updatedRecord.collectionRecord || null
       },
@@ -2338,7 +2049,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
-  sendJson(res, 404, { ok: false, error: "Not found" });
+  sendJson(req, res, 404, { ok: false, error: "Not found" });
 }
 
 const server = http.createServer(async (req, res) => {
@@ -2352,7 +2063,7 @@ const server = http.createServer(async (req, res) => {
 
     await serveStaticAsset(req, res, requestUrl.pathname);
   } catch (error) {
-    sendJson(res, 500, {
+    sendJson(req, res, 500, {
       ok: false,
       error: "Server error",
       detail: error instanceof Error ? error.message : "Unknown error"
@@ -2360,7 +2071,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, HOST, async () => {
-  await ensureStockRequestsFile();
-  console.log(`Find My Tube running on http://${HOST}:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Find My Tube server running at http://${HOST}:${PORT}`);
+  console.log(`SUPABASE_URL loaded: ${SUPABASE_URL ? SUPABASE_URL : "(missing)"}`);
 });

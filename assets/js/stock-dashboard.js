@@ -1,5 +1,9 @@
 const stockDashboardRefreshBtn = document.getElementById("stockDashboardRefreshBtn");
 const stockDashboardStatus = document.getElementById("stockDashboardStatus");
+const stockDashboardStatsControls = document.getElementById("stockDashboardStatsControls");
+const stockDashboardToggleStatsBtn = document.getElementById("stockDashboardToggleStatsBtn");
+const stockDashboardStatsPanel = document.getElementById("stockDashboardStatsPanel");
+const stockDashboardStatsEmpty = document.getElementById("stockDashboardStatsEmpty");
 const stockDashboardAccessCard = document.getElementById("stockDashboardAccessCard");
 const stockDashboardAuthStatus = document.getElementById("stockDashboardAuthStatus");
 const stockDashboardNotificationCard = document.getElementById("stockDashboardNotificationCard");
@@ -16,19 +20,13 @@ const stockDashboardAccessCloseBtn = document.getElementById("stockDashboardAcce
 const stockDashboardLogoutBtn = document.getElementById("stockDashboardLogoutBtn");
 const clearStockDataBtn = document.getElementById("clearStockDataBtn");
 const stockDashboardSessionCard = document.getElementById("stockDashboardSessionCard");
+const stockDashboardSessionKicker = document.getElementById("stockDashboardSessionKicker");
 const stockDashboardSessionUser = document.getElementById("stockDashboardSessionUser");
-const stockDashboardLockedCard = document.getElementById("stockDashboardLockedCard");
-const stockDashboardLockedLoginBtn = document.getElementById("stockDashboardLockedLoginBtn");
+const stockDashboardSessionMessage = document.getElementById("stockDashboardSessionMessage");
+const stockDashboardSessionLoginBtn = document.getElementById("stockDashboardSessionLoginBtn");
 const stockDashboardUserAdminCard = document.getElementById("stockDashboardUserAdminCard");
 const stockDashboardUserAdminStatus = document.getElementById("stockDashboardUserAdminStatus");
 const stockDashboardOpenCreateUserBtn = document.getElementById("stockDashboardOpenCreateUserBtn");
-const stockDashboardUserAuditStatus = document.getElementById("stockDashboardUserAuditStatus");
-const stockDashboardUserAuditList = document.getElementById("stockDashboardUserAuditList");
-const stockDashboardRefreshUserAuditBtn = document.getElementById("stockDashboardRefreshUserAuditBtn");
-const stockDashboardUserDebugStatus = document.getElementById("stockDashboardUserDebugStatus");
-const stockDashboardUserDebugList = document.getElementById("stockDashboardUserDebugList");
-const stockDashboardRefreshDebugUsersBtn = document.getElementById("stockDashboardRefreshDebugUsersBtn");
-const stockDashboardCopyDebugUsersBtn = document.getElementById("stockDashboardCopyDebugUsersBtn");
 const stockDashboardCreateUserModal = document.getElementById("stockDashboardCreateUserModal");
 const stockDashboardCloseCreateUserModalBtn = document.getElementById("stockDashboardCloseCreateUserModalBtn");
 const stockDashboardCreateUserForm = document.getElementById("stockDashboardCreateUserForm");
@@ -59,6 +57,8 @@ const stockDashboardReceiptItemsRows = document.getElementById("stockDashboardRe
 const stockDashboardReceiptSummaryList = document.getElementById("stockDashboardReceiptSummaryList");
 const stockDashboardReceiptSubmitBtn = document.getElementById("stockDashboardReceiptSubmitBtn");
 const stockDashboardReceiptResetBtn = document.getElementById("stockDashboardReceiptResetBtn");
+const stockDashboardReceiptToggleBtn = document.getElementById("stockDashboardReceiptToggleBtn");
+const stockDashboardReceiptFormWrap = document.getElementById("stockDashboardReceiptFormWrap");
 const stockDashboardInventoryCard = document.getElementById("stockDashboardInventoryCard");
 const stockDashboardInventoryStatus = document.getElementById("stockDashboardInventoryStatus");
 const stockDashboardInventoryList = document.getElementById("stockDashboardInventoryList");
@@ -75,14 +75,11 @@ const stockDashboardTopWards = document.getElementById("stockDashboardTopWards")
 const stockDashboardTopItems = document.getElementById("stockDashboardTopItems");
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
-const STOCK_DASHBOARD_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "collected", "cancelled"];
+const STOCK_DASHBOARD_LEGACY_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
-const STOCK_DASHBOARD_OWNER_SEEN_KEY = "fmt-stock-owner-seen";
-const STOCK_DASHBOARD_LEGACY_USERS_MIGRATION_KEY = "fmt-stock-legacy-users-migrated-v1";
-const STOCK_DASHBOARD_LEGACY_USERS_KEYS = ["users", "fmt-stock-users", "labUsers"];
 const STOCK_DASHBOARD_POLL_MS = 30000;
 const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
@@ -91,9 +88,9 @@ const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Login details not recognised.";
 const STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT = "Login failed. Please try again.";
 const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out due to inactivity.";
+const STOCK_DASHBOARD_AUTH_DEBUG = true;
 
 let stockDashboardSession = null;
-let stockDashboardToken = localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "";
 let stockDashboardPollTimer = 0;
 let stockDashboardLatestRequestMarker = "";
 let stockDashboardUnreadCount = 0;
@@ -109,6 +106,22 @@ let stockDashboardAuthState = "idle";
 let stockDashboardLoginAbortController = null;
 let stockDashboardLoginTimeoutTimer = 0;
 let stockDashboardLoginAttemptId = 0;
+let stockDashboardLogoutInProgress = false;
+let stockDashboardAuthGeneration = 0;
+
+function stockDashboardLogAuthDebug(stage, details = {}) {
+  if (!STOCK_DASHBOARD_AUTH_DEBUG) return;
+  try {
+    console.info(`[stock-dashboard][auth] ${stage}`, details);
+  } catch {
+    // no-op
+  }
+}
+
+function stockDashboardBumpAuthGeneration() {
+  stockDashboardAuthGeneration += 1;
+  return stockDashboardAuthGeneration;
+}
 
 function stockDashboardGetApiBaseUrl() {
   if (typeof window === "undefined") return "";
@@ -121,12 +134,16 @@ function stockDashboardGetApiBaseUrl() {
   const currentOrigin = window.location.origin || "";
   const currentHostname = window.location.hostname || "";
   const currentPort = window.location.port || "";
-  const isDirectBackendOrigin = currentPort === "3000";
   const isLikelyLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(currentHostname)
     || currentHostname.endsWith(".local")
     || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(currentHostname);
 
-  if (isDirectBackendOrigin || !isLikelyLocalHost) {
+  if (!isLikelyLocalHost) {
+    return currentOrigin;
+  }
+
+  // For local runs, use the same origin as the page by default.
+  if (currentPort) {
     return currentOrigin;
   }
 
@@ -148,23 +165,28 @@ const STOCK_DASHBOARD_BOOTSTRAP_URL = stockDashboardBuildApiUrl("/api/stock-auth
 const STOCK_DASHBOARD_LOGOUT_URL = stockDashboardBuildApiUrl("/api/stock-auth/logout");
 const STOCK_DASHBOARD_CLEAR_DATA_URL = stockDashboardBuildApiUrl("/api/lab/stock-data");
 const STOCK_DASHBOARD_USERS_URL = stockDashboardBuildApiUrl("/api/lab/users");
-const STOCK_DASHBOARD_USERS_DEBUG_URL = stockDashboardBuildApiUrl("/api/lab/users/debug");
-const STOCK_DASHBOARD_USERS_AUDIT_URL = stockDashboardBuildApiUrl("/api/lab/users/audit?limit=40");
 const STOCK_DASHBOARD_MANUAL_REQUEST_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests/manual");
 const STOCK_DASHBOARD_RECEIPTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-receipts");
 const STOCK_DASHBOARD_INVENTORY_URL = stockDashboardBuildApiUrl("/api/lab/stock-inventory");
 
+function stockDashboardFetch(url, options = {}) {
+  const nextOptions = {
+    ...options,
+    credentials: "include"
+  };
+  return window.fetch(url, nextOptions);
+}
+
 const stockDashboardManualState = Object.create(null);
 const stockDashboardReceiptRows = [];
-let stockDashboardDebugUsers = [];
-let stockDashboardUserAuditEntries = [];
 let stockDashboardManagedUsers = [];
 let stockDashboardApiConfig = null;
-let stockDashboardLegacyUsersMigratedCount = 0;
+let stockDashboardReceiptFormOpen = false;
+let stockDashboardIsSummaryOpen = false;
 
 async function stockDashboardLoadApiConfig() {
   try {
-    const response = await fetch(STOCK_DASHBOARD_CONFIG_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_CONFIG_URL, {
       cache: "no-store"
     });
     if (!response.ok) {
@@ -250,73 +272,6 @@ function stockDashboardGetRoleLabel(role, isAdmin = false) {
     : "Medical Technologist";
 }
 
-function stockDashboardNormalizeLegacyUserRecord(user) {
-  const displayName = String(user?.displayName || user?.name || "").replace(/\s+/g, " ").trim().slice(0, 120);
-  const displayElabUserNumber = stockDashboardGetDebugElabNumber(user);
-  const pin = String(user?.pin || "").trim();
-  const role = stockDashboardNormalizeUserRole(user?.role, false);
-  if (!displayName) return null;
-  if (!stockDashboardIsValidElabUserNumber(displayElabUserNumber)) return null;
-  if (!stockDashboardIsValidPin(pin)) return null;
-  return {
-    displayName,
-    userNumber: displayElabUserNumber,
-    pin,
-    role
-  };
-}
-
-async function stockDashboardMigrateLegacyUsersIfNeeded() {
-  if (!stockDashboardSession?.isOwner) return;
-  if (localStorage.getItem(STOCK_DASHBOARD_LEGACY_USERS_MIGRATION_KEY) === "1") return;
-  let migrated = 0;
-  let attempted = 0;
-
-  for (const legacyKey of STOCK_DASHBOARD_LEGACY_USERS_KEYS) {
-    const raw = String(localStorage.getItem(legacyKey) || "").trim();
-    if (!raw) continue;
-    let parsedUsers = [];
-    try {
-      parsedUsers = JSON.parse(raw);
-    } catch {
-      continue;
-    }
-    if (!Array.isArray(parsedUsers) || !parsedUsers.length) continue;
-
-    for (const legacyUser of parsedUsers) {
-      const normalized = stockDashboardNormalizeLegacyUserRecord(legacyUser);
-      if (!normalized) continue;
-      attempted += 1;
-      try {
-        const response = await fetch(STOCK_DASHBOARD_USERS_URL, {
-          method: "POST",
-          headers: stockDashboardGetHeaders(true),
-          body: JSON.stringify(normalized)
-        });
-        if (response.ok) {
-          migrated += 1;
-          continue;
-        }
-        if (response.status === 409) {
-          continue;
-        }
-      } catch {
-        // Ignore per-user failures so valid records can continue migrating.
-      }
-    }
-  }
-
-  localStorage.setItem(STOCK_DASHBOARD_LEGACY_USERS_MIGRATION_KEY, "1");
-  stockDashboardLegacyUsersMigratedCount = migrated;
-  if (stockDashboardUserAdminStatus) {
-    if (migrated > 0) {
-      stockDashboardUserAdminStatus.textContent = `Migrated ${migrated} legacy user${migrated === 1 ? "" : "s"} from browser storage to server storage.`;
-    } else if (attempted > 0) {
-      stockDashboardUserAdminStatus.textContent = "Legacy browser users already existed on server or could not be migrated.";
-    }
-  }
-}
-
 function stockDashboardNormalizeUserStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "disabled" || safeStatus === "inactive" || safeStatus === "suspended") {
@@ -349,17 +304,6 @@ function stockDashboardBuildUserApiUrlById(userId) {
   return stockDashboardBuildApiUrl(`/api/lab/users/by-id/${encodeURIComponent(safeId)}`);
 }
 
-function stockDashboardFormatUserAuditAction(action) {
-  const safeAction = String(action || "").trim().toLowerCase();
-  if (safeAction === "create") return "Created user";
-  if (safeAction === "disable") return "Disabled user";
-  if (safeAction === "re-enable") return "Re-enabled user";
-  if (safeAction === "reset-pin") return "PIN reset";
-  if (safeAction === "role-change") return "Role changed";
-  if (safeAction === "delete" || safeAction === "delete-user" || safeAction === "delete user") return "Deleted user";
-  return "Updated user";
-}
-
 function stockDashboardNormalizeStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "collected";
@@ -382,10 +326,6 @@ function stockDashboardGetHeaders(includeJson = false) {
   const headers = {};
   if (includeJson) {
     headers["Content-Type"] = "application/json";
-  }
-  const token = String(stockDashboardToken || localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "").trim();
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
   }
   return headers;
 }
@@ -858,6 +798,19 @@ function stockDashboardWriteScopedValue(prefix, value) {
   localStorage.setItem(key, String(value || ""));
 }
 
+function stockDashboardClearScopedValuesForUserNumber(userNumber) {
+  const safeUserNumber = String(userNumber || "").trim();
+  if (!safeUserNumber) return;
+  const keys = [
+    `${STOCK_DASHBOARD_LAST_SEEN_PREFIX}:${safeUserNumber}`,
+    `${STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX}:${safeUserNumber}`
+  ];
+  keys.forEach((key) => {
+    localStorage.removeItem(key);
+    stockDashboardLogAuthDebug("storage-remove", { key });
+  });
+}
+
 function stockDashboardReturnToPreviousPage() {
   try {
     const referrer = String(document.referrer || "");
@@ -1135,12 +1088,11 @@ function stockDashboardMarkNotificationsSeen() {
   stockDashboardRenderNotificationState();
 }
 
-function stockDashboardSetSession(token, user) {
+function stockDashboardSetSession(user) {
   if (stockDashboardAuthState === "checking") {
     stockDashboardClearLoginPendingWork();
   }
 
-  stockDashboardToken = token || "";
   stockDashboardSession = user ? {
     userNumber: user.userNumber,
     displayName: stockDashboardGetDisplayName(user),
@@ -1148,64 +1100,80 @@ function stockDashboardSetSession(token, user) {
     isOwner: Boolean(user.isOwner)
   } : null;
 
-  if (stockDashboardToken) {
-    localStorage.setItem(STOCK_DASHBOARD_TOKEN_KEY, stockDashboardToken);
-  } else {
-    localStorage.removeItem(STOCK_DASHBOARD_TOKEN_KEY);
-  }
-  if (stockDashboardSession?.isOwner) {
-    localStorage.setItem(STOCK_DASHBOARD_OWNER_SEEN_KEY, "1");
-  }
-
-  const isAuthenticated = Boolean(stockDashboardSession);
+  const { isLoggedIn, isAdmin, canViewDashboard } = stockDashboardGetAccessFlags(stockDashboardSession);
+  stockDashboardLogAuthDebug("set-session", {
+    sessionUser: stockDashboardSession ? {
+      userNumber: stockDashboardSession.userNumber,
+      role: stockDashboardSession.role,
+      isOwner: stockDashboardSession.isOwner
+    } : null,
+    isLoggedIn,
+    isAdmin,
+    canViewDashboard
+  });
   stockDashboardSetAccessModalOpen(false);
-  if (stockDashboardAuthForm) stockDashboardAuthForm.hidden = isAuthenticated;
-  if (stockDashboardSessionCard) stockDashboardSessionCard.hidden = !isAuthenticated;
-  if (stockDashboardLockedCard) stockDashboardLockedCard.hidden = isAuthenticated;
-  if (stockDashboardMetrics) stockDashboardMetrics.hidden = !isAuthenticated;
-  if (stockDashboardInsights) stockDashboardInsights.hidden = !isAuthenticated;
-  if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = !isAuthenticated;
-  if (stockDashboardRefreshBtn) stockDashboardRefreshBtn.hidden = !isAuthenticated;
-  if (stockDashboardUserAdminCard) stockDashboardUserAdminCard.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
+  if (stockDashboardAuthForm) stockDashboardAuthForm.hidden = isLoggedIn;
+  if (stockDashboardSessionCard) stockDashboardSessionCard.hidden = false;
+  if (stockDashboardSessionLoginBtn) stockDashboardSessionLoginBtn.hidden = isLoggedIn;
+  if (stockDashboardLogoutBtn) stockDashboardLogoutBtn.hidden = !isLoggedIn;
+  if (stockDashboardStatsControls) stockDashboardStatsControls.hidden = !canViewDashboard;
+  if (stockDashboardRequestsCard) stockDashboardRequestsCard.hidden = !canViewDashboard;
+  if (stockDashboardUserAdminCard) stockDashboardUserAdminCard.hidden = !isAdmin;
   if (stockDashboardOpenCreateUserBtn) {
-    stockDashboardOpenCreateUserBtn.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
+    stockDashboardOpenCreateUserBtn.hidden = !isAdmin;
   }
-  if (stockDashboardManualEntryCard) stockDashboardManualEntryCard.hidden = !isAuthenticated;
-  if (stockDashboardReceiptCard) stockDashboardReceiptCard.hidden = !isAuthenticated;
-  if (stockDashboardInventoryCard) stockDashboardInventoryCard.hidden = !isAuthenticated;
-  if (!isAuthenticated || !stockDashboardSession?.isOwner) {
+  if (stockDashboardManualEntryCard) stockDashboardManualEntryCard.hidden = !canViewDashboard;
+  if (stockDashboardReceiptCard) stockDashboardReceiptCard.hidden = !canViewDashboard;
+  if (stockDashboardInventoryCard) stockDashboardInventoryCard.hidden = !canViewDashboard;
+  if (!canViewDashboard) {
+    stockDashboardSetReceiptFormOpen(false);
+    stockDashboardSetSummaryOpen(false);
+  } else {
+    stockDashboardSetSummaryOpen(stockDashboardIsSummaryOpen);
+  }
+  if (!isAdmin) {
     stockDashboardSetCreateUserModalOpen(false);
   }
 
+  if (stockDashboardSessionKicker) {
+    stockDashboardSessionKicker.textContent = isLoggedIn ? "Signed in as" : "Not signed in";
+  }
+
   if (stockDashboardSessionUser) {
-    stockDashboardSessionUser.textContent = isAuthenticated
-      ? stockDashboardGetUserHeading(stockDashboardSession)
-      : "Medical Technologist";
+    stockDashboardSessionUser.textContent = isLoggedIn
+      ? `${stockDashboardGetDisplayName(stockDashboardSession) || `User ${stockDashboardSession.userNumber}`} - ${stockDashboardGetRoleLabel(stockDashboardSession.role, Boolean(stockDashboardSession.isOwner))}`
+      : "Stock Dashboard access";
+  }
+
+  if (stockDashboardSessionMessage) {
+    stockDashboardSessionMessage.textContent = isLoggedIn
+      ? "You can now view dashboard data and manage stock requests."
+      : "Sign in to view dashboard data and manage stock requests.";
   }
 
   if (clearStockDataBtn) {
-    clearStockDataBtn.hidden = !(isAuthenticated && stockDashboardSession?.isOwner);
+    clearStockDataBtn.hidden = !isAdmin;
   }
 
   if (stockDashboardAuthStatus) {
-    stockDashboardAuthStatus.textContent = isAuthenticated
+    stockDashboardAuthStatus.textContent = isLoggedIn
       ? stockDashboardGetSignedInLabel(stockDashboardSession)
       : stockDashboardSetupRequired
         ? "No lab admin is set up yet. Enter your eLab user number (2 or 3 digits) and 4-digit PIN to create the first admin."
         : "Sign in to view dashboard data and update request status.";
   }
   stockDashboardSetAuthControlsDisabled(false);
-  stockDashboardAuthState = isAuthenticated ? "success" : "idle";
+  stockDashboardAuthState = isLoggedIn ? "success" : "idle";
 
   if (stockDashboardLoginBtn) {
-    stockDashboardLoginBtn.textContent = isAuthenticated
+    stockDashboardLoginBtn.textContent = isLoggedIn
       ? "Log In"
       : stockDashboardSetupRequired
         ? "Create Admin"
         : "Log In";
   }
 
-  if (!isAuthenticated) {
+  if (!isLoggedIn) {
     stockDashboardClearInactivityTimers();
     stockDashboardInactivityWarningShown = false;
     stockDashboardStatusBeforeInactivityWarning = "";
@@ -1221,21 +1189,7 @@ function stockDashboardSetSession(token, user) {
     if (stockDashboardUserList) {
       stockDashboardUserList.innerHTML = "";
     }
-    if (stockDashboardUserAuditList) {
-      stockDashboardUserAuditList.innerHTML = "";
-    }
-    if (stockDashboardUserDebugList) {
-      stockDashboardUserDebugList.innerHTML = "";
-    }
     stockDashboardManagedUsers = [];
-    stockDashboardDebugUsers = [];
-    stockDashboardUserAuditEntries = [];
-    if (stockDashboardUserAuditStatus) {
-      stockDashboardUserAuditStatus.textContent = "Recent user create/update/disable events.";
-    }
-    if (stockDashboardUserDebugStatus) {
-      stockDashboardUserDebugStatus.textContent = "Temporary testing view. Remove this before using real staff accounts.";
-    }
     if (stockDashboardInventoryList) stockDashboardInventoryList.innerHTML = "";
     if (stockDashboardReceiptList) stockDashboardReceiptList.innerHTML = "";
     if (stockDashboardStatusCounts) stockDashboardStatusCounts.innerHTML = "";
@@ -1258,7 +1212,7 @@ async function loadPublicStockDashboardRequests() {
   if (!stockDashboardRequestList) return;
 
   try {
-    const response = await fetch(STOCK_DASHBOARD_PUBLIC_REQUESTS_URL, { cache: "no-store" });
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_PUBLIC_REQUESTS_URL, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Public requests failed with status ${response.status}`);
     }
@@ -1297,6 +1251,48 @@ function stockDashboardNormalizeElabUserNumber(raw) {
   const typed = String(raw || "").trim();
   if (!/^\d+$/.test(typed)) return "";
   return typed.replace(/^0+(?=\d)/, "");
+}
+
+function stockDashboardGetAccessFlags(session) {
+  const isLoggedIn = Boolean(session);
+  const isAdmin = Boolean(isLoggedIn && session?.role === "admin");
+  const canViewDashboard = isLoggedIn;
+  return { isLoggedIn, isAdmin, canViewDashboard };
+}
+
+function stockDashboardSetSummaryOpen(isOpen) {
+  stockDashboardIsSummaryOpen = Boolean(isOpen);
+  const canViewDashboard = Boolean(stockDashboardSession);
+  const shouldShowPanel = canViewDashboard && stockDashboardIsSummaryOpen;
+
+  if (stockDashboardStatsPanel) {
+    stockDashboardStatsPanel.hidden = !shouldShowPanel;
+  }
+  if (stockDashboardMetrics) {
+    stockDashboardMetrics.hidden = !shouldShowPanel;
+  }
+  if (stockDashboardInsights) {
+    stockDashboardInsights.hidden = !shouldShowPanel;
+  }
+  if (stockDashboardToggleStatsBtn) {
+    stockDashboardToggleStatsBtn.textContent = shouldShowPanel ? "Hide summary" : "Show summary";
+    stockDashboardToggleStatsBtn.setAttribute("aria-expanded", shouldShowPanel ? "true" : "false");
+  }
+}
+
+function stockDashboardSetReceiptFormOpen(isOpen) {
+  stockDashboardReceiptFormOpen = Boolean(isOpen);
+  if (stockDashboardReceiptFormWrap) {
+    stockDashboardReceiptFormWrap.hidden = !stockDashboardReceiptFormOpen;
+  }
+  if (stockDashboardReceiptToggleBtn) {
+    stockDashboardReceiptToggleBtn.setAttribute("aria-expanded", stockDashboardReceiptFormOpen ? "true" : "false");
+    stockDashboardReceiptToggleBtn.textContent = stockDashboardReceiptFormOpen ? "Hide received stock form" : "Add received stock";
+  }
+}
+
+function stockDashboardIsAdminSession() {
+  return Boolean(stockDashboardSession && stockDashboardSession.role === "admin");
 }
 
 function stockDashboardSetAuthControlsDisabled(isDisabled) {
@@ -1349,17 +1345,13 @@ function stockDashboardCancelLoginAttempt({ message = "Login cancelled.", goIdle
 function stockDashboardSetBusy(isBusy) {
   [
     stockDashboardLoginBtn,
-    stockDashboardLogoutBtn,
     stockDashboardRefreshBtn,
     stockDashboardCreateUserBtn,
     stockDashboardManualSubmitBtn,
     stockDashboardManualResetBtn,
     stockDashboardReceiptAddItemBtn,
     stockDashboardReceiptSubmitBtn,
-    stockDashboardReceiptResetBtn,
-    stockDashboardRefreshUserAuditBtn,
-    stockDashboardRefreshDebugUsersBtn,
-    stockDashboardCopyDebugUsersBtn
+    stockDashboardReceiptResetBtn
   ].forEach((button) => {
     if (button instanceof HTMLButtonElement) {
       button.disabled = isBusy;
@@ -1390,11 +1382,16 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
 
   const typedUserNumber = String(userNumber || "").trim();
   const normalizedUserNumber = stockDashboardNormalizeElabUserNumber(typedUserNumber);
+  stockDashboardLogAuthDebug("login-attempt", {
+    typedUserNumber,
+    normalizedUserNumber
+  });
   if (!normalizedUserNumber) {
     stockDashboardSetAuthState("error", "Enter a valid 2- or 3-digit eLab user number.");
     return;
   }
 
+  const authGenerationAtStart = stockDashboardBumpAuthGeneration();
   stockDashboardSetAuthState("checking");
   const attemptId = ++stockDashboardLoginAttemptId;
   const controller = new AbortController();
@@ -1405,7 +1402,7 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
   }, STOCK_DASHBOARD_LOGIN_TIMEOUT_MS);
 
   try {
-    const response = await fetch(url, {
+    const response = await stockDashboardFetch(url, {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
       body: JSON.stringify({
@@ -1417,9 +1414,10 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
       signal: controller.signal
     });
     if (stockDashboardLoginAttemptId !== attemptId) return;
+    if (authGenerationAtStart !== stockDashboardAuthGeneration) return;
 
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload?.token || !payload?.user) {
+    if (!response.ok || !payload?.user) {
       const errorMessage = payload?.error || (stockDashboardSetupRequired ? "Could not create admin." : STOCK_DASHBOARD_INVALID_LOGIN_TEXT);
       const setupAlreadyConfigured = url === STOCK_DASHBOARD_BOOTSTRAP_URL
         && response.status === 403
@@ -1434,14 +1432,18 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
     }
 
     stockDashboardSetupRequired = false;
-    stockDashboardSetSession(payload.token, payload.user);
+    stockDashboardSetSession(payload.user);
+    stockDashboardLogAuthDebug("login-success", {
+      sessionUser: payload.user ? {
+        userNumber: payload.user.userNumber,
+        role: payload.user.role,
+        isOwner: payload.user.isOwner
+      } : null
+    });
     stockDashboardSetAuthState("success", stockDashboardGetSignedInLabel(payload.user));
     if (stockDashboardPinInput) stockDashboardPinInput.value = "";
-    await stockDashboardMigrateLegacyUsersIfNeeded();
     await loadStockDashboard();
     await loadStockDashboardUsers();
-    await loadStockDashboardDebugUsers();
-    await loadStockDashboardUserAudit();
   } catch (error) {
     if (stockDashboardLoginAttemptId !== attemptId) return;
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -1471,20 +1473,25 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
 }
 
 async function loadStockDashboardUsers() {
-  if (!stockDashboardSession?.isOwner || !stockDashboardUserList) return;
+  if (!stockDashboardIsAdminSession() || !stockDashboardUserList) return;
+  const authGenerationAtStart = stockDashboardAuthGeneration;
 
   if (stockDashboardUserAdminStatus) {
     stockDashboardUserAdminStatus.textContent = "Loading users...";
   }
 
   try {
-    const response = await fetch(STOCK_DASHBOARD_USERS_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_USERS_URL, {
       cache: "no-store",
       headers: stockDashboardGetHeaders()
     });
 
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (response.status === 403) {
+      if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "Admin access required.";
       return;
     }
 
@@ -1493,6 +1500,9 @@ async function loadStockDashboardUsers() {
     }
 
     const payload = await response.json();
+    if (authGenerationAtStart !== stockDashboardAuthGeneration || !stockDashboardIsAdminSession()) {
+      return;
+    }
     const users = Array.isArray(payload?.users) ? payload.users : [];
     stockDashboardManagedUsers = users;
     stockDashboardUserList.innerHTML = users.length
@@ -1530,11 +1540,8 @@ async function loadStockDashboardUsers() {
       : '<p class="stock-dashboard-empty">No users yet.</p>';
 
     if (stockDashboardUserAdminStatus) {
-      const migrationSuffix = stockDashboardLegacyUsersMigratedCount > 0
-        ? ` Includes ${stockDashboardLegacyUsersMigratedCount} migrated legacy user${stockDashboardLegacyUsersMigratedCount === 1 ? "" : "s"}.`
-        : "";
       const durabilityWarning = String(stockDashboardApiConfig?.storage?.durabilityWarning || "").trim();
-      stockDashboardUserAdminStatus.textContent = `${users.length} user${users.length === 1 ? "" : "s"} saved.${migrationSuffix}${durabilityWarning ? ` ${durabilityWarning}` : ""}`;
+      stockDashboardUserAdminStatus.textContent = `${users.length} user${users.length === 1 ? "" : "s"} saved.${durabilityWarning ? ` ${durabilityWarning}` : ""}`;
     }
   } catch {
     stockDashboardManagedUsers = [];
@@ -1544,209 +1551,18 @@ async function loadStockDashboardUsers() {
   }
 }
 
-function stockDashboardRenderDebugUsers(users = []) {
-  if (!stockDashboardUserDebugList) return;
-
-  if (!users.length) {
-    stockDashboardUserDebugList.innerHTML = '<p class="stock-dashboard-empty">No saved users found.</p>';
-    return;
-  }
-
-  // TODO: Remove PIN display before using real staff accounts.
-  stockDashboardUserDebugList.innerHTML = users.map((user) => {
-    const name = stockDashboardGetDisplayName(user) || "Medical Technologist";
-    const displayElabUserNumber = stockDashboardGetDebugElabNumber(user);
-    const normalizedElabUserNumber = String(user?.normalizedElabUserNumber || user?.userNumber || "").trim();
-    const pin = String(user?.pin || "").trim() || "Not stored";
-    const roleLabel = stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner));
-    const statusLabel = stockDashboardNormalizeUserStatus(user?.status);
-    const createdAt = stockDashboardFormatOptionalDate(user?.createdAt);
-    const lastLoginAt = stockDashboardFormatOptionalDate(user?.lastLoginAt);
-    return `
-      <div class="stock-dashboard-list-row">
-        <span>
-          ${stockDashboardEscapeHtml(name)}
-          <br />eLab user number: ${stockDashboardEscapeHtml(displayElabUserNumber || "Not stored")}
-          <br />Normalized eLab number: ${stockDashboardEscapeHtml(normalizedElabUserNumber || "Not stored")}
-          <br />PIN: ${stockDashboardEscapeHtml(pin)}
-          <br />Role: ${stockDashboardEscapeHtml(roleLabel)}
-          <br />Status: ${stockDashboardEscapeHtml(statusLabel)}
-          <br />Created: ${stockDashboardEscapeHtml(createdAt)}
-          <br />Last login: ${stockDashboardEscapeHtml(lastLoginAt)}
-        </span>
-      </div>
-    `;
-  }).join("");
-}
-
-async function loadStockDashboardDebugUsers() {
-  if (!stockDashboardSession?.isOwner || !stockDashboardUserDebugList) return;
-
-  if (stockDashboardUserDebugStatus) {
-    stockDashboardUserDebugStatus.textContent = "Loading debug users...";
-  }
-
-  try {
-    const response = await fetch(STOCK_DASHBOARD_USERS_DEBUG_URL, {
-      cache: "no-store",
-      headers: stockDashboardGetHeaders()
-    });
-
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error("Could not load debug users.");
-    }
-
-    const payload = await response.json().catch(() => ({}));
-    const users = Array.isArray(payload?.users) ? payload.users : [];
-    stockDashboardDebugUsers = users;
-    stockDashboardRenderDebugUsers(users);
-    if (stockDashboardUserDebugStatus) {
-      const storageInfo = String(stockDashboardApiConfig?.storage?.dataDir || "").trim();
-      stockDashboardUserDebugStatus.textContent = users.length
-        ? `Showing ${users.length} saved user${users.length === 1 ? "" : "s"}. Storage: server file${storageInfo ? ` (${storageInfo})` : ""}. localStorage key ${STOCK_DASHBOARD_TOKEN_KEY} is session token only.`
-        : "No saved users found.";
-    }
-  } catch {
-    stockDashboardDebugUsers = [];
-    stockDashboardRenderDebugUsers([]);
-    if (stockDashboardUserDebugStatus) {
-      stockDashboardUserDebugStatus.textContent = "Could not load debug users.";
-    }
-  }
-}
-
-async function stockDashboardCopyDebugUsers() {
-  if (!stockDashboardSession?.isOwner) return;
-
-  const users = Array.isArray(stockDashboardDebugUsers) ? stockDashboardDebugUsers : [];
-  if (!users.length) {
-    if (stockDashboardUserDebugStatus) {
-      stockDashboardUserDebugStatus.textContent = "No saved users found.";
-    }
-    return;
-  }
-
-  const copyText = users.map((user) => {
-    const name = stockDashboardGetDisplayName(user) || "Medical Technologist";
-    const displayElabUserNumber = stockDashboardGetDebugElabNumber(user) || "Not stored";
-    const normalizedElabUserNumber = String(user?.normalizedElabUserNumber || user?.userNumber || "").trim() || "Not stored";
-    const pin = String(user?.pin || "").trim() || "Not stored";
-    const roleLabel = stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner));
-    const statusLabel = stockDashboardNormalizeUserStatus(user?.status);
-    return [
-      `Name: ${name}`,
-      `eLab user number: ${displayElabUserNumber}`,
-      `Normalized number: ${normalizedElabUserNumber}`,
-      `PIN: ${pin}`,
-      `Role: ${roleLabel}`,
-      `Status: ${statusLabel}`
-    ].join("\n");
-  }).join("\n\n");
-
-  try {
-    await navigator.clipboard.writeText(copyText);
-    if (stockDashboardUserDebugStatus) {
-      stockDashboardUserDebugStatus.textContent = "Debug users copied.";
-    }
-  } catch {
-    if (stockDashboardUserDebugStatus) {
-      stockDashboardUserDebugStatus.textContent = "Could not copy debug users.";
-    }
-  }
-}
-
-function stockDashboardRenderUserAudit(entries = []) {
-  if (!stockDashboardUserAuditList) return;
-  if (!entries.length) {
-    stockDashboardUserAuditList.innerHTML = '<p class="stock-dashboard-empty">No audit entries yet.</p>';
-    return;
-  }
-
-  stockDashboardUserAuditList.innerHTML = entries.map((entry) => {
-    const actionLabel = stockDashboardFormatUserAuditAction(entry?.action);
-    const targetName = String(entry?.targetName || "").trim() || "Unknown user";
-    const targetNumber = String(entry?.targetDisplayElabUserNumber || entry?.targetUserNumber || "").trim() || "Unknown";
-    const adminName = String(entry?.adminName || "").trim() || "Admin";
-    const adminNumber = String(entry?.adminUserNumber || "").trim();
-    const beforeRole = String(entry?.beforeRole || "").trim();
-    const afterRole = String(entry?.afterRole || "").trim();
-    const beforeStatus = String(entry?.beforeStatus || "").trim();
-    const afterStatus = String(entry?.afterStatus || "").trim();
-    const changeParts = [];
-    if (beforeRole || afterRole) {
-      changeParts.push(`Role: ${beforeRole || "n/a"} → ${afterRole || "n/a"}`);
-    }
-    if (beforeStatus || afterStatus) {
-      changeParts.push(`Status: ${beforeStatus || "n/a"} → ${afterStatus || "n/a"}`);
-    }
-    return `
-      <article class="stock-dashboard-request-card">
-        <div class="stock-dashboard-request-top">
-          <div>
-            <p class="stock-order-kicker">${stockDashboardEscapeHtml(targetNumber)}</p>
-            <h4>${stockDashboardEscapeHtml(actionLabel)} · ${stockDashboardEscapeHtml(targetName)}</h4>
-          </div>
-          <span class="stock-order-status-badge" data-status="ready">${stockDashboardEscapeHtml(stockDashboardFormatOptionalDate(entry?.timestamp))}</span>
-        </div>
-        <div class="stock-dashboard-request-meta">
-          <span>By: ${stockDashboardEscapeHtml(adminName)}${adminNumber ? ` (${stockDashboardEscapeHtml(adminNumber)})` : ""}</span>
-          ${changeParts.map((part) => `<span>${stockDashboardEscapeHtml(part)}</span>`).join("")}
-        </div>
-      </article>
-    `;
-  }).join("");
-}
-
-async function loadStockDashboardUserAudit() {
-  if (!stockDashboardSession?.isOwner) return;
-  if (stockDashboardUserAuditStatus) {
-    stockDashboardUserAuditStatus.textContent = "Loading user audit log...";
-  }
-
-  try {
-    const response = await fetch(STOCK_DASHBOARD_USERS_AUDIT_URL, {
-      cache: "no-store",
-      headers: stockDashboardGetHeaders()
-    });
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
-      return;
-    }
-    if (!response.ok) {
-      throw new Error("Could not load user audit log.");
-    }
-    const payload = await response.json().catch(() => ({}));
-    const entries = Array.isArray(payload?.entries) ? payload.entries : [];
-    stockDashboardUserAuditEntries = entries;
-    stockDashboardRenderUserAudit(entries);
-    if (stockDashboardUserAuditStatus) {
-      stockDashboardUserAuditStatus.textContent = entries.length
-        ? `Showing ${entries.length} recent user actions.`
-        : "No audit entries yet.";
-    }
-  } catch {
-    stockDashboardUserAuditEntries = [];
-    stockDashboardRenderUserAudit([]);
-    if (stockDashboardUserAuditStatus) {
-      stockDashboardUserAuditStatus.textContent = "Could not load user audit log.";
-    }
-  }
-}
-
 async function stockDashboardUpdateUserRecord(userId, updates, successMessage) {
-  const response = await fetch(stockDashboardBuildUserApiUrlById(userId), {
+  const response = await stockDashboardFetch(stockDashboardBuildUserApiUrlById(userId), {
     method: "PATCH",
     headers: stockDashboardGetHeaders(true),
     body: JSON.stringify(updates)
   });
-  if (response.status === 401 || response.status === 403) {
-    stockDashboardSetSession("", null);
+  if (response.status === 401) {
+    stockDashboardSetSession(null);
     return false;
+  }
+  if (response.status === 403) {
+    throw new Error("Admin access required.");
   }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -1759,13 +1575,16 @@ async function stockDashboardUpdateUserRecord(userId, updates, successMessage) {
 }
 
 async function stockDashboardDeleteUserRecord(userId) {
-  const response = await fetch(stockDashboardBuildUserApiUrlById(userId), {
+  const response = await stockDashboardFetch(stockDashboardBuildUserApiUrlById(userId), {
     method: "DELETE",
     headers: stockDashboardGetHeaders()
   });
-  if (response.status === 401 || response.status === 403) {
-    stockDashboardSetSession("", null);
+  if (response.status === 401) {
+    stockDashboardSetSession(null);
     return false;
+  }
+  if (response.status === 403) {
+    throw new Error("Admin access required.");
   }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -1778,7 +1597,7 @@ async function stockDashboardDeleteUserRecord(userId) {
 }
 
 async function stockDashboardHandleUserAction(action, userId, userNumber) {
-  if (!stockDashboardSession?.isOwner) return;
+  if (!stockDashboardIsAdminSession()) return;
   const safeAction = String(action || "").trim();
   const safeUserId = String(userId || "").trim();
   const safeUserNumber = String(userNumber || "").trim();
@@ -1822,8 +1641,6 @@ async function stockDashboardHandleUserAction(action, userId, userNumber) {
     }
 
     await loadStockDashboardUsers();
-    await loadStockDashboardDebugUsers();
-    await loadStockDashboardUserAudit();
   } catch (error) {
     if (stockDashboardUserAdminStatus) {
       stockDashboardUserAdminStatus.textContent = error instanceof Error ? error.message : "Could not update user.";
@@ -1834,7 +1651,7 @@ async function stockDashboardHandleUserAction(action, userId, userNumber) {
 }
 
 async function createStockDashboardUser() {
-  if (!stockDashboardSession?.isOwner) {
+  if (!stockDashboardIsAdminSession()) {
     stockDashboardSetCreateUserMessage("Only Admin users can create users.");
     return;
   }
@@ -1870,14 +1687,18 @@ async function createStockDashboardUser() {
   stockDashboardSetCreateUserMessage("Creating user...");
 
   try {
-    const response = await fetch(STOCK_DASHBOARD_USERS_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_USERS_URL, {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
       body: JSON.stringify({ displayName, userNumber, pin, role })
     });
 
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (response.status === 403) {
+      stockDashboardSetCreateUserMessage("Admin access required.");
       return;
     }
 
@@ -1891,8 +1712,6 @@ async function createStockDashboardUser() {
     if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created and saved.";
     stockDashboardSetCreateUserModalOpen(false);
     await loadStockDashboardUsers();
-    await loadStockDashboardDebugUsers();
-    await loadStockDashboardUserAudit();
     if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created and saved.";
   } catch (error) {
     const errorText = error instanceof Error ? error.message : "";
@@ -1941,6 +1760,7 @@ function stockDashboardResetReceiptForm() {
   if (stockDashboardReceiptForm) stockDashboardReceiptForm.reset();
   stockDashboardEnsureReceiptRows();
   stockDashboardRenderReceiptItemRows();
+  stockDashboardSetReceiptFormOpen(false);
   if (stockDashboardReceiptStatus) {
     stockDashboardReceiptStatus.textContent = "Record tubes and consumables received from suppliers.";
   }
@@ -1967,7 +1787,7 @@ async function stockDashboardSubmitManualRequest() {
   }
 
   try {
-    const response = await fetch(STOCK_DASHBOARD_MANUAL_REQUEST_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_MANUAL_REQUEST_URL, {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
       body: JSON.stringify({
@@ -1991,8 +1811,12 @@ async function stockDashboardSubmitManualRequest() {
       })
     });
 
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (response.status === 403) {
+      stockDashboardSetSession(null);
       return;
     }
 
@@ -2039,7 +1863,7 @@ async function stockDashboardSubmitReceipt() {
   }
 
   try {
-    const response = await fetch(STOCK_DASHBOARD_RECEIPTS_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_RECEIPTS_URL, {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
       body: JSON.stringify({
@@ -2063,8 +1887,12 @@ async function stockDashboardSubmitReceipt() {
       })
     });
 
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (response.status === 403) {
+      stockDashboardSetSession(null);
       return;
     }
 
@@ -2091,13 +1919,17 @@ async function loadStockInventory() {
   if (!stockDashboardSession) return;
 
   try {
-    const response = await fetch(STOCK_DASHBOARD_INVENTORY_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_INVENTORY_URL, {
       cache: "no-store",
       headers: stockDashboardGetHeaders()
     });
 
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (response.status === 403) {
+      stockDashboardSetSession(null);
       return;
     }
 
@@ -2144,32 +1976,50 @@ function renderDashboardList(container, rows, renderRow) {
 }
 
 function renderStockDashboardStats(stats) {
-  if (!stats) return;
+  const safeStats = stats || {};
+  const totalRequests = Number(safeStats.totalRequests || 0);
+  const openRequests = Number(safeStats.openRequests || 0);
+  const totalLineItems = Number(safeStats.totalLineItems || 0);
+  const totalUnitsRequested = Number(safeStats.totalUnitsRequested || 0);
+  const hasBreakdown = STOCK_DASHBOARD_STATUS_ORDER.some((status) => Number(safeStats.statusCounts?.[status] || 0) > 0);
+  const hasTopWards = Array.isArray(safeStats.topWards) && safeStats.topWards.length > 0;
+  const hasTopItems = Array.isArray(safeStats.topItems) && safeStats.topItems.length > 0;
+  const hasAnyStats = totalRequests > 0 || openRequests > 0 || totalLineItems > 0 || totalUnitsRequested > 0 || hasBreakdown || hasTopWards || hasTopItems;
 
-  if (stockDashboardTotalRequests) stockDashboardTotalRequests.textContent = String(stats.totalRequests || 0);
-  if (stockDashboardOpenRequests) stockDashboardOpenRequests.textContent = String(stats.openRequests || 0);
-  if (stockDashboardLineItems) stockDashboardLineItems.textContent = String(stats.totalLineItems || 0);
-  if (stockDashboardUnitsRequested) stockDashboardUnitsRequested.textContent = String(stats.totalUnitsRequested || 0);
+  if (stockDashboardTotalRequests) stockDashboardTotalRequests.textContent = String(totalRequests);
+  if (stockDashboardOpenRequests) stockDashboardOpenRequests.textContent = String(openRequests);
+  if (stockDashboardLineItems) stockDashboardLineItems.textContent = String(totalLineItems);
+  if (stockDashboardUnitsRequested) stockDashboardUnitsRequested.textContent = String(totalUnitsRequested);
 
-  renderDashboardList(stockDashboardStatusCounts, STOCK_DASHBOARD_STATUS_ORDER.filter((status) => Number(stats.statusCounts?.[status] || 0)), (status) => `
+  renderDashboardList(stockDashboardStatusCounts, STOCK_DASHBOARD_STATUS_ORDER.filter((status) => Number(safeStats.statusCounts?.[status] || 0)), (status) => `
     <span class="stock-dashboard-chip" data-status="${stockDashboardEscapeHtml(status)}">
-      ${stockDashboardEscapeHtml(stockDashboardFormatStatus(status))}: ${Number(stats.statusCounts?.[status] || 0)}
+      ${stockDashboardEscapeHtml(stockDashboardFormatStatus(status))}: ${Number(safeStats.statusCounts?.[status] || 0)}
     </span>
   `);
 
-  renderDashboardList(stockDashboardTopWards, stats.topWards || [], (ward) => `
+  renderDashboardList(stockDashboardTopWards, safeStats.topWards || [], (ward) => `
     <div class="stock-dashboard-list-row">
       <span>${stockDashboardEscapeHtml(ward.name)}</span>
       <strong>${Number(ward.count || 0)}</strong>
     </div>
   `);
 
-  renderDashboardList(stockDashboardTopItems, stats.topItems || [], (item) => `
+  renderDashboardList(stockDashboardTopItems, safeStats.topItems || [], (item) => `
     <div class="stock-dashboard-list-row">
       <span>${stockDashboardEscapeHtml(item.label)}</span>
       <strong>${Number(item.quantity || 0)}</strong>
     </div>
   `);
+
+  if (stockDashboardStatsEmpty) {
+    stockDashboardStatsEmpty.hidden = hasAnyStats;
+  }
+  if (stockDashboardInsights) {
+    stockDashboardInsights.hidden = !stockDashboardIsSummaryOpen || !hasAnyStats;
+  }
+  if (stockDashboardMetrics) {
+    stockDashboardMetrics.hidden = !stockDashboardIsSummaryOpen || !hasAnyStats;
+  }
 }
 
 function renderStockDashboardRequests(requests) {
@@ -2232,21 +2082,25 @@ function renderStockDashboardRequests(requests) {
 }
 
 async function loadStockDashboard(options = {}) {
-  if (!stockDashboardStatus || !stockDashboardSession) {
+  if (!stockDashboardSession) {
     return;
   }
+  const authGenerationAtStart = stockDashboardAuthGeneration;
+  const requestedForUserNumber = String(stockDashboardSession.userNumber || "");
   const { silent = false, fromPoll = false } = options;
 
   if (!silent) {
-    stockDashboardStatus.textContent = "Loading requests...";
+    if (stockDashboardStatus) {
+      stockDashboardStatus.textContent = "Loading requests...";
+    }
     stockDashboardSetBusy(true);
   }
 
   try {
     const [statsResponse, requestsResponse, inventoryResponse] = await Promise.all([
-      fetch(STOCK_DASHBOARD_STATS_URL, { cache: "no-store", headers: stockDashboardGetHeaders() }),
-      fetch(STOCK_DASHBOARD_REQUESTS_URL, { cache: "no-store", headers: stockDashboardGetHeaders() }),
-      fetch(STOCK_DASHBOARD_INVENTORY_URL, { cache: "no-store", headers: stockDashboardGetHeaders() })
+      stockDashboardFetch(STOCK_DASHBOARD_STATS_URL, { cache: "no-store", headers: stockDashboardGetHeaders() }),
+      stockDashboardFetch(STOCK_DASHBOARD_REQUESTS_URL, { cache: "no-store", headers: stockDashboardGetHeaders() }),
+      stockDashboardFetch(STOCK_DASHBOARD_INVENTORY_URL, { cache: "no-store", headers: stockDashboardGetHeaders() })
     ]);
 
     if (
@@ -2254,7 +2108,7 @@ async function loadStockDashboard(options = {}) {
       || requestsResponse.status === 401 || requestsResponse.status === 403
       || inventoryResponse.status === 401 || inventoryResponse.status === 403
     ) {
-      stockDashboardSetSession("", null);
+      stockDashboardSetSession(null);
       return;
     }
 
@@ -2266,6 +2120,19 @@ async function loadStockDashboard(options = {}) {
     const requestsPayload = await requestsResponse.json();
     const inventoryPayload = await inventoryResponse.json();
     const requests = requestsPayload.requests || [];
+    const authGenerationChanged = authGenerationAtStart !== stockDashboardAuthGeneration;
+    const sessionChanged = !stockDashboardSession
+      || String(stockDashboardSession.userNumber || "") !== requestedForUserNumber;
+    if (authGenerationChanged || sessionChanged || stockDashboardLogoutInProgress) {
+      stockDashboardLogAuthDebug("skip-stale-dashboard-render", {
+        authGenerationAtStart,
+        authGenerationCurrent: stockDashboardAuthGeneration,
+        requestedForUserNumber,
+        currentUserNumber: String(stockDashboardSession?.userNumber || ""),
+        logoutInProgress: stockDashboardLogoutInProgress
+      });
+      return;
+    }
 
     renderStockDashboardStats(statsPayload.stats || {});
     renderStockDashboardRequests(requests);
@@ -2288,7 +2155,7 @@ async function loadStockDashboard(options = {}) {
 }
 
 async function updateStockDashboardRequestStatus(requestId, status) {
-  if (!requestId || !status || !stockDashboardStatus || !stockDashboardSession) return;
+  if (!requestId || !status || !stockDashboardSession) return;
 
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "collected") {
@@ -2299,14 +2166,18 @@ async function updateStockDashboardRequestStatus(requestId, status) {
   stockDashboardStatus.textContent = `Updating ${requestId}...`;
 
   try {
-    const response = await fetch(stockDashboardBuildApiUrl(`/api/stock-requests/${encodeURIComponent(requestId)}/status`), {
+    const response = await stockDashboardFetch(stockDashboardBuildApiUrl(`/api/stock-requests/${encodeURIComponent(requestId)}/status`), {
       method: "PATCH",
       headers: stockDashboardGetHeaders(true),
       body: JSON.stringify({ status })
     });
 
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (response.status === 403) {
+      stockDashboardSetSession(null);
       return;
     }
 
@@ -2336,63 +2207,118 @@ async function updateStockDashboardRequestStatus(requestId, status) {
 }
 
 async function checkStockDashboardSession() {
+  const authGenerationAtStart = stockDashboardAuthGeneration;
   try {
-    const response = await fetch(STOCK_DASHBOARD_SESSION_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_SESSION_URL, {
       cache: "no-store",
       headers: stockDashboardGetHeaders()
     });
     const payload = await response.json().catch(() => ({}));
 
     stockDashboardSetupRequired = Boolean(payload?.setupRequired);
+    stockDashboardLogAuthDebug("session-check-response", {
+      ok: response.ok,
+      authenticated: Boolean(payload?.authenticated),
+      setupRequired: stockDashboardSetupRequired,
+      resolvedUser: payload?.user ? {
+        userNumber: payload.user.userNumber,
+        role: payload.user.role,
+        isOwner: payload.user.isOwner
+      } : null
+    });
+
+    if (authGenerationAtStart !== stockDashboardAuthGeneration) {
+      stockDashboardLogAuthDebug("session-check-ignored-stale-generation", {
+        authGenerationAtStart,
+        authGenerationCurrent: stockDashboardAuthGeneration
+      });
+      return;
+    }
 
     if (!response.ok || !payload?.authenticated || !payload?.user) {
-      stockDashboardSetSession("", null);
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (stockDashboardLogoutInProgress) {
+      stockDashboardLogAuthDebug("session-check-ignored-during-logout", {
+        resolvedUser: payload?.user?.userNumber || ""
+      });
+      stockDashboardSetSession(null);
       return;
     }
 
     stockDashboardSetupRequired = false;
-    stockDashboardSetSession(stockDashboardToken, payload.user);
-    await stockDashboardMigrateLegacyUsersIfNeeded();
+    stockDashboardSetSession(payload.user);
     await loadStockDashboard();
     await loadStockDashboardUsers();
-    await loadStockDashboardDebugUsers();
-    await loadStockDashboardUserAudit();
   } catch {
-    stockDashboardSetSession("", null);
+    stockDashboardSetSession(null);
   }
 }
 
 async function logoutStockDashboard() {
+  stockDashboardLogAuthDebug("logout-clicked", {
+    hasSession: Boolean(stockDashboardSession),
+    userNumber: String(stockDashboardSession?.userNumber || ""),
+    role: String(stockDashboardSession?.role || "")
+  });
   if (stockDashboardAuthState === "checking") {
     stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
   }
+  const previousSession = stockDashboardSession ? { ...stockDashboardSession } : null;
+  const logoutGeneration = stockDashboardBumpAuthGeneration();
+  stockDashboardLogoutInProgress = true;
   stockDashboardSetBusy(true);
-  const tokenSnapshot = String(stockDashboardToken || localStorage.getItem(STOCK_DASHBOARD_TOKEN_KEY) || "").trim();
-  const logoutHeaders = tokenSnapshot
-    ? { Authorization: `Bearer ${tokenSnapshot}` }
-    : {};
 
   stockDashboardLatestRequestMarker = "";
   stockDashboardUnreadCount = 0;
-  stockDashboardSetSession("", null);
+  localStorage.removeItem(STOCK_DASHBOARD_LEGACY_TOKEN_KEY);
+  stockDashboardClearScopedValuesForUserNumber(previousSession?.userNumber || "");
+  stockDashboardSetSession(null);
 
   try {
-    await fetch(STOCK_DASHBOARD_LOGOUT_URL, {
-      method: "POST",
-      headers: logoutHeaders
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_LOGOUT_URL, {
+      method: "POST"
     });
-    if (!tokenSnapshot) {
-      console.warn("[stock-dashboard] Logout request sent without a local session token.");
+    if (!response.ok) {
+      stockDashboardLogAuthDebug("logout-response-not-ok", { status: response.status });
+    } else {
+      stockDashboardLogAuthDebug("logout-response-ok", { status: response.status });
+    }
+
+    const verifyResponse = await stockDashboardFetch(STOCK_DASHBOARD_SESSION_URL, {
+      cache: "no-store",
+      headers: stockDashboardGetHeaders()
+    });
+    const verifyPayload = await verifyResponse.json().catch(() => ({}));
+    const authenticated = Boolean(verifyResponse.ok && verifyPayload?.authenticated && verifyPayload?.user);
+    stockDashboardLogAuthDebug("logout-verify-session", {
+      ok: verifyResponse.ok,
+      authenticated
+    });
+    if (authenticated) {
+      stockDashboardSetSession(null);
+      if (stockDashboardAuthStatus) {
+        stockDashboardAuthStatus.textContent = "Sign-out could not be confirmed. Please try again.";
+      }
     }
   } catch (error) {
     console.error("[stock-dashboard] Logout request failed, local session still cleared.", error);
   } finally {
+    stockDashboardLogoutInProgress = false;
+    stockDashboardLogAuthDebug("logout-finished", {
+      logoutGeneration,
+      authGenerationCurrent: stockDashboardAuthGeneration,
+      hasSession: Boolean(stockDashboardSession),
+      isLoggedIn: Boolean(stockDashboardSession),
+      isAdmin: Boolean(stockDashboardSession?.role === "admin")
+    });
     stockDashboardSetBusy(false);
   }
 }
 
 async function clearStockDashboardData() {
-  if (!stockDashboardSession?.isOwner || !clearStockDataBtn) return;
+  if (!stockDashboardIsAdminSession() || !clearStockDataBtn) return;
 
   const confirmed = window.confirm("Clear all saved stock request history? This cannot be undone.");
   if (!confirmed) return;
@@ -2403,13 +2329,17 @@ async function clearStockDashboardData() {
   }
 
   try {
-    const response = await fetch(STOCK_DASHBOARD_CLEAR_DATA_URL, {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_CLEAR_DATA_URL, {
       method: "DELETE",
       headers: stockDashboardGetHeaders()
     });
 
-    if (response.status === 401 || response.status === 403) {
-      stockDashboardSetSession("", null);
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    if (response.status === 403) {
+      if (stockDashboardStatus) stockDashboardStatus.textContent = "Admin access required.";
       return;
     }
 
@@ -2434,11 +2364,12 @@ stockDashboardLoginBtn?.addEventListener("click", () => {
   stockDashboardSendAuthRequest(stockDashboardSetupRequired ? STOCK_DASHBOARD_BOOTSTRAP_URL : STOCK_DASHBOARD_LOGIN_URL);
 });
 
-stockDashboardLockedLoginBtn?.addEventListener("click", () => {
+stockDashboardSessionLoginBtn?.addEventListener("click", () => {
   stockDashboardOpenLoginModal();
 });
 
 stockDashboardLogoutBtn?.addEventListener("click", () => {
+  stockDashboardLogAuthDebug("logout-button-handler-fired");
   logoutStockDashboard();
 });
 
@@ -2476,16 +2407,12 @@ stockDashboardMarkSeenBtn?.addEventListener("click", () => {
   stockDashboardMarkNotificationsSeen();
 });
 
-stockDashboardRefreshDebugUsersBtn?.addEventListener("click", () => {
-  loadStockDashboardDebugUsers();
+stockDashboardToggleStatsBtn?.addEventListener("click", () => {
+  stockDashboardSetSummaryOpen(!stockDashboardIsSummaryOpen);
 });
 
-stockDashboardCopyDebugUsersBtn?.addEventListener("click", () => {
-  stockDashboardCopyDebugUsers();
-});
-
-stockDashboardRefreshUserAuditBtn?.addEventListener("click", () => {
-  loadStockDashboardUserAudit();
+stockDashboardReceiptToggleBtn?.addEventListener("click", () => {
+  stockDashboardSetReceiptFormOpen(!stockDashboardReceiptFormOpen);
 });
 
 stockDashboardUserList?.addEventListener("click", (event) => {
@@ -2538,7 +2465,7 @@ stockDashboardCreateUserForm?.addEventListener("submit", (event) => {
 });
 
 stockDashboardOpenCreateUserBtn?.addEventListener("click", () => {
-  if (!stockDashboardSession?.isOwner) return;
+  if (!stockDashboardIsAdminSession()) return;
   stockDashboardSetCreateUserModalOpen(true);
 });
 
@@ -2643,5 +2570,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 initStockDashboardTools();
+localStorage.removeItem(STOCK_DASHBOARD_LEGACY_TOKEN_KEY);
+stockDashboardSetSummaryOpen(false);
 stockDashboardLoadApiConfig();
 checkStockDashboardSession();

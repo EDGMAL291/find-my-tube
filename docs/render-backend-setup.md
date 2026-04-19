@@ -5,13 +5,14 @@ This project can use Render for the hosted stock API while the frontend stays on
 ## What You Will Get
 
 - a hosted API URL such as `https://find-my-tube-api.onrender.com`
-- persistent request storage on a Render disk
+- persistent auth + stock storage in Supabase
 - the existing stock submit and dashboard endpoints from `server.js`
 
 ## Files Added For This
 
 - [`render.yaml`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/render.yaml) - Render blueprint for the Node API
-- [`server.js`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/server.js) - now supports `DATA_DIR` so Render can store data on its mounted disk
+- [`server.js`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/server.js) - uses Supabase-backed auth and stock persistence
+- [`supabase/migrations/20260419_stock_dashboard.sql`](/Users/edgarmalesa/Desktop/new%20project/find%20my%20tube/supabase/migrations/20260419_stock_dashboard.sql) - required DB schema
 
 ## Create The Backend In Render
 
@@ -21,11 +22,13 @@ This project can use Render for the hosted stock API while the frontend stays on
 4. Render should detect [`render.yaml`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/render.yaml).
 5. Create the service.
 
-Render will create:
+Render will create a Node web service called `find-my-tube-api`.
 
-- a Node web service called `find-my-tube-api`
-- a persistent disk mounted at `/var/data`
-- an environment variable `DATA_DIR=/var/data/find-my-tube`
+Set these environment variables in Render:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only secret)
+- optional: `SUPABASE_ANON_KEY` (frontend-safe only if needed for direct browser Supabase calls)
 
 ## Set The First Admin
 
@@ -35,7 +38,7 @@ After the service is live, open the Render Shell for the web service and run:
 npm run admin:set -- --user 001 --pin 1234 --name "Lab Admin"
 ```
 
-That creates the first admin user in the hosted backend storage.
+That creates or updates the first admin user in Supabase.
 
 If you prefer not to use the Render shell, the live dashboard can now bootstrap the first admin automatically when no lab users exist yet.
 
@@ -62,6 +65,6 @@ After deploy, these should work:
 
 ## Notes
 
-- This setup keeps your current JSON-file backend, but stores it on a Render disk instead of the repo filesystem.
-- Sessions are still in memory, so lab users will need to sign in again after backend restarts.
-- If you later want stronger durability and reporting, the next upgrade is moving requests/users from JSON files to a database.
+- This setup uses Supabase as the source of truth for users, requests, receipts, inventory, sessions, and audit logs.
+- Sessions are stored and validated server-side with Supabase-backed session records.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` server-side only and never expose it to the browser.

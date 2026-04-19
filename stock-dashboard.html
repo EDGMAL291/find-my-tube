@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260417h" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260420a" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -81,7 +81,8 @@
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
-    <main class="stock-dashboard-panel" aria-labelledby="stockDashboardTitle">
+    <main class="stock-dashboard-panel" aria-labelledby="stockDashboardMainTitle">
+      <h2 id="stockDashboardMainTitle" class="sr-only">Stock Dashboard</h2>
       <section class="profile-modal stock-dashboard-login-modal" id="stockDashboardAccessCard" hidden aria-labelledby="labAccessTitle">
         <div class="profile-modal-card stock-dashboard-login-modal-card stock-order-request-card" role="dialog" aria-modal="true" aria-labelledby="labAccessTitle" aria-describedby="stockDashboardAuthStatus">
           <div class="profile-modal-head stock-dashboard-login-modal-head">
@@ -114,26 +115,15 @@
         </div>
       </section>
 
-      <section class="stock-order-request-card stock-dashboard-session-card" id="stockDashboardSessionCard" hidden>
+      <section class="stock-order-request-card stock-dashboard-session-card" id="stockDashboardSessionCard">
         <div>
-          <p class="stock-order-kicker">Signed in</p>
-          <h3 id="stockDashboardSessionUser">Medical Technologist</h3>
+          <p class="stock-order-kicker" id="stockDashboardSessionKicker">Not signed in</p>
+          <h3 id="stockDashboardSessionUser">Stock Dashboard access</h3>
+          <p class="stock-dashboard-status" id="stockDashboardSessionMessage">Sign in to view dashboard data and manage stock requests.</p>
         </div>
         <div class="stock-dashboard-session-actions">
-          <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn">Log out</button>
-        </div>
-      </section>
-
-      <section class="stock-order-request-card" id="stockDashboardLockedCard" hidden>
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Locked</p>
-            <h3>Stock Dashboard (lab only)</h3>
-          </div>
-        </div>
-        <p class="stock-dashboard-status">Log in to view dashboard data and update request statuses.</p>
-        <div class="stock-dashboard-inline-actions">
-          <button type="button" class="quick-tool-launch-btn" id="stockDashboardLockedLoginBtn">Log in</button>
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardSessionLoginBtn">Log in</button>
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn" hidden>Log out</button>
         </div>
       </section>
 
@@ -147,79 +137,104 @@
         <div class="stock-dashboard-request-list" id="stockDashboardRequestList"></div>
       </section>
 
-      <section class="stock-order-request-card stock-dashboard-hero">
+      <section class="stock-order-request-card stock-dashboard-stats-controls" id="stockDashboardStatsControls" hidden>
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Stock Dashboard</p>
-            <h2 id="stockDashboardTitle">Team requests at a glance</h2>
+            <p class="stock-order-kicker">Optional summary</p>
+            <h3>Summary</h3>
+          </div>
+          <button
+            type="button"
+            class="quick-tool-clear-btn"
+            id="stockDashboardToggleStatsBtn"
+            aria-expanded="false"
+            aria-controls="stockDashboardStatsPanel"
+          >
+            Show summary
+          </button>
+        </div>
+      </section>
+
+      <section class="stock-order-request-card stock-dashboard-stats-panel" id="stockDashboardStatsPanel" hidden aria-labelledby="stockDashboardStatsTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Summary</p>
+            <h3 id="stockDashboardStatsTitle">Request summary</h3>
           </div>
           <div class="stock-dashboard-hero-actions">
             <p class="stock-dashboard-status" id="stockDashboardStatus">Loading requests...</p>
             <button type="button" class="quick-tool-launch-btn" id="stockDashboardRefreshBtn">Refresh</button>
           </div>
         </div>
-      </section>
 
-      <section class="stock-dashboard-metrics" id="stockDashboardMetrics" aria-label="Stock request metrics" hidden>
-        <article class="stock-order-summary-item">
-          <span class="stock-order-summary-label">Total requests</span>
-          <span class="stock-order-summary-value" id="stockDashboardTotalRequests">0</span>
-        </article>
-        <article class="stock-order-summary-item">
-          <span class="stock-order-summary-label">Open requests</span>
-          <span class="stock-order-summary-value" id="stockDashboardOpenRequests">0</span>
-        </article>
-        <article class="stock-order-summary-item">
-          <span class="stock-order-summary-label">Line items</span>
-          <span class="stock-order-summary-value" id="stockDashboardLineItems">0</span>
-        </article>
-        <article class="stock-order-summary-item">
-          <span class="stock-order-summary-label">Units requested</span>
-          <span class="stock-order-summary-value" id="stockDashboardUnitsRequested">0</span>
-        </article>
-      </section>
+        <p class="stock-dashboard-empty" id="stockDashboardStatsEmpty" hidden>No summary available yet. Summary will appear once requests are submitted.</p>
 
-      <section class="stock-dashboard-grid" id="stockDashboardInsights" hidden>
-        <article class="stock-order-request-card">
-          <div class="stock-order-request-head">
-            <div>
-              <p class="stock-order-kicker">Activity</p>
-              <h3>Status breakdown</h3>
+        <section class="stock-dashboard-metrics" id="stockDashboardMetrics" aria-label="Stock request metrics">
+          <article class="stock-order-summary-item">
+            <span class="stock-order-summary-label">Total requests</span>
+            <span class="stock-order-summary-value" id="stockDashboardTotalRequests">0</span>
+          </article>
+          <article class="stock-order-summary-item">
+            <span class="stock-order-summary-label">Open requests</span>
+            <span class="stock-order-summary-value" id="stockDashboardOpenRequests">0</span>
+          </article>
+          <article class="stock-order-summary-item">
+            <span class="stock-order-summary-label">Line items</span>
+            <span class="stock-order-summary-value" id="stockDashboardLineItems">0</span>
+          </article>
+          <article class="stock-order-summary-item">
+            <span class="stock-order-summary-label">Units requested</span>
+            <span class="stock-order-summary-value" id="stockDashboardUnitsRequested">0</span>
+          </article>
+        </section>
+
+        <section class="stock-dashboard-grid" id="stockDashboardInsights">
+          <article class="stock-order-request-card">
+            <div class="stock-order-request-head">
+              <div>
+                <p class="stock-order-kicker">Activity</p>
+                <h3>Status breakdown</h3>
+              </div>
             </div>
-          </div>
-          <div class="stock-dashboard-chip-list" id="stockDashboardStatusCounts"></div>
-        </article>
+            <div class="stock-dashboard-chip-list" id="stockDashboardStatusCounts"></div>
+          </article>
 
-        <article class="stock-order-request-card">
-          <div class="stock-order-request-head">
-            <div>
-              <p class="stock-order-kicker">Usage</p>
-              <h3>Top wards</h3>
+          <article class="stock-order-request-card">
+            <div class="stock-order-request-head">
+              <div>
+                <p class="stock-order-kicker">Usage</p>
+                <h3>Top wards</h3>
+              </div>
             </div>
-          </div>
-          <div class="stock-dashboard-list" id="stockDashboardTopWards"></div>
-        </article>
+            <div class="stock-dashboard-list" id="stockDashboardTopWards"></div>
+          </article>
 
-        <article class="stock-order-request-card">
-          <div class="stock-order-request-head">
-            <div>
-              <p class="stock-order-kicker">Usage</p>
-              <h3>Top items</h3>
+          <article class="stock-order-request-card">
+            <div class="stock-order-request-head">
+              <div>
+                <p class="stock-order-kicker">Usage</p>
+                <h3>Top items</h3>
+              </div>
             </div>
-          </div>
-          <div class="stock-dashboard-list" id="stockDashboardTopItems"></div>
-        </article>
+            <div class="stock-dashboard-list" id="stockDashboardTopItems"></div>
+          </article>
+        </section>
       </section>
 
       <section class="stock-order-request-card" id="stockDashboardReceiptCard" hidden aria-labelledby="stockDashboardReceiptTitle">
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Received Stock</p>
-            <h3 id="stockDashboardReceiptTitle">Record received stock</h3>
+            <p class="stock-order-kicker">Received stock</p>
+            <h3 id="stockDashboardReceiptTitle">Received stock</h3>
           </div>
           <p class="stock-dashboard-status" id="stockDashboardReceiptStatus">Record tubes and consumables received from suppliers.</p>
         </div>
 
+        <div class="stock-dashboard-inline-actions stock-dashboard-receipt-toggle">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardReceiptToggleBtn" aria-expanded="false" aria-controls="stockDashboardReceiptFormWrap">Add received stock</button>
+        </div>
+
+        <div id="stockDashboardReceiptFormWrap" hidden>
         <form class="stock-order-form" id="stockDashboardReceiptForm" autocomplete="off">
           <label class="stock-order-field">
             <span class="stock-order-field-label">Supplier</span>
@@ -254,6 +269,7 @@
             <button type="button" class="quick-tool-clear-btn" id="stockDashboardReceiptResetBtn">Clear</button>
           </div>
         </form>
+        </div>
       </section>
 
       <section class="stock-order-request-card" id="stockDashboardInventoryCard" hidden aria-labelledby="stockDashboardInventoryTitle">
@@ -289,32 +305,6 @@
         </div>
 
         <div class="stock-dashboard-list" id="stockDashboardUserList"></div>
-
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Admin only</p>
-            <h3>User audit log</h3>
-          </div>
-          <p class="stock-dashboard-status" id="stockDashboardUserAuditStatus">Recent user create/update/disable events.</p>
-        </div>
-        <div class="stock-dashboard-inline-actions">
-          <button type="button" class="quick-tool-clear-btn" id="stockDashboardRefreshUserAuditBtn">Refresh audit log</button>
-        </div>
-        <div class="stock-dashboard-list" id="stockDashboardUserAuditList"></div>
-
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Admin only</p>
-            <h3>User Save Debug</h3>
-          </div>
-          <p class="stock-dashboard-status" id="stockDashboardUserDebugStatus">Temporary testing view. Remove this before using real staff accounts.</p>
-        </div>
-        <p class="stock-dashboard-status">Temporary testing view. Remove this before using real staff accounts.</p>
-        <div class="stock-dashboard-inline-actions">
-          <button type="button" class="quick-tool-clear-btn" id="stockDashboardRefreshDebugUsersBtn">Refresh debug users</button>
-          <button type="button" class="quick-tool-clear-btn" id="stockDashboardCopyDebugUsersBtn">Copy debug users</button>
-        </div>
-        <div class="stock-dashboard-list" id="stockDashboardUserDebugList"></div>
       </section>
     </main>
 
@@ -398,13 +388,13 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260417a"></script>
-  <script src="assets/js/app-config.js?v=20260417a"></script>
-  <script src="assets/js/script.js?v=20260417i"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260417i"></script>
+  <script src="assets/data/data.js?v=20260420a"></script>
+  <script src="assets/js/app-config.js?v=20260420a"></script>
+  <script src="assets/js/script.js?v=20260420a"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260420a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-17.9";
+      const APP_VERSION = "2026-04-20.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -436,7 +426,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260417i", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260420a", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

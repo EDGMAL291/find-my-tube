@@ -10,5 +10,9 @@
   },
   "devDependencies": {
     "browser-sync": "^3.0.3"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.8",
+    "dotenv": "^17.4.2"
   }
 }

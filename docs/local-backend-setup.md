@@ -6,12 +6,19 @@ This project now ships with a free built-in backend in `server.js`.
 
 - serves the app on port `3000`
 - accepts consumables requests at `POST /api/stock-requests`
-- stores requests in `data/stock-requests.json`
+- stores auth and stock data in Supabase tables
 - exposes protected lab stats at `GET /api/lab/stock-stats`
 - lets only the admin create lab users with a user number and 4-digit PIN
 - lets signed-in lab users update request status from the dashboard
 
 ## Run It
+
+Before running locally, set:
+
+```bash
+export SUPABASE_URL=\"https://YOUR-PROJECT.supabase.co\"
+export SUPABASE_SERVICE_ROLE_KEY=\"YOUR_SERVICE_ROLE_KEY\"
+```
 
 ```bash
 npm run dev
@@ -35,8 +42,8 @@ This sets the admin login. The admin can then create other lab users from the da
 
 ## Notes
 
-- This is a local backend, so the data stays on the machine running the server.
+- This runs locally, but auth and stock data persist in your configured Supabase project.
 - Staff on the same network can use it if they open the machine IP address and the Mac allows local incoming connections.
-- Because requests are stored in JSON, this is best for a lightweight internal workflow. If usage grows later, we can move the same API to SQLite without changing the front end much.
-- Lab login is lightweight and local. Sessions are in memory, so signing in again is needed after a server restart.
+- Data durability now comes from Supabase, not local JSON files.
+- Lab sessions are validated server-side via Supabase-backed session records.
 - Users cannot create their own accounts through the site. Only the admin can add them.

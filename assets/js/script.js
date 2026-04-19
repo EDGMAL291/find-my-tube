@@ -229,12 +229,16 @@ function getStockApiBaseUrl() {
   const currentOrigin = window.location.origin || "";
   const currentHostname = window.location.hostname || "";
   const currentPort = window.location.port || "";
-  const isDirectBackendOrigin = currentPort === "3000";
   const isLikelyLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(currentHostname)
     || currentHostname.endsWith(".local")
     || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(currentHostname);
 
-  if (isDirectBackendOrigin || !isLikelyLocalHost) {
+  if (!isLikelyLocalHost) {
+    return currentOrigin;
+  }
+
+  // For local runs, use the same origin as the page by default.
+  if (currentPort) {
     return currentOrigin;
   }
 

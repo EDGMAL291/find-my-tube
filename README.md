@@ -20,18 +20,35 @@ npm run dev
 
 - `http://localhost:3000`
 
-## Local Backend
+## Supabase-Backed Backend
 
-The stock request flow now has a free built-in backend:
+The stock dashboard backend now persists auth and stock data in Supabase:
 
-- `POST /api/stock-requests` saves consumables requests locally
+- `POST /api/stock-requests` saves consumables requests
 - `GET /api/stock-requests` returns recent requests
 - `GET /api/lab/stock-stats` returns protected summary stats for lab users
-- data is stored in `data/stock-requests.json`
-- lab login data is stored in `data/stock-users.json`
+- user auth + sessions + stock requests + receipts + inventory + audit logs are stored in Supabase
 
 Use `http://localhost:3000/stock-dashboard.html` to review recent requests and update their status.
 Lab users cannot self-register anymore. The site admin creates them.
+
+### Required Environment Variables
+
+Set these on your backend host (local `.env` or Render service env):
+
+- `SUPABASE_URL` (server-required)
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only, secret, never expose to browser)
+- `SUPABASE_ANON_KEY` (optional, browser-safe only if you later add direct browser Supabase calls)
+
+Security note:
+- `SUPABASE_SERVICE_ROLE_KEY` must stay server-side only.
+- This project currently uses server-mediated APIs, so the frontend does not need Supabase keys.
+
+### Schema Setup
+
+Run the SQL migration in:
+
+- [`supabase/migrations/20260419_stock_dashboard.sql`](/Users/edgarmalesa/Desktop/new%20project/find%20my%20tube/supabase/migrations/20260419_stock_dashboard.sql)
 
 ## Hosted Backend
 
@@ -83,10 +100,9 @@ How to install:
 - `assets/css/style.css` - UI styles
 - `assets/js/script.js` - search/filter logic and rendering
 - `assets/js/stock-dashboard.js` - local stock dashboard
+- `supabase/migrations/20260419_stock_dashboard.sql` - Supabase schema for auth and stock persistence
 - `assets/data/data.js` - lab test dataset
 - `server.js` - local backend and static file server
-- `data/stock-requests.json` - saved consumables requests
-- `data/stock-users.json` - local lab login records
 - `assets/images/lab-bg.svg` - lab-themed background artwork
 - `assets/icons/` - favicons, PWA icons, and source icon artwork
 - `docs/find-my-tube-preview.zip` - packaged preview artifact
