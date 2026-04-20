@@ -1254,6 +1254,97 @@ body.find-my-test-page .about-panel {
   gap: 12px;
 }
 
+.track-orders-filter-actions {
+  margin-top: 0.25rem;
+}
+
+.track-orders-table {
+  margin-top: 0.9rem;
+}
+
+.track-orders-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.track-orders-header,
+.track-orders-row {
+  display: grid;
+  grid-template-columns:
+    minmax(140px, 1.05fr)
+    minmax(140px, 1fr)
+    minmax(130px, 0.9fr)
+    minmax(130px, 0.9fr)
+    minmax(190px, 1.6fr)
+    minmax(120px, 0.85fr);
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.track-orders-header {
+  padding: 0 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+.track-orders-row {
+  padding: 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.track-orders-row.is-highlighted {
+  border-color: rgba(14, 116, 144, 0.5);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.track-orders-cell {
+  min-width: 0;
+  font-size: 0.83rem;
+  overflow-wrap: anywhere;
+}
+
+.track-orders-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.track-orders-status-badge[data-stage="submitted"] {
+  color: #7a4e00;
+  background: rgba(250, 204, 21, 0.2);
+  border-color: rgba(180, 83, 9, 0.28);
+}
+
+.track-orders-status-badge[data-stage="ready"] {
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.track-orders-status-badge[data-stage="collected"] {
+  color: #166534;
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(22, 163, 74, 0.32);
+}
+
+.track-orders-status-badge[data-stage="cancelled"] {
+  color: #991b1b;
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(220, 38, 38, 0.34);
+}
+
 .stock-order-summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6629,6 +6720,11 @@ html[data-theme="dark"] .stock-dashboard-receipt-item-row {
   border-color: rgba(107, 141, 152, 0.22);
 }
 
+html[data-theme="dark"] .track-orders-row {
+  background: rgba(11, 24, 31, 0.88);
+  border-color: rgba(107, 141, 152, 0.22);
+}
+
 html[data-theme="dark"] .stock-dashboard-queue-row {
   background: rgba(11, 24, 31, 0.88);
   border-color: rgba(107, 141, 152, 0.22);
@@ -6697,6 +6793,29 @@ html[data-theme="neutral"] .stock-dashboard-chip {
   }
 
   .stock-dashboard-queue-cell::before {
+    content: attr(data-label);
+    color: var(--muted-text);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .track-orders-header {
+    display: none;
+  }
+
+  .track-orders-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.85rem;
+  }
+
+  .track-orders-cell {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .track-orders-cell::before {
     content: attr(data-label);
     color: var(--muted-text);
     font-size: 0.65rem;

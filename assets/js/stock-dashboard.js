@@ -105,8 +105,10 @@ const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
 const STOCK_DASHBOARD_LOGIN_TIMEOUT_MS = 5000;
 const STOCK_DASHBOARD_SESSION_CHECK_MS = 20000;
-const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Login details not recognised.";
+const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Incorrect user number or PIN.";
 const STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT = "Login failed. Please try again.";
+const STOCK_DASHBOARD_LOGIN_UNAVAILABLE_TEXT = "Login service is unavailable.";
+const STOCK_DASHBOARD_LOGIN_CONFIG_TEXT = "Server configuration error.";
 const STOCK_DASHBOARD_SAVE_USER_ERROR_TEXT = "Could not save user. Please try again.";
 const STOCK_DASHBOARD_REPLACED_MESSAGE = "You were logged out because this account was signed in somewhere else.";
 const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
@@ -1707,6 +1709,56 @@ function stockDashboardSetBusy(isBusy) {
   });
 }
 
+function stockDashboardGetAuthErrorMessage(response, payload, { setupRequired = false } = {}) {
+  const statusCode = Number(response?.status || 0);
+  const errorCode = String(payload?.code || "").trim().toLowerCase();
+  const backendMessage = String(payload?.error || "").trim();
+  const backendDetail = String(payload?.detail || "").trim().toLowerCase();
+  const safeBackendMessage = backendMessage.replace(/\s+/g, " ").trim();
+
+  if (errorCode === "invalid_credentials" || statusCode === 401) {
+    return STOCK_DASHBOARD_INVALID_LOGIN_TEXT;
+  }
+
+  if (errorCode === "login_service_unavailable" || statusCode === 503) {
+    return STOCK_DASHBOARD_LOGIN_UNAVAILABLE_TEXT;
+  }
+
+  if (errorCode === "server_configuration_error") {
+    return STOCK_DASHBOARD_LOGIN_CONFIG_TEXT;
+  }
+
+  if (
+    statusCode === 500
+    && (
+      backendDetail.includes("active_session_token_hash")
+      || backendDetail.includes("last_seen_at")
+      || backendDetail.includes("last_login_at")
+      || backendDetail.includes("relation \"users\"")
+    )
+  ) {
+    return STOCK_DASHBOARD_LOGIN_CONFIG_TEXT;
+  }
+
+  if (statusCode === 400 && safeBackendMessage) {
+    return safeBackendMessage;
+  }
+
+  if (setupRequired && safeBackendMessage) {
+    return safeBackendMessage;
+  }
+
+  if (statusCode >= 500) {
+    return STOCK_DASHBOARD_LOGIN_UNAVAILABLE_TEXT;
+  }
+
+  if (safeBackendMessage && safeBackendMessage.toLowerCase() !== "server error") {
+    return safeBackendMessage;
+  }
+
+  return setupRequired ? "Could not create admin." : STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT;
+}
+
 async function stockDashboardSendAuthRequest(url, options = {}) {
   const forceRelogin = Boolean(options?.forceRelogin);
   if (stockDashboardAuthState === "checking") {
@@ -1730,9 +1782,12 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
 
   const typedUserNumber = String(userNumber || "").trim();
   const normalizedUserNumber = stockDashboardNormalizeElabUserNumber(typedUserNumber);
+  const apiBaseUrl = stockDashboardGetApiBaseUrl();
   stockDashboardLogAuthDebug("login-attempt", {
     typedUserNumber,
-    normalizedUserNumber
+    normalizedUserNumber,
+    apiBaseUrl,
+    endpoint: url
   });
   if (!normalizedUserNumber) {
     stockDashboardSetAuthState("error", "Enter a valid 2- or 3-digit eLab user number.");
@@ -1766,10 +1821,12 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload?.user) {
-      const errorMessage = payload?.error || (stockDashboardSetupRequired ? "Could not create admin." : STOCK_DASHBOARD_INVALID_LOGIN_TEXT);
+      const errorMessage = stockDashboardGetAuthErrorMessage(response, payload, {
+        setupRequired: stockDashboardSetupRequired
+      });
       const setupAlreadyConfigured = url === STOCK_DASHBOARD_BOOTSTRAP_URL
         && response.status === 403
-        && /already been configured/i.test(String(errorMessage));
+        && /already been configured/i.test(String(payload?.error || errorMessage));
       if (setupAlreadyConfigured) {
         stockDashboardSetupRequired = false;
         stockDashboardSetAuthState("idle", "Admin already exists. Checking your login details...");
@@ -1801,7 +1858,7 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
       }
       return;
     }
-    const fallbackMessage = stockDashboardSetupRequired ? "Could not create admin." : STOCK_DASHBOARD_INVALID_LOGIN_TEXT;
+    const fallbackMessage = stockDashboardSetupRequired ? "Could not create admin." : STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT;
     const message = error instanceof Error && error.message ? error.message : fallbackMessage;
     stockDashboardSetAuthState("error", message);
     if (!(error instanceof Error && error.message === STOCK_DASHBOARD_INVALID_LOGIN_TEXT)) {

@@ -81,6 +81,10 @@ const resetStockOrderBtn = document.getElementById("resetStockOrderBtn");
 const refreshStockTrackingBtn = document.getElementById("refreshStockTrackingBtn");
 const stockOrderTrackingMeta = document.getElementById("stockOrderTrackingMeta");
 const stockOrderTrackingList = document.getElementById("stockOrderTrackingList");
+const stockOrderSubmissionCard = document.getElementById("stockOrderSubmissionCard");
+const stockOrderSubmissionRequestId = document.getElementById("stockOrderSubmissionRequestId");
+const stockOrderSubmissionMessage = document.getElementById("stockOrderSubmissionMessage");
+const stockOrderTrackOrderBtn = document.getElementById("stockOrderTrackOrderBtn");
 const aboutPanel = document.getElementById("aboutPanel");
 const drawModal = document.getElementById("drawModal");
 const drawResultCard = document.getElementById("drawResultCard");
@@ -198,6 +202,7 @@ const STOCK_ORDER_HEADER_COPY = "Consumables, stock requests, and order status."
 const DRAW_PLAN_SHARE_PARAM = "plan";
 const STOCK_ORDER_HOME_URL = "./order-stock.html";
 const STOCK_DASHBOARD_URL = "./stock-dashboard.html";
+const TRACK_ORDERS_URL = "./track-orders.html";
 const THEME_STORAGE_KEY = "fmt-theme-mode";
 const THEME_COLOR_BY_MODE = {
   light: "#0f766e",
@@ -875,6 +880,16 @@ function openStockDashboard() {
   window.location.assign(STOCK_DASHBOARD_URL);
 }
 
+function openTrackOrders(params = {}) {
+  const url = new URL(TRACK_ORDERS_URL, window.location.href);
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const safeValue = String(value || "").trim();
+    if (!safeValue) return;
+    url.searchParams.set(key, safeValue);
+  });
+  window.location.assign(url.pathname + url.search);
+}
+
 // Formats a stock request timestamp for the tracking list.
 function formatStockRequestDateTime(value) {
   const date = new Date(value);
@@ -1380,6 +1395,38 @@ function resetStockOrderForm() {
   updateStockOrderPreview();
 }
 
+function showStockOrderSubmissionConfirmation(record = null, payload = null) {
+  if (!stockOrderSubmissionCard) return;
+
+  const requestId = String(record?.id || "").trim();
+  const requestedBy = String(record?.requestedBy || payload?.requestedBy || "").trim();
+  const wardUnit = String(record?.wardUnit || payload?.wardUnit || "").trim();
+
+  stockOrderSubmissionCard.hidden = !requestId;
+  if (!requestId) return;
+
+  if (stockOrderSubmissionRequestId) {
+    stockOrderSubmissionRequestId.textContent = requestId;
+  }
+
+  if (stockOrderSubmissionMessage) {
+    stockOrderSubmissionMessage.textContent = "Request submitted successfully. Use Track Orders to follow status updates.";
+  }
+
+  if (stockOrderTrackOrderBtn) {
+    const targetUrl = new URL(TRACK_ORDERS_URL, window.location.href);
+    targetUrl.searchParams.set("requestId", requestId);
+    if (requestedBy) targetUrl.searchParams.set("requestedBy", requestedBy);
+    if (wardUnit) targetUrl.searchParams.set("ward", wardUnit);
+    stockOrderTrackOrderBtn.setAttribute("href", `${targetUrl.pathname}${targetUrl.search}`);
+  }
+}
+
+function hideStockOrderSubmissionConfirmation() {
+  if (!stockOrderSubmissionCard) return;
+  stockOrderSubmissionCard.hidden = true;
+}
+
 // Initializes the consumables order panel.
 function initStockOrderPanel() {
   if (!stockOrderPanel || !stockOrderRequesterNameInput || !stockOrderRequesterSelect || !stockOrderGrid) return;
@@ -1393,6 +1440,7 @@ function initStockOrderPanel() {
   });
   stockOrderStatusMode = "draft";
   submittedStockOrderRecord = null;
+  hideStockOrderSubmissionConfirmation();
 
   populateStockRequesterOptions();
   renderStockOrderItems();
@@ -1400,6 +1448,7 @@ function initStockOrderPanel() {
   loadStockTrackingList();
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
+    hideStockOrderSubmissionConfirmation();
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
       submittedStockOrderRecord = null;
@@ -1408,6 +1457,7 @@ function initStockOrderPanel() {
   });
 
   stockOrderRequesterSelect.addEventListener("change", () => {
+    hideStockOrderSubmissionConfirmation();
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
       submittedStockOrderRecord = null;
@@ -1415,6 +1465,7 @@ function initStockOrderPanel() {
     updateStockOrderPreview();
   });
   stockOrderNoteInput?.addEventListener("input", () => {
+    hideStockOrderSubmissionConfirmation();
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
       submittedStockOrderRecord = null;
@@ -1460,14 +1511,17 @@ function initStockOrderPanel() {
       const sheetSyncWarning = result?.sheetSync && result.sheetSync.ok === false
         ? " Order saved, but Google Sheets still needs attention."
         : "";
+      const submittedRecord = submittedStockOrderRecord;
       showSelectionNotice(submittedStockOrderRecord?.id
         ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.${sheetSyncWarning}`
         : `Consumables request submitted.${sheetSyncWarning}`);
       resetStockOrderForm();
+      showStockOrderSubmissionConfirmation(submittedRecord, payload);
       loadStockTrackingList();
     } catch (error) {
       submittedStockOrderRecord = null;
       stockOrderStatusMode = "submit-failed";
+      hideStockOrderSubmissionConfirmation();
       const message = error instanceof Error
         ? error.message
         : "You can still copy or share it.";
@@ -1504,6 +1558,7 @@ function initStockOrderPanel() {
 
   bindPressAction(resetStockOrderBtn, () => {
     resetStockOrderForm();
+    hideStockOrderSubmissionConfirmation();
   });
 
   bindPressAction(refreshStockTrackingBtn, () => {
@@ -6816,6 +6871,11 @@ function bindEvents() {
 
         if (action === "stock-dashboard") {
           openStockDashboard();
+          return;
+        }
+
+        if (action === "track-orders") {
+          openTrackOrders();
           return;
         }
 

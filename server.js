@@ -22,6 +22,8 @@ const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
 const STOCK_SHEETS_TIMEOUT_MS = 12000;
 const STOCK_AUTH_INVALID_MESSAGE = "Login details not recognised.";
 const STOCK_AUTH_REPLACED_MESSAGE = "Session replaced by a newer login.";
+const STOCK_AUTH_SERVICE_UNAVAILABLE_MESSAGE = "Login service is unavailable.";
+const STOCK_AUTH_CONFIG_ERROR_MESSAGE = "Server configuration error.";
 const MAX_BODY_BYTES = 1024 * 1024;
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const AUTH_COOKIE_NAME = "fmt_lab_session";
@@ -132,6 +134,37 @@ function sendText(req, res, statusCode, message) {
     "Content-Length": Buffer.byteLength(message)
   });
   res.end(message);
+}
+
+function getErrorMessage(error) {
+  return error instanceof Error ? error.message : String(error || "Unknown error");
+}
+
+function isMissingUserSessionColumnsError(error) {
+  const message = getErrorMessage(error).toLowerCase();
+  if (!message) return false;
+  if (!message.includes("does not exist")) return false;
+  if (!message.includes("relation \"users\"") && !message.includes("table \"users\"")) return false;
+  return (
+    message.includes("active_session_token_hash")
+    || message.includes("last_seen_at")
+    || message.includes("last_login_at")
+  );
+}
+
+function logStockAuthError(context, error, details = {}) {
+  const safeDetails = { ...details };
+  try {
+    console.error(`[stock-auth] ${context}`, {
+      ...safeDetails,
+      errorMessage: getErrorMessage(error),
+      errorCode: error?.code || "",
+      errorDetails: error?.details || "",
+      errorHint: error?.hint || ""
+    });
+  } catch {
+    // no-op
+  }
 }
 
 function sanitizeString(value, maxLength = 160) {
@@ -818,7 +851,15 @@ async function requireLabSession(req, res) {
     }
     return session;
   } catch (error) {
-    sendJson(req, res, 500, { ok: false, error: error instanceof Error ? error.message : "Session check failed" });
+    logStockAuthError("require-session-failed", error, {
+      route: req.url || "",
+      method: req.method
+    });
+    if (isMissingUserSessionColumnsError(error)) {
+      sendJson(req, res, 500, { ok: false, code: "server_configuration_error", error: STOCK_AUTH_CONFIG_ERROR_MESSAGE });
+      return null;
+    }
+    sendJson(req, res, 503, { ok: false, code: "login_service_unavailable", error: STOCK_AUTH_SERVICE_UNAVAILABLE_MESSAGE });
     return null;
   }
 }
@@ -1439,9 +1480,21 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const user = await dbFindUserByUserNumber(userNumber);
+    let user = null;
+    try {
+      user = await dbFindUserByUserNumber(userNumber);
+    } catch (error) {
+      logStockAuthError("db-find-user-failed", error, {
+        userNumber,
+        route: pathname,
+        method: req.method
+      });
+      sendJson(req, res, 503, { ok: false, code: "login_service_unavailable", error: STOCK_AUTH_SERVICE_UNAVAILABLE_MESSAGE });
+      return;
+    }
+
     if (!user || !user.is_active || !verifyPinHash(pin, user.pin_hash)) {
-      sendJson(req, res, 401, { ok: false, error: STOCK_AUTH_INVALID_MESSAGE });
+      sendJson(req, res, 401, { ok: false, code: "invalid_credentials", error: STOCK_AUTH_INVALID_MESSAGE });
       return;
     }
 
@@ -1450,27 +1503,50 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + LAB_SESSION_TTL_MS);
 
-    await dbSingle(
-      supabase.from("lab_sessions").insert({
-        token_hash: tokenHash,
-        user_id: user.id,
-        expires_at: expiresAt.toISOString()
-      })
-    );
-
-    await dbSingle(
-      supabase
-        .from("users")
-        .update({
-          last_login_at: now.toISOString(),
-          last_seen_at: now.toISOString(),
-          active_session_token_hash: tokenHash,
-          updated_at: now.toISOString()
+    try {
+      await dbSingle(
+        supabase.from("lab_sessions").insert({
+          token_hash: tokenHash,
+          user_id: user.id,
+          expires_at: expiresAt.toISOString()
         })
-        .eq("id", user.id)
-    );
+      );
 
-    await dbCreateAuditLog(user.id, "login", "session", tokenHash, {});
+      await dbSingle(
+        supabase
+          .from("users")
+          .update({
+            last_login_at: now.toISOString(),
+            last_seen_at: now.toISOString(),
+            active_session_token_hash: tokenHash,
+            updated_at: now.toISOString()
+          })
+          .eq("id", user.id)
+      );
+
+      await dbCreateAuditLog(user.id, "login", "session", tokenHash, {});
+    } catch (error) {
+      logStockAuthError("login-persistence-failed", error, {
+        userId: user.id,
+        userNumber,
+        route: pathname,
+        method: req.method
+      });
+      if (isMissingUserSessionColumnsError(error)) {
+        sendJson(req, res, 500, {
+          ok: false,
+          code: "server_configuration_error",
+          error: STOCK_AUTH_CONFIG_ERROR_MESSAGE
+        });
+        return;
+      }
+      sendJson(req, res, 503, {
+        ok: false,
+        code: "login_service_unavailable",
+        error: STOCK_AUTH_SERVICE_UNAVAILABLE_MESSAGE
+      });
+      return;
+    }
 
     res.setHeader("Set-Cookie", buildAuthCookie(token, req, { expiresAt }));
     sendJson(req, res, 200, {
@@ -1524,48 +1600,72 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     const nowIso = new Date().toISOString();
     const pinHash = hashPin(pin);
-    const createdUser = await dbSingle(
-      supabase.from("users").insert({
-        user_number: userNumber,
-        display_name: displayName,
-        pin_hash: pinHash,
-        role: "admin",
-        is_active: true,
-        created_at: nowIso,
-        updated_at: nowIso,
-        last_login_at: nowIso,
-        last_seen_at: nowIso
-      }).select("*").single()
-    );
+    let createdUser = null;
+    let token = "";
+    try {
+      createdUser = await dbSingle(
+        supabase.from("users").insert({
+          user_number: userNumber,
+          display_name: displayName,
+          pin_hash: pinHash,
+          role: "admin",
+          is_active: true,
+          created_at: nowIso,
+          updated_at: nowIso,
+          last_login_at: nowIso,
+          last_seen_at: nowIso
+        }).select("*").single()
+      );
 
-    const token = createLabSessionToken();
-    const tokenHash = hashSessionToken(token);
-    const expiresAt = new Date(Date.now() + LAB_SESSION_TTL_MS);
-    await dbSingle(
-      supabase.from("lab_sessions").insert({
-        token_hash: tokenHash,
-        user_id: createdUser.id,
-        expires_at: expiresAt.toISOString()
-      })
-    );
-
-    await dbSingle(
-      supabase
-        .from("users")
-        .update({
-          active_session_token_hash: tokenHash,
-          last_seen_at: nowIso,
-          updated_at: nowIso
+      token = createLabSessionToken();
+      const tokenHash = hashSessionToken(token);
+      const expiresAt = new Date(Date.now() + LAB_SESSION_TTL_MS);
+      await dbSingle(
+        supabase.from("lab_sessions").insert({
+          token_hash: tokenHash,
+          user_id: createdUser.id,
+          expires_at: expiresAt.toISOString()
         })
-        .eq("id", createdUser.id)
-    );
+      );
 
-    await dbCreateAuditLog(createdUser.id, "bootstrap-admin", "user", createdUser.id, {
-      userNumber,
-      displayName
-    });
+      await dbSingle(
+        supabase
+          .from("users")
+          .update({
+            active_session_token_hash: tokenHash,
+            last_seen_at: nowIso,
+            updated_at: nowIso
+          })
+          .eq("id", createdUser.id)
+      );
 
-    res.setHeader("Set-Cookie", buildAuthCookie(token, req, { expiresAt }));
+      await dbCreateAuditLog(createdUser.id, "bootstrap-admin", "user", createdUser.id, {
+        userNumber,
+        displayName
+      });
+      res.setHeader("Set-Cookie", buildAuthCookie(token, req, { expiresAt }));
+    } catch (error) {
+      logStockAuthError("bootstrap-admin-failed", error, {
+        userNumber,
+        route: pathname,
+        method: req.method
+      });
+      if (isMissingUserSessionColumnsError(error)) {
+        sendJson(req, res, 500, {
+          ok: false,
+          code: "server_configuration_error",
+          error: STOCK_AUTH_CONFIG_ERROR_MESSAGE
+        });
+        return;
+      }
+      sendJson(req, res, 503, {
+        ok: false,
+        code: "login_service_unavailable",
+        error: STOCK_AUTH_SERVICE_UNAVAILABLE_MESSAGE
+      });
+      return;
+    }
+
     sendJson(req, res, 201, {
       ok: true,
       authenticated: true,
@@ -2188,8 +2288,20 @@ const server = http.createServer(async (req, res) => {
 
     await serveStaticAsset(req, res, requestUrl.pathname);
   } catch (error) {
+    try {
+      console.error("[api] unhandled-request-error", {
+        method: req.method,
+        url: req.url,
+        errorMessage: getErrorMessage(error),
+        errorCode: error?.code || "",
+        errorStack: error instanceof Error ? error.stack : ""
+      });
+    } catch {
+      // no-op
+    }
     sendJson(req, res, 500, {
       ok: false,
+      code: "server_error",
       error: "Server error",
       detail: error instanceof Error ? error.message : "Unknown error"
     });
