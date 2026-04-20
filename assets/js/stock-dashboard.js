@@ -62,7 +62,12 @@ const stockDashboardReceiptFormWrap = document.getElementById("stockDashboardRec
 const stockDashboardInventoryCard = document.getElementById("stockDashboardInventoryCard");
 const stockDashboardInventoryStatus = document.getElementById("stockDashboardInventoryStatus");
 const stockDashboardInventoryList = document.getElementById("stockDashboardInventoryList");
-const stockDashboardReceiptList = document.getElementById("stockDashboardReceiptList");
+const stockDashboardDataCard = document.getElementById("stockDashboardDataCard");
+const stockDashboardDataStatus = document.getElementById("stockDashboardDataStatus");
+const stockDashboardViewRequestsDataBtn = document.getElementById("stockDashboardViewRequestsDataBtn");
+const stockDashboardViewReceiptsDataBtn = document.getElementById("stockDashboardViewReceiptsDataBtn");
+const stockDashboardExportDataBtn = document.getElementById("stockDashboardExportDataBtn");
+const stockDashboardClearOldDataBtn = document.getElementById("stockDashboardClearOldDataBtn");
 const stockDashboardMetrics = document.getElementById("stockDashboardMetrics");
 const stockDashboardInsights = document.getElementById("stockDashboardInsights");
 const stockDashboardRequestsCard = document.getElementById("stockDashboardRequestsCard");
@@ -208,6 +213,12 @@ let stockDashboardManagedUsers = [];
 let stockDashboardApiConfig = null;
 let stockDashboardReceiptFormOpen = false;
 let stockDashboardIsSummaryOpen = false;
+const stockDashboardDatasets = {
+  stockRequests: [],
+  receivedStock: [],
+  activeWorkQueue: [],
+  archivedCompletedRequests: []
+};
 
 async function stockDashboardLoadApiConfig() {
   try {
@@ -710,39 +721,25 @@ function stockDashboardRenderInventory(summary = []) {
   }
 }
 
-function stockDashboardRenderReceipts(receipts = []) {
-  renderDashboardList(stockDashboardReceiptList, receipts, (receipt) => {
-    const items = Array.isArray(receipt.items) ? receipt.items : [];
-    const summary = items.map((item) => `${stockDashboardGetDisplayLabel(item)}: ${stockDashboardGetItemQuantityLabel(item)}`).join("\n");
-    const totalUnitsAdded = items.reduce((sum, item) => sum + Math.max(0, Number(item.inventoryUnits || 0)), 0);
-    const receivedBy = String(receipt?.receivedBy || "").trim();
-    const supplier = String(receipt?.supplierName || "").trim();
-    const reference = String(receipt?.reference || "").trim();
-    const metaBits = [
-      stockDashboardFormatDateTime(receipt.createdAt),
-      supplier ? `Supplier: ${supplier}` : "",
-      reference ? `Reference: ${reference}` : "",
-      receivedBy ? `Received by: Medical Technologist ${receivedBy}` : "",
-      `Total units added: ${totalUnitsAdded}`
-    ].filter(Boolean);
+function stockDashboardPrepareDatasets(requests = [], recentReceipts = []) {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeReceipts = Array.isArray(recentReceipts) ? recentReceipts : [];
+  const activeWorkQueue = safeRequests.filter((request) => stockDashboardNormalizeStatus(request?.status) !== "collected");
+  const archivedCompletedRequests = safeRequests.filter((request) => stockDashboardNormalizeStatus(request?.status) === "collected");
 
-    return `
-      <div class="stock-dashboard-request-card">
-        <div class="stock-dashboard-request-top">
-          <div>
-            <p class="stock-order-kicker">${stockDashboardEscapeHtml(receipt.id || "Receipt")}</p>
-            <h4>${stockDashboardEscapeHtml(supplier || "Received stock")}</h4>
-          </div>
-          <span class="stock-order-status-badge" data-status="received">Received</span>
-        </div>
-        <div class="stock-dashboard-request-meta">
-          ${metaBits.map((value) => `<span>${stockDashboardEscapeHtml(value)}</span>`).join("")}
-        </div>
-        <p class="stock-dashboard-request-items">${stockDashboardEscapeHtml(summary || "No items listed")}</p>
-        ${receipt.notes ? `<p class="stock-dashboard-request-note">${stockDashboardEscapeHtml(receipt.notes)}</p>` : ""}
-      </div>
-    `;
-  });
+  stockDashboardDatasets.stockRequests = safeRequests;
+  stockDashboardDatasets.receivedStock = safeReceipts;
+  stockDashboardDatasets.activeWorkQueue = activeWorkQueue;
+  stockDashboardDatasets.archivedCompletedRequests = archivedCompletedRequests;
+}
+
+function stockDashboardRefreshDataSectionStatus() {
+  if (!stockDashboardDataStatus) return;
+  const requestCount = stockDashboardDatasets.stockRequests.length;
+  const receiptCount = stockDashboardDatasets.receivedStock.length;
+  const activeCount = stockDashboardDatasets.activeWorkQueue.length;
+  const archivedCount = stockDashboardDatasets.archivedCompletedRequests.length;
+  stockDashboardDataStatus.textContent = `Requests: ${requestCount} · Received stock records: ${receiptCount} · Active queue: ${activeCount} · Archived/Collected: ${archivedCount}.`;
 }
 
 function stockDashboardRenderEditorGrid(grid, editorState, editorKey) {
@@ -1272,6 +1269,8 @@ function stockDashboardSetSession(user) {
   if (stockDashboardManualEntryCard) stockDashboardManualEntryCard.hidden = !canViewDashboard;
   if (stockDashboardReceiptCard) stockDashboardReceiptCard.hidden = !canViewDashboard;
   if (stockDashboardInventoryCard) stockDashboardInventoryCard.hidden = !canViewDashboard;
+  if (stockDashboardDataCard) stockDashboardDataCard.hidden = !canViewDashboard;
+  if (stockDashboardClearOldDataBtn) stockDashboardClearOldDataBtn.hidden = !isAdmin;
   if (!canViewDashboard) {
     stockDashboardSetReceiptFormOpen(false);
     stockDashboardSetSummaryOpen(false);
@@ -1336,7 +1335,8 @@ function stockDashboardSetSession(user) {
     }
     stockDashboardManagedUsers = [];
     if (stockDashboardInventoryList) stockDashboardInventoryList.innerHTML = "";
-    if (stockDashboardReceiptList) stockDashboardReceiptList.innerHTML = "";
+    stockDashboardPrepareDatasets([], []);
+    stockDashboardRefreshDataSectionStatus();
     if (stockDashboardStatusCounts) stockDashboardStatusCounts.innerHTML = "";
     if (stockDashboardTopWards) stockDashboardTopWards.innerHTML = "";
     if (stockDashboardTopItems) stockDashboardTopItems.innerHTML = "";
@@ -2090,7 +2090,8 @@ async function loadStockInventory() {
 
     const payload = await response.json().catch(() => ({}));
     stockDashboardRenderInventory(Array.isArray(payload?.summary) ? payload.summary : []);
-    stockDashboardRenderReceipts(Array.isArray(payload?.recentReceipts) ? payload.recentReceipts : []);
+    stockDashboardPrepareDatasets(stockDashboardDatasets.stockRequests, Array.isArray(payload?.recentReceipts) ? payload.recentReceipts : []);
+    stockDashboardRefreshDataSectionStatus();
   } catch {
     if (stockDashboardInventoryStatus) {
       stockDashboardInventoryStatus.textContent = "Could not load inventory.";
@@ -2098,9 +2099,8 @@ async function loadStockInventory() {
     if (stockDashboardInventoryList) {
       stockDashboardInventoryList.innerHTML = '<p class="stock-dashboard-empty">Inventory is not available yet.</p>';
     }
-    if (stockDashboardReceiptList) {
-      stockDashboardReceiptList.innerHTML = '<p class="stock-dashboard-empty">No received stock records yet.</p>';
-    }
+    stockDashboardPrepareDatasets(stockDashboardDatasets.stockRequests, []);
+    stockDashboardRefreshDataSectionStatus();
   }
 }
 
@@ -2176,10 +2176,12 @@ function renderStockDashboardStats(stats) {
 function renderStockDashboardRequests(requests) {
   if (!stockDashboardRequestList) return;
 
-  const activeRequests = Array.isArray(requests) ? requests : [];
+  const activeRequests = Array.isArray(requests)
+    ? requests.filter((request) => stockDashboardNormalizeStatus(request?.status) !== "collected")
+    : [];
 
   if (!activeRequests.length) {
-    stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No consumables requests yet. New ward requests will appear here automatically.</p>';
+    stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No active consumables requests in the queue.</p>';
     return;
   }
 
@@ -2271,6 +2273,7 @@ async function loadStockDashboard(options = {}) {
     const requestsPayload = await requestsResponse.json();
     const inventoryPayload = await inventoryResponse.json();
     const requests = requestsPayload.requests || [];
+    const recentReceipts = Array.isArray(inventoryPayload?.recentReceipts) ? inventoryPayload.recentReceipts : [];
     const authGenerationChanged = authGenerationAtStart !== stockDashboardAuthGeneration;
     const sessionChanged = !stockDashboardSession
       || String(stockDashboardSession.userNumber || "") !== requestedForUserNumber;
@@ -2287,8 +2290,9 @@ async function loadStockDashboard(options = {}) {
 
     renderStockDashboardStats(statsPayload.stats || {});
     renderStockDashboardRequests(requests);
+    stockDashboardPrepareDatasets(requests, recentReceipts);
+    stockDashboardRefreshDataSectionStatus();
     stockDashboardRenderInventory(Array.isArray(inventoryPayload?.summary) ? inventoryPayload.summary : []);
-    stockDashboardRenderReceipts(Array.isArray(inventoryPayload?.recentReceipts) ? inventoryPayload.recentReceipts : []);
     stockDashboardProcessNotifications(requests, { fromPoll });
     if (!silent) {
       stockDashboardStatus.textContent = `Updated ${stockDashboardFormatDateTime(new Date().toISOString())}`;
@@ -2570,6 +2574,31 @@ stockDashboardMarkSeenBtn?.addEventListener("click", () => {
 
 stockDashboardToggleStatsBtn?.addEventListener("click", () => {
   stockDashboardSetSummaryOpen(!stockDashboardIsSummaryOpen);
+});
+
+stockDashboardViewRequestsDataBtn?.addEventListener("click", () => {
+  if (stockDashboardDataStatus) {
+    stockDashboardDataStatus.textContent = `Requests dataset ready: ${stockDashboardDatasets.stockRequests.length} total, ${stockDashboardDatasets.activeWorkQueue.length} active, ${stockDashboardDatasets.archivedCompletedRequests.length} archived/collected.`;
+  }
+});
+
+stockDashboardViewReceiptsDataBtn?.addEventListener("click", () => {
+  if (stockDashboardDataStatus) {
+    stockDashboardDataStatus.textContent = `Received stock dataset ready: ${stockDashboardDatasets.receivedStock.length} record${stockDashboardDatasets.receivedStock.length === 1 ? "" : "s"}.`;
+  }
+});
+
+stockDashboardExportDataBtn?.addEventListener("click", () => {
+  if (stockDashboardDataStatus) {
+    stockDashboardDataStatus.textContent = "Export to Excel is prepared and will be wired to CSV/XLSX output next.";
+  }
+});
+
+stockDashboardClearOldDataBtn?.addEventListener("click", () => {
+  if (!stockDashboardIsAdminSession()) return;
+  if (stockDashboardDataStatus) {
+    stockDashboardDataStatus.textContent = "Clear old data is reserved for admin cleanup workflow and will be wired in a later step.";
+  }
 });
 
 stockDashboardReceiptToggleBtn?.addEventListener("click", () => {

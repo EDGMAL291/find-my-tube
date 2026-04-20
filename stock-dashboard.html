@@ -282,14 +282,22 @@
         </div>
 
         <div class="stock-dashboard-list" id="stockDashboardInventoryList"></div>
+      </section>
 
+      <section class="stock-order-request-card" id="stockDashboardDataCard" hidden aria-labelledby="stockDashboardDataTitle">
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Recent received stock</p>
-            <h3>Recent received stock</h3>
+            <p class="stock-order-kicker">Data</p>
+            <h3 id="stockDashboardDataTitle">Data</h3>
           </div>
+          <p class="stock-dashboard-status" id="stockDashboardDataStatus">Store and manage stock request and stock movement data for later review and Excel export.</p>
         </div>
-        <div class="stock-dashboard-list" id="stockDashboardReceiptList"></div>
+        <div class="stock-dashboard-inline-actions">
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardViewRequestsDataBtn">View requests data</button>
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardViewReceiptsDataBtn">View received stock data</button>
+          <button type="button" class="quick-tool-launch-btn" id="stockDashboardExportDataBtn">Export to Excel</button>
+          <button type="button" class="quick-tool-clear-btn" id="stockDashboardClearOldDataBtn" hidden>Clear old data</button>
+        </div>
       </section>
 
       <section class="stock-order-request-card" id="stockDashboardUserAdminCard" hidden aria-labelledby="stockDashboardUserAdminTitle">
