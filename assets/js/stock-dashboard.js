@@ -128,6 +128,7 @@ let stockDashboardLoginTimeoutTimer = 0;
 let stockDashboardLoginAttemptId = 0;
 let stockDashboardLogoutInProgress = false;
 let stockDashboardAuthGeneration = 0;
+let stockDashboardLastFocusedElement = null;
 
 function stockDashboardLogAuthDebug(stage, details = {}) {
   if (!STOCK_DASHBOARD_AUTH_DEBUG) return;
@@ -316,17 +317,12 @@ function stockDashboardGetUserHeading(user) {
   return roleLabel;
 }
 
-function stockDashboardGetSignedInLabel(user) {
-  const displayName = stockDashboardGetDisplayName(user);
-  const role = stockDashboardNormalizeUserRole(user?.role, Boolean(user?.isOwner));
-  if (role === "admin") {
-    const looksLikeLegacyAdminNumber = /^admin\s*\d+$/i.test(displayName);
-    const adminName = displayName && !looksLikeLegacyAdminNumber
-      ? displayName
-      : "Administrator";
-    return `Signed in as ${adminName}`;
-  }
-  if (displayName) return `Signed in as ${displayName}`;
+function stockDashboardGetSignedInStatusText(session) {
+  if (!session) return "Not signed in";
+  const role = stockDashboardNormalizeUserRole(session?.role, Boolean(session?.isOwner));
+  if (role === "admin") return "Signed in as Administrator";
+  const displayName = stockDashboardGetDisplayName(session);
+  if (displayName) return `Signed in as Medical Technologist – ${displayName}`;
   return "Signed in as Medical Technologist";
 }
 
@@ -1287,21 +1283,17 @@ function stockDashboardSetSession(user) {
   }
 
   if (stockDashboardSessionKicker) {
-    stockDashboardSessionKicker.textContent = isLoggedIn ? "Session active" : "Not signed in";
+    stockDashboardSessionKicker.textContent = "Status";
   }
 
   if (stockDashboardSessionUser) {
-    stockDashboardSessionUser.textContent = isLoggedIn
-      ? stockDashboardGetSignedInLabel(stockDashboardSession)
-      : "Stock Dashboard access";
+    stockDashboardSessionUser.textContent = stockDashboardGetSignedInStatusText(stockDashboardSession);
   }
 
   if (stockDashboardSessionMessage) {
-    if (!isLoggedIn) {
-      stockDashboardSessionMessage.textContent = "Sign in to view dashboard data and manage stock requests.";
-    } else {
-      stockDashboardSessionMessage.textContent = `Role: ${stockDashboardGetRoleLabel(stockDashboardSession.role, Boolean(stockDashboardSession.isOwner))}.`;
-    }
+    stockDashboardSessionMessage.textContent = isLoggedIn
+      ? "You can now view dashboard data and manage stock requests."
+      : "Sign in to view dashboard data and manage stock requests.";
   }
 
   if (clearStockDataBtn) {
@@ -1664,7 +1656,6 @@ async function loadStockDashboardUsers() {
         const safeUserId = String(user?.id || "").trim();
         const safeUserNumber = String(user?.userNumber || "").trim();
         const isSelf = stockDashboardSession?.userNumber === safeUserNumber;
-        const roleLabel = stockDashboardGetRoleLabel(user?.role, false);
         const statusLabel = stockDashboardNormalizeUserStatus(user?.status);
         const isDisabled = statusLabel === "Disabled";
         return `
@@ -1677,7 +1668,6 @@ async function loadStockDashboardUsers() {
               <span class="stock-order-status-badge" data-status="${isDisabled ? "cancelled" : "ready"}">${stockDashboardEscapeHtml(statusLabel)}</span>
             </div>
             <div class="stock-dashboard-request-meta">
-              <span>Role: ${stockDashboardEscapeHtml(roleLabel)}</span>
               <span>Normalized: ${stockDashboardEscapeHtml(safeUserNumber || "Unknown")}</span>
               <span>Created: ${stockDashboardEscapeHtml(stockDashboardFormatOptionalDate(user?.createdAt))}</span>
               <span>Last login: ${stockDashboardEscapeHtml(stockDashboardFormatOptionalDate(user?.lastLoginAt))}</span>
