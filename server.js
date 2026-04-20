@@ -27,7 +27,7 @@ const STOCK_AUTH_CONFIG_ERROR_MESSAGE = "Server configuration error.";
 const MAX_BODY_BYTES = 1024 * 1024;
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const AUTH_COOKIE_NAME = "fmt_lab_session";
-const VALID_REQUEST_STATUSES = new Set(["received", "packed", "ready", "collected", "completed", "cancelled"]);
+const VALID_REQUEST_STATUSES = new Set(["submitted", "received", "packed", "ready", "collected", "completed", "cancelled"]);
 
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
@@ -237,12 +237,13 @@ function normalizeUserStatus(value) {
 function slugifyStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "completed";
-  return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "received";
+  if (safeStatus === "received") return "submitted";
+  return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "submitted";
 }
 
 function formatStatusLabel(status) {
   const safeStatus = slugifyStatus(status);
-  if (safeStatus === "received") return "Submitted";
+  if (safeStatus === "submitted") return "Submitted";
   if (safeStatus === "packed") return "Ready for Collection";
   if (safeStatus === "ready") return "Ready for Collection";
   if (safeStatus === "collected" || safeStatus === "completed") return "Collected";
@@ -482,7 +483,7 @@ function appendStatusAudit(record, status, userNumber, timestamp) {
   });
   record.statusHistory = history;
 
-  if (safeStatus === "received") {
+  if (safeStatus === "submitted") {
     record.receivedAt = safeTimestamp;
     record.receivedBy = safeUserNumber;
   }
@@ -925,7 +926,7 @@ async function dbInsertRequest(payload, sessionUser = null) {
     ward_or_unit: payload.wardUnit,
     notes: payload.notes,
     request_text: payload.requestText,
-    status: "received",
+    status: "submitted",
     line_item_count: payload.lineItemCount,
     total_requested_quantity: payload.totalRequestedQuantity,
     submitted_at: payload.submittedAt || nowIso,
@@ -934,7 +935,7 @@ async function dbInsertRequest(payload, sessionUser = null) {
     requested_by_user_id: null,
     entered_by_user_id: sessionUser?.id || null,
     status_updated_by_user_id: sessionUser?.id || null,
-    status_history: [{ status: "received", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
+    status_history: [{ status: "submitted", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
   };
 
   await dbSingle(supabase.from("stock_requests").insert(record));
@@ -1387,7 +1388,7 @@ async function mirrorStockRequestToGoogleSheets(record) {
         source: sanitizeString(record?.source || "find-my-tube", 60),
         submittedAt: sanitizeString(record?.submittedAt, 40),
         createdAt: sanitizeString(record?.createdAt, 40),
-        status: sanitizeString(record?.status || "received", 40),
+        status: sanitizeString(record?.status || "submitted", 40),
         requestedBy: sanitizeString(record?.requestedBy, 120),
         wardUnit: sanitizeString(record?.wardUnit, 120),
         notes: sanitizeMultilineString(record?.notes, 500),

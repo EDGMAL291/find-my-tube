@@ -80,7 +80,7 @@ const stockDashboardTopWards = document.getElementById("stockDashboardTopWards")
 const stockDashboardTopItems = document.getElementById("stockDashboardTopItems");
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
-const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "collected", "cancelled"];
+const STOCK_DASHBOARD_STATUS_ORDER = ["submitted", "packed", "collected", "cancelled"];
 const STOCK_DASHBOARD_LEGACY_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
@@ -267,8 +267,8 @@ function stockDashboardEscapeHtml(value) {
 }
 
 function stockDashboardFormatStatus(status) {
-  const safeStatus = String(status || "received").trim().toLowerCase();
-  if (safeStatus === "received") return "Submitted";
+  const safeStatus = String(status || "submitted").trim().toLowerCase();
+  if (safeStatus === "submitted" || safeStatus === "received") return "Submitted";
   if (safeStatus === "packed") return "Ready for Collection";
   if (safeStatus === "ready") return "Ready for Collection";
   if (safeStatus === "collected" || safeStatus === "completed" || safeStatus === "sent") return "Collected";
@@ -365,12 +365,13 @@ function stockDashboardNormalizeStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "collected";
   if (safeStatus === "completed") return "collected";
-  return safeStatus || "received";
+  if (safeStatus === "received") return "submitted";
+  return safeStatus || "submitted";
 }
 
 function stockDashboardGetQueueStatusMeta(status) {
   const safeStatus = stockDashboardNormalizeStatus(status);
-  if (safeStatus === "received") return { label: "Submitted", stage: "submitted" };
+  if (safeStatus === "submitted") return { label: "Submitted", stage: "submitted" };
   if (safeStatus === "processing" || safeStatus === "in-progress") return { label: "Ready for Collection", stage: "ready" };
   if (safeStatus === "packed") return { label: "Ready for Collection", stage: "ready" };
   if (safeStatus === "ready") return { label: "Ready for Collection", stage: "ready" };

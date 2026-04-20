@@ -905,7 +905,8 @@ function formatStockRequestDateTime(value) {
 function normalizeStockRequestStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent" || safeStatus === "completed") return "collected";
-  return safeStatus || "received";
+  if (safeStatus === "received") return "submitted";
+  return safeStatus || "submitted";
 }
 
 // Gets a consistent stock item label for cards, summaries, and payload previews.
@@ -943,7 +944,7 @@ function renderStockTrackingList(requests) {
     const updateMeta = request?.statusUpdatedAt || request?.updatedAt
       ? `Last update ${formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
       : "";
-    const statusLabel = normalizedStatus === "received"
+    const statusLabel = normalizedStatus === "submitted"
       ? "Submitted"
       : normalizedStatus === "packed"
         ? "Ready for Collection"
@@ -1092,7 +1093,7 @@ function getStockOrderStatusLabel() {
   if (isSubmittingStockOrder) return "Submitting";
   if (stockOrderStatusMode === "submitted") {
     const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
-    if (submittedStatus === "received") return "Submitted";
+    if (submittedStatus === "submitted") return "Submitted";
     if (submittedStatus === "packed") return "Ready for Collection";
     if (submittedStatus === "ready") return "Ready for Collection";
     if (submittedStatus === "collected") return "Collected";

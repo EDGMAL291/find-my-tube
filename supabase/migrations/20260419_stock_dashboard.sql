@@ -24,7 +24,7 @@ create table if not exists public.stock_requests (
   ward_or_unit text not null,
   notes text,
   request_text text,
-  status text not null default 'received' check (status in ('received', 'packed', 'ready', 'collected', 'completed', 'cancelled')),
+  status text not null default 'submitted' check (status in ('submitted', 'packed', 'ready', 'collected', 'completed', 'cancelled')),
   status_updated_by_user_id uuid references public.users(id) on delete set null,
   status_history jsonb not null default '[]'::jsonb,
   inventory_deducted boolean not null default false,

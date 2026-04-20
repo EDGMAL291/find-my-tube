@@ -18,6 +18,7 @@
   const highlightedRequestId = String(params.get("requestId") || "").trim().toLowerCase();
   let trackOrders = [];
   let pollTimer = 0;
+  let wardFetchDebounceTimer = 0;
 
   function escapeHtml(value) {
     return String(value || "")
@@ -32,12 +33,13 @@
     const safe = String(status || "").trim().toLowerCase();
     if (safe === "sent" || safe === "completed") return "collected";
     if (safe === "packed" || safe === "in-progress" || safe === "processing") return "ready";
-    return safe || "received";
+    if (safe === "received") return "submitted";
+    return safe || "submitted";
   }
 
   function getStatusMeta(status) {
     const safe = normalizeStatus(status);
-    if (safe === "received") return { key: "received", label: "Submitted", stage: "submitted" };
+    if (safe === "submitted") return { key: "submitted", label: "Submitted", stage: "submitted" };
     if (safe === "ready") return { key: "ready", label: "Ready for Collection", stage: "ready" };
     if (safe === "collected") return { key: "collected", label: "Collected", stage: "collected" };
     if (safe === "cancelled") return { key: "cancelled", label: "Cancelled", stage: "cancelled" };
@@ -57,23 +59,6 @@
     }).format(date);
   }
 
-  function getItemsSummary(items) {
-    const safeItems = Array.isArray(items) ? items : [];
-    if (!safeItems.length) return "No items listed";
-
-    const labels = safeItems.slice(0, 3).map((item) => {
-      const label = String(item?.label || "Stock item").trim();
-      const quantity = String(item?.formattedQuantity || item?.quantity || "").trim();
-      return quantity ? `${label}: ${quantity}` : label;
-    });
-
-    if (safeItems.length > 3) {
-      labels.push(`+${safeItems.length - 3} more`);
-    }
-
-    return labels.join(" | ");
-  }
-
   function getApiUrl() {
     if (typeof buildStockApiUrl === "function") {
       return buildStockApiUrl("/api/stock-requests?limit=250");
@@ -81,34 +66,71 @@
     return `${window.location.origin}/api/stock-requests?limit=250`;
   }
 
-  function filteredOrders() {
-    const requestIdFilter = String(requestIdInput.value || "").trim().toLowerCase();
-    const requestedByFilter = String(requestedByInput.value || "").trim().toLowerCase();
-    const wardFilter = String(wardInput.value || "").trim().toLowerCase();
-    const statusFilter = normalizeStatus(statusSelect.value || "");
+  function getCurrentFilters() {
+    return {
+      requestId: String(requestIdInput.value || "").trim().toLowerCase(),
+      requestedBy: String(requestedByInput.value || "").trim().toLowerCase(),
+      ward: String(wardInput.value || "").trim().toLowerCase(),
+      status: String(statusSelect.value || "active").trim().toLowerCase()
+    };
+  }
 
-    return trackOrders.filter((order) => {
+  function sortByNewestFirst(rows = []) {
+    return [...rows].sort((a, b) => {
+      const aTime = new Date(a?.createdAt || a?.submittedAt || 0).getTime() || 0;
+      const bTime = new Date(b?.createdAt || b?.submittedAt || 0).getTime() || 0;
+      return bTime - aTime;
+    });
+  }
+
+  function filteredOrders() {
+    const filters = getCurrentFilters();
+
+    const filtered = trackOrders.filter((order) => {
       const id = String(order?.id || "").trim().toLowerCase();
       const requestedBy = String(order?.requestedBy || "").trim().toLowerCase();
       const ward = String(order?.wardUnit || "").trim().toLowerCase();
       const normalizedStatus = normalizeStatus(order?.status);
 
-      if (requestIdFilter && !id.includes(requestIdFilter)) return false;
-      if (requestedByFilter && !requestedBy.includes(requestedByFilter)) return false;
-      if (wardFilter && !ward.includes(wardFilter)) return false;
-      if (statusFilter && normalizedStatus !== statusFilter) return false;
+      if (filters.requestId && !id.includes(filters.requestId)) return false;
+      if (filters.requestedBy && !requestedBy.includes(filters.requestedBy)) return false;
+      if (filters.ward && !ward.includes(filters.ward)) return false;
+
+      if (filters.status === "active") {
+        if (normalizedStatus === "collected") return false;
+      } else if (filters.status !== "all" && filters.status && normalizedStatus !== filters.status) {
+        return false;
+      }
+
       return true;
     });
+
+    return sortByNewestFirst(filtered);
+  }
+
+  function getActiveCount(rows) {
+    return rows.filter((row) => {
+      const status = normalizeStatus(row?.status);
+      return status !== "collected";
+    }).length;
   }
 
   function renderRows() {
     const rows = filteredOrders();
+    const filters = getCurrentFilters();
 
     count.textContent = `${rows.length} request${rows.length === 1 ? "" : "s"}`;
 
     if (!rows.length) {
       table.innerHTML = '<p class="stock-dashboard-empty">No matching requests found for these filters.</p>';
+      if (filters.ward) {
+        meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (0 active).`;
+      }
       return;
+    }
+
+    if (filters.ward) {
+      meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (${getActiveCount(rows)} active).`;
     }
 
     const header = `
@@ -116,8 +138,7 @@
         <span>Request ID</span>
         <span>Requested by</span>
         <span>Ward / Unit</span>
-        <span>Date / Time</span>
-        <span>Items requested</span>
+        <span>Date</span>
         <span>Status</span>
       </div>
     `;
@@ -131,8 +152,7 @@
           <span class="track-orders-cell" data-label="Request ID">${escapeHtml(requestId)}</span>
           <span class="track-orders-cell" data-label="Requested by">${escapeHtml(request?.requestedBy || "Unknown requester")}</span>
           <span class="track-orders-cell" data-label="Ward / Unit">${escapeHtml(request?.wardUnit || "Ward not set")}</span>
-          <span class="track-orders-cell" data-label="Date / Time">${escapeHtml(formatDateTime(request?.createdAt || request?.submittedAt))}</span>
-          <span class="track-orders-cell" data-label="Items requested">${escapeHtml(getItemsSummary(request?.items))}</span>
+          <span class="track-orders-cell" data-label="Date">${escapeHtml(formatDateTime(request?.createdAt || request?.submittedAt))}</span>
           <span class="track-orders-cell" data-label="Status">
             <span class="track-orders-status-badge" data-stage="${escapeHtml(statusMeta.stage)}">${escapeHtml(statusMeta.label)}</span>
           </span>
@@ -158,7 +178,10 @@
       const payload = await response.json().catch(() => ({}));
       trackOrders = Array.isArray(payload?.requests) ? payload.requests : [];
       renderRows();
-      meta.textContent = `Live updates every 20 seconds. Last refresh: ${formatDateTime(new Date().toISOString())}.`;
+
+      if (!String(wardInput.value || "").trim()) {
+        meta.textContent = `Live updates every 20 seconds. Last refresh: ${formatDateTime(new Date().toISOString())}.`;
+      }
     } catch (error) {
       table.innerHTML = '<p class="stock-dashboard-empty">Tracking is unavailable right now. Please refresh and try again.</p>';
       meta.textContent = error instanceof Error ? error.message : "Tracking is unavailable right now.";
@@ -171,20 +194,30 @@
     const requestId = String(params.get("requestId") || "").trim();
     const requestedBy = String(params.get("requestedBy") || "").trim();
     const ward = String(params.get("ward") || "").trim();
-    const status = normalizeStatus(params.get("status") || "");
+    const status = normalizeStatus(params.get("status") || "active");
 
-    if (requestId) requestIdInput.value = requestId;
-    if (requestedBy) requestedByInput.value = requestedBy;
     if (ward) wardInput.value = ward;
-    if (status && ["received", "ready", "collected", "cancelled"].includes(status)) {
+    if (status && ["active", "submitted", "ready", "collected", "cancelled", "all"].includes(status)) {
       statusSelect.value = status;
+    } else {
+      statusSelect.value = "active";
     }
+    if (requestedBy) requestedByInput.value = requestedBy;
+    if (requestId) requestIdInput.value = requestId;
   }
 
   applyQueryParamsToFilters();
 
-  form?.addEventListener("input", () => {
+  form?.addEventListener("input", (event) => {
     renderRows();
+
+    const target = event.target instanceof Element ? event.target : null;
+    if (target?.id === "trackOrdersWardInput") {
+      window.clearTimeout(wardFetchDebounceTimer);
+      wardFetchDebounceTimer = window.setTimeout(() => {
+        loadOrders({ silent: true });
+      }, 300);
+    }
   });
 
   refreshBtn?.addEventListener("click", () => {
@@ -192,10 +225,10 @@
   });
 
   clearBtn?.addEventListener("click", () => {
-    requestIdInput.value = "";
-    requestedByInput.value = "";
     wardInput.value = "";
-    statusSelect.value = "";
+    statusSelect.value = "active";
+    requestedByInput.value = "";
+    requestIdInput.value = "";
     renderRows();
   });
 
@@ -205,6 +238,7 @@
 
   window.addEventListener("beforeunload", () => {
     window.clearInterval(pollTimer);
+    window.clearTimeout(wardFetchDebounceTimer);
   });
 
   loadOrders();

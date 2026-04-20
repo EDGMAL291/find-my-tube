@@ -1273,9 +1273,8 @@ body.find-my-test-page .about-panel {
   grid-template-columns:
     minmax(140px, 1.05fr)
     minmax(140px, 1fr)
+    minmax(160px, 1.05fr)
     minmax(130px, 0.9fr)
-    minmax(130px, 0.9fr)
-    minmax(190px, 1.6fr)
     minmax(120px, 0.85fr);
   gap: 0.6rem;
   align-items: center;
@@ -1322,15 +1321,15 @@ body.find-my-test-page .about-panel {
 }
 
 .track-orders-status-badge[data-stage="submitted"] {
-  color: #7a4e00;
-  background: rgba(250, 204, 21, 0.2);
-  border-color: rgba(180, 83, 9, 0.28);
-}
-
-.track-orders-status-badge[data-stage="ready"] {
   color: #1d4ed8;
   background: rgba(59, 130, 246, 0.14);
   border-color: rgba(37, 99, 235, 0.3);
+}
+
+.track-orders-status-badge[data-stage="ready"] {
+  color: #7a4e00;
+  background: rgba(250, 204, 21, 0.2);
+  border-color: rgba(180, 83, 9, 0.28);
 }
 
 .track-orders-status-badge[data-stage="collected"] {
