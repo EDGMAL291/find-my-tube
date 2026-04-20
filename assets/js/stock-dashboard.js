@@ -80,6 +80,19 @@ const STOCK_DASHBOARD_LEGACY_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
+const STOCK_DASHBOARD_SIGNED_OUT_KEY = "fmt-stock-auth-signed-out";
+const STOCK_DASHBOARD_AUTH_STATE_KEYS = Object.freeze([
+  STOCK_DASHBOARD_LEGACY_TOKEN_KEY,
+  "fmt-stock-lab-user",
+  "fmt-stock-lab-user-number",
+  "fmt-stock-lab-role",
+  "fmt-stock-lab-session",
+  "fmt-stock-lab-auth",
+  "fmt-stock-admin-user",
+  "fmt-stock-admin-role",
+  "fmt-stock-dashboard-admin",
+  "fmt-stock-dashboard-session"
+]);
 const STOCK_DASHBOARD_POLL_MS = 30000;
 const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
@@ -820,6 +833,100 @@ function stockDashboardClearScopedValuesForUserNumber(userNumber) {
   });
 }
 
+function stockDashboardRemoveStorageKeyFromAllStores(key) {
+  if (!key) return;
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // no-op
+  }
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // no-op
+  }
+  stockDashboardLogAuthDebug("storage-remove", { key });
+}
+
+function stockDashboardClearStorageByPrefixes(prefixes = []) {
+  [localStorage, sessionStorage].forEach((store) => {
+    try {
+      for (let index = store.length - 1; index >= 0; index -= 1) {
+        const key = String(store.key(index) || "");
+        if (!key) continue;
+        if (!prefixes.some((prefix) => key.startsWith(prefix))) continue;
+        store.removeItem(key);
+        stockDashboardLogAuthDebug("storage-remove-prefix", { key });
+      }
+    } catch {
+      // no-op
+    }
+  });
+}
+
+function stockDashboardSetSignedOutOverride(enabled) {
+  if (enabled) {
+    try {
+      localStorage.setItem(STOCK_DASHBOARD_SIGNED_OUT_KEY, "1");
+    } catch {
+      // no-op
+    }
+    try {
+      sessionStorage.setItem(STOCK_DASHBOARD_SIGNED_OUT_KEY, "1");
+    } catch {
+      // no-op
+    }
+    return;
+  }
+  stockDashboardRemoveStorageKeyFromAllStores(STOCK_DASHBOARD_SIGNED_OUT_KEY);
+}
+
+function stockDashboardHasSignedOutOverride() {
+  try {
+    if (localStorage.getItem(STOCK_DASHBOARD_SIGNED_OUT_KEY) === "1") return true;
+  } catch {
+    // no-op
+  }
+  try {
+    if (sessionStorage.getItem(STOCK_DASHBOARD_SIGNED_OUT_KEY) === "1") return true;
+  } catch {
+    // no-op
+  }
+  return false;
+}
+
+function stockDashboardClearAuthStateStorage() {
+  STOCK_DASHBOARD_AUTH_STATE_KEYS.forEach((key) => {
+    stockDashboardRemoveStorageKeyFromAllStores(key);
+  });
+  stockDashboardClearStorageByPrefixes([
+    `${STOCK_DASHBOARD_LAST_SEEN_PREFIX}:`,
+    `${STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX}:`
+  ]);
+}
+
+function stockDashboardHasAdminQueryFlag() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    return params.get("admin") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function stockDashboardGetCleanDashboardUrl() {
+  return `${window.location.origin}/stock-dashboard.html`;
+}
+
+function stockDashboardSanitizeDashboardUrlOnLoad() {
+  if (!stockDashboardHasAdminQueryFlag()) return;
+  try {
+    window.history.replaceState(null, "", stockDashboardGetCleanDashboardUrl());
+  } catch {
+    // no-op
+  }
+}
+
 function stockDashboardReturnToPreviousPage() {
   try {
     const referrer = String(document.referrer || "");
@@ -1108,6 +1215,9 @@ function stockDashboardSetSession(user) {
     role: stockDashboardNormalizeUserRole(user.role, Boolean(user.isOwner)),
     isOwner: Boolean(user.isOwner)
   } : null;
+  if (stockDashboardSession) {
+    stockDashboardSetSignedOutOverride(false);
+  }
 
   const { isLoggedIn, isAdmin, canViewDashboard } = stockDashboardGetAccessFlags(stockDashboardSession);
   stockDashboardLogAuthDebug("set-session", {
@@ -1441,6 +1551,7 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
     }
 
     stockDashboardSetupRequired = false;
+    stockDashboardSetSignedOutOverride(false);
     stockDashboardSetSession(payload.user);
     stockDashboardLogAuthDebug("login-success", {
       sessionUser: payload.user ? {
@@ -2223,6 +2334,10 @@ async function updateStockDashboardRequestStatus(requestId, status) {
 }
 
 async function checkStockDashboardSession() {
+  if (stockDashboardHasSignedOutOverride()) {
+    stockDashboardSetSession(null);
+    return;
+  }
   const authGenerationAtStart = stockDashboardAuthGeneration;
   try {
     const response = await stockDashboardFetch(STOCK_DASHBOARD_SESSION_URL, {
@@ -2282,13 +2397,15 @@ async function logoutStockDashboard() {
     stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
   }
   const previousSession = stockDashboardSession ? { ...stockDashboardSession } : null;
+  const shouldRedirectToCleanDashboard = stockDashboardHasAdminQueryFlag();
   const logoutGeneration = stockDashboardBumpAuthGeneration();
   stockDashboardLogoutInProgress = true;
   stockDashboardSetBusy(true);
 
   stockDashboardLatestRequestMarker = "";
   stockDashboardUnreadCount = 0;
-  localStorage.removeItem(STOCK_DASHBOARD_LEGACY_TOKEN_KEY);
+  stockDashboardClearAuthStateStorage();
+  stockDashboardSetSignedOutOverride(true);
   stockDashboardClearScopedValuesForUserNumber(previousSession?.userNumber || "");
   stockDashboardSetSession(null);
 
@@ -2330,6 +2447,9 @@ async function logoutStockDashboard() {
       isAdmin: Boolean(stockDashboardSession?.role === "admin")
     });
     stockDashboardSetBusy(false);
+    if (shouldRedirectToCleanDashboard) {
+      window.location.assign("/stock-dashboard.html");
+    }
   }
 }
 
@@ -2586,6 +2706,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 initStockDashboardTools();
+stockDashboardSanitizeDashboardUrlOnLoad();
 localStorage.removeItem(STOCK_DASHBOARD_LEGACY_TOKEN_KEY);
 stockDashboardSetSummaryOpen(false);
 stockDashboardLoadApiConfig();
