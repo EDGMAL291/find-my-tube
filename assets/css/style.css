@@ -1258,6 +1258,45 @@ body.find-my-test-page .about-panel {
   margin-top: 0.25rem;
 }
 
+#trackOrdersFiltersForm {
+  grid-template-columns: 1fr;
+  overflow-x: hidden;
+}
+
+#trackOrdersFiltersForm > * {
+  min-width: 0;
+}
+
+#trackOrdersFiltersForm .stock-order-field {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#trackOrdersFiltersForm .stock-order-field input,
+#trackOrdersFiltersForm .stock-order-field select,
+#trackOrdersFiltersForm .stock-order-field textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#trackOrdersFiltersForm .track-orders-filter-actions {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+
+#trackOrdersFiltersForm .track-orders-filter-actions > * {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .track-orders-table {
   margin-top: 0.9rem;
 }
@@ -1274,7 +1313,6 @@ body.find-my-test-page .about-panel {
     minmax(140px, 1.05fr)
     minmax(140px, 1fr)
     minmax(160px, 1.05fr)
-    minmax(130px, 0.9fr)
     minmax(120px, 0.85fr);
   gap: 0.6rem;
   align-items: center;
@@ -6841,6 +6879,11 @@ html[data-theme="neutral"] .stock-dashboard-chip {
 .stock-dashboard-notification-actions {
     justify-content: flex-start;
   }
+}
+
+#trackOrdersFiltersForm .track-orders-filter-actions {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 .app-env-badge {

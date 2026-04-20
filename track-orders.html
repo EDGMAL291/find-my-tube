@@ -38,7 +38,7 @@
           <span>tube</span>
         </button>
       </h1>
-      <p id="headerIntroText">Track stock request status by request ID, requester, or ward.</p>
+      <p id="headerIntroText">Track stock request status by ward, status, and requester.</p>
       <div class="header-settings" id="headerSettings">
         <button
           type="button"
@@ -94,7 +94,7 @@
         <div class="stock-order-request-head">
           <div>
             <p class="stock-order-kicker">Filters</p>
-            <h3 id="trackOrdersFiltersTitle">Find requests quickly</h3>
+            <h3 id="trackOrdersFiltersTitle">Search by ward or name</h3>
           </div>
           <p class="stock-order-request-meta" id="trackOrdersMeta">Loading requests...</p>
         </div>
@@ -105,26 +105,9 @@
             <input type="text" id="trackOrdersWardInput" placeholder="Type ward/unit (e.g. ICU, Medical ICU)" />
           </label>
 
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">Status</span>
-            <select id="trackOrdersStatusSelect">
-              <option value="active">Hide Collected (default)</option>
-              <option value="submitted">Submitted</option>
-              <option value="ready">Ready for Collection</option>
-              <option value="collected">Collected</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="all">All statuses</option>
-            </select>
-          </label>
-
-          <label class="stock-order-field">
+          <label class="stock-order-field stock-order-field-wide">
             <span class="stock-order-field-label">Requested by / user number</span>
             <input type="text" id="trackOrdersRequestedByInput" placeholder="Name or user number" />
-          </label>
-
-          <label class="stock-order-field">
-            <span class="stock-order-field-label">Request ID</span>
-            <input type="text" id="trackOrdersRequestIdInput" placeholder="e.g. STK-20260420-AB12" />
           </label>
 
           <div class="stock-order-request-actions track-orders-filter-actions stock-order-field stock-order-field-wide">

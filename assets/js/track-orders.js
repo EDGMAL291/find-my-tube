@@ -7,18 +7,17 @@
   const form = document.getElementById("trackOrdersFiltersForm");
   const refreshBtn = document.getElementById("trackOrdersRefreshBtn");
   const clearBtn = document.getElementById("trackOrdersClearFiltersBtn");
-  const requestIdInput = document.getElementById("trackOrdersRequestIdInput");
   const requestedByInput = document.getElementById("trackOrdersRequestedByInput");
   const wardInput = document.getElementById("trackOrdersWardInput");
-  const statusSelect = document.getElementById("trackOrdersStatusSelect");
 
-  if (!table || !meta || !count || !requestIdInput || !requestedByInput || !wardInput || !statusSelect) return;
+  if (!table || !meta || !count || !requestedByInput || !wardInput) return;
 
   const params = new URLSearchParams(window.location.search || "");
   const highlightedRequestId = String(params.get("requestId") || "").trim().toLowerCase();
   let trackOrders = [];
   let pollTimer = 0;
   let wardFetchDebounceTimer = 0;
+  let lastRefreshIso = "";
 
   function escapeHtml(value) {
     return String(value || "")
@@ -68,11 +67,14 @@
 
   function getCurrentFilters() {
     return {
-      requestId: String(requestIdInput.value || "").trim().toLowerCase(),
       requestedBy: String(requestedByInput.value || "").trim().toLowerCase(),
-      ward: String(wardInput.value || "").trim().toLowerCase(),
-      status: String(statusSelect.value || "active").trim().toLowerCase()
+      ward: String(wardInput.value || "").trim().toLowerCase()
     };
+  }
+
+  function getLastRefreshText() {
+    if (!lastRefreshIso) return "";
+    return `Last refresh: ${formatDateTime(lastRefreshIso)}.`;
   }
 
   function sortByNewestFirst(rows = []) {
@@ -87,20 +89,11 @@
     const filters = getCurrentFilters();
 
     const filtered = trackOrders.filter((order) => {
-      const id = String(order?.id || "").trim().toLowerCase();
       const requestedBy = String(order?.requestedBy || "").trim().toLowerCase();
       const ward = String(order?.wardUnit || "").trim().toLowerCase();
-      const normalizedStatus = normalizeStatus(order?.status);
 
-      if (filters.requestId && !id.includes(filters.requestId)) return false;
       if (filters.requestedBy && !requestedBy.includes(filters.requestedBy)) return false;
       if (filters.ward && !ward.includes(filters.ward)) return false;
-
-      if (filters.status === "active") {
-        if (normalizedStatus === "collected") return false;
-      } else if (filters.status !== "all" && filters.status && normalizedStatus !== filters.status) {
-        return false;
-      }
 
       return true;
     });
@@ -111,7 +104,7 @@
   function getActiveCount(rows) {
     return rows.filter((row) => {
       const status = normalizeStatus(row?.status);
-      return status !== "collected";
+      return status !== "collected" && status !== "cancelled";
     }).length;
   }
 
@@ -124,18 +117,17 @@
     if (!rows.length) {
       table.innerHTML = '<p class="stock-dashboard-empty">No matching requests found for these filters.</p>';
       if (filters.ward) {
-        meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (0 active).`;
+        meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (0 active). ${getLastRefreshText()}`.trim();
       }
       return;
     }
 
     if (filters.ward) {
-      meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (${getActiveCount(rows)} active).`;
+      meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (${getActiveCount(rows)} active). ${getLastRefreshText()}`.trim();
     }
 
     const header = `
       <div class="track-orders-header" role="row">
-        <span>Request ID</span>
         <span>Requested by</span>
         <span>Ward / Unit</span>
         <span>Date</span>
@@ -149,7 +141,6 @@
       const isHighlighted = highlightedRequestId && requestId.toLowerCase() === highlightedRequestId;
       return `
         <div class="track-orders-row${isHighlighted ? " is-highlighted" : ""}" role="row">
-          <span class="track-orders-cell" data-label="Request ID">${escapeHtml(requestId)}</span>
           <span class="track-orders-cell" data-label="Requested by">${escapeHtml(request?.requestedBy || "Unknown requester")}</span>
           <span class="track-orders-cell" data-label="Ward / Unit">${escapeHtml(request?.wardUnit || "Ward not set")}</span>
           <span class="track-orders-cell" data-label="Date">${escapeHtml(formatDateTime(request?.createdAt || request?.submittedAt))}</span>
@@ -177,10 +168,11 @@
 
       const payload = await response.json().catch(() => ({}));
       trackOrders = Array.isArray(payload?.requests) ? payload.requests : [];
+      lastRefreshIso = new Date().toISOString();
       renderRows();
 
       if (!String(wardInput.value || "").trim()) {
-        meta.textContent = `Live updates every 20 seconds. Last refresh: ${formatDateTime(new Date().toISOString())}.`;
+        meta.textContent = `Live updates every 2 minutes. ${getLastRefreshText()}`.trim();
       }
     } catch (error) {
       table.innerHTML = '<p class="stock-dashboard-empty">Tracking is unavailable right now. Please refresh and try again.</p>';
@@ -191,19 +183,11 @@
   }
 
   function applyQueryParamsToFilters() {
-    const requestId = String(params.get("requestId") || "").trim();
     const requestedBy = String(params.get("requestedBy") || "").trim();
     const ward = String(params.get("ward") || "").trim();
-    const status = normalizeStatus(params.get("status") || "active");
 
     if (ward) wardInput.value = ward;
-    if (status && ["active", "submitted", "ready", "collected", "cancelled", "all"].includes(status)) {
-      statusSelect.value = status;
-    } else {
-      statusSelect.value = "active";
-    }
     if (requestedBy) requestedByInput.value = requestedBy;
-    if (requestId) requestIdInput.value = requestId;
   }
 
   applyQueryParamsToFilters();
@@ -226,15 +210,13 @@
 
   clearBtn?.addEventListener("click", () => {
     wardInput.value = "";
-    statusSelect.value = "active";
     requestedByInput.value = "";
-    requestIdInput.value = "";
     renderRows();
   });
 
   pollTimer = window.setInterval(() => {
     loadOrders({ silent: true });
-  }, 20000);
+  }, 120000);
 
   window.addEventListener("beforeunload", () => {
     window.clearInterval(pollTimer);
