@@ -30,6 +30,14 @@ const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 const SUPABASE_ANON_KEY = String(process.env.SUPABASE_ANON_KEY || "").trim();
 const HAS_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+let SUPABASE_PROJECT_HOST = "";
+if (SUPABASE_URL) {
+  try {
+    SUPABASE_PROJECT_HOST = new URL(SUPABASE_URL).host;
+  } catch {
+    SUPABASE_PROJECT_HOST = "";
+  }
+}
 
 const supabase = HAS_SUPABASE
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -1287,7 +1295,9 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         baseUrl
       },
       supabase: {
-        hasAnonKey: Boolean(SUPABASE_ANON_KEY)
+        hasAnonKey: Boolean(SUPABASE_ANON_KEY),
+        configured: HAS_SUPABASE,
+        projectHost: SUPABASE_PROJECT_HOST
       },
       timestamp: new Date().toISOString()
     });
@@ -1575,44 +1585,57 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const existingUser = await dbFindUserByUserNumber(userNumber);
-    if (existingUser) {
-      sendJson(req, res, 409, {
-        ok: false,
-        error: existingUser.is_active
-          ? "That eLab user number already exists"
-          : "That eLab user number belongs to a disabled user. Re-enable or edit the existing user."
+    try {
+      const existingUser = await dbFindUserByUserNumber(userNumber);
+      if (existingUser) {
+        sendJson(req, res, 409, {
+          ok: false,
+          error: existingUser.is_active
+            ? "That eLab user number already exists"
+            : "That eLab user number belongs to a disabled user. Re-enable or edit the existing user."
+        });
+        return;
+      }
+
+      const nowIso = new Date().toISOString();
+      const user = await dbSingle(
+        supabase.from("users").insert({
+          user_number: userNumber,
+          display_name: displayName,
+          pin_hash: hashPin(pin),
+          role,
+          is_active: true,
+          created_at: nowIso,
+          updated_at: nowIso
+        }).select("*").single()
+      );
+
+      await dbCreateAuditLog(session.user.id, "create", "user", String(user.id), {
+        targetUserNumber: userNumber,
+        targetDisplayElabUserNumber: displayElabUserNumber || userNumber,
+        targetName: displayName,
+        beforeRole: "",
+        afterRole: role,
+        beforeStatus: "",
+        afterStatus: "active"
       });
-      return;
-    }
 
-    const nowIso = new Date().toISOString();
-    const user = await dbSingle(
-      supabase.from("users").insert({
-        user_number: userNumber,
-        display_name: displayName,
-        pin_hash: hashPin(pin),
+      sendJson(req, res, 201, {
+        ok: true,
+        user: mapUserFromDb(user)
+      });
+    } catch (error) {
+      console.error("Create user failed", {
+        actorUserId: sanitizeString(session.user?.id, 80),
+        userNumber,
         role,
-        is_active: true,
-        created_at: nowIso,
-        updated_at: nowIso
-      }).select("*").single()
-    );
-
-    await dbCreateAuditLog(session.user.id, "create", "user", String(user.id), {
-      targetUserNumber: userNumber,
-      targetDisplayElabUserNumber: displayElabUserNumber || userNumber,
-      targetName: displayName,
-      beforeRole: "",
-      afterRole: role,
-      beforeStatus: "",
-      afterStatus: "active"
-    });
-
-    sendJson(req, res, 201, {
-      ok: true,
-      user: mapUserFromDb(user)
-    });
+        reason: error instanceof Error ? error.message : "Unknown error"
+      });
+      sendJson(req, res, 500, {
+        ok: false,
+        error: "Could not save user. Please try again."
+      });
+    }
     return;
   }
 

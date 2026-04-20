@@ -86,9 +86,14 @@ const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
 const STOCK_DASHBOARD_LOGIN_TIMEOUT_MS = 5000;
 const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Login details not recognised.";
 const STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT = "Login failed. Please try again.";
+const STOCK_DASHBOARD_SAVE_USER_ERROR_TEXT = "Could not save user. Please try again.";
 const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out due to inactivity.";
 const STOCK_DASHBOARD_AUTH_DEBUG = true;
+const STOCK_DASHBOARD_PROD_API_BY_HOST = Object.freeze({
+  "findmytube.co.za": "https://find-my-tube-api.onrender.com",
+  "www.findmytube.co.za": "https://find-my-tube-api.onrender.com"
+});
 
 let stockDashboardSession = null;
 let stockDashboardPollTimer = 0;
@@ -133,6 +138,10 @@ function stockDashboardGetApiBaseUrl() {
 
   const currentOrigin = window.location.origin || "";
   const currentHostname = window.location.hostname || "";
+  const explicitProdApi = STOCK_DASHBOARD_PROD_API_BY_HOST[currentHostname];
+  if (explicitProdApi) {
+    return explicitProdApi;
+  }
   const currentPort = window.location.port || "";
   const isLikelyLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(currentHostname)
     || currentHostname.endsWith(".local")
@@ -1704,7 +1713,14 @@ async function createStockDashboardUser() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload?.error || "Could not create user");
+      if (response.status >= 500) {
+        console.error("Stock Dashboard create user failed on server", {
+          status: response.status,
+          error: payload?.error || ""
+        });
+        throw new Error(STOCK_DASHBOARD_SAVE_USER_ERROR_TEXT);
+      }
+      throw new Error(payload?.error || STOCK_DASHBOARD_SAVE_USER_ERROR_TEXT);
     }
 
     if (stockDashboardCreateUserForm) stockDashboardCreateUserForm.reset();
@@ -1715,7 +1731,7 @@ async function createStockDashboardUser() {
     if (stockDashboardUserAdminStatus) stockDashboardUserAdminStatus.textContent = "User created and saved.";
   } catch (error) {
     const errorText = error instanceof Error ? error.message : "";
-    const message = errorText || "User could not be saved. Please check storage or console errors.";
+    const message = errorText || STOCK_DASHBOARD_SAVE_USER_ERROR_TEXT;
     stockDashboardSetCreateUserMessage(message);
     if (stockDashboardUserAdminStatus) {
       stockDashboardUserAdminStatus.textContent = message;
