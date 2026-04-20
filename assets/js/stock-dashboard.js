@@ -81,8 +81,10 @@ const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
 const STOCK_DASHBOARD_SIGNED_OUT_KEY = "fmt-stock-auth-signed-out";
+const STOCK_DASHBOARD_ACTIVE_AUTH_KEY = "fmt-stock-auth-active";
 const STOCK_DASHBOARD_AUTH_STATE_KEYS = Object.freeze([
   STOCK_DASHBOARD_LEGACY_TOKEN_KEY,
+  STOCK_DASHBOARD_ACTIVE_AUTH_KEY,
   "fmt-stock-lab-user",
   "fmt-stock-lab-user-number",
   "fmt-stock-lab-role",
@@ -290,7 +292,7 @@ function stockDashboardNormalizeUserRole(role, isAdmin = false) {
 
 function stockDashboardGetRoleLabel(role, isAdmin = false) {
   return stockDashboardNormalizeUserRole(role, isAdmin) === "admin"
-    ? "Admin"
+    ? "Administrator"
     : "Medical Technologist";
 }
 
@@ -316,9 +318,16 @@ function stockDashboardGetUserHeading(user) {
 
 function stockDashboardGetSignedInLabel(user) {
   const displayName = stockDashboardGetDisplayName(user);
-  const roleLabel = stockDashboardGetRoleLabel(user?.role, Boolean(user?.isOwner));
-  if (displayName) return `Signed in as ${displayName} (${roleLabel}).`;
-  return `Signed in as ${roleLabel}.`;
+  const role = stockDashboardNormalizeUserRole(user?.role, Boolean(user?.isOwner));
+  if (role === "admin") {
+    const looksLikeLegacyAdminNumber = /^admin\s*\d+$/i.test(displayName);
+    const adminName = displayName && !looksLikeLegacyAdminNumber
+      ? displayName
+      : "Administrator";
+    return `Signed in as ${adminName}`;
+  }
+  if (displayName) return `Signed in as ${displayName}`;
+  return "Signed in as Medical Technologist";
 }
 
 function stockDashboardBuildUserApiUrlById(userId) {
@@ -895,6 +904,26 @@ function stockDashboardHasSignedOutOverride() {
   return false;
 }
 
+function stockDashboardSetActiveAuthMarker(enabled) {
+  if (enabled) {
+    try {
+      localStorage.setItem(STOCK_DASHBOARD_ACTIVE_AUTH_KEY, "1");
+    } catch {
+      // no-op
+    }
+    return;
+  }
+  stockDashboardRemoveStorageKeyFromAllStores(STOCK_DASHBOARD_ACTIVE_AUTH_KEY);
+}
+
+function stockDashboardHasActiveAuthMarker() {
+  try {
+    return localStorage.getItem(STOCK_DASHBOARD_ACTIVE_AUTH_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function stockDashboardClearAuthStateStorage() {
   STOCK_DASHBOARD_AUTH_STATE_KEYS.forEach((key) => {
     stockDashboardRemoveStorageKeyFromAllStores(key);
@@ -959,13 +988,13 @@ function stockDashboardSetAccessModalOpen(isOpen) {
   }
 
   if (isOpen && stockDashboardSession && stockDashboardAuthStatus) {
-    stockDashboardAuthStatus.textContent = `${stockDashboardGetSignedInLabel(stockDashboardSession)} Already signed in. Use Log out to switch accounts.`;
+    stockDashboardAuthStatus.textContent = "Already signed in. Use Log out to switch accounts.";
   }
 }
 
 function stockDashboardOpenLoginModal() {
   if (stockDashboardSession && stockDashboardAuthStatus) {
-    stockDashboardAuthStatus.textContent = `${stockDashboardGetSignedInLabel(stockDashboardSession)} Already signed in. Use Log out to switch accounts.`;
+    stockDashboardAuthStatus.textContent = "Already signed in. Use Log out to switch accounts.";
   } else if (stockDashboardAuthStatus) {
     stockDashboardAuthStatus.textContent = stockDashboardSetupRequired
       ? "No lab admin is set up yet. Enter your eLab user number (2 or 3 digits) and 4-digit PIN to create the first admin."
@@ -1217,6 +1246,9 @@ function stockDashboardSetSession(user) {
   } : null;
   if (stockDashboardSession) {
     stockDashboardSetSignedOutOverride(false);
+    stockDashboardSetActiveAuthMarker(true);
+  } else {
+    stockDashboardSetActiveAuthMarker(false);
   }
 
   const { isLoggedIn, isAdmin, canViewDashboard } = stockDashboardGetAccessFlags(stockDashboardSession);
@@ -1255,19 +1287,21 @@ function stockDashboardSetSession(user) {
   }
 
   if (stockDashboardSessionKicker) {
-    stockDashboardSessionKicker.textContent = isLoggedIn ? "Signed in as" : "Not signed in";
+    stockDashboardSessionKicker.textContent = isLoggedIn ? "Session active" : "Not signed in";
   }
 
   if (stockDashboardSessionUser) {
     stockDashboardSessionUser.textContent = isLoggedIn
-      ? `${stockDashboardGetDisplayName(stockDashboardSession) || `User ${stockDashboardSession.userNumber}`} - ${stockDashboardGetRoleLabel(stockDashboardSession.role, Boolean(stockDashboardSession.isOwner))}`
+      ? stockDashboardGetSignedInLabel(stockDashboardSession)
       : "Stock Dashboard access";
   }
 
   if (stockDashboardSessionMessage) {
-    stockDashboardSessionMessage.textContent = isLoggedIn
-      ? "You can now view dashboard data and manage stock requests."
-      : "Sign in to view dashboard data and manage stock requests.";
+    if (!isLoggedIn) {
+      stockDashboardSessionMessage.textContent = "Sign in to view dashboard data and manage stock requests.";
+    } else {
+      stockDashboardSessionMessage.textContent = `Role: ${stockDashboardGetRoleLabel(stockDashboardSession.role, Boolean(stockDashboardSession.isOwner))}.`;
+    }
   }
 
   if (clearStockDataBtn) {
@@ -1276,7 +1310,7 @@ function stockDashboardSetSession(user) {
 
   if (stockDashboardAuthStatus) {
     stockDashboardAuthStatus.textContent = isLoggedIn
-      ? stockDashboardGetSignedInLabel(stockDashboardSession)
+      ? "Session active. Use Log out to switch accounts."
       : stockDashboardSetupRequired
         ? "No lab admin is set up yet. Enter your eLab user number (2 or 3 digits) and 4-digit PIN to create the first admin."
         : "Sign in to view dashboard data and update request status.";
@@ -1485,7 +1519,7 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
   }
 
   if (stockDashboardSession && !forceRelogin) {
-    stockDashboardSetAuthState("error", `${stockDashboardGetSignedInLabel(stockDashboardSession)} Already signed in. Use Log out to switch accounts.`);
+    stockDashboardSetAuthState("error", "Already signed in. Use Log out to switch accounts.");
     return;
   }
 
@@ -1560,7 +1594,7 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
         isOwner: payload.user.isOwner
       } : null
     });
-    stockDashboardSetAuthState("success", stockDashboardGetSignedInLabel(payload.user));
+    stockDashboardSetAuthState("success", "Signed in.");
     if (stockDashboardPinInput) stockDashboardPinInput.value = "";
     await loadStockDashboard();
     await loadStockDashboardUsers();
@@ -1650,7 +1684,7 @@ async function loadStockDashboardUsers() {
             </div>
             <div class="stock-dashboard-inline-actions">
               <button type="button" class="quick-tool-clear-btn" data-user-action="${isDisabled ? "enable" : "disable"}" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">${isDisabled ? "Re-enable" : "Disable"}</button>
-              <button type="button" class="quick-tool-clear-btn" data-user-action="toggle-role" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">${roleLabel === "Admin" ? "Set as Medical Technologist" : "Set as Admin"}</button>
+              <button type="button" class="quick-tool-clear-btn" data-user-action="toggle-role" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">${stockDashboardNormalizeUserRole(user?.role, Boolean(user?.isOwner)) === "admin" ? "Set as Medical Technologist" : "Set as Administrator"}</button>
               <button type="button" class="quick-tool-clear-btn" data-user-action="reset-pin" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">Reset PIN</button>
               <button type="button" class="quick-tool-clear-btn" data-user-action="delete" data-user-id="${stockDashboardEscapeHtml(safeUserId)}" data-user-number="${stockDashboardEscapeHtml(safeUserNumber)}">Delete</button>
             </div>
@@ -1740,7 +1774,7 @@ async function stockDashboardHandleUserAction(action, userId, userNumber) {
       const changed = await stockDashboardUpdateUserRecord(
         safeUserId,
         { role: willSetAdmin ? "admin" : "labUser" },
-        willSetAdmin ? "Role updated to Admin." : "Role updated to Medical Technologist."
+        willSetAdmin ? "Role updated to Administrator." : "Role updated to Medical Technologist."
       );
       if (!changed) return;
     } else if (safeAction === "reset-pin") {
@@ -2338,6 +2372,10 @@ async function checkStockDashboardSession() {
     stockDashboardSetSession(null);
     return;
   }
+  if (!stockDashboardHasActiveAuthMarker()) {
+    stockDashboardSetSession(null);
+    return;
+  }
   const authGenerationAtStart = stockDashboardAuthGeneration;
   try {
     const response = await stockDashboardFetch(STOCK_DASHBOARD_SESSION_URL, {
@@ -2397,7 +2435,6 @@ async function logoutStockDashboard() {
     stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
   }
   const previousSession = stockDashboardSession ? { ...stockDashboardSession } : null;
-  const shouldRedirectToCleanDashboard = stockDashboardHasAdminQueryFlag();
   const logoutGeneration = stockDashboardBumpAuthGeneration();
   stockDashboardLogoutInProgress = true;
   stockDashboardSetBusy(true);
@@ -2447,9 +2484,7 @@ async function logoutStockDashboard() {
       isAdmin: Boolean(stockDashboardSession?.role === "admin")
     });
     stockDashboardSetBusy(false);
-    if (shouldRedirectToCleanDashboard) {
-      window.location.assign("/stock-dashboard.html");
-    }
+    window.location.assign("/stock-dashboard.html");
   }
 }
 
