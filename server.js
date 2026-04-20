@@ -456,6 +456,19 @@ function getStockInventoryLabel(item) {
   return sanitizeString(item?.label, 120) || sanitizeString(item?.id, 80) || "Item";
 }
 
+function getStockBatchKey(item) {
+  return getStockInventoryKey(item);
+}
+
+function buildBatchExpiryConflictMessage(itemLabel, expiryDate) {
+  const safeItemLabel = sanitizeString(itemLabel, 120) || "this item";
+  const safeExpiryDate = sanitizeDateOnly(expiryDate);
+  if (!safeExpiryDate) {
+    return "This lot number already exists for this item. Please use the same expiry date.";
+  }
+  return `This lot number already exists for this item with expiry ${safeExpiryDate}. Please use the same expiry date.`;
+}
+
 function appendStatusAudit(record, status, userNumber, timestamp) {
   const safeStatus = slugifyStatus(status);
   const safeUserNumber = sanitizeUserNumber(userNumber);
@@ -996,6 +1009,72 @@ async function dbApplyInventoryDelta(item, delta) {
   );
 }
 
+async function dbFindInventoryBatch(item, batchNumber) {
+  const itemKey = getStockBatchKey(item);
+  const safeBatchNumber = sanitizeString(batchNumber, 120);
+  if (!itemKey || !safeBatchNumber) return null;
+  return dbMaybeSingle(
+    supabase
+      .from("inventory_batches")
+      .select("*")
+      .eq("item_key", itemKey)
+      .eq("batch_number", safeBatchNumber)
+      .limit(1)
+      .maybeSingle()
+  );
+}
+
+async function dbUpsertInventoryBatch(item, sessionUser, receivedAtIso) {
+  const itemKey = getStockBatchKey(item);
+  const safeBatchNumber = sanitizeString(item?.batchNumber, 120);
+  if (!itemKey || !safeBatchNumber) return;
+
+  const nowIso = new Date().toISOString();
+  const inventoryUnits = Math.max(0, Number(getItemInventoryUnits(item)) || 0);
+  if (!inventoryUnits) return;
+
+  const existing = await dbFindInventoryBatch(item, safeBatchNumber);
+  const existingExpiryDate = sanitizeDateOnly(existing?.expiry_date);
+  const incomingExpiryDate = sanitizeDateOnly(item?.expiryDate);
+  const resolvedExpiryDate = existingExpiryDate || incomingExpiryDate || null;
+
+  if (!existing) {
+    await dbSingle(
+      supabase.from("inventory_batches").insert({
+        item_key: itemKey,
+        item_id: sanitizeString(item?.id, 80) || null,
+        item_name: getStockInventoryLabel(item),
+        batch_number: safeBatchNumber,
+        expiry_date: resolvedExpiryDate,
+        quantity_received: inventoryUnits,
+        quantity_remaining: inventoryUnits,
+        date_received: sanitizeString(receivedAtIso, 40) || nowIso,
+        received_by_user_id: sessionUser?.id || null,
+        last_received_at: nowIso,
+        created_at: nowIso,
+        updated_at: nowIso
+      })
+    );
+    return;
+  }
+
+  await dbSingle(
+    supabase
+      .from("inventory_batches")
+      .update({
+        item_id: sanitizeString(item?.id, 80) || existing.item_id || null,
+        item_name: getStockInventoryLabel(item),
+        expiry_date: resolvedExpiryDate,
+        quantity_received: Math.max(0, Number(existing.quantity_received || 0) + inventoryUnits),
+        quantity_remaining: Math.max(0, Number(existing.quantity_remaining || 0) + inventoryUnits),
+        received_by_user_id: sessionUser?.id || existing.received_by_user_id || null,
+        last_received_at: nowIso,
+        updated_at: nowIso
+      })
+      .eq("id", existing.id)
+  );
+}
+
 async function dbGetInventoryMap() {
   const rows = await dbSingle(supabase.from("inventory_balances").select("*").order("item_name", { ascending: true }));
   const map = new Map();
@@ -1024,6 +1103,43 @@ async function dbListInventorySummary() {
 async function dbInsertReceipt(payload, sessionUser) {
   const nowIso = new Date().toISOString();
   const receiptId = buildReceiptId();
+  const normalizedItems = [];
+  const batchExpiryMap = new Map();
+
+  for (const rawItem of payload.items) {
+    const item = { ...rawItem };
+    const batchNumber = sanitizeString(item?.batchNumber, 120);
+    const incomingExpiryDate = sanitizeDateOnly(item?.expiryDate);
+
+    if (batchNumber) {
+      item.batchNumber = batchNumber;
+      const itemBatchKey = `${getStockBatchKey(item).toLowerCase()}::${batchNumber.toLowerCase()}`;
+      const previouslySeenExpiry = batchExpiryMap.get(itemBatchKey) || "";
+      if (previouslySeenExpiry && incomingExpiryDate && previouslySeenExpiry !== incomingExpiryDate) {
+        const payloadConflictError = new Error(buildBatchExpiryConflictMessage(item?.label, previouslySeenExpiry));
+        payloadConflictError.code = "batch_expiry_conflict";
+        throw payloadConflictError;
+      }
+      const existingBatch = await dbFindInventoryBatch(item, batchNumber);
+      const existingExpiryDate = sanitizeDateOnly(existingBatch?.expiry_date);
+      if (existingExpiryDate && incomingExpiryDate && existingExpiryDate !== incomingExpiryDate) {
+        const conflictError = new Error(buildBatchExpiryConflictMessage(item?.label, existingExpiryDate));
+        conflictError.code = "batch_expiry_conflict";
+        throw conflictError;
+      }
+      if (existingExpiryDate && !incomingExpiryDate) {
+        item.expiryDate = existingExpiryDate;
+      }
+      const resolvedExpiryDate = sanitizeDateOnly(item?.expiryDate);
+      if (resolvedExpiryDate) {
+        batchExpiryMap.set(itemBatchKey, resolvedExpiryDate);
+      }
+    } else {
+      item.batchNumber = "";
+    }
+
+    normalizedItems.push(item);
+  }
 
   await dbSingle(
     supabase.from("received_stock").insert({
@@ -1040,9 +1156,9 @@ async function dbInsertReceipt(payload, sessionUser) {
     })
   );
 
-  if (payload.items.length) {
+  if (normalizedItems.length) {
     await dbSingle(
-      supabase.from("received_stock_items").insert(payload.items.map((item) => ({
+      supabase.from("received_stock_items").insert(normalizedItems.map((item) => ({
         received_stock_id: receiptId,
         item_id: item.id || null,
         item_name: item.label,
@@ -1055,13 +1171,16 @@ async function dbInsertReceipt(payload, sessionUser) {
         formatted_quantity: item.formattedQuantity || null,
         sheet_column_key: item.sheetColumnKey || null,
         sheet_tray_column_key: item.sheetTrayColumnKey || null,
-        sheet_single_column_key: item.sheetSingleColumnKey || null
+        sheet_single_column_key: item.sheetSingleColumnKey || null,
+        batch_number: item.batchNumber || null,
+        expiry_date: sanitizeDateOnly(item.expiryDate) || null
       })))
     );
   }
 
-  for (const item of payload.items) {
+  for (const item of normalizedItems) {
     await dbApplyInventoryDelta(item, getItemInventoryUnits(item));
+    await dbUpsertInventoryBatch(item, sessionUser, payload.submittedAt || nowIso);
   }
 
   await dbCreateAuditLog(sessionUser?.id || null, "create-received-stock", "received_stock", receiptId, {
@@ -2049,6 +2168,56 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
+  if (req.method === "GET" && pathname === "/api/lab/stock-batches/lookup") {
+    const session = await requireLabSession(req, res);
+    if (!session) return;
+
+    const itemKey = sanitizeString(searchParams.get("itemKey"), 80);
+    const itemId = sanitizeString(searchParams.get("itemId"), 80);
+    const itemLabel = sanitizeString(searchParams.get("itemLabel"), 120);
+    const batchNumber = sanitizeString(searchParams.get("batchNumber"), 120);
+
+    if (!batchNumber) {
+      sendJson(req, res, 200, {
+        ok: true,
+        exists: false
+      });
+      return;
+    }
+
+    const syntheticItem = {
+      sheetColumnKey: itemKey,
+      id: itemId,
+      label: itemLabel
+    };
+    const existing = await dbFindInventoryBatch(syntheticItem, batchNumber);
+    if (!existing) {
+      sendJson(req, res, 200, {
+        ok: true,
+        exists: false,
+        batchNumber
+      });
+      return;
+    }
+
+    sendJson(req, res, 200, {
+      ok: true,
+      exists: true,
+      batch: {
+        itemKey: sanitizeString(existing.item_key, 80),
+        itemId: sanitizeString(existing.item_id, 80),
+        itemName: sanitizeString(existing.item_name, 120),
+        batchNumber: sanitizeString(existing.batch_number, 120),
+        expiryDate: sanitizeDateOnly(existing.expiry_date),
+        quantityReceived: Math.max(0, Number(existing.quantity_received) || 0),
+        quantityRemaining: Math.max(0, Number(existing.quantity_remaining) || 0),
+        dateReceived: sanitizeString(existing.date_received, 40),
+        receivedBy: sanitizeString(existing.received_by_user_id, 80)
+      }
+    });
+    return;
+  }
+
   if (req.method === "POST" && pathname === "/api/lab/stock-receipts") {
     const session = await requireLabSession(req, res);
     if (!session) return;
@@ -2078,7 +2247,20 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const receipt = await dbInsertReceipt(cleanPayload, session.user);
+    let receipt = null;
+    try {
+      receipt = await dbInsertReceipt(cleanPayload, session.user);
+    } catch (error) {
+      if (error?.code === "batch_expiry_conflict") {
+        sendJson(req, res, 409, {
+          ok: false,
+          code: "batch_expiry_conflict",
+          error: error instanceof Error ? error.message : "Batch expiry conflict"
+        });
+        return;
+      }
+      throw error;
+    }
 
     sendJson(req, res, 201, {
       ok: true,

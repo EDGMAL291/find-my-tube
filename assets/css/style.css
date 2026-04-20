@@ -6460,6 +6460,11 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
   gap: 0.35rem;
 }
 
+.stock-dashboard-receipt-item-row input[data-receipt-field="expiryDate"][readonly] {
+  background: rgba(148, 163, 184, 0.16);
+  cursor: not-allowed;
+}
+
 .stock-dashboard-inline-actions {
   display: flex;
   flex-wrap: wrap;

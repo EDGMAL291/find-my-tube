@@ -208,6 +208,7 @@ const STOCK_DASHBOARD_USERS_URL = stockDashboardBuildApiUrl("/api/lab/users");
 const STOCK_DASHBOARD_MANUAL_REQUEST_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests/manual");
 const STOCK_DASHBOARD_RECEIPTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-receipts");
 const STOCK_DASHBOARD_INVENTORY_URL = stockDashboardBuildApiUrl("/api/lab/stock-inventory");
+const STOCK_DASHBOARD_BATCH_LOOKUP_URL = stockDashboardBuildApiUrl("/api/lab/stock-batches/lookup");
 
 async function stockDashboardFetch(url, options = {}) {
   const nextOptions = {
@@ -226,6 +227,7 @@ async function stockDashboardFetch(url, options = {}) {
 
 const stockDashboardManualState = Object.create(null);
 const stockDashboardReceiptRows = [];
+const stockDashboardBatchLookupCache = new Map();
 let stockDashboardManagedUsers = [];
 let stockDashboardApiConfig = null;
 let stockDashboardReceiptFormOpen = false;
@@ -521,6 +523,76 @@ function stockDashboardGetReceiptUnitOption(catalogItem, unitType) {
   return catalogItem.options.find((option) => option.value === safeUnitType) || catalogItem.options[0] || null;
 }
 
+function stockDashboardGetReceiptRowSourceItem(row) {
+  const catalogItem = stockDashboardGetReceiptCatalogItem(row?.itemKey);
+  const unitOption = stockDashboardGetReceiptUnitOption(catalogItem, row?.unitType);
+  return unitOption?.sourceItem || null;
+}
+
+function stockDashboardBuildBatchLookupCacheKey(itemKey, batchNumber) {
+  return `${String(itemKey || "").trim().toLowerCase()}::${String(batchNumber || "").trim().toLowerCase()}`;
+}
+
+async function stockDashboardLookupReceiptBatch(row) {
+  if (!row || !stockDashboardSession) return;
+
+  const sourceItem = stockDashboardGetReceiptRowSourceItem(row);
+  const batchNumber = String(row.batchNumber || "").trim();
+  if (!sourceItem || !batchNumber) {
+    row.batchExpiryLocked = false;
+    row.lockedExpiryDate = "";
+    row.batchExpiryMessage = "";
+    return;
+  }
+
+  const itemKey = String(sourceItem.sheetColumnKey || sourceItem.id || sourceItem.label || "").trim();
+  if (!itemKey) return;
+
+  const cacheKey = stockDashboardBuildBatchLookupCacheKey(itemKey, batchNumber);
+  let payload = stockDashboardBatchLookupCache.get(cacheKey) || null;
+  if (!payload) {
+    const lookupUrl = new URL(STOCK_DASHBOARD_BATCH_LOOKUP_URL, window.location.origin);
+    lookupUrl.searchParams.set("itemKey", itemKey);
+    lookupUrl.searchParams.set("itemId", String(sourceItem.id || ""));
+    lookupUrl.searchParams.set("itemLabel", String(sourceItem.label || ""));
+    lookupUrl.searchParams.set("batchNumber", batchNumber);
+
+    const response = await stockDashboardFetch(lookupUrl.toString(), {
+      cache: "no-store",
+      headers: stockDashboardGetHeaders()
+    });
+    if (response.status === 401) {
+      stockDashboardSetSession(null);
+      return;
+    }
+    payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || "Could not validate batch expiry.");
+    }
+    stockDashboardBatchLookupCache.set(cacheKey, payload);
+  }
+
+  if (!payload?.exists || !payload?.batch) {
+    row.batchExpiryLocked = false;
+    row.lockedExpiryDate = "";
+    row.batchExpiryMessage = "";
+    return;
+  }
+
+  const existingExpiryDate = String(payload.batch.expiryDate || "").trim();
+  if (!existingExpiryDate) {
+    row.batchExpiryLocked = false;
+    row.lockedExpiryDate = "";
+    row.batchExpiryMessage = "This lot already exists but has no recorded expiry yet.";
+    return;
+  }
+
+  row.lockedExpiryDate = existingExpiryDate;
+  row.batchExpiryLocked = true;
+  row.expiryDate = existingExpiryDate;
+  row.batchExpiryMessage = `Existing lot detected. Expiry fixed to ${existingExpiryDate}.`;
+}
+
 function stockDashboardEnsureReceiptRows() {
   if (stockDashboardReceiptRows.length) return;
   if (!stockDashboardReceiptItemCatalog.length) return;
@@ -531,7 +603,10 @@ function stockDashboardEnsureReceiptRows() {
     unitType: stockDashboardReceiptItemCatalog[0].defaultUnit,
     quantity: "",
     batchNumber: "",
-    expiryDate: ""
+    expiryDate: "",
+    lockedExpiryDate: "",
+    batchExpiryLocked: false,
+    batchExpiryMessage: ""
   });
 }
 
@@ -549,7 +624,10 @@ function stockDashboardAddReceiptRow(initialValues = {}) {
     unitType: nextUnitType,
     quantity: String(initialValues.quantity || "").trim(),
     batchNumber: String(initialValues.batchNumber || "").trim(),
-    expiryDate: String(initialValues.expiryDate || "").trim()
+    expiryDate: String(initialValues.expiryDate || "").trim(),
+    lockedExpiryDate: String(initialValues.lockedExpiryDate || "").trim(),
+    batchExpiryLocked: Boolean(initialValues.batchExpiryLocked),
+    batchExpiryMessage: String(initialValues.batchExpiryMessage || "").trim()
   });
 }
 
@@ -591,6 +669,7 @@ function stockDashboardRenderReceiptItemRows() {
     const safeQuantity = String(row.quantity || "");
     const safeBatchNumber = String(row.batchNumber || "");
     const safeExpiryDate = String(row.expiryDate || "");
+    const safeBatchMessage = String(row.batchExpiryMessage || "");
 
     return `
       <div class="stock-dashboard-receipt-item-row" data-receipt-row-id="${stockDashboardEscapeHtml(row.id)}">
@@ -624,13 +703,14 @@ function stockDashboardRenderReceiptItemRows() {
 
         <label class="stock-order-field">
           <span class="stock-order-field-label">Expiry date</span>
-          <input type="date" data-receipt-field="expiryDate" value="${stockDashboardEscapeHtml(safeExpiryDate)}" />
+          <input type="date" data-receipt-field="expiryDate" value="${stockDashboardEscapeHtml(safeExpiryDate)}"${row.batchExpiryLocked ? " readonly" : ""} />
         </label>
 
         <div class="stock-dashboard-receipt-row-actions">
           <button type="button" class="quick-tool-clear-btn" data-receipt-remove-row="${stockDashboardEscapeHtml(row.id)}"${stockDashboardReceiptRows.length <= 1 ? " disabled" : ""}>Remove</button>
           <p class="stock-dashboard-status">Row ${index + 1}</p>
         </div>
+        ${safeBatchMessage ? `<p class="stock-dashboard-status">${stockDashboardEscapeHtml(safeBatchMessage)}</p>` : ""}
       </div>
     `;
   }).join("");
@@ -643,6 +723,7 @@ function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
   const errors = [];
   const mergedItems = new Map();
   const receiptItems = [];
+  const batchExpiryByItemAndLot = new Map();
   const summaryRows = [];
 
   if (!stockDashboardReceiptRows.length) {
@@ -665,12 +746,38 @@ function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
     }
 
     const sourceItem = unitOption.sourceItem;
+    const itemForTotals = {
+      ...sourceItem,
+      quantity
+    };
+    const inventoryUnits = typeof getStockInventoryUnits === "function"
+      ? getStockInventoryUnits(itemForTotals)
+      : (sourceItem.unitType === "tray"
+        ? quantity * Math.max(0, Number(sourceItem.traySize || 0))
+        : sourceItem.unitType === "packet"
+          ? quantity * Math.max(0, Number(sourceItem.packetSize || 0))
+          : quantity);
     const batchNumber = String(row.batchNumber || "").trim();
     const expiryDateRaw = String(row.expiryDate || "").trim();
     const expiryDate = /^\d{4}-\d{2}-\d{2}$/.test(expiryDateRaw) ? expiryDateRaw : "";
     if (validate && expiryDateRaw && !expiryDate) {
       errors.push("Use a valid expiry date format (YYYY-MM-DD) for each item.");
       return;
+    }
+    if (validate && row.batchExpiryLocked && row.lockedExpiryDate && expiryDate && expiryDate !== row.lockedExpiryDate) {
+      errors.push(`This lot number already exists for this item with expiry ${row.lockedExpiryDate}. Please use the same expiry date.`);
+      return;
+    }
+    if (validate && batchNumber) {
+      const itemBatchKey = `${String(sourceItem.sheetColumnKey || sourceItem.id || sourceItem.label || "").toLowerCase()}::${batchNumber.toLowerCase()}`;
+      const knownExpiry = batchExpiryByItemAndLot.get(itemBatchKey) || "";
+      if (knownExpiry && expiryDate && knownExpiry !== expiryDate) {
+        errors.push(`This lot number already exists for this item with expiry ${knownExpiry}. Please use the same expiry date.`);
+        return;
+      }
+      if (expiryDate) {
+        batchExpiryByItemAndLot.set(itemBatchKey, expiryDate);
+      }
     }
 
     receiptItems.push({
@@ -691,18 +798,6 @@ function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
       batchNumber,
       expiryDate
     });
-
-    const itemForTotals = {
-      ...sourceItem,
-      quantity
-    };
-    const inventoryUnits = typeof getStockInventoryUnits === "function"
-      ? getStockInventoryUnits(itemForTotals)
-      : (sourceItem.unitType === "tray"
-        ? quantity * Math.max(0, Number(sourceItem.traySize || 0))
-        : sourceItem.unitType === "packet"
-          ? quantity * Math.max(0, Number(sourceItem.packetSize || 0))
-          : quantity);
     const mergedKey = sourceItem.id;
 
     if (!mergedItems.has(mergedKey)) {
@@ -2168,6 +2263,7 @@ function stockDashboardResetManualForm() {
 
 function stockDashboardResetReceiptForm() {
   stockDashboardReceiptRows.length = 0;
+  stockDashboardBatchLookupCache.clear();
   if (stockDashboardReceiptForm) stockDashboardReceiptForm.reset();
   stockDashboardEnsureReceiptRows();
   stockDashboardRenderReceiptItemRows();
@@ -2977,7 +3073,7 @@ stockDashboardReceiptItemsRows?.addEventListener("click", (event) => {
   stockDashboardRenderReceiptItemRows();
 });
 
-stockDashboardReceiptItemsRows?.addEventListener("change", (event) => {
+stockDashboardReceiptItemsRows?.addEventListener("change", async (event) => {
   const target = event.target instanceof Element ? event.target : null;
   const rowElement = target?.closest("[data-receipt-row-id]");
   if (!(rowElement instanceof HTMLElement)) return;
@@ -2989,19 +3085,59 @@ stockDashboardReceiptItemsRows?.addEventListener("change", (event) => {
     row.itemKey = target.value;
     const catalogItem = stockDashboardGetReceiptCatalogItem(row.itemKey);
     row.unitType = stockDashboardGetReceiptUnitOption(catalogItem, row.unitType)?.value || catalogItem?.defaultUnit || "each";
+    row.batchExpiryLocked = false;
+    row.lockedExpiryDate = "";
+    row.batchExpiryMessage = "";
+    if (String(row.batchNumber || "").trim()) {
+      try {
+        await stockDashboardLookupReceiptBatch(row);
+      } catch (error) {
+        row.batchExpiryMessage = error instanceof Error ? error.message : "Could not validate batch expiry.";
+      }
+    }
     stockDashboardRenderReceiptItemRows();
     return;
   }
 
   if (field === "unit" && target instanceof HTMLSelectElement) {
     row.unitType = target.value;
+    row.batchExpiryLocked = false;
+    row.lockedExpiryDate = "";
+    row.batchExpiryMessage = "";
+    if (String(row.batchNumber || "").trim()) {
+      try {
+        await stockDashboardLookupReceiptBatch(row);
+      } catch (error) {
+        row.batchExpiryMessage = error instanceof Error ? error.message : "Could not validate batch expiry.";
+      }
+    }
     stockDashboardRenderReceiptItemRows();
     return;
   }
 
   if (field === "expiryDate" && target instanceof HTMLInputElement) {
+    if (row.batchExpiryLocked && row.lockedExpiryDate) {
+      row.expiryDate = row.lockedExpiryDate;
+      stockDashboardRenderReceiptItemRows();
+      return;
+    }
     row.expiryDate = target.value;
     return;
+  }
+
+  if (field === "batchNumber" && target instanceof HTMLInputElement) {
+    row.batchNumber = target.value;
+    row.batchExpiryLocked = false;
+    row.lockedExpiryDate = "";
+    row.batchExpiryMessage = "";
+    if (String(row.batchNumber || "").trim()) {
+      try {
+        await stockDashboardLookupReceiptBatch(row);
+      } catch (error) {
+        row.batchExpiryMessage = error instanceof Error ? error.message : "Could not validate batch expiry.";
+      }
+    }
+    stockDashboardRenderReceiptItemRows();
   }
 });
 
@@ -3018,6 +3154,9 @@ stockDashboardReceiptItemsRows?.addEventListener("input", (event) => {
     row.quantity = target.value;
   } else if (field === "batchNumber") {
     row.batchNumber = target.value;
+    row.batchExpiryLocked = false;
+    row.lockedExpiryDate = "";
+    row.batchExpiryMessage = "";
   } else {
     return;
   }
