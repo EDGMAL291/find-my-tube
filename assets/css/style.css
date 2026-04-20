@@ -6348,7 +6348,13 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
 
 .stock-dashboard-receipt-item-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(130px, 0.7fr) minmax(150px, 0.8fr) auto;
+  grid-template-columns:
+    minmax(0, 1.35fr)
+    minmax(120px, 0.65fr)
+    minmax(130px, 0.7fr)
+    minmax(165px, 0.95fr)
+    minmax(170px, 0.95fr)
+    auto;
   gap: 0.65rem;
   padding: 0.8rem;
   border-radius: 14px;
@@ -6642,6 +6648,10 @@ html[data-theme="neutral"] .stock-dashboard-chip {
   .stock-dashboard-metrics,
   .stock-dashboard-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stock-dashboard-receipt-item-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

@@ -104,12 +104,17 @@ const STOCK_DASHBOARD_POLL_MS = 30000;
 const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
 const STOCK_DASHBOARD_LOGIN_TIMEOUT_MS = 5000;
+const STOCK_DASHBOARD_SESSION_CHECK_MS = 20000;
 const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Login details not recognised.";
 const STOCK_DASHBOARD_LOGIN_GENERIC_ERROR_TEXT = "Login failed. Please try again.";
 const STOCK_DASHBOARD_SAVE_USER_ERROR_TEXT = "Could not save user. Please try again.";
+const STOCK_DASHBOARD_REPLACED_MESSAGE = "You were logged out because this account was signed in somewhere else.";
 const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
 const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out due to inactivity.";
 const STOCK_DASHBOARD_AUTH_DEBUG = true;
+const STOCK_DASHBOARD_AUTH_BROADCAST_NAME = "fmt-stock-auth-sync";
+const STOCK_DASHBOARD_AUTH_SYNC_EVENT_KEY = "fmt-stock-auth-sync-event";
+const STOCK_DASHBOARD_AUTH_FLASH_MESSAGE_KEY = "fmt-stock-auth-flash";
 const STOCK_DASHBOARD_PROD_API_BY_HOST = Object.freeze({
   "findmytube.co.za": "https://find-my-tube-api.onrender.com",
   "www.findmytube.co.za": "https://find-my-tube-api.onrender.com"
@@ -134,6 +139,9 @@ let stockDashboardLoginAttemptId = 0;
 let stockDashboardLogoutInProgress = false;
 let stockDashboardAuthGeneration = 0;
 let stockDashboardLastFocusedElement = null;
+let stockDashboardSessionCheckTimer = 0;
+let stockDashboardAuthSyncChannel = null;
+let stockDashboardHandlingRemoteLogout = false;
 
 function stockDashboardLogAuthDebug(stage, details = {}) {
   if (!STOCK_DASHBOARD_AUTH_DEBUG) return;
@@ -199,12 +207,19 @@ const STOCK_DASHBOARD_MANUAL_REQUEST_URL = stockDashboardBuildApiUrl("/api/lab/s
 const STOCK_DASHBOARD_RECEIPTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-receipts");
 const STOCK_DASHBOARD_INVENTORY_URL = stockDashboardBuildApiUrl("/api/lab/stock-inventory");
 
-function stockDashboardFetch(url, options = {}) {
+async function stockDashboardFetch(url, options = {}) {
   const nextOptions = {
     ...options,
     credentials: "include"
   };
-  return window.fetch(url, nextOptions);
+  const response = await window.fetch(url, nextOptions);
+  if (response.status === 401) {
+    const payload = await response.clone().json().catch(() => ({}));
+    if (String(payload?.reason || "").trim().toLowerCase() === "session_replaced") {
+      stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast: true, reload: true });
+    }
+  }
+  return response;
 }
 
 const stockDashboardManualState = Object.create(null);
@@ -512,7 +527,9 @@ function stockDashboardEnsureReceiptRows() {
     id: `receipt-row-${Date.now()}-0`,
     itemKey: stockDashboardReceiptItemCatalog[0].key,
     unitType: stockDashboardReceiptItemCatalog[0].defaultUnit,
-    quantity: ""
+    quantity: "",
+    batchNumber: "",
+    expiryDate: ""
   });
 }
 
@@ -528,7 +545,9 @@ function stockDashboardAddReceiptRow(initialValues = {}) {
     id: `receipt-row-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
     itemKey,
     unitType: nextUnitType,
-    quantity: String(initialValues.quantity || "").trim()
+    quantity: String(initialValues.quantity || "").trim(),
+    batchNumber: String(initialValues.batchNumber || "").trim(),
+    expiryDate: String(initialValues.expiryDate || "").trim()
   });
 }
 
@@ -568,6 +587,8 @@ function stockDashboardRenderReceiptItemRows() {
       </option>
     `).join("");
     const safeQuantity = String(row.quantity || "");
+    const safeBatchNumber = String(row.batchNumber || "");
+    const safeExpiryDate = String(row.expiryDate || "");
 
     return `
       <div class="stock-dashboard-receipt-item-row" data-receipt-row-id="${stockDashboardEscapeHtml(row.id)}">
@@ -594,6 +615,16 @@ function stockDashboardRenderReceiptItemRows() {
           </select>
         </label>
 
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Batch / Lot number</span>
+          <input type="text" data-receipt-field="batchNumber" value="${stockDashboardEscapeHtml(safeBatchNumber)}" placeholder="Optional batch / lot" />
+        </label>
+
+        <label class="stock-order-field">
+          <span class="stock-order-field-label">Expiry date</span>
+          <input type="date" data-receipt-field="expiryDate" value="${stockDashboardEscapeHtml(safeExpiryDate)}" />
+        </label>
+
         <div class="stock-dashboard-receipt-row-actions">
           <button type="button" class="quick-tool-clear-btn" data-receipt-remove-row="${stockDashboardEscapeHtml(row.id)}"${stockDashboardReceiptRows.length <= 1 ? " disabled" : ""}>Remove</button>
           <p class="stock-dashboard-status">Row ${index + 1}</p>
@@ -609,6 +640,7 @@ function stockDashboardRenderReceiptItemRows() {
 function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
   const errors = [];
   const mergedItems = new Map();
+  const receiptItems = [];
   const summaryRows = [];
 
   if (!stockDashboardReceiptRows.length) {
@@ -631,6 +663,33 @@ function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
     }
 
     const sourceItem = unitOption.sourceItem;
+    const batchNumber = String(row.batchNumber || "").trim();
+    const expiryDateRaw = String(row.expiryDate || "").trim();
+    const expiryDate = /^\d{4}-\d{2}-\d{2}$/.test(expiryDateRaw) ? expiryDateRaw : "";
+    if (validate && expiryDateRaw && !expiryDate) {
+      errors.push("Use a valid expiry date format (YYYY-MM-DD) for each item.");
+      return;
+    }
+
+    receiptItems.push({
+      id: sourceItem.id,
+      label: sourceItem.label,
+      variantLabel: sourceItem.variantLabel || "",
+      quantity,
+      unitType: sourceItem.unitType,
+      traySize: sourceItem.traySize || null,
+      packetSize: sourceItem.packetSize || null,
+      formattedQuantity: typeof formatStockQuantity === "function"
+        ? formatStockQuantity({ ...sourceItem, quantity })
+        : String(quantity),
+      inventoryUnits,
+      sheetColumnKey: sourceItem.sheetColumnKey || "",
+      sheetTrayColumnKey: sourceItem.sheetTrayColumnKey || "",
+      sheetSingleColumnKey: sourceItem.sheetSingleColumnKey || "",
+      batchNumber,
+      expiryDate
+    });
+
     const itemForTotals = {
       ...sourceItem,
       quantity
@@ -689,7 +748,7 @@ function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
     });
   });
 
-  return { items, summaryRows, errors };
+  return { items: receiptItems, summaryRows, errors };
 }
 
 function stockDashboardBuildAuditRows(request) {
@@ -927,6 +986,113 @@ function stockDashboardClearAuthStateStorage() {
   ]);
 }
 
+function stockDashboardSetAuthFlashMessage(message) {
+  const safe = String(message || "").trim();
+  if (!safe) return;
+  try {
+    sessionStorage.setItem(STOCK_DASHBOARD_AUTH_FLASH_MESSAGE_KEY, safe);
+  } catch {
+    // no-op
+  }
+}
+
+function stockDashboardConsumeAuthFlashMessage() {
+  try {
+    const message = String(sessionStorage.getItem(STOCK_DASHBOARD_AUTH_FLASH_MESSAGE_KEY) || "").trim();
+    if (!message) return "";
+    sessionStorage.removeItem(STOCK_DASHBOARD_AUTH_FLASH_MESSAGE_KEY);
+    return message;
+  } catch {
+    return "";
+  }
+}
+
+function stockDashboardApplyAuthFlashMessage() {
+  const message = stockDashboardConsumeAuthFlashMessage();
+  if (!message) return;
+  if (stockDashboardAuthStatus) stockDashboardAuthStatus.textContent = message;
+  if (stockDashboardSessionMessage && !stockDashboardSession) stockDashboardSessionMessage.textContent = message;
+}
+
+function stockDashboardBroadcastAuthEvent(type, message = "") {
+  const payload = {
+    type: String(type || "").trim(),
+    message: String(message || "").trim(),
+    timestamp: Date.now()
+  };
+  if (!payload.type) return;
+  try {
+    stockDashboardAuthSyncChannel?.postMessage(payload);
+  } catch {
+    // no-op
+  }
+  try {
+    localStorage.setItem(STOCK_DASHBOARD_AUTH_SYNC_EVENT_KEY, JSON.stringify(payload));
+    localStorage.removeItem(STOCK_DASHBOARD_AUTH_SYNC_EVENT_KEY);
+  } catch {
+    // no-op
+  }
+}
+
+function stockDashboardHandleSessionReplaced(message = STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast = true, reload = true } = {}) {
+  if (stockDashboardHandlingRemoteLogout) return;
+  stockDashboardHandlingRemoteLogout = true;
+  const safeMessage = String(message || "").trim() || STOCK_DASHBOARD_REPLACED_MESSAGE;
+  stockDashboardClearAuthStateStorage();
+  stockDashboardSetSignedOutOverride(true);
+  stockDashboardSetAuthFlashMessage(safeMessage);
+  stockDashboardSetSession(null);
+  if (broadcast) {
+    stockDashboardBroadcastAuthEvent("session_replaced", safeMessage);
+  }
+  if (reload) {
+    window.location.assign("/stock-dashboard.html");
+    return;
+  }
+  if (stockDashboardAuthStatus) stockDashboardAuthStatus.textContent = safeMessage;
+  if (stockDashboardSessionMessage) stockDashboardSessionMessage.textContent = safeMessage;
+  stockDashboardHandlingRemoteLogout = false;
+}
+
+function stockDashboardHandleAuthSyncPayload(payload = {}) {
+  const type = String(payload?.type || "").trim().toLowerCase();
+  const message = String(payload?.message || "").trim();
+  if (type === "session_replaced") {
+    stockDashboardHandleSessionReplaced(message || STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast: false, reload: true });
+    return;
+  }
+  if (type === "logout") {
+    stockDashboardClearAuthStateStorage();
+    stockDashboardSetSignedOutOverride(true);
+    stockDashboardSetSession(null);
+    window.location.assign("/stock-dashboard.html");
+  }
+}
+
+function stockDashboardInitAuthSync() {
+  if (typeof window === "undefined") return;
+  if (typeof BroadcastChannel !== "undefined") {
+    try {
+      stockDashboardAuthSyncChannel = new BroadcastChannel(STOCK_DASHBOARD_AUTH_BROADCAST_NAME);
+      stockDashboardAuthSyncChannel.onmessage = (event) => {
+        stockDashboardHandleAuthSyncPayload(event?.data || {});
+      };
+    } catch {
+      stockDashboardAuthSyncChannel = null;
+    }
+  }
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== STOCK_DASHBOARD_AUTH_SYNC_EVENT_KEY || !event.newValue) return;
+    try {
+      const payload = JSON.parse(event.newValue);
+      stockDashboardHandleAuthSyncPayload(payload || {});
+    } catch {
+      // no-op
+    }
+  });
+}
+
 function stockDashboardHasAdminQueryFlag() {
   try {
     const params = new URLSearchParams(window.location.search || "");
@@ -1041,6 +1207,40 @@ function stockDashboardStartPolling() {
 function stockDashboardStopPolling() {
   window.clearInterval(stockDashboardPollTimer);
   stockDashboardPollTimer = 0;
+}
+
+async function stockDashboardValidateSession() {
+  if (!stockDashboardSession || stockDashboardLogoutInProgress) return;
+  try {
+    const response = await stockDashboardFetch(STOCK_DASHBOARD_SESSION_URL, {
+      cache: "no-store",
+      headers: stockDashboardGetHeaders()
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (response.status === 401 && String(payload?.reason || "").trim().toLowerCase() === "session_replaced") {
+      stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast: true, reload: true });
+      return;
+    }
+    if (!response.ok || !payload?.authenticated || !payload?.user) {
+      stockDashboardSetSession(null);
+    }
+  } catch {
+    // keep existing session on transient network errors
+  }
+}
+
+function stockDashboardStartSessionValidationPolling() {
+  window.clearInterval(stockDashboardSessionCheckTimer);
+  stockDashboardSessionCheckTimer = 0;
+  if (!stockDashboardSession) return;
+  stockDashboardSessionCheckTimer = window.setInterval(() => {
+    stockDashboardValidateSession();
+  }, STOCK_DASHBOARD_SESSION_CHECK_MS);
+}
+
+function stockDashboardStopSessionValidationPolling() {
+  window.clearInterval(stockDashboardSessionCheckTimer);
+  stockDashboardSessionCheckTimer = 0;
 }
 
 function stockDashboardClearInactivityTimers() {
@@ -1324,6 +1524,7 @@ function stockDashboardSetSession(user) {
     stockDashboardLatestRequestMarker = "";
     stockDashboardUnreadCount = 0;
     stockDashboardStopPolling();
+    stockDashboardStopSessionValidationPolling();
     if (stockDashboardStatus) {
       stockDashboardStatus.textContent = "Dashboard locked. Log in to view requests and stock insights.";
     }
@@ -1350,7 +1551,9 @@ function stockDashboardSetSession(user) {
     stockDashboardUpdateNotificationPermissionUi();
     stockDashboardRenderNotificationState();
     stockDashboardStartPolling();
+    stockDashboardStartSessionValidationPolling();
   }
+  stockDashboardApplyAuthFlashMessage();
 }
 
 async function loadPublicStockDashboardRequests() {
@@ -1957,7 +2160,9 @@ async function stockDashboardSubmitManualRequest() {
           inventoryUnits: typeof getStockInventoryUnits === "function" ? getStockInventoryUnits(item) : Number(item.quantity || 0),
           sheetColumnKey: item.sheetColumnKey || "",
           sheetTrayColumnKey: item.sheetTrayColumnKey || "",
-          sheetSingleColumnKey: item.sheetSingleColumnKey || ""
+          sheetSingleColumnKey: item.sheetSingleColumnKey || "",
+          batchNumber: item.batchNumber || "",
+          expiryDate: item.expiryDate || ""
         }))
       })
     });
@@ -2438,6 +2643,7 @@ async function logoutStockDashboard() {
   stockDashboardClearAuthStateStorage();
   stockDashboardSetSignedOutOverride(true);
   stockDashboardClearScopedValuesForUserNumber(previousSession?.userNumber || "");
+  stockDashboardSetAuthFlashMessage("Not signed in");
   stockDashboardSetSession(null);
 
   try {
@@ -2478,6 +2684,7 @@ async function logoutStockDashboard() {
       isAdmin: Boolean(stockDashboardSession?.role === "admin")
     });
     stockDashboardSetBusy(false);
+    stockDashboardBroadcastAuthEvent("logout", "Not signed in");
     window.location.assign("/stock-dashboard.html");
   }
 }
@@ -2584,13 +2791,13 @@ stockDashboardViewRequestsDataBtn?.addEventListener("click", () => {
 
 stockDashboardViewReceiptsDataBtn?.addEventListener("click", () => {
   if (stockDashboardDataStatus) {
-    stockDashboardDataStatus.textContent = `Received stock dataset ready: ${stockDashboardDatasets.receivedStock.length} record${stockDashboardDatasets.receivedStock.length === 1 ? "" : "s"}.`;
+    stockDashboardDataStatus.textContent = `Received stock dataset ready: ${stockDashboardDatasets.receivedStock.length} record${stockDashboardDatasets.receivedStock.length === 1 ? "" : "s"} (includes per-item batch/lot and expiry date fields).`;
   }
 });
 
 stockDashboardExportDataBtn?.addEventListener("click", () => {
   if (stockDashboardDataStatus) {
-    stockDashboardDataStatus.textContent = "Export to Excel is prepared and will be wired to CSV/XLSX output next.";
+    stockDashboardDataStatus.textContent = "Export to Excel is prepared to include item, quantity, unit, batch/lot, expiry date, supplier, reference, notes, and date received once CSV/XLSX output is wired.";
   }
 });
 
@@ -2732,6 +2939,12 @@ stockDashboardReceiptItemsRows?.addEventListener("change", (event) => {
   if (field === "unit" && target instanceof HTMLSelectElement) {
     row.unitType = target.value;
     stockDashboardRenderReceiptItemRows();
+    return;
+  }
+
+  if (field === "expiryDate" && target instanceof HTMLInputElement) {
+    row.expiryDate = target.value;
+    return;
   }
 });
 
@@ -2743,8 +2956,14 @@ stockDashboardReceiptItemsRows?.addEventListener("input", (event) => {
   if (!row) return;
 
   const field = target?.getAttribute("data-receipt-field");
-  if (field !== "quantity" || !(target instanceof HTMLInputElement)) return;
-  row.quantity = target.value;
+  if (!(target instanceof HTMLInputElement)) return;
+  if (field === "quantity") {
+    row.quantity = target.value;
+  } else if (field === "batchNumber") {
+    row.batchNumber = target.value;
+  } else {
+    return;
+  }
   const preview = stockDashboardBuildReceiptPayload({ validate: false });
   stockDashboardRenderReceiptSummaryRows(preview.summaryRows);
 });
@@ -2760,6 +2979,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 initStockDashboardTools();
+stockDashboardInitAuthSync();
 stockDashboardSanitizeDashboardUrlOnLoad();
 localStorage.removeItem(STOCK_DASHBOARD_LEGACY_TOKEN_KEY);
 stockDashboardSetSummaryOpen(false);

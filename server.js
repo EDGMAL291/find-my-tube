@@ -21,6 +21,7 @@ const STOCK_ORDER_SHEETS_WEBHOOK_URL = String(
 ).trim();
 const STOCK_SHEETS_TIMEOUT_MS = 12000;
 const STOCK_AUTH_INVALID_MESSAGE = "Login details not recognised.";
+const STOCK_AUTH_REPLACED_MESSAGE = "Session replaced by a newer login.";
 const MAX_BODY_BYTES = 1024 * 1024;
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const AUTH_COOKIE_NAME = "fmt_lab_session";
@@ -150,6 +151,11 @@ function sanitizeMultilineString(value, maxLength = 1000) {
     .replace(/\n{3,}/g, "\n\n")
     .trim()
     .slice(0, maxLength);
+}
+
+function sanitizeDateOnly(value) {
+  const safe = String(value || "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(safe) ? safe : "";
 }
 
 function sanitizeUserNumber(value) {
@@ -332,6 +338,16 @@ function sanitizeItem(item) {
   };
 }
 
+function sanitizeReceiptItem(item) {
+  const safeItem = sanitizeItem(item);
+  if (!safeItem) return null;
+  return {
+    ...safeItem,
+    batchNumber: sanitizeString(item?.batchNumber, 120),
+    expiryDate: sanitizeDateOnly(item?.expiryDate)
+  };
+}
+
 function sanitizeStockRequestPayload(payload) {
   const items = Array.isArray(payload?.items)
     ? payload.items.map(sanitizeItem).filter(Boolean)
@@ -352,7 +368,7 @@ function sanitizeStockRequestPayload(payload) {
 
 function sanitizeStockReceiptPayload(payload) {
   const items = Array.isArray(payload?.items)
-    ? payload.items.map(sanitizeItem).filter(Boolean)
+    ? payload.items.map(sanitizeReceiptItem).filter(Boolean)
     : [];
 
   return {
@@ -654,7 +670,9 @@ function mapReceiptFromDb(row) {
       inventoryUnits: Math.max(0, Number(item?.inventory_units) || 0),
       sheetColumnKey: sanitizeString(item?.sheet_column_key, 80),
       sheetTrayColumnKey: sanitizeString(item?.sheet_tray_column_key, 80),
-      sheetSingleColumnKey: sanitizeString(item?.sheet_single_column_key, 80)
+      sheetSingleColumnKey: sanitizeString(item?.sheet_single_column_key, 80),
+      batchNumber: sanitizeString(item?.batch_number, 120),
+      expiryDate: sanitizeDateOnly(item?.expiry_date)
     }))
     : [];
 
@@ -714,40 +732,88 @@ async function dbGetSession(req) {
   const token = getSessionToken(req);
   if (!token) return null;
   const tokenHash = hashSessionToken(token);
-  const nowIso = new Date().toISOString();
   const session = await dbMaybeSingle(
     supabase
       .from("lab_sessions")
-      .select("id,user_id,expires_at,users(*)")
+      .select("id,user_id,token_hash,expires_at,users(*)")
       .eq("token_hash", tokenHash)
-      .gt("expires_at", nowIso)
       .limit(1)
       .maybeSingle()
   );
 
   if (!session) return null;
 
+  const nowIso = new Date().toISOString();
   const user = session.users;
   if (!user || !user.is_active) {
     await dbSingle(supabase.from("lab_sessions").delete().eq("id", session.id));
-    return null;
+    return {
+      invalidReason: "user_inactive"
+    };
   }
+
+  if (!session.expires_at || new Date(session.expires_at).getTime() <= Date.now()) {
+    await dbSingle(supabase.from("lab_sessions").delete().eq("id", session.id));
+    return {
+      invalidReason: "session_expired"
+    };
+  }
+
+  const activeTokenHash = String(user.active_session_token_hash || "").trim();
+  if (!activeTokenHash || activeTokenHash !== tokenHash) {
+    return {
+      invalidReason: "session_replaced"
+    };
+  }
+
+  await dbSingle(
+    supabase
+      .from("users")
+      .update({ last_seen_at: nowIso, updated_at: nowIso })
+      .eq("id", user.id)
+      .eq("active_session_token_hash", tokenHash)
+  );
 
   return {
     id: session.id,
     user,
-    token
+    token,
+    tokenHash
   };
+}
+
+function sendSessionInvalidResponse(req, res, invalidReason) {
+  const safeReason = String(invalidReason || "").trim().toLowerCase();
+  if (safeReason === "session_replaced") {
+    res.setHeader("Set-Cookie", buildAuthClearCookies(req));
+    sendJson(req, res, 401, {
+      ok: false,
+      error: STOCK_AUTH_REPLACED_MESSAGE,
+      reason: "session_replaced"
+    });
+    return;
+  }
+  if (safeReason === "session_expired") {
+    res.setHeader("Set-Cookie", buildAuthClearCookies(req));
+    sendJson(req, res, 401, {
+      ok: false,
+      error: "Session expired. Please log in again.",
+      reason: "session_expired"
+    });
+    return;
+  }
+  sendJson(req, res, 401, {
+    ok: false,
+    error: "Lab login required",
+    reason: "session_required"
+  });
 }
 
 async function requireLabSession(req, res) {
   try {
     const session = await dbGetSession(req);
-    if (!session) {
-      sendJson(req, res, 401, {
-        ok: false,
-        error: "Lab login required"
-      });
+    if (!session || session.invalidReason) {
+      sendSessionInvalidResponse(req, res, session?.invalidReason);
       return null;
     }
     return session;
@@ -834,7 +900,9 @@ async function dbInsertRequest(payload, sessionUser = null) {
         formatted_quantity: item.formattedQuantity || null,
         sheet_column_key: item.sheetColumnKey || null,
         sheet_tray_column_key: item.sheetTrayColumnKey || null,
-        sheet_single_column_key: item.sheetSingleColumnKey || null
+        sheet_single_column_key: item.sheetSingleColumnKey || null,
+        batch_number: item.batchNumber || null,
+        expiry_date: sanitizeDateOnly(item.expiryDate) || null
       })))
     );
   }
@@ -1330,6 +1398,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
+    if (session.invalidReason) {
+      sendSessionInvalidResponse(req, res, session.invalidReason);
+      return;
+    }
+
     sendJson(req, res, 200, {
       ok: true,
       authenticated: true,
@@ -1388,7 +1461,12 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     await dbSingle(
       supabase
         .from("users")
-        .update({ last_login_at: now.toISOString(), updated_at: now.toISOString() })
+        .update({
+          last_login_at: now.toISOString(),
+          last_seen_at: now.toISOString(),
+          active_session_token_hash: tokenHash,
+          updated_at: now.toISOString()
+        })
         .eq("id", user.id)
     );
 
@@ -1455,7 +1533,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         is_active: true,
         created_at: nowIso,
         updated_at: nowIso,
-        last_login_at: nowIso
+        last_login_at: nowIso,
+        last_seen_at: nowIso
       }).select("*").single()
     );
 
@@ -1468,6 +1547,17 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         user_id: createdUser.id,
         expires_at: expiresAt.toISOString()
       })
+    );
+
+    await dbSingle(
+      supabase
+        .from("users")
+        .update({
+          active_session_token_hash: tokenHash,
+          last_seen_at: nowIso,
+          updated_at: nowIso
+        })
+        .eq("id", createdUser.id)
     );
 
     await dbCreateAuditLog(createdUser.id, "bootstrap-admin", "user", createdUser.id, {
@@ -1490,9 +1580,21 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     if (token) {
       const tokenHash = hashSessionToken(token);
       await dbSingle(supabase.from("lab_sessions").delete().eq("token_hash", tokenHash));
+      await dbSingle(
+        supabase
+          .from("users")
+          .update({ active_session_token_hash: null, updated_at: new Date().toISOString() })
+          .eq("active_session_token_hash", tokenHash)
+      );
     }
-    if (currentSession?.user?.id) {
-      await dbSingle(supabase.from("lab_sessions").delete().eq("user_id", currentSession.user.id));
+    if (currentSession?.user?.id && currentSession?.tokenHash) {
+      await dbSingle(
+        supabase
+          .from("users")
+          .update({ active_session_token_hash: null, updated_at: new Date().toISOString() })
+          .eq("id", currentSession.user.id)
+          .eq("active_session_token_hash", currentSession.tokenHash)
+      );
     }
 
     res.setHeader("Set-Cookie", buildAuthClearCookies(req));
