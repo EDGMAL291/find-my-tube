@@ -180,6 +180,7 @@ const stockOrderState = Object.create(null);
 let stockOrderStatusMode = "draft";
 let isSubmittingStockOrder = false;
 let submittedStockOrderRecord = null;
+let lastStockSubmitErrorMessage = "";
 let hasLoadedStockTrackingOnce = false;
 const stockTrackedRequestStatuses = Object.create(null);
 const currentPageParams = new URLSearchParams(window.location.search);
@@ -1100,7 +1101,7 @@ function getStockOrderStatusLabel() {
     if (submittedStatus === "cancelled") return "Cancelled";
     return "Submitted";
   }
-  if (stockOrderStatusMode === "submit-failed") return "Retry";
+  if (stockOrderStatusMode === "submit-failed") return "Submit failed";
   if (stockOrderStatusMode === "copied") return "Copied";
   if (stockOrderStatusMode === "shared") return "Shared";
   if (requesterName && requesterWard && selectedItems.length) return "Ready";
@@ -1178,9 +1179,11 @@ function updateStockOrderPreview() {
   stockOrderRequestMeta.textContent = hasRequest
     ? blockedReason
       ? blockedReason
-      : stockOrderStatusMode === "submitted" && submittedStockOrderRecord?.id
-      ? `Request ${submittedStockOrderRecord.id} saved. ${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
-      : `${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
+      : stockOrderStatusMode === "submit-failed"
+        ? (lastStockSubmitErrorMessage || "Request could not be submitted. Please try again or contact the lab.")
+        : stockOrderStatusMode === "submitted" && submittedStockOrderRecord?.id
+          ? `Request ${submittedStockOrderRecord.id} saved. ${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
+          : `${selectedItems.length} line item${selectedItems.length === 1 ? "" : "s"}, ${itemCount} total quantity requested.`
     : "Add your name, ward / unit, and at least one item.";
 
   if (submitStockOrderBtn) {
@@ -1209,6 +1212,7 @@ function setStockItemQuantity(itemId, quantity) {
   if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
     stockOrderStatusMode = "ready";
     submittedStockOrderRecord = null;
+    lastStockSubmitErrorMessage = "";
   }
 
   const input = stockOrderGrid?.querySelector(`[data-stock-qty-input="${itemId}"]`);
@@ -1382,6 +1386,7 @@ function resetStockOrderForm() {
   });
   stockOrderStatusMode = "draft";
   submittedStockOrderRecord = null;
+  lastStockSubmitErrorMessage = "";
 
   if (stockOrderForm) {
     stockOrderForm.reset();
@@ -1441,6 +1446,7 @@ function initStockOrderPanel() {
   });
   stockOrderStatusMode = "draft";
   submittedStockOrderRecord = null;
+  lastStockSubmitErrorMessage = "";
   hideStockOrderSubmissionConfirmation();
 
   populateStockRequesterOptions();
@@ -1453,6 +1459,7 @@ function initStockOrderPanel() {
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
       submittedStockOrderRecord = null;
+      lastStockSubmitErrorMessage = "";
     }
     updateStockOrderPreview();
   });
@@ -1462,6 +1469,7 @@ function initStockOrderPanel() {
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
       submittedStockOrderRecord = null;
+      lastStockSubmitErrorMessage = "";
     }
     updateStockOrderPreview();
   });
@@ -1470,6 +1478,7 @@ function initStockOrderPanel() {
     if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
       stockOrderStatusMode = "ready";
       submittedStockOrderRecord = null;
+      lastStockSubmitErrorMessage = "";
     }
     updateStockOrderPreview();
   });
@@ -1489,6 +1498,7 @@ function initStockOrderPanel() {
       return;
     }
 
+    lastStockSubmitErrorMessage = "";
     isSubmittingStockOrder = true;
     updateStockOrderPreview();
 
@@ -1503,7 +1513,10 @@ function initStockOrderPanel() {
 
       if (!response.ok) {
         const result = await response.json().catch(() => null);
-        throw new Error(result?.error || `Submit failed with status ${response.status}`);
+        const serverMessage = String(result?.error || "").trim();
+        const detailMessage = String(result?.detail || "").trim();
+        const combinedMessage = [serverMessage, detailMessage].filter(Boolean).join(" - ");
+        throw new Error(combinedMessage || `Submit failed with status ${response.status}`);
       }
 
       const result = await response.json().catch(() => ({}));
@@ -1523,10 +1536,17 @@ function initStockOrderPanel() {
       submittedStockOrderRecord = null;
       stockOrderStatusMode = "submit-failed";
       hideStockOrderSubmissionConfirmation();
-      const message = error instanceof Error
-        ? error.message
-        : "You can still copy or share it.";
-      showSelectionNotice(`Could not submit the consumables request. ${message}`);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      lastStockSubmitErrorMessage = "Request could not be submitted. Please try again or contact the lab.";
+      console.error("Stock order submit failed", {
+        submitUrl: STOCK_ORDER_SUBMIT_URL,
+        requestedBy: payload?.requestedBy || "",
+        wardUnit: payload?.wardUnit || "",
+        lineItemCount: payload?.lineItemCount || 0,
+        totalRequestedQuantity: payload?.totalRequestedQuantity || 0,
+        error: message
+      });
+      showSelectionNotice(lastStockSubmitErrorMessage);
     } finally {
       isSubmittingStockOrder = false;
       updateStockOrderPreview();

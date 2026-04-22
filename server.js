@@ -141,6 +141,11 @@ function getErrorMessage(error) {
   return error instanceof Error ? error.message : String(error || "Unknown error");
 }
 
+function isStockRequestStatusConstraintError(error) {
+  const message = getErrorMessage(error).toLowerCase();
+  return message.includes("stock_requests_status_check");
+}
+
 function isMissingUserSessionColumnsError(error) {
   const message = getErrorMessage(error).toLowerCase();
   if (!message) return false;
@@ -985,7 +990,25 @@ async function dbInsertRequest(payload, sessionUser = null) {
     status_history: [{ status: "submitted", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
   };
 
-  await dbSingle(supabase.from("stock_requests").insert(record));
+  try {
+    await dbSingle(supabase.from("stock_requests").insert(record));
+  } catch (error) {
+    if (!isStockRequestStatusConstraintError(error)) throw error;
+
+    // Backward compatibility for databases that still enforce legacy status values.
+    const fallbackRecord = {
+      ...record,
+      status: "received",
+      status_history: [{ status: "received", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
+    };
+    console.warn("[stock-submit] status-constraint-fallback", {
+      requestId,
+      previousStatus: record.status,
+      fallbackStatus: fallbackRecord.status,
+      errorMessage: getErrorMessage(error)
+    });
+    await dbSingle(supabase.from("stock_requests").insert(fallbackRecord));
+  }
 
   if (payload.items.length) {
     await dbSingle(
@@ -2427,8 +2450,22 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const cleanPayload = sanitizeStockRequestPayload(payload);
+    console.info("[stock-submit] request-received", {
+      origin: sanitizeString(req.headers.origin, 200),
+      host: sanitizeString(req.headers.host, 200),
+      requestedBy: cleanPayload.requestedBy,
+      wardUnit: cleanPayload.wardUnit,
+      lineItemCount: cleanPayload.lineItemCount,
+      totalRequestedQuantity: cleanPayload.totalRequestedQuantity
+    });
     const itemValidationError = validateStockRequestItems(cleanPayload.items);
     if (!cleanPayload.requestedBy || !cleanPayload.wardUnit || !cleanPayload.items.length) {
+      console.warn("[stock-submit] validation-failed", {
+        reason: "missing_required_fields",
+        requestedBy: cleanPayload.requestedBy,
+        wardUnit: cleanPayload.wardUnit,
+        lineItemCount: cleanPayload.lineItemCount
+      });
       sendJson(req, res, 400, {
         ok: false,
         error: "Requested by, ward / unit, and at least one item are required"
@@ -2436,6 +2473,10 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
     if (itemValidationError) {
+      console.warn("[stock-submit] validation-failed", {
+        reason: "item_validation_failed",
+        error: itemValidationError
+      });
       sendJson(req, res, 400, {
         ok: false,
         error: itemValidationError
@@ -2443,12 +2484,36 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const record = await dbInsertRequest(cleanPayload, null);
-    const sheetSync = await syncStockRecordToSheets(record, { action: "create-request" });
-    const sheetMirror = await mirrorStockRequestToGoogleSheets(record);
+    let record = null;
+    let sheetSync = null;
+    let sheetMirror = null;
+    try {
+      record = await dbInsertRequest(cleanPayload, null);
+      sheetSync = await syncStockRecordToSheets(record, { action: "create-request" });
+      sheetMirror = await mirrorStockRequestToGoogleSheets(record);
+    } catch (error) {
+      console.error("[stock-submit] write-failed", {
+        requestedBy: cleanPayload.requestedBy,
+        wardUnit: cleanPayload.wardUnit,
+        lineItemCount: cleanPayload.lineItemCount,
+        errorMessage: getErrorMessage(error),
+        errorCode: error?.code || "",
+        errorDetails: error?.details || "",
+        errorHint: error?.hint || ""
+      });
+      throw error;
+    }
+
     if (!sheetMirror.ok && !sheetMirror.skipped) {
       console.error(`Find My Tube: Google Sheets mirror failed for ${record.id}: ${sheetMirror.reason}`);
     }
+
+    console.info("[stock-submit] request-saved", {
+      requestId: record.id,
+      status: record.status,
+      lineItemCount: record.lineItemCount,
+      totalRequestedQuantity: record.totalRequestedQuantity
+    });
 
     sendJson(req, res, 201, {
       ok: true,
