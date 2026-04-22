@@ -26,6 +26,7 @@ const STOCK_AUTH_SERVICE_UNAVAILABLE_MESSAGE = "Login service is unavailable.";
 const STOCK_AUTH_CONFIG_ERROR_MESSAGE = "Server configuration error.";
 const MAX_BODY_BYTES = 1024 * 1024;
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
+const CANCELLED_ARCHIVE_WINDOW_MS = 5 * 60 * 60 * 1000;
 const AUTH_COOKIE_NAME = "fmt_lab_session";
 const VALID_REQUEST_STATUSES = new Set(["submitted", "received", "packed", "ready", "collected", "completed", "cancelled"]);
 
@@ -589,6 +590,38 @@ function buildStockSheetsColumns(items = []) {
   return columns;
 }
 
+function parseBooleanQueryFlag(value, fallback = false) {
+  if (value === undefined || value === null) return fallback;
+  const safeValue = String(value).trim().toLowerCase();
+  if (!safeValue) return fallback;
+  return ["1", "true", "yes", "on"].includes(safeValue);
+}
+
+function resolveCancelledAtFromHistory(statusHistory = []) {
+  if (!Array.isArray(statusHistory) || !statusHistory.length) return "";
+  for (let index = statusHistory.length - 1; index >= 0; index -= 1) {
+    const entry = statusHistory[index] || {};
+    if (slugifyStatus(entry?.status) !== "cancelled") continue;
+    const candidate = sanitizeString(entry?.updatedAt || entry?.timestamp, 40);
+    if (candidate) return candidate;
+  }
+  return "";
+}
+
+function resolveCancelledAt(request) {
+  const direct = sanitizeString(request?.cancelledAt || request?.cancelled_at, 40);
+  if (direct) return direct;
+  return resolveCancelledAtFromHistory(request?.statusHistory);
+}
+
+function isArchivedCancelledRequest(request, nowMs = Date.now()) {
+  if (slugifyStatus(request?.status) !== "cancelled") return false;
+  const cancelledAt = resolveCancelledAt(request);
+  const cancelledMs = new Date(cancelledAt).getTime();
+  if (!Number.isFinite(cancelledMs) || cancelledMs <= 0) return true;
+  return (nowMs - cancelledMs) >= CANCELLED_ARCHIVE_WINDOW_MS;
+}
+
 function buildStockSheetsPayload(record, options = {}) {
   const { action = "upsert-request", previousStatus = "", changedBy = "" } = options;
   const items = Array.isArray(record?.items) ? record.items : [];
@@ -678,6 +711,7 @@ function mapRequestItemFromDb(item) {
 function mapRequestFromDb(row) {
   const items = Array.isArray(row?.stock_request_items) ? row.stock_request_items.map(mapRequestItemFromDb) : [];
   const statusHistory = Array.isArray(row?.status_history) ? row.status_history : [];
+  const cancelledAt = sanitizeString(row?.cancelled_at, 40) || resolveCancelledAtFromHistory(statusHistory);
   return {
     id: sanitizeString(row?.id, 80),
     source: sanitizeString(row?.source, 60),
@@ -698,6 +732,8 @@ function mapRequestFromDb(row) {
     inventoryDeductedAt: sanitizeString(row?.inventory_deducted_at, 40),
     inventoryDeductedBy: "",
     collectionRecord: row?.collection_record || null,
+    cancelledAt,
+    cancelled_at: cancelledAt,
     statusHistory,
     items
   };
@@ -891,7 +927,11 @@ async function requireOwnerSession(req, res) {
   return session;
 }
 
-async function dbListRequests(limit = 25, { includeManual = true } = {}) {
+async function dbListRequests(limit = 25, {
+  includeManual = true,
+  includeCancelled = false,
+  includeArchived = false
+} = {}) {
   const rows = await dbSingle(
     supabase
       .from("stock_requests")
@@ -900,9 +940,16 @@ async function dbListRequests(limit = 25, { includeManual = true } = {}) {
       .limit(limit)
   );
 
-  const mapped = (rows || []).map(mapRequestFromDb);
-  if (includeManual) return mapped;
-  return mapped.filter((row) => sanitizeString(row.source, 60) !== "lab-manual-entry");
+  const nowMs = Date.now();
+  return (rows || [])
+    .map(mapRequestFromDb)
+    .filter((row) => includeManual || sanitizeString(row.source, 60) !== "lab-manual-entry")
+    .filter((row) => {
+      const status = slugifyStatus(row?.status);
+      if (!includeCancelled && status === "cancelled") return false;
+      if (!includeArchived && isArchivedCancelledRequest(row, nowMs)) return false;
+      return true;
+    });
 }
 
 async function dbGetRequestById(requestId) {
@@ -1240,6 +1287,11 @@ async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
     status_updated_by_user_id: sessionUser?.id || null,
     status_history: request.statusHistory
   };
+  if (nextStatus === "cancelled") {
+    updatePayload.cancelled_at = nowIso;
+  } else {
+    updatePayload.cancelled_at = null;
+  }
 
   if (shouldDeductInventory) {
     const deductedItems = request.items.map((item) => ({
@@ -1274,7 +1326,15 @@ async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
     }
   }
 
-  await dbSingle(supabase.from("stock_requests").update(updatePayload).eq("id", requestId));
+  try {
+    await dbSingle(supabase.from("stock_requests").update(updatePayload).eq("id", requestId));
+  } catch (error) {
+    const message = String(error?.message || "");
+    const isCancelledAtColumnError = /cancelled_at/i.test(message) && /column/i.test(message);
+    if (!isCancelledAtColumnError) throw error;
+    const { cancelled_at: _cancelledAt, ...fallbackPayload } = updatePayload;
+    await dbSingle(supabase.from("stock_requests").update(fallbackPayload).eq("id", requestId));
+  }
 
   await dbCreateAuditLog(sessionUser?.id || null, "update-stock-request-status", "stock_request", requestId, {
     previousStatus,
@@ -2098,7 +2158,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
   if (req.method === "GET" && pathname === "/api/stock-requests") {
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
-    const rows = await dbListRequests(limit, { includeManual: false });
+    const includeCancelled = parseBooleanQueryFlag(searchParams.get("includeCancelled"), false);
+    const includeArchived = parseBooleanQueryFlag(searchParams.get("includeArchived"), false);
+    const rows = await dbListRequests(limit, {
+      includeManual: false,
+      includeCancelled,
+      includeArchived
+    });
     sendJson(req, res, 200, { requests: rows });
     return;
   }
@@ -2108,7 +2174,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     if (!session) return;
 
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
-    const rows = await dbListRequests(limit, { includeManual: true });
+    const includeCancelled = parseBooleanQueryFlag(searchParams.get("includeCancelled"), false);
+    const includeArchived = parseBooleanQueryFlag(searchParams.get("includeArchived"), false);
+    const rows = await dbListRequests(limit, {
+      includeManual: true,
+      includeCancelled,
+      includeArchived
+    });
 
     sendJson(req, res, 200, {
       requests: rows,
@@ -2123,7 +2195,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const session = await requireLabSession(req, res);
     if (!session) return;
 
-    const rows = await dbListRequests(1000, { includeManual: true });
+    const includeCancelled = parseBooleanQueryFlag(searchParams.get("includeCancelled"), false);
+    const includeArchived = parseBooleanQueryFlag(searchParams.get("includeArchived"), false);
+    const rows = await dbListRequests(1000, {
+      includeManual: true,
+      includeCancelled,
+      includeArchived
+    });
     sendJson(req, res, 200, {
       stats: buildStockStats(rows),
       user: {

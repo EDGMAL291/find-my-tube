@@ -87,13 +87,16 @@
 
   function filteredOrders() {
     const filters = getCurrentFilters();
+    const visibleStatuses = new Set(["submitted", "ready", "collected"]);
 
     const filtered = trackOrders.filter((order) => {
       const requestedBy = String(order?.requestedBy || "").trim().toLowerCase();
       const ward = String(order?.wardUnit || "").trim().toLowerCase();
+      const normalizedStatus = normalizeStatus(order?.status);
 
       if (filters.requestedBy && !requestedBy.includes(filters.requestedBy)) return false;
       if (filters.ward && !ward.includes(filters.ward)) return false;
+      if (!visibleStatuses.has(normalizedStatus)) return false;
 
       return true;
     });
@@ -172,7 +175,7 @@
       renderRows();
 
       if (!String(wardInput.value || "").trim()) {
-        meta.textContent = `Live updates every 2 minutes. ${getLastRefreshText()}`.trim();
+        meta.textContent = `Live updates every 30 seconds. ${getLastRefreshText()}`.trim();
       }
     } catch (error) {
       table.innerHTML = '<p class="stock-dashboard-empty">Tracking is unavailable right now. Please refresh and try again.</p>';
@@ -216,7 +219,7 @@
 
   pollTimer = window.setInterval(() => {
     loadOrders({ silent: true });
-  }, 120000);
+  }, 30000);
 
   window.addEventListener("beforeunload", () => {
     window.clearInterval(pollTimer);
