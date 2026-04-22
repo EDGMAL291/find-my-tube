@@ -1019,35 +1019,51 @@ async function dbInsertRequest(payload, sessionUser = null) {
   }
 
   if (payload.items.length) {
-    const itemRows = payload.items.map((item) => ({
-      stock_request_id: requestId,
-      item_id: item.id || null,
-      item_name: item.label,
-      variant_label: item.variantLabel || null,
-      quantity: item.quantity,
-      unit: item.unitType || "each",
-      tray_size: item.traySize || null,
-      packet_size: item.packetSize || null,
-      inventory_units: getItemInventoryUnits(item),
-      formatted_quantity: item.formattedQuantity || null,
-      sheet_column_key: item.sheetColumnKey || null,
-      sheet_tray_column_key: item.sheetTrayColumnKey || null,
-      sheet_single_column_key: item.sheetSingleColumnKey || null,
-      batch_number: item.batchNumber || null,
-      expiry_date: sanitizeDateOnly(item.expiryDate) || null
-    }));
-
     try {
-      await dbSingle(supabase.from("stock_request_items").insert(itemRows));
-    } catch (error) {
-      if (!isMissingOptionalStockItemColumnsError(error, "stock_request_items")) throw error;
+      const itemRows = payload.items.map((item) => ({
+        stock_request_id: requestId,
+        item_id: item.id || null,
+        item_name: item.label,
+        variant_label: item.variantLabel || null,
+        quantity: item.quantity,
+        unit: item.unitType || "each",
+        tray_size: item.traySize || null,
+        packet_size: item.packetSize || null,
+        inventory_units: getItemInventoryUnits(item),
+        formatted_quantity: item.formattedQuantity || null,
+        sheet_column_key: item.sheetColumnKey || null,
+        sheet_tray_column_key: item.sheetTrayColumnKey || null,
+        sheet_single_column_key: item.sheetSingleColumnKey || null,
+        batch_number: item.batchNumber || null,
+        expiry_date: sanitizeDateOnly(item.expiryDate) || null
+      }));
 
-      const fallbackRows = itemRows.map(({ batch_number: _batchNumber, expiry_date: _expiryDate, ...row }) => row);
-      console.warn("[stock-submit] stock_request_items-legacy-schema-fallback", {
+      try {
+        await dbSingle(supabase.from("stock_request_items").insert(itemRows));
+      } catch (error) {
+        if (!isMissingOptionalStockItemColumnsError(error, "stock_request_items")) throw error;
+
+        const fallbackRows = itemRows.map(({ batch_number: _batchNumber, expiry_date: _expiryDate, ...row }) => row);
+        console.warn("[stock-submit] stock_request_items-legacy-schema-fallback", {
+          requestId,
+          errorMessage: getErrorMessage(error)
+        });
+        await dbSingle(supabase.from("stock_request_items").insert(fallbackRows));
+      }
+    } catch (itemInsertError) {
+      console.error("[stock-submit] item-insert-failed-rolling-back-request", {
         requestId,
-        errorMessage: getErrorMessage(error)
+        errorMessage: getErrorMessage(itemInsertError)
       });
-      await dbSingle(supabase.from("stock_request_items").insert(fallbackRows));
+      try {
+        await dbSingle(supabase.from("stock_requests").delete().eq("id", requestId));
+      } catch (rollbackError) {
+        console.error("[stock-submit] rollback-failed", {
+          requestId,
+          errorMessage: getErrorMessage(rollbackError)
+        });
+      }
+      throw itemInsertError;
     }
   }
 
