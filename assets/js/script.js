@@ -191,6 +191,12 @@ const isHomePage = currentAppPage === "home";
 const isFindMyTubePage = currentAppPage === "find-my-tube";
 const isFindMyTestPage = currentAppPage === "find-my-test";
 const isStockOrderPage = currentAppPage === "stock-order";
+const MOBILE_BOTTOM_NAV_BREAKPOINT = 860;
+const MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y = 88;
+const MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA = 54;
+const MOBILE_BOTTOM_NAV_SHOW_SCROLL_DELTA = 24;
+const MOBILE_BOTTOM_NAV_DEADZONE = 4;
+const MOBILE_BOTTOM_NAV_PAGES = new Set(["home", "find-my-tube", "find-my-test", "stock-order"]);
 const sharedPlanToken = currentPageParams.get("plan") || "";
 const APP_HOME_TITLE = "Find My Tube";
 const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube";
@@ -217,6 +223,12 @@ const ALLOWED_THEME_MODES = new Set(["light", "neutral", "dark"]);
 let currentTheme = ALLOWED_THEME_MODES.has(document.documentElement.dataset.theme)
   ? document.documentElement.dataset.theme
   : "neutral";
+let mobileBottomNav = null;
+let mobileBottomNavButtons = Object.create(null);
+let mobileBottomNavLastScrollY = 0;
+let mobileBottomNavDownDistance = 0;
+let mobileBottomNavUpDistance = 0;
+let mobileBottomNavIsHidden = false;
 const STOCK_API_CONFIGURED_BASE_URL = typeof window !== "undefined"
   ? String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim()
   : "";
@@ -4964,6 +4976,208 @@ function updateQuickToolsToggleState() {
 function updateDrawPlannerToggleState() {
   updateQuickToolsPanelState();
   updateQuickToolsToggleState();
+  setMobileBottomNavActiveState();
+}
+
+function shouldShowMobileBottomNav() {
+  return MOBILE_BOTTOM_NAV_PAGES.has(currentAppPage);
+}
+
+function isMobileBottomNavViewport() {
+  return window.matchMedia(`(max-width: ${MOBILE_BOTTOM_NAV_BREAKPOINT}px)`).matches;
+}
+
+function setMobileBottomNavHidden(isHidden) {
+  if (!mobileBottomNav) return;
+  mobileBottomNavIsHidden = Boolean(isHidden);
+  mobileBottomNav.classList.toggle("is-hidden", mobileBottomNavIsHidden);
+}
+
+function resetMobileBottomNavScrollState() {
+  mobileBottomNavLastScrollY = Math.max(0, window.scrollY || 0);
+  mobileBottomNavDownDistance = 0;
+  mobileBottomNavUpDistance = 0;
+}
+
+function setMobileBottomNavActiveState() {
+  if (!mobileBottomNavButtons) return;
+
+  const activeKey = isFindMyTubePage && isDrawPlannerOpen()
+    ? "draw"
+    : isHomePage
+      ? "home"
+      : isFindMyTubePage
+        ? "tube"
+        : isFindMyTestPage
+          ? "test"
+          : isStockOrderPage
+            ? "order"
+            : "";
+
+  ["home", "tube", "draw", "test", "order"].forEach((key) => {
+    const button = mobileBottomNavButtons[key];
+    if (!button) return;
+    const isActive = key === activeKey;
+    button.classList.toggle("is-active", isActive);
+    if (isActive) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+  });
+}
+
+function handleMobileBottomNavAction(action) {
+  setSiteMenuOpen(false);
+  setThemePanelOpen(false);
+
+  if (action === "home") {
+    goHome();
+    return;
+  }
+
+  if (action === "tube") {
+    openLookupHomeView();
+    return;
+  }
+
+  if (action === "draw") {
+    if (!isFindMyTubePage) {
+      window.location.assign(getFindMyTubePageUrl());
+      return;
+    }
+    closeProfileModal();
+    closeLegalModal({ restoreFocus: false });
+    scrollPanelIntoView(tubeLookupPanel || preSearchPanel);
+    if (selectedTestNames.size > 0) {
+      openDrawModal();
+      return;
+    }
+    closeDrawModal();
+    focusMainSearchField({ scroll: "if-needed" });
+    return;
+  }
+
+  if (action === "test") {
+    window.location.assign("./index.html?tool=find-my-test");
+    return;
+  }
+
+  if (action === "order") {
+    openStockSection();
+  }
+}
+
+function handleMobileBottomNavScroll() {
+  if (!mobileBottomNav) return;
+  if (!isMobileBottomNavViewport()) {
+    setMobileBottomNavHidden(false);
+    resetMobileBottomNavScrollState();
+    return;
+  }
+
+  const currentY = Math.max(0, window.scrollY || 0);
+  const delta = currentY - mobileBottomNavLastScrollY;
+  mobileBottomNavLastScrollY = currentY;
+
+  if (Math.abs(delta) < MOBILE_BOTTOM_NAV_DEADZONE) return;
+
+  if (currentY <= 20) {
+    mobileBottomNavDownDistance = 0;
+    mobileBottomNavUpDistance = 0;
+    setMobileBottomNavHidden(false);
+    return;
+  }
+
+  if (delta > 0) {
+    mobileBottomNavDownDistance += delta;
+    mobileBottomNavUpDistance = 0;
+    if (currentY > MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y && mobileBottomNavDownDistance >= MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA) {
+      setMobileBottomNavHidden(true);
+      mobileBottomNavDownDistance = 0;
+    }
+    return;
+  }
+
+  mobileBottomNavUpDistance += Math.abs(delta);
+  mobileBottomNavDownDistance = 0;
+  if (mobileBottomNavUpDistance >= MOBILE_BOTTOM_NAV_SHOW_SCROLL_DELTA) {
+    setMobileBottomNavHidden(false);
+    mobileBottomNavUpDistance = 0;
+  }
+}
+
+function initMobileBottomNav() {
+  if (!shouldShowMobileBottomNav() || mobileBottomNav) return;
+
+  const nav = document.createElement("nav");
+  nav.className = "mobile-bottom-nav";
+  nav.setAttribute("aria-label", "Main mobile navigation");
+  nav.innerHTML = `
+    <div class="mobile-bottom-nav-group" data-group="left">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="home" aria-label="Home">
+        <span class="mobile-bottom-nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="mobile-bottom-nav-label">Home</span>
+      </button>
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="tube" aria-label="Tube">
+        <span class="mobile-bottom-nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v8.6c0 1.7.9 3.3 2.4 4.2l.3.2a5 5 0 0 1 2.3 4.2V21H9v-.8a5 5 0 0 1 2.3-4.2l.3-.2A5 5 0 0 0 14 11.6V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="mobile-bottom-nav-label">Tube</span>
+      </button>
+    </div>
+    <button type="button" class="mobile-bottom-nav-btn mobile-bottom-nav-draw" data-mobile-nav="draw" aria-label="Start a Draw Plan">
+      <span class="mobile-bottom-nav-draw-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <span class="mobile-bottom-nav-label">Draw Plan</span>
+    </button>
+    <div class="mobile-bottom-nav-group" data-group="right">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" aria-label="Test">
+        <span class="mobile-bottom-nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>
+        </span>
+        <span class="mobile-bottom-nav-label">Test</span>
+      </button>
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="order" aria-label="Order">
+        <span class="mobile-bottom-nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3.8 8.2 12 4l8.2 4.2M3.8 8.2V16L12 20l8.2-4V8.2M3.8 8.2 12 12.4m8.2-4.2L12 12.4m0 0V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="mobile-bottom-nav-label">Order</span>
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(nav);
+  document.body.classList.add("has-mobile-bottom-nav");
+  mobileBottomNav = nav;
+  mobileBottomNavButtons = {
+    home: nav.querySelector('[data-mobile-nav="home"]'),
+    tube: nav.querySelector('[data-mobile-nav="tube"]'),
+    draw: nav.querySelector('[data-mobile-nav="draw"]'),
+    test: nav.querySelector('[data-mobile-nav="test"]'),
+    order: nav.querySelector('[data-mobile-nav="order"]')
+  };
+
+  nav.querySelectorAll("[data-mobile-nav]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.getAttribute("data-mobile-nav") || "";
+      handleMobileBottomNavAction(action);
+    });
+  });
+
+  resetMobileBottomNavScrollState();
+  setMobileBottomNavHidden(false);
+  setMobileBottomNavActiveState();
+  handleMobileBottomNavScroll();
+
+  window.addEventListener("scroll", handleMobileBottomNavScroll, { passive: true });
+  window.addEventListener("resize", () => {
+    handleMobileBottomNavScroll();
+    setMobileBottomNavActiveState();
+  });
 }
 
 // Opens draw modal.
@@ -7177,6 +7391,7 @@ initStockOrderPanel();
 initQuickToolsPanel();
 initFactsPanel();
 initSectionNavigation();
+initMobileBottomNav();
 renderGroupChips();
 refreshSearchPlaceholder();
 bindEvents();
