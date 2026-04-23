@@ -384,10 +384,10 @@
   <script src="assets/data/data.js?v=20260420a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
   <script src="assets/js/script.js?v=20260423j"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260420a"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260423b"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-20.1";
+      const APP_VERSION = "2026-04-23.2";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -419,7 +419,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260420a", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260423b", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

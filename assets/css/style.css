@@ -7358,6 +7358,17 @@ html[data-theme="dark"] .home-feature-card:focus-visible .home-feature-action {
   align-content: start;
 }
 
+body.stock-dashboard-session-restoring .stock-dashboard-session-actions button {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+body.stock-dashboard-session-restoring .stock-dashboard-request-list,
+body.stock-dashboard-session-restoring .stock-dashboard-list,
+body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
+  opacity: 0.7;
+}
+
 .stock-dashboard-auth-shell {
   display: grid;
   gap: 1rem;

@@ -329,13 +329,14 @@ function buildAuthCookie(token, req, { expiresAt = null, clear = false } = {}) {
 
   const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
   const isSecure = forwardedProto === "https" || req.socket.encrypted || /onrender\.com$/i.test(String(req.headers.host || ""));
+  const hasOrigin = Boolean(String(req.headers.origin || "").trim());
+  const shouldUseCrossSiteCookie = isSecure && (hasOrigin || String(process.env.NODE_ENV || "").trim().toLowerCase() === "production");
   if (isSecure) attrs.push("Secure");
 
   if (clear) {
     attrs.push("Max-Age=0");
     attrs.push("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
-    const hasOrigin = Boolean(String(req.headers.origin || "").trim());
-    attrs.push(hasOrigin && isSecure ? "SameSite=None" : "SameSite=Lax");
+    attrs.push(shouldUseCrossSiteCookie ? "SameSite=None" : "SameSite=Lax");
     return attrs.join("; ");
   }
 
@@ -343,8 +344,7 @@ function buildAuthCookie(token, req, { expiresAt = null, clear = false } = {}) {
     attrs.push(`Expires=${expiresAt.toUTCString()}`);
   }
 
-  const hasOrigin = Boolean(String(req.headers.origin || "").trim());
-  attrs.push(hasOrigin && isSecure ? "SameSite=None" : "SameSite=Lax");
+  attrs.push(shouldUseCrossSiteCookie ? "SameSite=None" : "SameSite=Lax");
 
   return attrs.join("; ");
 }
