@@ -11,7 +11,7 @@ const themeSwitcherPanel = document.getElementById("themeSwitcherPanel");
 const surfacePanelBackdrop = document.getElementById("surfacePanelBackdrop");
 const themeModeButtons = document.querySelectorAll("[data-theme-mode]");
 const homeHub = document.getElementById("homeHub");
-const homeTipCard = document.querySelector(".home-brief-card-featured");
+const homeTipCard = document.querySelector(".home-tip-card");
 const homeTipText = document.getElementById("homeTipText");
 const homeRecentActivityList = document.getElementById("homeRecentActivityList");
 const homeRecentEmpty = document.getElementById("homeRecentEmpty");
@@ -208,6 +208,17 @@ const MENU_ACTION_ORDER_INDEX = MENU_ACTION_ORDER.reduce((acc, action, index) =>
   acc[action] = index;
   return acc;
 }, Object.create(null));
+const MENU_ACTION_ICONS = Object.freeze({
+  home: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  tube: '<svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v8.6c0 1.7.9 3.3 2.4 4.2l.3.2a5 5 0 0 1 2.3 4.2V21H9v-.8a5 5 0 0 1 2.3-4.2l.3-.2A5 5 0 0 0 14 11.6V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  "find-my-test": '<svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>',
+  draw: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 16c4.5 0 4.5-8 9-8s4.5 8 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="16" r="1.4" stroke="currentColor" stroke-width="1.8"/><circle cx="13" cy="8" r="1.4" stroke="currentColor" stroke-width="1.8"/><circle cx="22" cy="16" r="1.4" stroke="currentColor" stroke-width="1.8"/></svg>',
+  stock: '<svg viewBox="0 0 24 24" fill="none"><path d="M3.8 8.2 12 4l8.2 4.2M3.8 8.2V16L12 20l8.2-4V8.2M3.8 8.2 12 12.4m8.2-4.2L12 12.4m0 0V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  "stock-dashboard": '<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16M6 9h5v8H6zM14 9h4v3h-4zM14 15h4v2h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  "track-orders": '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h10v8H5zM15 10h3.5l2 2.4V15H15zM7.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4ZM17.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 13.2v-2.4l2-.7.6-1.4-.9-1.9 1.7-1.7 1.9.9 1.4-.6.7-2h2.4l.7 2 1.4.6 1.9-.9 1.7 1.7-.9 1.9.6 1.4 2 .7v2.4l-2 .7-.6 1.4.9 1.9-1.7 1.7-1.9-.9-1.4.6-.7 2h-2.4l-.7-2-1.4-.6-1.9.9-1.7-1.7.9-1.9-.6-1.4-2-.7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  about: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+});
 const MOBILE_BOTTOM_NAV_BREAKPOINT = 860;
 const MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y = 88;
 const MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA = 54;
@@ -380,6 +391,21 @@ function normalizeMenuAction(action) {
   return safeAction;
 }
 
+function getMenuActionIconSvg(action) {
+  return MENU_ACTION_ICONS[normalizeMenuAction(action)] || MENU_ACTION_ICONS.home;
+}
+
+function enhanceMenuButton(button, actionAttribute) {
+  if (!(button instanceof HTMLElement) || button.dataset.menuEnhanced === "true") return;
+  const action = normalizeMenuAction(button.getAttribute(actionAttribute));
+  const label = String(button.textContent || "").trim();
+  button.dataset.menuEnhanced = "true";
+  button.innerHTML = `
+    <span class="menu-action-icon" aria-hidden="true">${getMenuActionIconSvg(action)}</span>
+    <span class="menu-action-label">${label}</span>
+  `;
+}
+
 function getCurrentPageMenuAction() {
   if (isThemePanelOpen) return "settings";
   if (isTrackOrdersPage) return "track-orders";
@@ -442,6 +468,7 @@ function enhanceSiteMenuStructure() {
   const secondaryButtons = [];
   buttons.forEach((button) => {
     const action = normalizeMenuAction(button.getAttribute("data-menu-action"));
+    enhanceMenuButton(button, "data-menu-action");
     if (MENU_SECONDARY_ACTION_ORDER.includes(action)) {
       button.dataset.menuGroup = "secondary";
       secondaryButtons.push(button);
@@ -461,16 +488,20 @@ function enhanceSiteMenuStructure() {
   mainButtons.forEach((button) => mainGroup.appendChild(button));
   siteMenuList.appendChild(mainGroup);
 
-  if (secondaryButtons.length) {
-    const secondaryGroup = document.createElement("div");
-    secondaryGroup.className = "site-menu-group";
+	  if (secondaryButtons.length) {
+	    const secondaryGroup = document.createElement("div");
+	    secondaryGroup.className = "site-menu-group";
     secondaryGroup.dataset.group = "secondary";
     secondaryGroup.setAttribute("role", "none");
     secondaryGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Secondary</p>';
-    secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
-    siteMenuList.appendChild(secondaryGroup);
-  }
-}
+	    secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
+	    siteMenuList.appendChild(secondaryGroup);
+	  }
+
+	  [...mainButtons, ...secondaryButtons].forEach((button, index) => {
+	    button.style.setProperty("--menu-item-index", String(index));
+	  });
+	}
 
 // Synchronizes the shared surface-panel backdrop.
 function syncSurfacePanelState() {
@@ -5425,9 +5456,16 @@ function initMobileBottomNav() {
   menuSheet.className = "mobile-bottom-menu-sheet";
   menuSheet.id = "mobileBottomMenuSheet";
   menuSheet.hidden = true;
-  menuSheet.setAttribute("aria-label", "Main mobile menu");
-  menuSheet.innerHTML = `
-    <div class="mobile-bottom-menu-list" role="menu" aria-label="Main menu actions">
+	  menuSheet.setAttribute("aria-label", "Main mobile menu");
+	  menuSheet.innerHTML = `
+	    <div class="mobile-bottom-menu-head">
+	      <div>
+	        <p class="mobile-bottom-menu-kicker">Find My Tube</p>
+	        <p class="mobile-bottom-menu-title">Menu</p>
+	      </div>
+	      <button type="button" class="mobile-bottom-menu-close" aria-label="Close menu">&times;</button>
+	    </div>
+	    <div class="mobile-bottom-menu-list" role="menu" aria-label="Main menu actions">
       <section class="mobile-bottom-menu-group" data-group="main" role="none">
         <p class="mobile-bottom-menu-group-title" role="presentation">Main navigation</p>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
@@ -5466,11 +5504,15 @@ function initMobileBottomNav() {
     });
   });
 
-  menuBackdrop.addEventListener("click", () => {
-    setMobileBottomMenuOpen(false);
-  });
-  menuSheet.querySelectorAll("[data-mobile-menu-action]").forEach((button) => {
-    button.addEventListener("click", () => {
+	  menuBackdrop.addEventListener("click", () => {
+	    setMobileBottomMenuOpen(false);
+	  });
+	  menuSheet.querySelector(".mobile-bottom-menu-close")?.addEventListener("click", () => {
+	    setMobileBottomMenuOpen(false);
+	  });
+	  menuSheet.querySelectorAll("[data-mobile-menu-action]").forEach((button) => {
+	    enhanceMenuButton(button, "data-mobile-menu-action");
+	    button.addEventListener("click", () => {
       const action = button.getAttribute("data-mobile-menu-action") || "";
       setMobileBottomMenuOpen(false);
       handleSiteNavigationAction(action, button);
@@ -7094,12 +7136,26 @@ function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
   }, intervalMs);
 }
 
+function startHomeTipRotation() {
+  if (!homeTipText || factTips.length < 2) return;
+  homeTipText.textContent = factTips[0];
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+
+  let current = 0;
+  window.setInterval(() => {
+    current = (current + 1) % factTips.length;
+    homeTipText.classList.add("is-changing");
+    window.setTimeout(() => {
+      homeTipText.textContent = factTips[current];
+      homeTipText.classList.remove("is-changing");
+    }, 180);
+  }, HOME_TIP_CYCLE_MS);
+}
+
 // Renders facts carousel.
 function renderFactsCarousel() {
   startCarousel(factTips, tipText, null, HOME_TIP_CYCLE_MS);
-  if (homeTipText && factTips.length) {
-    homeTipText.textContent = factTips[0];
-  }
+  startHomeTipRotation();
   homeTipCard?.classList.remove("is-orbiting");
 }
 

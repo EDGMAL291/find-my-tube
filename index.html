@@ -121,17 +121,6 @@
             <span class="home-action-label">Order Consumables</span>
             <span class="home-action-copy">Request tubes and consumables</span>
           </button>
-          <button type="button" class="home-action-tile home-action-tile-contact" data-menu-action="contact-feedback" aria-label="Open Contact and Feedback">
-            <span class="home-action-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
-                <path d="M6 7.5h12a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-2.5 2.5H11l-4 3v-3H6A2.5 2.5 0 0 1 3.5 15v-5A2.5 2.5 0 0 1 6 7.5Z"></path>
-                <path d="M8.2 11.2h7.6"></path>
-                <path d="M8.2 14h5.1"></path>
-              </svg>
-            </span>
-            <span class="home-action-label">Contact / Feedback</span>
-            <span class="home-action-copy">Get help or send feedback</span>
-          </button>
         </div>
       </section>
 
@@ -145,9 +134,31 @@
         <div class="home-status-list" id="homeStatusList"></div>
       </section>
 
+      <button type="button" class="home-action-tile home-action-tile-contact home-dashboard-contact" data-menu-action="contact-feedback" aria-label="Open Contact and Feedback">
+        <span class="home-action-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
+            <path d="M6 7.5h12a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-2.5 2.5H11l-4 3v-3H6A2.5 2.5 0 0 1 3.5 15v-5A2.5 2.5 0 0 1 6 7.5Z"></path>
+            <path d="M8.2 11.2h7.6"></path>
+            <path d="M8.2 14h5.1"></path>
+          </svg>
+        </span>
+        <span class="home-action-label">Contact / Feedback</span>
+        <span class="home-action-copy">Get help or send feedback</span>
+      </button>
+
       <section class="home-dashboard-section home-tip-card" aria-labelledby="homeTipTitle">
-        <div class="home-dashboard-head">
-          <h2 id="homeTipTitle">Collection Tips</h2>
+        <div class="home-tip-head">
+          <span class="home-tip-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
+              <path d="M8 4h8"></path>
+              <path d="M9 4v6.5a4 4 0 0 1-.8 2.4l-1.6 2.2A3 3 0 0 0 9 20h6a3 3 0 0 0 2.4-4.9l-1.6-2.2a4 4 0 0 1-.8-2.4V4"></path>
+              <path d="M8.2 15h7.6"></path>
+            </svg>
+          </span>
+          <div class="home-tip-title-group">
+            <span class="home-tip-badge">Tip</span>
+            <h2 id="homeTipTitle">Collection Tips</h2>
+          </div>
         </div>
         <p class="home-tip-text" id="homeTipText">Fill citrate tubes to the line to prevent clotting errors.</p>
       </section>
