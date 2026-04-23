@@ -82,6 +82,7 @@ const stockDashboardRequestList = document.getElementById("stockDashboardRequest
 
 const STOCK_DASHBOARD_STATUS_ORDER = ["submitted", "packed", "collected", "cancelled"];
 const STOCK_DASHBOARD_LEGACY_TOKEN_KEY = "fmt-stock-lab-token";
+const STOCK_DASHBOARD_SESSION_TOKEN_KEY = "fmt-stock-lab-session-token";
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
 const STOCK_DASHBOARD_LAST_SEEN_PREFIX = "fmt-stock-last-seen";
 const STOCK_DASHBOARD_LAST_NOTIFIED_PREFIX = "fmt-stock-last-notified";
@@ -89,6 +90,7 @@ const STOCK_DASHBOARD_SIGNED_OUT_KEY = "fmt-stock-auth-signed-out";
 const STOCK_DASHBOARD_ACTIVE_AUTH_KEY = "fmt-stock-auth-active";
 const STOCK_DASHBOARD_AUTH_STATE_KEYS = Object.freeze([
   STOCK_DASHBOARD_LEGACY_TOKEN_KEY,
+  STOCK_DASHBOARD_SESSION_TOKEN_KEY,
   STOCK_DASHBOARD_ACTIVE_AUTH_KEY,
   "fmt-stock-lab-user",
   "fmt-stock-lab-user-number",
@@ -390,7 +392,32 @@ function stockDashboardGetHeaders(includeJson = false) {
   if (includeJson) {
     headers["Content-Type"] = "application/json";
   }
+  const sessionToken = stockDashboardReadSessionToken();
+  if (sessionToken) {
+    headers.Authorization = `Bearer ${sessionToken}`;
+  }
   return headers;
+}
+
+function stockDashboardReadSessionToken() {
+  try {
+    return String(localStorage.getItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY) || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function stockDashboardWriteSessionToken(token) {
+  const safeToken = String(token || "").trim();
+  try {
+    if (safeToken) {
+      localStorage.setItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY, safeToken);
+      return;
+    }
+    localStorage.removeItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY);
+  } catch {
+    // The HttpOnly cookie path still works in browsers that allow cross-site cookies.
+  }
 }
 
 function stockDashboardSetCreateUserModalOpen(isOpen) {
@@ -2265,6 +2292,7 @@ async function stockDashboardSendAuthRequest(url, options = {}) {
 
     stockDashboardSetupRequired = false;
     stockDashboardSetSignedOutOverride(false);
+    stockDashboardWriteSessionToken(payload.sessionToken);
     stockDashboardSetSession(payload.user);
     console.info("[stock-dashboard][auth] login-success", {
       userNumber: String(payload?.user?.userNumber || ""),
@@ -3135,6 +3163,7 @@ async function logoutStockDashboard() {
     stockDashboardCancelLoginAttempt({ message: "Login cancelled.", goIdle: true });
   }
   const previousSession = stockDashboardSession ? { ...stockDashboardSession } : null;
+  const logoutHeaders = stockDashboardGetHeaders();
   const logoutGeneration = stockDashboardBumpAuthGeneration();
   stockDashboardLogoutInProgress = true;
   stockDashboardSetBusy(true);
@@ -3150,7 +3179,8 @@ async function logoutStockDashboard() {
 
   try {
     const response = await stockDashboardFetch(STOCK_DASHBOARD_LOGOUT_URL, {
-      method: "POST"
+      method: "POST",
+      headers: logoutHeaders
     });
     if (!response.ok) {
       stockDashboardLogAuthDebug("logout-response-not-ok", { status: response.status });

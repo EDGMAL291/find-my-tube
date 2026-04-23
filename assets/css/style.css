@@ -1023,12 +1023,17 @@ body.find-my-test-page .about-panel {
   gap: 14px;
 }
 
+.home-dashboard-actions {
+  display: grid;
+  gap: 12px;
+}
+
 .home-dashboard-section {
-  border-radius: 22px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-elevated);
-  box-shadow: 0 14px 28px rgba(65, 53, 38, 0.1);
-  padding: 15px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: color-mix(in srgb, var(--color-surface-elevated) 74%, transparent);
+  box-shadow: 0 8px 18px rgba(65, 53, 38, 0.06);
+  padding: 14px;
   display: grid;
   gap: 11px;
 }
@@ -1191,6 +1196,7 @@ body.find-my-test-page .about-panel {
 .home-action-copy {
   font-size: 0.77rem;
   color: var(--color-text-muted);
+  font-weight: 500;
   line-height: 1.36;
   max-width: 28ch;
 }
@@ -1203,11 +1209,6 @@ body.find-my-test-page .about-panel {
 .home-action-tile-test {
   --quick-action-accent: #2f8e83;
   --quick-action-art: url("../images/quick-actions/find-test-bg.svg");
-}
-
-.home-action-tile-plan {
-  --quick-action-accent: #7f72c5;
-  --quick-action-art: url("../images/quick-actions/tube-plan-bg.svg");
 }
 
 .home-action-tile-order {
@@ -1381,10 +1382,11 @@ button.home-recent-item:focus-visible {
 }
 
 .home-tip-card {
-  border-color: rgba(15, 118, 110, 0.24);
+  border-color: rgba(15, 118, 110, 0.18);
   background:
-    radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 34%),
-    linear-gradient(145deg, rgba(247, 253, 250, 0.98), rgba(235, 246, 242, 0.95));
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(247, 253, 250, 0.9), rgba(235, 246, 242, 0.82));
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.06);
 }
 
 .home-tip-text {

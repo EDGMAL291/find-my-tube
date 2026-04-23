@@ -317,7 +317,7 @@ function getBearerToken(req) {
 function getSessionToken(req) {
   const cookies = parseCookies(req);
   const fromCookie = String(cookies[AUTH_COOKIE_NAME] || "").trim();
-  return fromCookie;
+  return fromCookie || getBearerToken(req);
 }
 
 function buildAuthCookie(token, req, { expiresAt = null, clear = false } = {}) {
@@ -1842,6 +1842,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     sendJson(req, res, 200, {
       ok: true,
       authenticated: true,
+      sessionToken: token,
       user: mapUserFromDb({ ...user, last_login_at: now.toISOString(), updated_at: now.toISOString() })
     });
     return;
@@ -1959,6 +1960,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     sendJson(req, res, 201, {
       ok: true,
       authenticated: true,
+      sessionToken: token,
       user: mapUserFromDb(createdUser)
     });
     return;
