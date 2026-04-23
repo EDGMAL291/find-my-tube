@@ -1341,6 +1341,36 @@ async function dbDeleteStockAuditLogs() {
   };
 }
 
+async function dbResetInventoryBalances() {
+  const before = await dbCountTableRows("inventory_balances");
+  if (before === null) {
+    return { table: "inventory_balances", before: null, deleted: 0, reset: 0, skipped: true };
+  }
+
+  const { count, error } = await supabase
+    .from("inventory_balances")
+    .update({
+      quantity_on_hand: 0,
+      updated_at: new Date().toISOString()
+    }, { count: "exact" })
+    .neq("item_key", "__find_my_tube_reset_sentinel__");
+
+  if (error) {
+    if (isMissingDatabaseTableError(error, "inventory_balances")) {
+      return { table: "inventory_balances", before, deleted: 0, reset: 0, skipped: true };
+    }
+    throw new Error(error.message || "Could not reset inventory_balances");
+  }
+
+  return {
+    table: "inventory_balances",
+    before,
+    deleted: 0,
+    reset: Math.max(0, Number(count) || 0),
+    skipped: false
+  };
+}
+
 async function dbResetStockTransactionalData() {
   const uuidDeleteOptions = { impossibleValue: "00000000-0000-0000-0000-000000000000" };
   const results = [];
@@ -1350,7 +1380,7 @@ async function dbResetStockTransactionalData() {
   results.push(await dbDeleteAllRows("received_stock_items", uuidDeleteOptions));
   results.push(await dbDeleteAllRows("received_stock"));
   results.push(await dbDeleteAllRows("inventory_batches", uuidDeleteOptions));
-  results.push(await dbDeleteAllRows("inventory_balances", uuidDeleteOptions));
+  results.push(await dbResetInventoryBalances());
   results.push(await dbDeleteStockAuditLogs());
 
   return results;
