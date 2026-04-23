@@ -1235,6 +1235,127 @@ async function dbListInventorySummary() {
   }));
 }
 
+function isMissingDatabaseTableError(error, tableName = "") {
+  const message = getErrorMessage(error).toLowerCase();
+  const safeTableName = String(tableName || "").toLowerCase();
+  if (!message) return false;
+  return (
+    message.includes("does not exist")
+    || message.includes("could not find the table")
+    || (safeTableName && message.includes(safeTableName) && message.includes("schema cache"))
+  );
+}
+
+async function dbCountTableRows(tableName) {
+  const { count, error } = await supabase
+    .from(tableName)
+    .select("id", { count: "exact", head: true });
+
+  if (error) {
+    if (isMissingDatabaseTableError(error, tableName)) return null;
+    throw new Error(error.message || `Could not count ${tableName}`);
+  }
+
+  return Math.max(0, Number(count) || 0);
+}
+
+async function dbDeleteAllRows(tableName, { idColumn = "id", impossibleValue = "__find_my_tube_reset_sentinel__" } = {}) {
+  const before = await dbCountTableRows(tableName);
+  if (before === null) {
+    return { table: tableName, before: null, deleted: 0, skipped: true };
+  }
+
+  const { count, error } = await supabase
+    .from(tableName)
+    .delete({ count: "exact" })
+    .neq(idColumn, impossibleValue);
+
+  if (error) {
+    if (isMissingDatabaseTableError(error, tableName)) {
+      return { table: tableName, before, deleted: 0, skipped: true };
+    }
+    throw new Error(error.message || `Could not clear ${tableName}`);
+  }
+
+  return { table: tableName, before, deleted: Math.max(0, Number(count) || 0), skipped: false };
+}
+
+async function dbDeleteStockAuditLogs() {
+  const stockAuditTargetTypes = [
+    "stock_request",
+    "stock_requests",
+    "stock_request_item",
+    "stock_request_items",
+    "received_stock",
+    "received_stock_item",
+    "received_stock_items",
+    "inventory_balance",
+    "inventory_balances",
+    "inventory_batch",
+    "inventory_batches"
+  ];
+  const stockAuditActions = [
+    "create-request",
+    "create-received-stock",
+    "update-stock-request-status",
+    "clear-stock-data"
+  ];
+
+  const before = await dbCountTableRows("audit_logs");
+  if (before === null) {
+    return { table: "audit_logs", before: null, deleted: 0, skipped: true };
+  }
+
+  const byTarget = await supabase
+    .from("audit_logs")
+    .delete({ count: "exact" })
+    .in("target_type", stockAuditTargetTypes);
+  if (byTarget.error) {
+    if (isMissingDatabaseTableError(byTarget.error, "audit_logs")) {
+      return { table: "audit_logs", before, deleted: 0, skipped: true };
+    }
+    throw new Error(byTarget.error.message || "Could not clear stock audit logs");
+  }
+
+  const byAction = await supabase
+    .from("audit_logs")
+    .delete({ count: "exact" })
+    .in("action", stockAuditActions);
+  if (byAction.error) {
+    if (isMissingDatabaseTableError(byAction.error, "audit_logs")) {
+      return {
+        table: "audit_logs",
+        before,
+        deleted: Math.max(0, Number(byTarget.count) || 0),
+        skipped: true
+      };
+    }
+    throw new Error(byAction.error.message || "Could not clear stock audit logs");
+  }
+
+  return {
+    table: "audit_logs",
+    before,
+    deleted: Math.max(0, Number(byTarget.count) || 0) + Math.max(0, Number(byAction.count) || 0),
+    skipped: false
+  };
+}
+
+async function dbResetStockTransactionalData() {
+  const uuidDeleteOptions = { impossibleValue: "00000000-0000-0000-0000-000000000000" };
+  const results = [];
+
+  results.push(await dbDeleteAllRows("stock_request_items", uuidDeleteOptions));
+  results.push(await dbDeleteAllRows("stock_requests"));
+  results.push(await dbDeleteAllRows("received_stock_items", uuidDeleteOptions));
+  results.push(await dbDeleteAllRows("received_stock"));
+  results.push(await dbDeleteAllRows("inventory_batches", uuidDeleteOptions));
+  results.push(await dbDeleteAllRows("inventory_balances", uuidDeleteOptions));
+  results.push(await dbDeleteStockAuditLogs());
+
+  return results;
+}
+
 async function dbInsertReceipt(payload, sessionUser) {
   const nowIso = new Date().toISOString();
   const receiptId = buildReceiptId();
@@ -2362,14 +2483,24 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const session = await requireOwnerSession(req, res);
     if (!session) return;
 
-    await dbSingle(supabase.from("stock_request_items").delete().neq("id", "00000000-0000-0000-0000-000000000000"));
-    await dbSingle(supabase.from("stock_requests").delete().neq("id", ""));
+    const clearedTables = await dbResetStockTransactionalData();
 
-    await dbCreateAuditLog(session.user.id, "clear-stock-data", "stock_requests", "*", {});
+    await dbCreateAuditLog(session.user.id, "clear-stock-data", "maintenance", "stock-transactional-data", {
+      clearedTables
+    });
 
     sendJson(req, res, 200, {
       ok: true,
       cleared: true,
+      clearedTables,
+      preserved: [
+        "users",
+        "lab_sessions",
+        "app configuration",
+        "static catalog/reference content",
+        "tube and test definitions"
+      ],
+      stockOnHandReset: true,
       clearedBy: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
     });
     return;
