@@ -374,6 +374,25 @@ body.stock-order-page .container {
   font-size: clamp(0.94rem, 2.5vw, 1rem);
 }
 
+body[data-app-page="home"] .header h1 {
+  text-align: center;
+}
+
+body[data-app-page="home"] .brand-title {
+  margin-inline: auto;
+  justify-content: center;
+}
+
+body[data-app-page="home"] .header > p {
+  text-align: center;
+  max-width: 46ch;
+  margin: 0 auto;
+}
+
+body[data-app-page="home"] .header {
+  margin-bottom: 30px;
+}
+
 .header-settings {
   grid-area: settings;
   position: relative;
@@ -4315,8 +4334,8 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .site-footer {
   display: block;
-  margin: 8px 0 12px;
-  padding: 8px 4px;
+  margin: 14px 0 14px;
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -4332,27 +4351,26 @@ body.find-my-tube-page .group-chip-icon svg {
   max-width: none;
 }
 
-.site-footer-title {
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: #6b7280;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-  text-align: center;
-}
-
-.site-footer-micro {
-  margin-top: 4px;
-}
-
-.site-footer-micro-line {
+.footer-card {
+  border-radius: 20px;
+  padding: 16px 18px;
   margin: 0;
-  font-size: 0.74rem;
+  border: 1px solid rgba(99, 116, 121, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(255, 252, 246, 0.95), rgba(245, 240, 231, 0.92));
+  box-shadow: 0 12px 22px rgba(16, 24, 40, 0.08);
+}
+
+.site-footer-title {
+  margin: 0;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #6b7280;
   line-height: 1.4;
   letter-spacing: 0.01em;
   text-align: center;
+  opacity: 0.82;
 }
 
 .site-footer-note {
@@ -5688,8 +5706,7 @@ html[data-theme="dark"] .mobile-bottom-menu-item:hover {
   color: #e6f4fa;
 }
 
-html[data-theme="dark"] .site-footer-title,
-html[data-theme="dark"] .site-footer-micro-line {
+html[data-theme="dark"] .site-footer-title {
   color: #9ca3af;
 }
 
@@ -6473,7 +6490,6 @@ html[data-theme="neutral"] .draw-selection-head h3,
 html[data-theme="neutral"] .draw-group-top h3,
 html[data-theme="neutral"] .profile-modal-head h3,
 html[data-theme="neutral"] .site-footer-title,
-html[data-theme="neutral"] .site-footer-micro-line,
 html[data-theme="neutral"] .card-title-select-copy,
 html[data-theme="neutral"] .draw-selected-chip-name {
   color: #1f2b33;
@@ -6653,7 +6669,6 @@ html[data-theme="dark"] .contact-sheet-head h3,
 html[data-theme="dark"] .about-info-modal-head h3,
 html[data-theme="dark"] .about-info-title,
 html[data-theme="dark"] .site-footer-title,
-html[data-theme="dark"] .site-footer-micro-line,
 html[data-theme="dark"] .card-title-select-copy,
 html[data-theme="dark"] .card-requested-specimen-value,
 html[data-theme="dark"] .draw-selected-chip-name {
@@ -7197,6 +7212,7 @@ html[data-theme="neutral"] .search-box.lookup-shell,
 html[data-theme="neutral"] .home-brief-card,
 html[data-theme="neutral"] .home-feature-card,
 html[data-theme="neutral"] .home-dashboard-section,
+html[data-theme="neutral"] .footer-card,
 html[data-theme="neutral"] .stock-order-panel,
 html[data-theme="neutral"] .about-panel {
   border-color: rgba(77, 104, 97, 0.28);
@@ -7244,6 +7260,7 @@ html[data-theme="dark"] .search-box.lookup-shell,
 html[data-theme="dark"] .home-brief-card,
 html[data-theme="dark"] .home-feature-card,
 html[data-theme="dark"] .home-dashboard-section,
+html[data-theme="dark"] .footer-card,
 html[data-theme="dark"] .stock-order-panel,
 html[data-theme="dark"] .about-panel {
   border-color: rgba(107, 141, 152, 0.22);
