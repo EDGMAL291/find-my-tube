@@ -2539,6 +2539,53 @@ body.find-my-test-page .clinical-workup-form {
   background: rgba(255, 255, 255, 0.98);
 }
 
+.clinical-workup-autocomplete {
+  margin-top: 7px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 14px 24px rgba(25, 46, 56, 0.12);
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.clinical-workup-autocomplete-item {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+  background: transparent;
+  color: #1f2a30;
+  font: inherit;
+  text-align: left;
+  padding: 10px 12px;
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.clinical-workup-autocomplete-item:last-child {
+  border-bottom: 0;
+}
+
+.clinical-workup-autocomplete-item:hover,
+.clinical-workup-autocomplete-item.is-highlighted {
+  background: rgba(15, 118, 110, 0.1);
+}
+
+.clinical-workup-autocomplete-term {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.clinical-workup-autocomplete-meta,
+.clinical-workup-autocomplete-match {
+  font-size: 0.72rem;
+  color: #4b6470;
+  line-height: 1.35;
+}
+
 .clinical-workup-actions {
   display: flex;
   flex-wrap: wrap;
@@ -6880,6 +6927,21 @@ html[data-theme="neutral"] .theme-switcher-btn {
   background: rgba(248, 251, 249, 0.82);
 }
 
+html[data-theme="neutral"] .clinical-workup-autocomplete {
+  border-color: rgba(63, 104, 96, 0.24);
+  background: rgba(248, 252, 250, 0.98);
+  box-shadow: 0 14px 24px rgba(48, 60, 66, 0.14);
+}
+
+html[data-theme="neutral"] .clinical-workup-autocomplete-item {
+  border-bottom-color: rgba(63, 104, 96, 0.14);
+}
+
+html[data-theme="neutral"] .clinical-workup-autocomplete-item:hover,
+html[data-theme="neutral"] .clinical-workup-autocomplete-item.is-highlighted {
+  background: rgba(79, 122, 114, 0.12);
+}
+
 html[data-theme="neutral"] .theme-switcher-btn.active,
 html[data-theme="neutral"] .header-settings-btn.active,
 html[data-theme="neutral"] .header-settings-btn:hover {
@@ -7017,6 +7079,27 @@ html[data-theme="dark"] .clinical-workup-rule-test {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 8px 16px rgba(2, 6, 23, 0.14);
+}
+
+html[data-theme="dark"] .clinical-workup-autocomplete {
+  border-color: rgba(94, 234, 212, 0.24);
+  background: rgba(11, 28, 36, 0.96);
+  box-shadow: 0 16px 28px rgba(2, 6, 23, 0.34);
+}
+
+html[data-theme="dark"] .clinical-workup-autocomplete-item {
+  color: #e6f8fc;
+  border-bottom-color: rgba(94, 234, 212, 0.14);
+}
+
+html[data-theme="dark"] .clinical-workup-autocomplete-item:hover,
+html[data-theme="dark"] .clinical-workup-autocomplete-item.is-highlighted {
+  background: rgba(45, 212, 191, 0.14);
+}
+
+html[data-theme="dark"] .clinical-workup-autocomplete-meta,
+html[data-theme="dark"] .clinical-workup-autocomplete-match {
+  color: #a8d0d9;
 }
 
 html[data-theme="dark"] .search-clear-btn,

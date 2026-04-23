@@ -1,0 +1,5314 @@
+{
+  "version": "2026-04-23.v1",
+  "schemaVersion": "1.0",
+  "sourceModel": {
+    "description": "Starter clinical dictionary for Find My Test autocomplete and concern association support. Vocabulary and structure modelled on trusted public symptom/sign resources.",
+    "references": [
+      {
+        "label": "NHS Symptoms A to Z",
+        "url": "https://www.nhs.uk/symptoms/"
+      },
+      {
+        "label": "MSD Manual symptom organization",
+        "url": "https://www.msdmanuals.com/home/heart-and-blood-vessel-disorders/symptoms-of-heart-and-blood-vessel-disorders/overview-of-heart-and-blood-vessel-symptoms"
+      },
+      {
+        "label": "MedlinePlus Symptoms",
+        "url": "https://medlineplus.gov/symptoms.html"
+      },
+      {
+        "label": "openEHR Symptom/Sign archetype",
+        "url": "https://ckm.openehr.org/ckm/archetypes/1013.1.4802"
+      }
+    ]
+  },
+  "disclaimer": "Reference-support dictionary for triage-oriented test suggestion input only. Not a diagnostic engine.",
+  "categoriesCovered": [
+    "General",
+    "Cardiovascular",
+    "Respiratory",
+    "Gastrointestinal",
+    "Neurological",
+    "Musculoskeletal",
+    "Endocrine/Metabolic",
+    "Renal/Urinary",
+    "Reproductive/Gynae",
+    "Skin/Hair",
+    "Haematology",
+    "Infectious",
+    "Mental Health/Behaviour",
+    "Paediatrics/Neonatal"
+  ],
+  "symptoms": [
+    {
+      "id": "symptom-fever",
+      "term": "Fever",
+      "type": "symptom",
+      "synonyms": [
+        "pyrexia",
+        "high temperature",
+        "temperature"
+      ],
+      "bodySystem": "Infectious",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-viral-illness",
+        "concern-pneumonia"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Persistent fever with instability or confusion is urgent.",
+      "searchWeight": 96,
+      "active": true
+    },
+    {
+      "id": "symptom-chills",
+      "term": "Chills / rigors",
+      "type": "symptom",
+      "synonyms": [
+        "rigors",
+        "shivering attacks"
+      ],
+      "bodySystem": "Infectious",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-viral-illness"
+      ],
+      "associatedTests": [
+        "CRP",
+        "Blood Culture",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Rigors with hypotension or confusion can indicate severe infection.",
+      "searchWeight": 84,
+      "active": true
+    },
+    {
+      "id": "symptom-fatigue",
+      "term": "Fatigue",
+      "type": "symptom",
+      "synonyms": [
+        "tiredness",
+        "lethargy",
+        "low energy"
+      ],
+      "bodySystem": "General",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-anemia",
+        "concern-thyroid",
+        "concern-ckd",
+        "concern-diabetes"
+      ],
+      "associatedTests": [
+        "FBC",
+        "TSH",
+        "U&E",
+        "Glucose"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 94,
+      "active": true
+    },
+    {
+      "id": "symptom-weight-loss",
+      "term": "Unintentional weight loss",
+      "type": "symptom",
+      "synonyms": [
+        "weight loss",
+        "losing weight"
+      ],
+      "bodySystem": "General",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid",
+        "concern-hiv",
+        "concern-tb"
+      ],
+      "associatedTests": [
+        "FBC",
+        "CRP",
+        "TSH",
+        "HIV ELISA"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Significant unexplained weight loss needs prompt evaluation.",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "symptom-night-sweats",
+      "term": "Night sweats",
+      "type": "symptom",
+      "synonyms": [
+        "nocturnal sweating",
+        "sweating at night"
+      ],
+      "bodySystem": "General",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-tb",
+        "concern-hiv",
+        "concern-sepsis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "HIV ELISA"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 74,
+      "active": true
+    },
+    {
+      "id": "symptom-loss-appetite",
+      "term": "Loss of appetite",
+      "type": "symptom",
+      "synonyms": [
+        "poor appetite",
+        "reduced appetite",
+        "anorexia symptom"
+      ],
+      "bodySystem": "General",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-hepatitis",
+        "concern-depression-anxiety"
+      ],
+      "associatedTests": [
+        "CRP",
+        "Liver Function Tests (LFT)",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "symptom-chest-pain",
+      "term": "Chest pain",
+      "type": "symptom",
+      "synonyms": [
+        "chest tightness",
+        "chest discomfort",
+        "angina pain"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-acs",
+        "concern-thromboembolism",
+        "concern-pneumonia"
+      ],
+      "associatedTests": [
+        "Cardiac Profile",
+        "Troponin I",
+        "D-Dimer",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Acute chest pain with dyspnea, syncope, or diaphoresis is urgent.",
+      "searchWeight": 99,
+      "active": true
+    },
+    {
+      "id": "symptom-palpitations",
+      "term": "Palpitations",
+      "type": "symptom",
+      "synonyms": [
+        "racing heart",
+        "heart pounding",
+        "irregular heartbeat awareness"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-arrhythmia",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "Cardiac Profile",
+        "TSH",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 85,
+      "active": true
+    },
+    {
+      "id": "symptom-dyspnea",
+      "term": "Shortness of breath",
+      "type": "symptom",
+      "synonyms": [
+        "breathlessness",
+        "dyspnea",
+        "dyspnoea",
+        "SOB",
+        "difficulty breathing"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-heart-failure",
+        "concern-pneumonia",
+        "concern-thromboembolism",
+        "concern-asthma-copd"
+      ],
+      "associatedTests": [
+        "CRP",
+        "Blood Gas (ABG)",
+        "NT-proBNP",
+        "D-Dimer"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Acute or worsening dyspnea may indicate respiratory or cardiac emergency.",
+      "searchWeight": 98,
+      "active": true
+    },
+    {
+      "id": "symptom-orthopnea",
+      "term": "Orthopnea",
+      "type": "symptom",
+      "synonyms": [
+        "breathless lying flat",
+        "needs extra pillows",
+        "paroxysmal nocturnal dyspnea"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-heart-failure"
+      ],
+      "associatedTests": [
+        "NT-proBNP",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "New orthopnea with edema can indicate decompensated heart failure.",
+      "searchWeight": 79,
+      "active": true
+    },
+    {
+      "id": "symptom-leg-swelling",
+      "term": "Leg swelling",
+      "type": "symptom",
+      "synonyms": [
+        "ankle swelling",
+        "swollen legs",
+        "peripheral edema",
+        "peripheral oedema"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-heart-failure",
+        "concern-ckd",
+        "concern-thromboembolism"
+      ],
+      "associatedTests": [
+        "U&E",
+        "NT-proBNP",
+        "Liver Function Tests (LFT)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 84,
+      "active": true
+    },
+    {
+      "id": "symptom-syncope",
+      "term": "Syncope",
+      "type": "symptom",
+      "synonyms": [
+        "fainting",
+        "blackout",
+        "loss of consciousness"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-arrhythmia",
+        "concern-acs",
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "U&E",
+        "Cardiac Profile"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Unexplained syncope may be high risk and needs urgent assessment.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "symptom-presyncope",
+      "term": "Dizziness / presyncope",
+      "type": "symptom",
+      "synonyms": [
+        "lightheadedness",
+        "near faint",
+        "dizzy spells"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-arrhythmia",
+        "concern-anemia",
+        "concern-hypoglycemia"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Glucose",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "symptom-calf-pain",
+      "term": "Calf pain",
+      "type": "symptom",
+      "synonyms": [
+        "leg pain",
+        "calf tenderness",
+        "unilateral leg pain"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thromboembolism"
+      ],
+      "associatedTests": [
+        "D-Dimer",
+        "Coagulation Studies"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Unilateral calf pain/swelling with dyspnea can indicate VTE.",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "symptom-cough",
+      "term": "Cough",
+      "type": "symptom",
+      "synonyms": [
+        "dry cough",
+        "productive cough",
+        "persistent cough"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pneumonia",
+        "concern-tb",
+        "concern-viral-illness"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 92,
+      "active": true
+    },
+    {
+      "id": "symptom-sputum",
+      "term": "Increased sputum",
+      "type": "symptom",
+      "synonyms": [
+        "phlegm",
+        "mucus cough",
+        "purulent sputum"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pneumonia",
+        "concern-asthma-copd"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 68,
+      "active": true
+    },
+    {
+      "id": "symptom-wheeze",
+      "term": "Wheeze",
+      "type": "symptom",
+      "synonyms": [
+        "whistling breathing",
+        "audible wheeze"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-asthma-copd"
+      ],
+      "associatedTests": [
+        "Blood Gas (ABG)",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe wheeze with exhaustion or hypoxia is urgent.",
+      "searchWeight": 76,
+      "active": true
+    },
+    {
+      "id": "symptom-pleuritic-pain",
+      "term": "Pleuritic chest pain",
+      "type": "symptom",
+      "synonyms": [
+        "pain on breathing",
+        "pleurisy-like pain"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pneumonia",
+        "concern-thromboembolism"
+      ],
+      "associatedTests": [
+        "CRP",
+        "D-Dimer",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Pleuritic pain with dyspnea/hemoptysis needs urgent exclusion of PE.",
+      "searchWeight": 78,
+      "active": true
+    },
+    {
+      "id": "symptom-hemoptysis",
+      "term": "Hemoptysis",
+      "type": "symptom",
+      "synonyms": [
+        "haemoptysis",
+        "coughing blood"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thromboembolism",
+        "concern-tb",
+        "concern-pneumonia"
+      ],
+      "associatedTests": [
+        "FBC",
+        "CRP",
+        "D-Dimer"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Coughing blood is a red-flag presentation.",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "symptom-abdo-pain",
+      "term": "Abdominal pain",
+      "type": "symptom",
+      "synonyms": [
+        "stomach pain",
+        "tummy pain",
+        "abdominal cramps"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gastroenteritis",
+        "concern-pancreatitis",
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Amylase",
+        "Lipase"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe abdominal pain with instability is urgent.",
+      "searchWeight": 95,
+      "active": true
+    },
+    {
+      "id": "symptom-epigastric-pain",
+      "term": "Epigastric pain",
+      "type": "symptom",
+      "synonyms": [
+        "upper abdominal pain",
+        "pit of stomach pain"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pancreatitis",
+        "concern-acs"
+      ],
+      "associatedTests": [
+        "Amylase",
+        "Lipase",
+        "Cardiac Profile"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 73,
+      "active": true
+    },
+    {
+      "id": "symptom-ruq-pain",
+      "term": "Right upper quadrant pain",
+      "type": "symptom",
+      "synonyms": [
+        "RUQ pain",
+        "right upper abdominal pain"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-hepatitis",
+        "concern-preeclampsia"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "CRP"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 67,
+      "active": true
+    },
+    {
+      "id": "symptom-nausea",
+      "term": "Nausea",
+      "type": "symptom",
+      "synonyms": [
+        "queasy",
+        "feeling sick"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gastroenteritis",
+        "concern-pancreatitis",
+        "concern-acs"
+      ],
+      "associatedTests": [
+        "U&E",
+        "CRP",
+        "Glucose"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "symptom-vomiting",
+      "term": "Vomiting",
+      "type": "symptom",
+      "synonyms": [
+        "emesis",
+        "throwing up",
+        "being sick"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gastroenteritis",
+        "concern-aki",
+        "concern-pancreatitis"
+      ],
+      "associatedTests": [
+        "U&E",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Persistent vomiting with dehydration or altered mental state is urgent.",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "symptom-diarrhea",
+      "term": "Diarrhea",
+      "type": "symptom",
+      "synonyms": [
+        "diarrhoea",
+        "loose stools",
+        "frequent stools"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gastroenteritis",
+        "concern-sepsis"
+      ],
+      "associatedTests": [
+        "U&E",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 83,
+      "active": true
+    },
+    {
+      "id": "symptom-constipation",
+      "term": "Constipation",
+      "type": "symptom",
+      "synonyms": [
+        "hard stools",
+        "reduced bowel motions"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid",
+        "concern-ckd"
+      ],
+      "associatedTests": [
+        "TSH",
+        "U&E",
+        "Calcium"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 60,
+      "active": true
+    },
+    {
+      "id": "symptom-bloating",
+      "term": "Abdominal bloating",
+      "type": "symptom",
+      "synonyms": [
+        "distension",
+        "abdominal fullness"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gastroenteritis"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 54,
+      "active": true
+    },
+    {
+      "id": "symptom-heartburn",
+      "term": "Heartburn / reflux",
+      "type": "symptom",
+      "synonyms": [
+        "acid reflux",
+        "GORD symptoms",
+        "indigestion"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gastroenteritis"
+      ],
+      "associatedTests": [
+        "H. pylori Antigen",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 66,
+      "active": true
+    },
+    {
+      "id": "symptom-jaundice",
+      "term": "Jaundice",
+      "type": "symptom",
+      "synonyms": [
+        "icterus",
+        "yellow eyes",
+        "yellow skin"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-hepatitis",
+        "concern-anemia",
+        "concern-neonatal-jaundice"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "Total Serum Bilirubin (TSB)",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "New jaundice with confusion or bleeding requires urgent review.",
+      "searchWeight": 88,
+      "active": true
+    },
+    {
+      "id": "symptom-dark-urine",
+      "term": "Dark urine",
+      "type": "symptom",
+      "synonyms": [
+        "tea-coloured urine",
+        "cola urine"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-hepatitis",
+        "concern-aki"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 63,
+      "active": true
+    },
+    {
+      "id": "symptom-pale-stools",
+      "term": "Pale stools",
+      "type": "symptom",
+      "synonyms": [
+        "clay stools",
+        "light coloured stool"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-hepatitis"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "Conjugated Bilirubin (Direct)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 52,
+      "active": true
+    },
+    {
+      "id": "symptom-blood-vomit",
+      "term": "Vomiting blood",
+      "type": "symptom",
+      "synonyms": [
+        "hematemesis",
+        "haematemesis"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "FBC",
+        "INR",
+        "Group and Save"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Possible upper GI bleed is urgent.",
+      "searchWeight": 89,
+      "active": true
+    },
+    {
+      "id": "symptom-black-stool",
+      "term": "Black stool",
+      "type": "symptom",
+      "synonyms": [
+        "melaena",
+        "melena",
+        "tarry stool"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "FBC",
+        "INR",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Possible GI bleeding requires urgent review.",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "symptom-rectal-bleeding",
+      "term": "Rectal bleeding",
+      "type": "symptom",
+      "synonyms": [
+        "blood in stool",
+        "hematochezia",
+        "haematochezia"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "FBC",
+        "INR"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Significant or ongoing rectal bleeding is urgent.",
+      "searchWeight": 83,
+      "active": true
+    },
+    {
+      "id": "symptom-headache",
+      "term": "Headache",
+      "type": "symptom",
+      "synonyms": [
+        "head pain",
+        "cephalgia"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-headache-secondary",
+        "concern-preeclampsia",
+        "concern-meningitis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "symptom-thunderclap-headache",
+      "term": "Sudden severe headache",
+      "type": "symptom",
+      "synonyms": [
+        "thunderclap headache",
+        "worst headache"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-headache-secondary",
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "INR"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Thunderclap headache is an emergency.",
+      "searchWeight": 85,
+      "active": true
+    },
+    {
+      "id": "symptom-focal-weakness",
+      "term": "Focal limb weakness",
+      "type": "symptom",
+      "synonyms": [
+        "one-sided weakness",
+        "hemiparesis"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "FBC",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "New focal weakness is emergency stroke-pathway territory.",
+      "searchWeight": 92,
+      "active": true
+    },
+    {
+      "id": "symptom-facial-droop",
+      "term": "Facial droop",
+      "type": "symptom",
+      "synonyms": [
+        "face weakness",
+        "facial asymmetry"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Possible stroke sign requires emergency assessment.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "symptom-speech-difficulty",
+      "term": "Speech difficulty",
+      "type": "symptom",
+      "synonyms": [
+        "slurred speech",
+        "dysarthria",
+        "aphasia"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Acute speech change is a red flag for stroke.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "symptom-seizure",
+      "term": "Seizure episode",
+      "type": "symptom",
+      "synonyms": [
+        "convulsion",
+        "fit",
+        "epileptic seizure"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-seizure",
+        "concern-meningitis"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "U&E",
+        "Calcium"
+      ],
+      "redFlag": true,
+      "redFlagNote": "New seizure or prolonged seizure is urgent.",
+      "searchWeight": 84,
+      "active": true
+    },
+    {
+      "id": "symptom-confusion",
+      "term": "Confusion",
+      "type": "symptom",
+      "synonyms": [
+        "disorientation",
+        "acute confusion",
+        "altered mental state"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-stroke",
+        "concern-hypoglycemia"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "CRP",
+        "U&E",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Acute confusion may indicate serious systemic or neurological illness.",
+      "searchWeight": 94,
+      "active": true
+    },
+    {
+      "id": "symptom-drowsiness",
+      "term": "Drowsiness",
+      "type": "symptom",
+      "synonyms": [
+        "somnolence",
+        "excessive sleepiness"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-hypoglycemia",
+        "concern-aki"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "U&E",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Reduced consciousness is urgent.",
+      "searchWeight": 80,
+      "active": true
+    },
+    {
+      "id": "symptom-neck-stiffness",
+      "term": "Neck stiffness",
+      "type": "symptom",
+      "synonyms": [
+        "nuchal rigidity",
+        "stiff neck"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-meningitis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "CSF Profile"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Neck stiffness with fever/headache needs urgent assessment.",
+      "searchWeight": 77,
+      "active": true
+    },
+    {
+      "id": "symptom-photophobia",
+      "term": "Photophobia",
+      "type": "symptom",
+      "synonyms": [
+        "light sensitivity"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-meningitis",
+        "concern-headache-secondary"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 62,
+      "active": true
+    },
+    {
+      "id": "symptom-vertigo",
+      "term": "Vertigo",
+      "type": "symptom",
+      "synonyms": [
+        "spinning sensation",
+        "room spinning"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 63,
+      "active": true
+    },
+    {
+      "id": "symptom-numbness",
+      "term": "Numbness / paresthesia",
+      "type": "symptom",
+      "synonyms": [
+        "pins and needles",
+        "tingling",
+        "paresthesia",
+        "paraesthesia"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-stroke",
+        "concern-diabetes"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "HbA1c",
+        "Vitamin B12"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "symptom-joint-pain",
+      "term": "Joint pain",
+      "type": "symptom",
+      "synonyms": [
+        "arthralgia",
+        "painful joints"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-rheumatoid",
+        "concern-autoimmune",
+        "concern-viral-illness"
+      ],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "Rheumatoid Factor (RF)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "symptom-joint-swelling",
+      "term": "Joint swelling",
+      "type": "symptom",
+      "synonyms": [
+        "swollen joints",
+        "inflamed joints"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-rheumatoid",
+        "concern-autoimmune"
+      ],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "Anti-CCP Antibody"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 74,
+      "active": true
+    },
+    {
+      "id": "symptom-morning-stiffness",
+      "term": "Morning stiffness",
+      "type": "symptom",
+      "synonyms": [
+        "stiff in morning",
+        "prolonged morning stiffness"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-rheumatoid",
+        "concern-autoimmune"
+      ],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "Anti-CCP Antibody"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 64,
+      "active": true
+    },
+    {
+      "id": "symptom-muscle-pain",
+      "term": "Muscle pain",
+      "type": "symptom",
+      "synonyms": [
+        "myalgia",
+        "muscle aches"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-viral-illness",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "CRP",
+        "TSH",
+        "CK Total"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "symptom-back-pain",
+      "term": "Back pain",
+      "type": "symptom",
+      "synonyms": [
+        "lower back pain",
+        "lumbar pain"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-uti",
+        "concern-ckd"
+      ],
+      "associatedTests": [
+        "Urine MC&S",
+        "U&E",
+        "CRP"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 73,
+      "active": true
+    },
+    {
+      "id": "symptom-polyuria",
+      "term": "Polyuria",
+      "type": "symptom",
+      "synonyms": [
+        "passing urine frequently",
+        "urinating a lot",
+        "frequent urination"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-diabetes",
+        "concern-uti"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "HbA1c",
+        "Urine MC&S"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 80,
+      "active": true
+    },
+    {
+      "id": "symptom-polydipsia",
+      "term": "Polydipsia",
+      "type": "symptom",
+      "synonyms": [
+        "excessive thirst",
+        "very thirsty"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-diabetes"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "HbA1c"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 78,
+      "active": true
+    },
+    {
+      "id": "symptom-polyphagia",
+      "term": "Increased appetite",
+      "type": "symptom",
+      "synonyms": [
+        "polyphagia",
+        "always hungry"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-diabetes",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "TSH"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 54,
+      "active": true
+    },
+    {
+      "id": "symptom-heat-intolerance",
+      "term": "Heat intolerance",
+      "type": "symptom",
+      "synonyms": [
+        "feels too hot",
+        "excess sweating in heat"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "TSH",
+        "Free T4"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 56,
+      "active": true
+    },
+    {
+      "id": "symptom-cold-intolerance",
+      "term": "Cold intolerance",
+      "type": "symptom",
+      "synonyms": [
+        "feels very cold",
+        "cold sensitivity"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid",
+        "concern-anemia"
+      ],
+      "associatedTests": [
+        "TSH",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 56,
+      "active": true
+    },
+    {
+      "id": "symptom-weight-gain",
+      "term": "Unexplained weight gain",
+      "type": "symptom",
+      "synonyms": [
+        "gaining weight",
+        "weight increase"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "TSH",
+        "HbA1c"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 55,
+      "active": true
+    },
+    {
+      "id": "symptom-tremor",
+      "term": "Tremor",
+      "type": "symptom",
+      "synonyms": [
+        "shaking",
+        "hand tremor"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid",
+        "concern-hypoglycemia"
+      ],
+      "associatedTests": [
+        "TSH",
+        "Glucose"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 58,
+      "active": true
+    },
+    {
+      "id": "symptom-dysuria",
+      "term": "Dysuria",
+      "type": "symptom",
+      "synonyms": [
+        "painful urination",
+        "burning urine",
+        "burning micturition"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-uti",
+        "concern-sti"
+      ],
+      "associatedTests": [
+        "Urine MC&S",
+        "CRP"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "symptom-urgency",
+      "term": "Urinary urgency",
+      "type": "symptom",
+      "synonyms": [
+        "urgent urination",
+        "can\"t hold urine"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-uti"
+      ],
+      "associatedTests": [
+        "Urine MC&S"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 66,
+      "active": true
+    },
+    {
+      "id": "symptom-nocturia",
+      "term": "Nocturia",
+      "type": "symptom",
+      "synonyms": [
+        "night urination",
+        "waking to urinate"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-ckd",
+        "concern-diabetes"
+      ],
+      "associatedTests": [
+        "U&E",
+        "Glucose",
+        "HbA1c"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 60,
+      "active": true
+    },
+    {
+      "id": "symptom-hematuria",
+      "term": "Hematuria",
+      "type": "symptom",
+      "synonyms": [
+        "haematuria",
+        "blood in urine",
+        "red urine"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-uti",
+        "concern-aki"
+      ],
+      "associatedTests": [
+        "Urine MC&S",
+        "FBC",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Visible blood in urine needs urgent evaluation.",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "symptom-oliguria",
+      "term": "Reduced urine output",
+      "type": "symptom",
+      "synonyms": [
+        "oliguria",
+        "passing less urine",
+        "scant urine"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-aki",
+        "concern-sepsis"
+      ],
+      "associatedTests": [
+        "U&E",
+        "Creatinine",
+        "Potassium"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Oliguria can indicate severe kidney or circulatory compromise.",
+      "searchWeight": 84,
+      "active": true
+    },
+    {
+      "id": "symptom-foamy-urine",
+      "term": "Foamy urine",
+      "type": "symptom",
+      "synonyms": [
+        "frothy urine",
+        "bubbly urine"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-ckd"
+      ],
+      "associatedTests": [
+        "U&E",
+        "Creatinine"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 52,
+      "active": true
+    },
+    {
+      "id": "symptom-flank-pain",
+      "term": "Flank pain",
+      "type": "symptom",
+      "synonyms": [
+        "loin pain",
+        "kidney pain",
+        "costovertebral pain"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-uti",
+        "concern-aki"
+      ],
+      "associatedTests": [
+        "Urine MC&S",
+        "CRP",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 68,
+      "active": true
+    },
+    {
+      "id": "symptom-pelvic-pain",
+      "term": "Pelvic pain",
+      "type": "symptom",
+      "synonyms": [
+        "lower pelvic pain",
+        "suprapubic pain"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sti",
+        "concern-ectopic-miscarriage",
+        "concern-uti"
+      ],
+      "associatedTests": [
+        "Urine MC&S",
+        "CRP",
+        "Beta-hCG"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Pregnancy with pelvic pain is a red flag.",
+      "searchWeight": 83,
+      "active": true
+    },
+    {
+      "id": "symptom-vaginal-bleeding",
+      "term": "Vaginal bleeding",
+      "type": "symptom",
+      "synonyms": [
+        "PV bleeding",
+        "abnormal vaginal bleeding",
+        "bleeding in pregnancy"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-ectopic-miscarriage",
+        "concern-pregnancy-booking"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Beta-hCG",
+        "Blood Group & Rh"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Heavy bleeding or bleeding in early pregnancy is urgent.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "symptom-vaginal-discharge",
+      "term": "Vaginal discharge",
+      "type": "symptom",
+      "synonyms": [
+        "abnormal discharge",
+        "offensive discharge"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sti",
+        "concern-uti"
+      ],
+      "associatedTests": [
+        "Urine MC&S",
+        "CRP"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 67,
+      "active": true
+    },
+    {
+      "id": "symptom-amenorrhea",
+      "term": "Amenorrhea",
+      "type": "symptom",
+      "synonyms": [
+        "missed periods",
+        "no menstruation",
+        "absent periods"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pregnancy-booking",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "Beta-hCG",
+        "TSH",
+        "Prolactin"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 69,
+      "active": true
+    },
+    {
+      "id": "symptom-dysmenorrhea",
+      "term": "Painful periods",
+      "type": "symptom",
+      "synonyms": [
+        "dysmenorrhoea",
+        "menstrual cramps"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sti"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 55,
+      "active": true
+    },
+    {
+      "id": "symptom-menorrhagia",
+      "term": "Heavy menstrual bleeding",
+      "type": "symptom",
+      "synonyms": [
+        "heavy periods",
+        "menorrhagia"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-anemia",
+        "concern-bleeding-disorder"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Ferritin",
+        "Coagulation Studies"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 71,
+      "active": true
+    },
+    {
+      "id": "symptom-pregnancy-headache",
+      "term": "Headache in pregnancy",
+      "type": "symptom",
+      "synonyms": [
+        "pregnant headache",
+        "pregnancy severe headache"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-preeclampsia"
+      ],
+      "associatedTests": [
+        "U&E",
+        "Liver Function Tests (LFT)",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Headache with visual symptoms or high BP in pregnancy is urgent.",
+      "searchWeight": 77,
+      "active": true
+    },
+    {
+      "id": "symptom-reduced-fetal-movement",
+      "term": "Reduced fetal movements",
+      "type": "symptom",
+      "synonyms": [
+        "decreased fetal movement",
+        "baby moving less"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-preeclampsia"
+      ],
+      "associatedTests": [
+        "FBC",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Reduced fetal movement is urgent obstetric assessment.",
+      "searchWeight": 79,
+      "active": true
+    },
+    {
+      "id": "symptom-rash",
+      "term": "Rash",
+      "type": "symptom",
+      "synonyms": [
+        "skin eruption",
+        "skin rash",
+        "spots"
+      ],
+      "bodySystem": "Skin/Hair",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-cellulitis",
+        "concern-viral-illness",
+        "concern-dermatitis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 78,
+      "active": true
+    },
+    {
+      "id": "symptom-pruritus",
+      "term": "Itching",
+      "type": "symptom",
+      "synonyms": [
+        "pruritus",
+        "itchy skin"
+      ],
+      "bodySystem": "Skin/Hair",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-dermatitis",
+        "concern-hepatitis"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 66,
+      "active": true
+    },
+    {
+      "id": "symptom-hair-loss",
+      "term": "Hair loss",
+      "type": "symptom",
+      "synonyms": [
+        "alopecia",
+        "thinning hair"
+      ],
+      "bodySystem": "Skin/Hair",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid",
+        "concern-anemia"
+      ],
+      "associatedTests": [
+        "TSH",
+        "Ferritin",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 58,
+      "active": true
+    },
+    {
+      "id": "symptom-nail-change",
+      "term": "Nail changes",
+      "type": "symptom",
+      "synonyms": [
+        "brittle nails",
+        "spoon nails"
+      ],
+      "bodySystem": "Skin/Hair",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-anemia",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Ferritin",
+        "TSH"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 45,
+      "active": true
+    },
+    {
+      "id": "symptom-pallor",
+      "term": "Pallor",
+      "type": "symptom",
+      "synonyms": [
+        "pale skin",
+        "looking pale"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-anemia",
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Ferritin"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 73,
+      "active": true
+    },
+    {
+      "id": "symptom-easy-bruising",
+      "term": "Easy bruising",
+      "type": "symptom",
+      "synonyms": [
+        "bruising easily",
+        "spontaneous bruises"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-bleeding-disorder",
+        "concern-thrombocytopenia"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Coagulation Studies"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 68,
+      "active": true
+    },
+    {
+      "id": "symptom-bleeding-gums",
+      "term": "Bleeding gums",
+      "type": "symptom",
+      "synonyms": [
+        "gum bleeding"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-bleeding-disorder",
+        "concern-thrombocytopenia"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Coagulation Studies"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 56,
+      "active": true
+    },
+    {
+      "id": "symptom-epistaxis",
+      "term": "Nosebleeds",
+      "type": "symptom",
+      "synonyms": [
+        "epistaxis",
+        "bleeding nose"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-bleeding-disorder",
+        "concern-thrombocytopenia"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Coagulation Studies"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 59,
+      "active": true
+    },
+    {
+      "id": "symptom-low-mood",
+      "term": "Low mood",
+      "type": "symptom",
+      "synonyms": [
+        "feeling down",
+        "depressed mood",
+        "sadness"
+      ],
+      "bodySystem": "Mental Health/Behaviour",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-depression-anxiety",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "TSH",
+        "FBC",
+        "Vitamin B12"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "symptom-anxiety",
+      "term": "Anxiety",
+      "type": "symptom",
+      "synonyms": [
+        "panic symptoms",
+        "nervousness",
+        "worry"
+      ],
+      "bodySystem": "Mental Health/Behaviour",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-depression-anxiety",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "TSH",
+        "Glucose"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 72,
+      "active": true
+    },
+    {
+      "id": "symptom-insomnia",
+      "term": "Sleep disturbance",
+      "type": "symptom",
+      "synonyms": [
+        "insomnia",
+        "poor sleep"
+      ],
+      "bodySystem": "Mental Health/Behaviour",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-depression-anxiety",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "TSH"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 60,
+      "active": true
+    },
+    {
+      "id": "symptom-memory-concern",
+      "term": "Memory concerns",
+      "type": "symptom",
+      "synonyms": [
+        "forgetfulness",
+        "cognitive decline",
+        "poor concentration"
+      ],
+      "bodySystem": "Mental Health/Behaviour",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-depression-anxiety",
+        "concern-anemia"
+      ],
+      "associatedTests": [
+        "Vitamin B12",
+        "TSH",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 53,
+      "active": true
+    },
+    {
+      "id": "symptom-poor-feeding-neonate",
+      "term": "Poor feeding (neonate)",
+      "type": "symptom",
+      "synonyms": [
+        "newborn poor feeding",
+        "not feeding well"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-neonatal-sepsis",
+        "concern-neonatal-jaundice"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Total Serum Bilirubin (TSB)"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Poor feeding in a neonate is a red flag.",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "symptom-lethargy-neonate",
+      "term": "Lethargy (neonate)",
+      "type": "symptom",
+      "synonyms": [
+        "sleepy newborn",
+        "difficult to wake baby"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-neonatal-sepsis",
+        "concern-neonatal-jaundice"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Glucose"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Lethargic neonate requires urgent assessment.",
+      "searchWeight": 88,
+      "active": true
+    },
+    {
+      "id": "symptom-jaundice-neonate",
+      "term": "Jaundice in newborn",
+      "type": "symptom",
+      "synonyms": [
+        "neonatal jaundice",
+        "yellow newborn"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-neonatal-jaundice"
+      ],
+      "associatedTests": [
+        "Total Serum Bilirubin (TSB)",
+        "Conjugated Bilirubin (Direct)",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Early or severe neonatal jaundice needs urgent review.",
+      "searchWeight": 84,
+      "active": true
+    },
+    {
+      "id": "symptom-fever-child",
+      "term": "Fever in young child",
+      "type": "symptom",
+      "synonyms": [
+        "paediatric fever",
+        "child fever"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-viral-illness"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Unwell febrile child with reduced responsiveness is urgent.",
+      "searchWeight": 78,
+      "active": true
+    },
+    {
+      "id": "symptom-rash-child",
+      "term": "Rash in child",
+      "type": "symptom",
+      "synonyms": [
+        "childhood rash",
+        "paediatric rash"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-viral-illness",
+        "concern-meningitis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Rash with fever and toxicity is urgent.",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "symptom-irritability-infant",
+      "term": "Irritability in infant",
+      "type": "symptom",
+      "synonyms": [
+        "inconsolable infant",
+        "fussy infant"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-neonatal-sepsis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Glucose"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Persistent unexplained infant irritability may be serious.",
+      "searchWeight": 72,
+      "active": true
+    }
+  ],
+  "signs": [
+    {
+      "id": "sign-fever-measured",
+      "term": "Documented fever",
+      "type": "sign",
+      "synonyms": [
+        "measured pyrexia",
+        "temperature above normal"
+      ],
+      "bodySystem": "Infectious",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-pneumonia",
+        "concern-viral-illness"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture"
+      ],
+      "redFlag": true,
+      "redFlagNote": "High fever with instability is urgent.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "sign-hypotension",
+      "term": "Hypotension",
+      "type": "sign",
+      "synonyms": [
+        "low blood pressure",
+        "shock blood pressure"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-gi-bleed",
+        "concern-acs"
+      ],
+      "associatedTests": [
+        "Lactate",
+        "FBC",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Hypotension is a red-flag sign of potential shock.",
+      "searchWeight": 98,
+      "active": true
+    },
+    {
+      "id": "sign-tachycardia",
+      "term": "Tachycardia",
+      "type": "sign",
+      "synonyms": [
+        "fast pulse",
+        "raised heart rate"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-arrhythmia",
+        "concern-thromboembolism"
+      ],
+      "associatedTests": [
+        "Cardiac Profile",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Persistent tachycardia with symptoms requires urgent review.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "sign-bradycardia",
+      "term": "Bradycardia",
+      "type": "sign",
+      "synonyms": [
+        "slow pulse",
+        "low heart rate"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-arrhythmia"
+      ],
+      "associatedTests": [
+        "Cardiac Profile",
+        "TSH",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Symptomatic bradycardia can be unstable.",
+      "searchWeight": 74,
+      "active": true
+    },
+    {
+      "id": "sign-irregular-pulse",
+      "term": "Irregular pulse",
+      "type": "sign",
+      "synonyms": [
+        "irregular heartbeat on exam",
+        "pulse irregularity"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-arrhythmia"
+      ],
+      "associatedTests": [
+        "Cardiac Profile",
+        "TSH",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 72,
+      "active": true
+    },
+    {
+      "id": "sign-jvp-raised",
+      "term": "Raised JVP",
+      "type": "sign",
+      "synonyms": [
+        "elevated jugular venous pressure"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-heart-failure"
+      ],
+      "associatedTests": [
+        "NT-proBNP",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 66,
+      "active": true
+    },
+    {
+      "id": "sign-pedal-edema",
+      "term": "Pitting pedal edema",
+      "type": "sign",
+      "synonyms": [
+        "ankle edema",
+        "ankle oedema",
+        "leg edema"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-heart-failure",
+        "concern-ckd"
+      ],
+      "associatedTests": [
+        "U&E",
+        "NT-proBNP",
+        "Liver Function Tests (LFT)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 78,
+      "active": true
+    },
+    {
+      "id": "sign-cyanosis",
+      "term": "Cyanosis",
+      "type": "sign",
+      "synonyms": [
+        "bluish discoloration",
+        "low oxygen appearance"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pneumonia",
+        "concern-asthma-copd",
+        "concern-heart-failure"
+      ],
+      "associatedTests": [
+        "Blood Gas (ABG)",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Cyanosis is an emergency sign.",
+      "searchWeight": 92,
+      "active": true
+    },
+    {
+      "id": "sign-low-oxygen",
+      "term": "Low oxygen saturation",
+      "type": "sign",
+      "synonyms": [
+        "hypoxia",
+        "low SpO2"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pneumonia",
+        "concern-thromboembolism",
+        "concern-heart-failure"
+      ],
+      "associatedTests": [
+        "Blood Gas (ABG)",
+        "CRP",
+        "D-Dimer"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Hypoxia needs urgent escalation.",
+      "searchWeight": 95,
+      "active": true
+    },
+    {
+      "id": "sign-accessory-muscles",
+      "term": "Accessory muscle use",
+      "type": "sign",
+      "synonyms": [
+        "increased work of breathing",
+        "respiratory distress"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-asthma-copd",
+        "concern-pneumonia"
+      ],
+      "associatedTests": [
+        "Blood Gas (ABG)",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Respiratory distress is urgent.",
+      "searchWeight": 89,
+      "active": true
+    },
+    {
+      "id": "sign-wheeze-ausc",
+      "term": "Wheeze on auscultation",
+      "type": "sign",
+      "synonyms": [
+        "expiratory wheeze",
+        "audible wheeze"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-asthma-copd"
+      ],
+      "associatedTests": [
+        "Blood Gas (ABG)",
+        "CRP"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 68,
+      "active": true
+    },
+    {
+      "id": "sign-crackles",
+      "term": "Bibasal crackles",
+      "type": "sign",
+      "synonyms": [
+        "crepitations",
+        "pulmonary crackles"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-heart-failure",
+        "concern-pneumonia"
+      ],
+      "associatedTests": [
+        "CRP",
+        "NT-proBNP"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 75,
+      "active": true
+    },
+    {
+      "id": "sign-pleural-rub",
+      "term": "Pleural rub",
+      "type": "sign",
+      "synonyms": [
+        "pleuritic rub"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pneumonia",
+        "concern-thromboembolism"
+      ],
+      "associatedTests": [
+        "CRP",
+        "D-Dimer"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 52,
+      "active": true
+    },
+    {
+      "id": "sign-abdo-guarding",
+      "term": "Abdominal guarding",
+      "type": "sign",
+      "synonyms": [
+        "guarding",
+        "involuntary guarding"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pancreatitis",
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Amylase"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Peritoneal signs are urgent.",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "sign-rebound",
+      "term": "Rebound tenderness",
+      "type": "sign",
+      "synonyms": [
+        "peritonism",
+        "rebound pain"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-pancreatitis",
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Rebound tenderness requires urgent surgical evaluation.",
+      "searchWeight": 83,
+      "active": true
+    },
+    {
+      "id": "sign-hepatomegaly",
+      "term": "Hepatomegaly",
+      "type": "sign",
+      "synonyms": [
+        "enlarged liver"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-hepatitis",
+        "concern-heart-failure"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "INR"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 58,
+      "active": true
+    },
+    {
+      "id": "sign-jaundice-visible",
+      "term": "Visible jaundice",
+      "type": "sign",
+      "synonyms": [
+        "icteric sclera",
+        "yellow sclera"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-hepatitis",
+        "concern-neonatal-jaundice"
+      ],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "Total Serum Bilirubin (TSB)"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Jaundice with encephalopathy/bleeding is urgent.",
+      "searchWeight": 80,
+      "active": true
+    },
+    {
+      "id": "sign-melaena",
+      "term": "Melaena observed",
+      "type": "sign",
+      "synonyms": [
+        "melena",
+        "black tarry stool observed"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "FBC",
+        "INR",
+        "Group and Save"
+      ],
+      "redFlag": true,
+      "redFlagNote": "GI bleeding sign.",
+      "searchWeight": 87,
+      "active": true
+    },
+    {
+      "id": "sign-hematemesis",
+      "term": "Hematemesis observed",
+      "type": "sign",
+      "synonyms": [
+        "haematemesis seen",
+        "vomited blood observed"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "FBC",
+        "INR",
+        "Group and Save"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Urgent hemorrhage sign.",
+      "searchWeight": 88,
+      "active": true
+    },
+    {
+      "id": "sign-gcs-drop",
+      "term": "Reduced GCS",
+      "type": "sign",
+      "synonyms": [
+        "decreased conscious level",
+        "lowered level of consciousness"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-stroke",
+        "concern-seizure"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "U&E",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Reduced consciousness is an emergency.",
+      "searchWeight": 97,
+      "active": true
+    },
+    {
+      "id": "sign-focal-deficit",
+      "term": "Focal neurological deficit",
+      "type": "sign",
+      "synonyms": [
+        "lateralizing sign",
+        "focal neuro sign"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "FBC",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Acute focal deficit is emergency stroke pathway.",
+      "searchWeight": 96,
+      "active": true
+    },
+    {
+      "id": "sign-ataxia",
+      "term": "Ataxia",
+      "type": "sign",
+      "synonyms": [
+        "unsteady gait",
+        "coordination deficit"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-stroke"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 61,
+      "active": true
+    },
+    {
+      "id": "sign-neck-stiff",
+      "term": "Meningeal neck stiffness",
+      "type": "sign",
+      "synonyms": [
+        "nuchal rigidity observed"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-meningitis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "CSF Profile"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Meningeal signs are urgent.",
+      "searchWeight": 79,
+      "active": true
+    },
+    {
+      "id": "sign-postictal",
+      "term": "Post-ictal state",
+      "type": "sign",
+      "synonyms": [
+        "post seizure confusion"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-seizure"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "U&E",
+        "Calcium"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Persistent post-ictal reduced consciousness is urgent.",
+      "searchWeight": 72,
+      "active": true
+    },
+    {
+      "id": "sign-hot-joint",
+      "term": "Hot swollen joint",
+      "type": "sign",
+      "synonyms": [
+        "acutely inflamed joint",
+        "hot tender joint"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-rheumatoid",
+        "concern-sepsis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Possible septic arthritis requires urgent assessment.",
+      "searchWeight": 78,
+      "active": true
+    },
+    {
+      "id": "sign-joint-effusion",
+      "term": "Joint effusion",
+      "type": "sign",
+      "synonyms": [
+        "joint fluid",
+        "swollen effusion"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-rheumatoid"
+      ],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "Anti-CCP Antibody"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 60,
+      "active": true
+    },
+    {
+      "id": "sign-proximal-weakness",
+      "term": "Proximal muscle weakness",
+      "type": "sign",
+      "synonyms": [
+        "difficulty rising from chair"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid",
+        "concern-autoimmune"
+      ],
+      "associatedTests": [
+        "TSH",
+        "CK Total",
+        "CRP"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 57,
+      "active": true
+    },
+    {
+      "id": "sign-dehydration",
+      "term": "Clinical dehydration",
+      "type": "sign",
+      "synonyms": [
+        "dry mucosa",
+        "poor skin turgor"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-gastroenteritis",
+        "concern-diabetes",
+        "concern-aki"
+      ],
+      "associatedTests": [
+        "U&E",
+        "Glucose",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Moderate/severe dehydration is urgent.",
+      "searchWeight": 84,
+      "active": true
+    },
+    {
+      "id": "sign-kussmaul",
+      "term": "Kussmaul breathing",
+      "type": "sign",
+      "synonyms": [
+        "deep rapid breathing"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-diabetes"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "Blood Gas (ABG)",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Possible diabetic ketoacidosis sign.",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "sign-thyroid-enlargement",
+      "term": "Goitre",
+      "type": "sign",
+      "synonyms": [
+        "thyroid enlargement",
+        "enlarged thyroid"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "TSH",
+        "Free T4",
+        "Thyroid Antibodies (TPO and Tg Ab)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 55,
+      "active": true
+    },
+    {
+      "id": "sign-cva-tenderness",
+      "term": "Costovertebral angle tenderness",
+      "type": "sign",
+      "synonyms": [
+        "renal angle tenderness",
+        "CVA tenderness"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-uti",
+        "concern-aki"
+      ],
+      "associatedTests": [
+        "Urine MC&S",
+        "CRP",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "sign-anuria",
+      "term": "Anuria",
+      "type": "sign",
+      "synonyms": [
+        "no urine output",
+        "near no urine"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-aki"
+      ],
+      "associatedTests": [
+        "U&E",
+        "Creatinine",
+        "Potassium"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Anuria is an urgent sign.",
+      "searchWeight": 89,
+      "active": true
+    },
+    {
+      "id": "sign-pallor-visible",
+      "term": "Visible pallor",
+      "type": "sign",
+      "synonyms": [
+        "conjunctival pallor",
+        "pale appearance"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-anemia",
+        "concern-gi-bleed"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Ferritin"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 74,
+      "active": true
+    },
+    {
+      "id": "sign-petechiae",
+      "term": "Petechiae / purpura",
+      "type": "sign",
+      "synonyms": [
+        "non-blanching rash",
+        "purpuric rash"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-thrombocytopenia",
+        "concern-sepsis"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Coagulation Studies",
+        "CRP"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Non-blanching rash with illness is urgent.",
+      "searchWeight": 88,
+      "active": true
+    },
+    {
+      "id": "sign-active-bleeding",
+      "term": "Active mucosal bleeding",
+      "type": "sign",
+      "synonyms": [
+        "ongoing bleeding",
+        "spontaneous bleeding"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-bleeding-disorder",
+        "concern-thrombocytopenia"
+      ],
+      "associatedTests": [
+        "FBC",
+        "Coagulation Studies",
+        "INR"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Active bleeding requires urgent care.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "sign-psychomotor-retardation",
+      "term": "Psychomotor slowing",
+      "type": "sign",
+      "synonyms": [
+        "slowed behavior",
+        "retarded psychomotor activity"
+      ],
+      "bodySystem": "Mental Health/Behaviour",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-depression-anxiety",
+        "concern-thyroid"
+      ],
+      "associatedTests": [
+        "TSH",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 49,
+      "active": true
+    },
+    {
+      "id": "sign-agitation",
+      "term": "Marked agitation",
+      "type": "sign",
+      "synonyms": [
+        "acute agitation",
+        "severe restlessness"
+      ],
+      "bodySystem": "Mental Health/Behaviour",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-depression-anxiety",
+        "concern-hypoglycemia",
+        "concern-sepsis"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "CRP",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe agitation with confusion can indicate acute illness.",
+      "searchWeight": 58,
+      "active": true
+    },
+    {
+      "id": "sign-neonate-temp-instability",
+      "term": "Neonatal temperature instability",
+      "type": "sign",
+      "synonyms": [
+        "newborn hypothermia",
+        "newborn fever"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-neonatal-sepsis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Temperature instability in neonate is urgent.",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "sign-neonate-jaundice-visible",
+      "term": "Visible neonatal jaundice",
+      "type": "sign",
+      "synonyms": [
+        "newborn icterus"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-neonatal-jaundice"
+      ],
+      "associatedTests": [
+        "Total Serum Bilirubin (TSB)",
+        "Conjugated Bilirubin (Direct)"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Early or severe neonatal jaundice needs urgent review.",
+      "searchWeight": 81,
+      "active": true
+    },
+    {
+      "id": "sign-neonate-poor-perfusion",
+      "term": "Neonatal poor perfusion",
+      "type": "sign",
+      "synonyms": [
+        "prolonged capillary refill in newborn"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-neonatal-sepsis"
+      ],
+      "associatedTests": [
+        "Lactate",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Poor perfusion in neonate is urgent.",
+      "searchWeight": 85,
+      "active": true
+    },
+    {
+      "id": "sign-fontanelle-bulging",
+      "term": "Bulging fontanelle",
+      "type": "sign",
+      "synonyms": [
+        "tense fontanelle"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-meningitis",
+        "concern-neonatal-sepsis"
+      ],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "CSF Profile"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Bulging fontanelle is urgent.",
+      "searchWeight": 79,
+      "active": true
+    },
+    {
+      "id": "sign-reduced-responsiveness-child",
+      "term": "Reduced responsiveness in child",
+      "type": "sign",
+      "synonyms": [
+        "difficult to rouse child",
+        "child lethargic"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [
+        "concern-sepsis",
+        "concern-meningitis",
+        "concern-hypoglycemia"
+      ],
+      "associatedTests": [
+        "Glucose",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Unresponsive or lethargic child is urgent.",
+      "searchWeight": 91,
+      "active": true
+    }
+  ],
+  "concerns": [
+    {
+      "id": "concern-acs",
+      "term": "Acute coronary syndrome risk",
+      "type": "concern",
+      "synonyms": [
+        "ACS",
+        "possible heart attack",
+        "myocardial ischemia"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Cardiac Profile",
+        "Troponin I",
+        "ECG",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Urgent chest pain or ischemic symptoms require emergency escalation.",
+      "searchWeight": 99,
+      "active": true
+    },
+    {
+      "id": "concern-heart-failure",
+      "term": "Heart failure / fluid overload",
+      "type": "concern",
+      "synonyms": [
+        "congestive heart failure",
+        "CHF",
+        "cardiac failure"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "NT-proBNP",
+        "U&E",
+        "Liver Function Tests (LFT)",
+        "Cardiac Profile"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe dyspnea, hypoxia, or pulmonary edema requires urgent care.",
+      "searchWeight": 95,
+      "active": true
+    },
+    {
+      "id": "concern-arrhythmia",
+      "term": "Arrhythmia / palpitations",
+      "type": "concern",
+      "synonyms": [
+        "irregular heartbeat",
+        "palpitations",
+        "tachyarrhythmia"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Cardiac Profile",
+        "TSH",
+        "U&E",
+        "Magnesium"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 88,
+      "active": true
+    },
+    {
+      "id": "concern-hypertension",
+      "term": "Hypertension / blood pressure control",
+      "type": "concern",
+      "synonyms": [
+        "high blood pressure",
+        "BP control"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "U&E",
+        "Creatinine",
+        "Lipid Profile / Lipogram",
+        "HbA1c"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 76,
+      "active": true
+    },
+    {
+      "id": "concern-thromboembolism",
+      "term": "Venous thromboembolism risk",
+      "type": "concern",
+      "synonyms": [
+        "DVT / PE concern",
+        "clot risk",
+        "venous clot"
+      ],
+      "bodySystem": "Cardiovascular",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "D-Dimer",
+        "Coagulation Studies",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Sudden dyspnea, pleuritic pain, hemoptysis, or unilateral leg swelling is urgent.",
+      "searchWeight": 92,
+      "active": true
+    },
+    {
+      "id": "concern-pneumonia",
+      "term": "Lower respiratory infection",
+      "type": "concern",
+      "synonyms": [
+        "pneumonia",
+        "chest infection",
+        "LRTI"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "Procalcitonin (PCT)",
+        "FBC",
+        "Blood Culture"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Hypoxia, respiratory distress, or sepsis features need urgent review.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "concern-asthma-copd",
+      "term": "Asthma / COPD exacerbation",
+      "type": "concern",
+      "synonyms": [
+        "wheeze flare",
+        "bronchospasm",
+        "obstructive airway flare"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Blood Gas (ABG)",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe breathlessness or silent chest requires emergency escalation.",
+      "searchWeight": 84,
+      "active": true
+    },
+    {
+      "id": "concern-tb",
+      "term": "Tuberculosis concern",
+      "type": "concern",
+      "synonyms": [
+        "TB screening",
+        "possible pulmonary TB"
+      ],
+      "bodySystem": "Respiratory",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "FBC",
+        "HIV ELISA"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 70,
+      "active": true
+    },
+    {
+      "id": "concern-sepsis",
+      "term": "Sepsis / severe infection risk",
+      "type": "concern",
+      "synonyms": [
+        "systemic infection",
+        "septic presentation",
+        "septic shock risk"
+      ],
+      "bodySystem": "Infectious",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "Procalcitonin (PCT)",
+        "Blood Culture",
+        "Lactate",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Possible sepsis is time-critical and requires urgent escalation.",
+      "searchWeight": 98,
+      "active": true
+    },
+    {
+      "id": "concern-viral-illness",
+      "term": "Acute viral illness",
+      "type": "concern",
+      "synonyms": [
+        "flu-like illness",
+        "influenza-like illness",
+        "viral syndrome"
+      ],
+      "bodySystem": "Infectious",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 64,
+      "active": true
+    },
+    {
+      "id": "concern-hiv",
+      "term": "HIV screening context",
+      "type": "concern",
+      "synonyms": [
+        "HIV concern",
+        "HIV exposure"
+      ],
+      "bodySystem": "Infectious",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "HIV ELISA",
+        "FBC",
+        "Liver Function Tests (LFT)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 71,
+      "active": true
+    },
+    {
+      "id": "concern-gastroenteritis",
+      "term": "Acute gastroenteritis / dehydration",
+      "type": "concern",
+      "synonyms": [
+        "vomiting and diarrhea",
+        "gastro",
+        "acute diarrhea illness"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "U&E",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe dehydration, persistent vomiting, or shock signs are urgent.",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "concern-hepatitis",
+      "term": "Hepatitis / liver inflammation",
+      "type": "concern",
+      "synonyms": [
+        "acute hepatitis",
+        "liver inflammation",
+        "jaundice workup"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Liver Function Tests (LFT)",
+        "Acute Viral Hepatitis Profile",
+        "INR"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Acute jaundice with confusion/bleeding risk needs urgent assessment.",
+      "searchWeight": 82,
+      "active": true
+    },
+    {
+      "id": "concern-gi-bleed",
+      "term": "Gastrointestinal bleed concern",
+      "type": "concern",
+      "synonyms": [
+        "GI bleeding",
+        "hematemesis or melaena",
+        "digestive tract bleed"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "FBC",
+        "U&E",
+        "INR",
+        "Group and Save"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Potential GI hemorrhage is an emergency.",
+      "searchWeight": 95,
+      "active": true
+    },
+    {
+      "id": "concern-pancreatitis",
+      "term": "Acute pancreatitis concern",
+      "type": "concern",
+      "synonyms": [
+        "pancreatic inflammation",
+        "pancreatitis"
+      ],
+      "bodySystem": "Gastrointestinal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Amylase",
+        "Lipase",
+        "Liver Function Tests (LFT)",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe abdominal pain with systemic upset needs urgent review.",
+      "searchWeight": 74,
+      "active": true
+    },
+    {
+      "id": "concern-stroke",
+      "term": "Acute stroke / TIA risk",
+      "type": "concern",
+      "synonyms": [
+        "CVA concern",
+        "neurological deficit",
+        "FAST positive"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "FBC",
+        "U&E",
+        "Glucose",
+        "INR"
+      ],
+      "redFlag": true,
+      "redFlagNote": "New focal neurological deficit requires emergency stroke pathway.",
+      "searchWeight": 99,
+      "active": true
+    },
+    {
+      "id": "concern-seizure",
+      "term": "Seizure disorder / new seizure",
+      "type": "concern",
+      "synonyms": [
+        "convulsion",
+        "fits",
+        "epileptic event"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Glucose",
+        "U&E",
+        "Calcium",
+        "Magnesium"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Status epilepticus or reduced consciousness is urgent.",
+      "searchWeight": 83,
+      "active": true
+    },
+    {
+      "id": "concern-meningitis",
+      "term": "Meningitis / CNS infection concern",
+      "type": "concern",
+      "synonyms": [
+        "meningoencephalitis",
+        "meningism",
+        "CNS sepsis"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture",
+        "CSF Profile"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Suspected meningitis is a medical emergency.",
+      "searchWeight": 97,
+      "active": true
+    },
+    {
+      "id": "concern-headache-secondary",
+      "term": "Secondary headache red flag concern",
+      "type": "concern",
+      "synonyms": [
+        "dangerous headache",
+        "sudden severe headache",
+        "thunderclap headache"
+      ],
+      "bodySystem": "Neurological",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Sudden severe headache or focal deficits require urgent evaluation.",
+      "searchWeight": 79,
+      "active": true
+    },
+    {
+      "id": "concern-diabetes",
+      "term": "Diabetes screening / hyperglycemia",
+      "type": "concern",
+      "synonyms": [
+        "high sugar concern",
+        "possible diabetes mellitus",
+        "hyperglycemia"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Glucose",
+        "HbA1c",
+        "U&E"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 88,
+      "active": true
+    },
+    {
+      "id": "concern-hypoglycemia",
+      "term": "Hypoglycemia concern",
+      "type": "concern",
+      "synonyms": [
+        "low blood sugar",
+        "hypo episodes"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Glucose",
+        "HbA1c",
+        "U&E"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Symptomatic hypoglycemia with altered consciousness is urgent.",
+      "searchWeight": 78,
+      "active": true
+    },
+    {
+      "id": "concern-thyroid",
+      "term": "Thyroid dysfunction",
+      "type": "concern",
+      "synonyms": [
+        "hypothyroidism concern",
+        "hyperthyroidism concern",
+        "thyroid disorder"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "TSH",
+        "Free T4",
+        "Free T3",
+        "Thyroid Antibodies (TPO and Tg Ab)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 86,
+      "active": true
+    },
+    {
+      "id": "concern-adrenal",
+      "term": "Adrenal insufficiency concern",
+      "type": "concern",
+      "synonyms": [
+        "Addisonian concern",
+        "adrenal failure"
+      ],
+      "bodySystem": "Endocrine/Metabolic",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Cortisol",
+        "U&E",
+        "Glucose"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Possible adrenal crisis is urgent.",
+      "searchWeight": 65,
+      "active": true
+    },
+    {
+      "id": "concern-aki",
+      "term": "Acute kidney injury concern",
+      "type": "concern",
+      "synonyms": [
+        "AKI",
+        "worsening renal function",
+        "acute renal impairment"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "U&E",
+        "Creatinine",
+        "Potassium"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Rapidly rising creatinine, oliguria, or hyperkalemia is urgent.",
+      "searchWeight": 92,
+      "active": true
+    },
+    {
+      "id": "concern-ckd",
+      "term": "Chronic kidney disease monitoring",
+      "type": "concern",
+      "synonyms": [
+        "CKD follow-up",
+        "chronic renal disease"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "U&E",
+        "Creatinine",
+        "Calcium",
+        "Phosphate",
+        "PTH"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 81,
+      "active": true
+    },
+    {
+      "id": "concern-uti",
+      "term": "Urinary tract infection concern",
+      "type": "concern",
+      "synonyms": [
+        "UTI",
+        "cystitis",
+        "pyelonephritis concern"
+      ],
+      "bodySystem": "Renal/Urinary",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Urine MC&S",
+        "CRP",
+        "FBC"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 80,
+      "active": true
+    },
+    {
+      "id": "concern-anemia",
+      "term": "Anaemia / anemia workup",
+      "type": "concern",
+      "synonyms": [
+        "low hemoglobin",
+        "anaemic symptoms",
+        "anemia workup"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "FBC",
+        "Fe Studies",
+        "Ferritin",
+        "Vitamin B12"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 93,
+      "active": true
+    },
+    {
+      "id": "concern-bleeding-disorder",
+      "term": "Bleeding tendency / coagulopathy",
+      "type": "concern",
+      "synonyms": [
+        "coagulation disorder",
+        "easy bleeding",
+        "bleeding diathesis"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Coagulation Studies",
+        "Fibrinogen",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Active bleeding or severe thrombocytopenia requires urgent management.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "concern-thrombocytopenia",
+      "term": "Thrombocytopenia concern",
+      "type": "concern",
+      "synonyms": [
+        "low platelets",
+        "platelet drop"
+      ],
+      "bodySystem": "Haematology",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "FBC",
+        "Blood Film",
+        "Coagulation Studies"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 75,
+      "active": true
+    },
+    {
+      "id": "concern-autoimmune",
+      "term": "Systemic autoimmune inflammation",
+      "type": "concern",
+      "synonyms": [
+        "connective tissue disease",
+        "autoimmune flare",
+        "inflammatory autoimmune disease"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "ANA Screen and Reflex ENA Antibodies",
+        "CRP",
+        "ESR",
+        "Rheumatoid Factor (RF)"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 73,
+      "active": true
+    },
+    {
+      "id": "concern-rheumatoid",
+      "term": "Inflammatory arthritis concern",
+      "type": "concern",
+      "synonyms": [
+        "rheumatoid arthritis concern",
+        "polyarthritis"
+      ],
+      "bodySystem": "Musculoskeletal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "ESR",
+        "Rheumatoid Factor (RF)",
+        "Anti-CCP Antibody"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 72,
+      "active": true
+    },
+    {
+      "id": "concern-pregnancy-booking",
+      "term": "Pregnancy booking / antenatal profile",
+      "type": "concern",
+      "synonyms": [
+        "antenatal booking",
+        "first pregnancy bloods",
+        "ANTINV context"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "female",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "key",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Antenatal Screen (ANTINV)",
+        "Blood Group & Rh",
+        "RPR (Syphilis Screen)",
+        "HIV ELISA"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 91,
+      "active": true
+    },
+    {
+      "id": "concern-ectopic-miscarriage",
+      "term": "Early pregnancy pain or bleeding risk",
+      "type": "concern",
+      "synonyms": [
+        "possible ectopic",
+        "pregnancy bleeding",
+        "threatened miscarriage"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "female",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "key",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Beta-hCG",
+        "Blood Group & Rh",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Pregnancy bleeding with pain can be life-threatening.",
+      "searchWeight": 93,
+      "active": true
+    },
+    {
+      "id": "concern-preeclampsia",
+      "term": "Pre-eclampsia concern",
+      "type": "concern",
+      "synonyms": [
+        "pregnancy hypertension concern",
+        "pre-eclampsia symptoms"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "female",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "key",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "U&E",
+        "Liver Function Tests (LFT)",
+        "FBC",
+        "Uric Acid"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Severe hypertension, headache, visual symptoms, or RUQ pain in pregnancy is urgent.",
+      "searchWeight": 90,
+      "active": true
+    },
+    {
+      "id": "concern-sti",
+      "term": "Sexually transmitted infection concern",
+      "type": "concern",
+      "synonyms": [
+        "STI concern",
+        "genital infection concern",
+        "urethritis/vaginitis concern"
+      ],
+      "bodySystem": "Reproductive/Gynae",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "HIV ELISA",
+        "RPR (Syphilis Screen)",
+        "Hepatitis B Surface Antigen (HBsAg)",
+        "Urine MC&S"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 68,
+      "active": true
+    },
+    {
+      "id": "concern-dermatitis",
+      "term": "Dermatitis / inflammatory skin condition",
+      "type": "concern",
+      "synonyms": [
+        "eczema flare",
+        "inflammatory rash"
+      ],
+      "bodySystem": "Skin/Hair",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "IgE"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 56,
+      "active": true
+    },
+    {
+      "id": "concern-cellulitis",
+      "term": "Cellulitis / skin soft tissue infection",
+      "type": "concern",
+      "synonyms": [
+        "skin infection",
+        "erysipelas concern",
+        "infected skin"
+      ],
+      "bodySystem": "Skin/Hair",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Rapidly spreading redness, fever, or systemic signs needs urgent review.",
+      "searchWeight": 74,
+      "active": true
+    },
+    {
+      "id": "concern-depression-anxiety",
+      "term": "Depression / anxiety symptom burden",
+      "type": "concern",
+      "synonyms": [
+        "low mood concern",
+        "anxiety symptoms",
+        "psychological distress"
+      ],
+      "bodySystem": "Mental Health/Behaviour",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "all",
+        "minYears": null,
+        "maxYears": null,
+        "notes": ""
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "TSH",
+        "FBC",
+        "Vitamin B12"
+      ],
+      "redFlag": false,
+      "redFlagNote": "",
+      "searchWeight": 62,
+      "active": true
+    },
+    {
+      "id": "concern-neonatal-sepsis",
+      "term": "Neonatal sepsis concern",
+      "type": "concern",
+      "synonyms": [
+        "newborn infection concern",
+        "early neonatal sepsis"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "neonatal",
+        "minYears": 0,
+        "maxYears": 0.08,
+        "notes": "First 28 days"
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture",
+        "Lactate"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Any unwell neonate may deteriorate quickly and needs urgent escalation.",
+      "searchWeight": 94,
+      "active": true
+    },
+    {
+      "id": "concern-neonatal-jaundice",
+      "term": "Neonatal jaundice concern",
+      "type": "concern",
+      "synonyms": [
+        "newborn jaundice",
+        "infant jaundice"
+      ],
+      "bodySystem": "Paediatrics/Neonatal",
+      "sexApplicability": "all",
+      "ageApplicability": {
+        "group": "neonatal",
+        "minYears": 0,
+        "maxYears": 0.08,
+        "notes": "First 28 days"
+      },
+      "pregnancyRelevance": "not_specific",
+      "associatedConcerns": [],
+      "associatedTests": [
+        "Total Serum Bilirubin (TSB)",
+        "Conjugated Bilirubin (Direct)",
+        "FBC"
+      ],
+      "redFlag": true,
+      "redFlagNote": "Very early jaundice, poor feeding, or lethargy requires urgent neonatal review.",
+      "searchWeight": 83,
+      "active": true
+    }
+  ]
+}

@@ -34,19 +34,32 @@
   // Keep Find My Test state local, then sync only the parts that need to reach the main app shell.
   const state = {
     dataset: null,
+    dictionary: null,
+    dictionaryByType: {
+      symptom: [],
+      sign: [],
+      concern: []
+    },
     selectedQuickPickIds: new Set(),
     autoMatchedQuickPickIds: new Set(),
     output: null,
     expandedQuickPickFields: new Set(),
     pregnancyWasAutoLocked: false,
     lastUnlockedPregnancyValue: "unknown",
-    autoMatchResetTimeoutId: 0
+    autoMatchResetTimeoutId: 0,
+    autocompleteByField: {
+      symptoms: { items: [], highlightedIndex: -1, open: false },
+      signs: { items: [], highlightedIndex: -1, open: false },
+      concern: { items: [], highlightedIndex: -1, open: false }
+    }
   };
   const pageParams = new URLSearchParams(window.location.search);
   const isFindMyTestPage = pageParams.get("tool") === "find-my-test";
   const MIN_PREGNANCY_AGE_YEARS = 12;
 
   const datasetUrl = `assets/data/find-my-test-map.json?v=${app.assetVersion || "20260322b"}`;
+  const dictionaryUrl = `assets/data/find-my-test-dictionary.json?v=${app.assetVersion || "20260423a"}`;
+  const AUTOCOMPLETE_MAX_RESULTS = 8;
 
   // Shared text helpers keep dataset matching rules predictable.
   function escapeHtml(value) {
@@ -98,6 +111,266 @@
   // Formats count.
   function formatCount(count, noun) {
     return `${count} ${noun}${count === 1 ? "" : "s"}`;
+  }
+
+  function getDictionaryTypeForField(field) {
+    if (field === "signs") return "sign";
+    if (field === "concern") return "concern";
+    return "symptom";
+  }
+
+  function getAutocompletePanelId(field) {
+    return `clinicalWorkupAutocomplete-${field}`;
+  }
+
+  function getAutocompleteState(field) {
+    if (!state.autocompleteByField[field]) {
+      state.autocompleteByField[field] = { items: [], highlightedIndex: -1, open: false };
+    }
+    return state.autocompleteByField[field];
+  }
+
+  function ensureAutocompletePanel(field) {
+    const input = getQuickPickInput(field);
+    if (!input) return null;
+
+    const panelId = getAutocompletePanelId(field);
+    let panel = document.getElementById(panelId);
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = panelId;
+      panel.className = "clinical-workup-autocomplete";
+      panel.setAttribute("role", "listbox");
+      panel.setAttribute("aria-label", `${field} suggestions`);
+      panel.hidden = true;
+      input.insertAdjacentElement("afterend", panel);
+    }
+
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("aria-controls", panelId);
+    return panel;
+  }
+
+  function splitTrailingToken(value) {
+    const text = String(value || "");
+    const match = text.match(/^([\\s\\S]*?)([^,;\\n]*)$/);
+    if (!match) {
+      return { leading: text, token: "", hasDelimiterBeforeToken: false };
+    }
+    return {
+      leading: match[1] || "",
+      token: match[2] || "",
+      hasDelimiterBeforeToken: /[,;\\n]\\s*$/.test(match[1] || "")
+    };
+  }
+
+  function getActiveAutocompleteQuery(field) {
+    const input = getQuickPickInput(field);
+    if (!input) return "";
+    const token = splitTrailingToken(input.value).token;
+    return normalize(token).trim();
+  }
+
+  function buildDictionaryAutocompleteMatches(field, normalizedQuery) {
+    if (!normalizedQuery) return [];
+
+    const dictionaryType = getDictionaryTypeForField(field);
+    const candidates = state.dictionaryByType[dictionaryType] || [];
+    const matches = [];
+
+    candidates.forEach((entry) => {
+      if (!entry?.active) return;
+
+      const term = String(entry.term || "").trim();
+      const normalizedTerm = normalize(term);
+      if (!normalizedTerm) return;
+
+      let tier = -1;
+      let matchValue = term;
+
+      if (normalizedTerm.startsWith(normalizedQuery)) {
+        tier = 0;
+      } else if (normalizedTerm.includes(normalizedQuery)) {
+        tier = 1;
+      } else {
+        const synonymMatches = (entry.synonyms || [])
+          .map((synonym) => String(synonym || "").trim())
+          .filter(Boolean)
+          .map((synonym) => ({
+            value: synonym,
+            normalized: normalize(synonym)
+          }))
+          .filter((synonym) => synonym.normalized);
+
+        const synonymPrefix = synonymMatches.find((synonym) => synonym.normalized.startsWith(normalizedQuery));
+        const synonymContains = synonymMatches.find((synonym) => synonym.normalized.includes(normalizedQuery));
+        if (synonymPrefix) {
+          tier = 2;
+          matchValue = synonymPrefix.value;
+        } else if (synonymContains) {
+          tier = 3;
+          matchValue = synonymContains.value;
+        }
+      }
+
+      if (tier < 0) return;
+
+      matches.push({
+        ...entry,
+        tier,
+        matchValue,
+        searchWeight: Number.isFinite(entry.searchWeight) ? entry.searchWeight : 0
+      });
+    });
+
+    matches.sort((left, right) => {
+      if (left.tier !== right.tier) return left.tier - right.tier;
+      if (right.searchWeight !== left.searchWeight) return right.searchWeight - left.searchWeight;
+      return left.term.localeCompare(right.term);
+    });
+
+    return matches.slice(0, AUTOCOMPLETE_MAX_RESULTS);
+  }
+
+  function closeAutocomplete(field) {
+    const panel = ensureAutocompletePanel(field);
+    const stateForField = getAutocompleteState(field);
+    stateForField.open = false;
+    stateForField.items = [];
+    stateForField.highlightedIndex = -1;
+    if (panel) {
+      panel.hidden = true;
+      panel.innerHTML = "";
+    }
+  }
+
+  function closeAllAutocomplete() {
+    ["symptoms", "signs", "concern"].forEach((field) => closeAutocomplete(field));
+  }
+
+  function renderAutocomplete(field) {
+    const panel = ensureAutocompletePanel(field);
+    const stateForField = getAutocompleteState(field);
+    if (!panel) return;
+
+    if (!stateForField.open || !stateForField.items.length) {
+      panel.hidden = true;
+      panel.innerHTML = "";
+      return;
+    }
+
+    panel.hidden = false;
+    panel.innerHTML = stateForField.items
+      .map((item, index) => {
+        const highlighted = index === stateForField.highlightedIndex;
+        const synonymHint = item.matchValue && item.matchValue !== item.term
+          ? `<span class="clinical-workup-autocomplete-match">Matched: ${escapeHtml(item.matchValue)}</span>`
+          : "";
+        const concernCount = Array.isArray(item.associatedConcerns) ? item.associatedConcerns.length : 0;
+
+        return `
+          <button
+            type="button"
+            class="clinical-workup-autocomplete-item${highlighted ? " is-highlighted" : ""}"
+            data-find-my-test-autocomplete-field="${field}"
+            data-find-my-test-autocomplete-index="${index}"
+            role="option"
+            aria-selected="${highlighted ? "true" : "false"}"
+          >
+            <span class="clinical-workup-autocomplete-term">${escapeHtml(item.term)}</span>
+            <span class="clinical-workup-autocomplete-meta">
+              ${escapeHtml(item.bodySystem || "General")} · weight ${item.searchWeight}${concernCount ? ` · ${concernCount} concern link${concernCount === 1 ? "" : "s"}` : ""}
+            </span>
+            ${synonymHint}
+          </button>
+        `;
+      })
+      .join("");
+  }
+
+  function updateAutocompleteForField(field) {
+    if (!state.dictionary) {
+      closeAutocomplete(field);
+      return;
+    }
+
+    const normalizedQuery = getActiveAutocompleteQuery(field);
+    if (normalizedQuery.length < 2) {
+      closeAutocomplete(field);
+      return;
+    }
+
+    const matches = buildDictionaryAutocompleteMatches(field, normalizedQuery);
+    const stateForField = getAutocompleteState(field);
+    stateForField.items = matches;
+    stateForField.open = matches.length > 0;
+    stateForField.highlightedIndex = matches.length ? 0 : -1;
+    renderAutocomplete(field);
+  }
+
+  function applyAutocompleteSelection(field, index) {
+    const input = getQuickPickInput(field);
+    const stateForField = getAutocompleteState(field);
+    const match = stateForField.items[index];
+    if (!input || !match) return false;
+
+    const tokenState = splitTrailingToken(input.value);
+    const leading = tokenState.leading || "";
+    const insertionPrefix = leading && !/[,;\\n]\\s*$/.test(leading) ? `${leading.trimEnd()}, ` : leading;
+    input.value = `${insertionPrefix}${match.term}, `;
+    const cursorPosition = input.value.length;
+    input.focus({ preventScroll: true });
+    input.setSelectionRange?.(cursorPosition, cursorPosition);
+
+    closeAutocomplete(field);
+    const autoMatchedIds = autoSelectTypedQuickPicks(field, { commitActiveToken: true });
+    syncQuickPickSelectionFromInputs();
+    flashAutoMatchedQuickPicks(autoMatchedIds);
+    setStatus("");
+    return true;
+  }
+
+  function handleAutocompleteKeydown(field, event) {
+    const stateForField = getAutocompleteState(field);
+    if (!stateForField.open || !stateForField.items.length) return false;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      stateForField.highlightedIndex = (stateForField.highlightedIndex + 1) % stateForField.items.length;
+      renderAutocomplete(field);
+      return true;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      stateForField.highlightedIndex = (stateForField.highlightedIndex - 1 + stateForField.items.length) % stateForField.items.length;
+      renderAutocomplete(field);
+      return true;
+    }
+
+    if (event.key === "Enter" || event.key === "Tab") {
+      const selectedIndex = stateForField.highlightedIndex >= 0 ? stateForField.highlightedIndex : 0;
+      const applied = applyAutocompleteSelection(field, selectedIndex);
+      if (applied) {
+        event.preventDefault();
+        return true;
+      }
+      return false;
+    }
+
+    if (event.key === "Escape") {
+      closeAutocomplete(field);
+      event.preventDefault();
+      return true;
+    }
+
+    return false;
+  }
+
+  function getQuickPickFieldFromInput(input) {
+    if (input === refs.signsInput) return "signs";
+    if (input === refs.concernInput) return "concern";
+    return "symptoms";
   }
 
   // DOB helpers power the age summary and the pregnancy field locking rules.
@@ -587,7 +860,9 @@
     const nextSelectedIds = new Set();
 
     (state.dataset?.quickPicks || []).forEach((quickPick) => {
-      const input = getQuickPickInput(getQuickPickField(quickPick));
+      const quickPickField = getQuickPickField(quickPick);
+      if (quickPickField !== "concern") return;
+      const input = getQuickPickInput(quickPickField);
       const text = getQuickPickText(quickPick);
       if (input && text && getQuickPickTokens(input.value).some((part) => normalize(part) === normalize(text))) {
         nextSelectedIds.add(quickPick.id);
@@ -738,6 +1013,7 @@
     if (refs.signsInput) refs.signsInput.value = "";
     if (refs.concernInput) refs.concernInput.value = "";
     if (refs.dobPickerInput) refs.dobPickerInput.value = "";
+    closeAllAutocomplete();
     renderDobField();
     syncPregnancyField();
     syncContextSelectStates();
@@ -1271,6 +1547,52 @@
     };
   }
 
+  function hydrateDictionary(rawDictionary) {
+    const entryCollections = {
+      symptom: Array.isArray(rawDictionary?.symptoms) ? rawDictionary.symptoms : [],
+      sign: Array.isArray(rawDictionary?.signs) ? rawDictionary.signs : [],
+      concern: Array.isArray(rawDictionary?.concerns) ? rawDictionary.concerns : []
+    };
+
+    const normalized = {
+      version: String(rawDictionary?.version || "").trim(),
+      schemaVersion: String(rawDictionary?.schemaVersion || "").trim(),
+      sourceModel: rawDictionary?.sourceModel || {},
+      disclaimer: String(rawDictionary?.disclaimer || "").trim(),
+      categoriesCovered: Array.isArray(rawDictionary?.categoriesCovered)
+        ? uniqueStrings(rawDictionary.categoriesCovered)
+        : [],
+      entriesByType: {
+        symptom: [],
+        sign: [],
+        concern: []
+      }
+    };
+
+    ["symptom", "sign", "concern"].forEach((type) => {
+      normalized.entriesByType[type] = entryCollections[type]
+        .map((entry) => ({
+          id: String(entry?.id || "").trim(),
+          term: String(entry?.term || "").trim(),
+          type,
+          synonyms: uniqueStrings(entry?.synonyms || []),
+          bodySystem: String(entry?.bodySystem || "General").trim() || "General",
+          sexApplicability: String(entry?.sexApplicability || "all").trim() || "all",
+          ageApplicability: entry?.ageApplicability || {},
+          pregnancyRelevance: String(entry?.pregnancyRelevance || "not_specific").trim() || "not_specific",
+          associatedConcerns: uniqueStrings(entry?.associatedConcerns || []),
+          associatedTests: uniqueStrings(entry?.associatedTests || []),
+          redFlag: Boolean(entry?.redFlag),
+          redFlagNote: String(entry?.redFlagNote || "").trim(),
+          searchWeight: Number.isFinite(entry?.searchWeight) ? entry.searchWeight : 50,
+          active: entry?.active !== false
+        }))
+        .filter((entry) => entry.id && entry.term);
+    });
+
+    return normalized;
+  }
+
   // Event wiring keeps the form reactive while delegating shared actions back to the main app API.
   function bindEvents() {
     [
@@ -1393,13 +1715,9 @@
       refs.concernInput
     ].forEach((field) => {
       field?.addEventListener("input", () => {
-        const autoMatchedIds = field === refs.symptomsInput
-          ? autoSelectTypedQuickPicks("symptoms")
-          : field === refs.signsInput
-            ? autoSelectTypedQuickPicks("signs")
-            : field === refs.concernInput
-              ? autoSelectTypedQuickPicks("concern")
-              : [];
+        const autoMatchedIds = field === refs.concernInput
+          ? autoSelectTypedQuickPicks("concern")
+          : [];
 
         if (field === refs.dobInput) {
           refs.dobInput.value = formatDobDraft(refs.dobInput.value || "");
@@ -1410,6 +1728,9 @@
         }
         syncQuickPickSelectionFromInputs();
         flashAutoMatchedQuickPicks(autoMatchedIds);
+        if (field === refs.symptomsInput || field === refs.signsInput || field === refs.concernInput) {
+          updateAutocompleteForField(getQuickPickFieldFromInput(field));
+        }
         setStatus("");
       });
     });
@@ -1434,18 +1755,43 @@
       [refs.concernInput, "concern"]
     ].forEach(([field, quickPickField]) => {
       field?.addEventListener("keydown", (event) => {
+        if (handleAutocompleteKeydown(quickPickField, event)) return;
+        if (quickPickField !== "concern") return;
         if (event.key !== "Enter" || event.shiftKey) return;
         event.preventDefault();
         const autoMatchedIds = commitTypedQuickPickField(quickPickField);
         syncQuickPickSelectionFromInputs();
         flashAutoMatchedQuickPicks(autoMatchedIds);
+        updateAutocompleteForField(quickPickField);
         setStatus("");
       });
 
       field?.addEventListener("blur", () => {
+        window.setTimeout(() => {
+          closeAutocomplete(quickPickField);
+        }, 120);
+        if (quickPickField !== "concern") return;
         const autoMatchedIds = autoSelectTypedQuickPicks(quickPickField, { commitActiveToken: true });
         syncQuickPickSelectionFromInputs();
         flashAutoMatchedQuickPicks(autoMatchedIds);
+      });
+
+      field?.addEventListener("focus", () => {
+        updateAutocompleteForField(quickPickField);
+      });
+    });
+
+    ["symptoms", "signs", "concern"].forEach((field) => {
+      const panel = ensureAutocompletePanel(field);
+      panel?.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+      });
+      panel?.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-find-my-test-autocomplete-index]");
+        if (!button) return;
+        const index = Number.parseInt(button.getAttribute("data-find-my-test-autocomplete-index") || "-1", 10);
+        if (!Number.isFinite(index) || index < 0) return;
+        applyAutocompleteSelection(field, index);
       });
     });
     refs.dobPickerInput?.addEventListener("change", () => {
@@ -1469,6 +1815,19 @@
       syncContextSelectStates();
     });
 
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      const isInputTarget = target === refs.symptomsInput
+        || target === refs.signsInput
+        || target === refs.concernInput;
+      if (isInputTarget) return;
+
+      const insideAutocomplete = target instanceof Element
+        && Boolean(target.closest(".clinical-workup-autocomplete"));
+      if (insideAutocomplete) return;
+      closeAllAutocomplete();
+    });
+
     document.addEventListener("findmytest:clear", (event) => {
       const shouldClearInputs = Boolean(event.detail?.preserveInputs === false);
       state.output = null;
@@ -1489,24 +1848,40 @@
     });
   }
 
-  // Boot the module by loading the latest dataset, then render the empty ready state.
+  // Boot the module by loading the latest datasets, then render the empty ready state.
   async function loadDataset() {
     setStatus("Loading Find My Test...");
 
     try {
-      const response = await fetch(datasetUrl, { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`Dataset request failed with ${response.status}`);
+      const [mapResponse, dictionaryResponse] = await Promise.all([
+        fetch(datasetUrl, { cache: "no-store" }),
+        fetch(dictionaryUrl, { cache: "no-store" })
+      ]);
+
+      if (!mapResponse.ok) {
+        throw new Error(`Dataset request failed with ${mapResponse.status}`);
+      }
+      if (!dictionaryResponse.ok) {
+        throw new Error(`Dictionary request failed with ${dictionaryResponse.status}`);
       }
 
-      const rawDataset = await response.json();
+      const rawDataset = await mapResponse.json();
+      const rawDictionary = await dictionaryResponse.json();
       state.dataset = hydrateDataset(rawDataset);
+      state.dictionary = hydrateDictionary(rawDictionary);
+      state.dictionaryByType = {
+        symptom: state.dictionary.entriesByType?.symptom || [],
+        sign: state.dictionary.entriesByType?.sign || [],
+        concern: state.dictionary.entriesByType?.concern || []
+      };
+
       renderDobField();
       syncSexIcon();
       syncPregnancyField();
       syncContextSelectStates();
       syncQuickPickSelectionFromInputs();
       renderQuickPicks();
+      closeAllAutocomplete();
       setStatus("");
 
       if (isFindMyTestPage) {
@@ -1516,7 +1891,7 @@
       }
     } catch (error) {
       console.error("Find My Test dataset failed to load.", error);
-      setStatus("Find My Test could not load the symptom-to-test map. Use the main search while we fix it.");
+      setStatus("Find My Test could not load its dictionary or symptom-to-test map. Use the main search while we fix it.");
     }
   }
 
