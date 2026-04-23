@@ -985,33 +985,8 @@ body.find-my-test-page .about-panel {
 
 .home-quick-actions-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-@media (max-width: 768px) {
-  .home-dashboard-actions .home-quick-actions-grid {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(280px, 86%);
-    grid-template-columns: none;
-    gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scroll-padding-inline: 0;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-
-  .home-dashboard-actions .home-quick-actions-grid::-webkit-scrollbar {
-    display: none;
-  }
-
-  .home-dashboard-actions .home-action-tile {
-    scroll-snap-align: start;
-  }
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
 }
 
 .home-action-tile {
@@ -1289,10 +1264,6 @@ button.home-recent-item:focus-visible {
 @media (min-width: 861px) {
   .home-dashboard {
     gap: 16px;
-  }
-
-  .home-dashboard-actions .home-quick-actions-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .home-dashboard {
