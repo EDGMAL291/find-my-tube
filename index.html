@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260423a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260423i" />
 </head>
 <body data-app-page="home">
   <div class="container">
@@ -64,7 +64,7 @@
           <div class="site-menu-list" role="menu" aria-label="Site menu">
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
-            <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Start a Draw Plan</button>
+            <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Tube Plan</button>
             <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
             <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order Stock / Consumables</button>
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
@@ -86,62 +86,25 @@
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
-    <section class="home-hub" id="homeHub">
-      <div class="home-brief-grid">
-        <article class="home-brief-card home-brief-card-featured">
-          <div class="home-card-head">
-            <span class="home-card-glyph" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M12 3l1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3z"></path>
-                <path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"></path>
-                <path d="M6 15l.7 1.6L8.3 17l-1.6.7L6 19.3l-.7-1.6L3.7 17l1.6-.7L6 15z"></path>
-              </svg>
-            </span>
-            <h2>Collection Tips</h2>
-          </div>
-          <p class="home-brief-text" id="homeTipText"></p>
-        </article>
-        <article class="home-brief-card home-brief-card-desktop-only" aria-label="Collection reminders">
-          <div class="home-card-head">
-            <span class="home-card-glyph" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M8 6h12"></path>
-                <path d="M8 12h12"></path>
-                <path d="M8 18h12"></path>
-                <path d="M4 6h.01"></path>
-                <path d="M4 12h.01"></path>
-                <path d="M4 18h.01"></path>
-              </svg>
-            </span>
-            <h2>Collection Reminders</h2>
-          </div>
-          <ul class="home-brief-list">
-            <li>Confirm patient prep and timing before collection.</li>
-            <li>Label specimens immediately after the draw.</li>
-            <li>Use the correct tube or container and fill to the line where required.</li>
-            <li>Escalate urgent or unusual handling requirements to the lab early.</li>
-          </ul>
-        </article>
-      </div>
-
-      <div class="home-feature-grid">
-        <button type="button" class="home-feature-card" data-menu-action="tube">
-          <div class="home-card-head">
-            <span class="home-card-glyph" aria-hidden="true">
+    <section class="home-hub home-dashboard" id="homeHub">
+      <section class="home-dashboard-section home-dashboard-actions" aria-labelledby="homeQuickActionsTitle">
+        <div class="home-dashboard-head">
+          <h2 id="homeQuickActionsTitle">Quick Actions</h2>
+        </div>
+        <div class="home-quick-actions-grid">
+          <button type="button" class="home-action-tile home-action-tile-lookup" data-menu-action="tube" aria-label="Open Find My Tube">
+            <span class="home-action-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
                 <path d="M9 3h6"></path>
                 <path d="M10 3v5l-4 7a4 4 0 0 0 3.5 6h5a4 4 0 0 0 3.5-6l-4-7V3"></path>
                 <path d="M8.5 14h7"></path>
               </svg>
             </span>
-            <h3>Tube lookup</h3>
-          </div>
-          <p>Find the right test, specimen, and collection guidance.</p>
-          <span class="home-feature-action">Find My Tube</span>
-        </button>
-        <button type="button" class="home-feature-card" data-menu-action="find-my-test">
-          <div class="home-card-head">
-            <span class="home-card-glyph" aria-hidden="true">
+            <span class="home-action-label">Find My Tube</span>
+            <span class="home-action-copy">Find the right collection tube</span>
+          </button>
+          <button type="button" class="home-action-tile home-action-tile-lookup" data-menu-action="find-my-test" aria-label="Open Find My Test">
+            <span class="home-action-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
                 <circle cx="11" cy="11" r="5.5"></circle>
                 <path d="M15.2 15.2L20 20"></path>
@@ -149,26 +112,57 @@
                 <path d="M8.8 11h4.4"></path>
               </svg>
             </span>
-            <h3>Test lookup</h3>
-          </div>
-          <p>Use symptoms and signs to guide test choice.</p>
-          <span class="home-feature-action">Find My Test</span>
-        </button>
-        <button type="button" class="home-feature-card" data-menu-action="stock">
-          <div class="home-card-head">
-            <span class="home-card-glyph" aria-hidden="true">
+            <span class="home-action-label">Find My Test</span>
+            <span class="home-action-copy">Search by test or clinical need</span>
+          </button>
+          <button type="button" class="home-action-tile home-action-tile-draw" data-menu-action="draw" aria-label="Start a Draw Plan">
+            <span class="home-action-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M4 8.5L12 4l8 4.5-8 4.5-8-4.5z"></path>
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+            </span>
+            <span class="home-action-label">Tube Plan</span>
+            <span class="home-action-copy">Add tests and plan the draw</span>
+          </button>
+          <button type="button" class="home-action-tile home-action-tile-order" data-menu-action="stock" aria-label="Open Order Stock">
+            <span class="home-action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M4 8.5 12 4l8 4.5-8 4.5-8-4.5z"></path>
                 <path d="M4 8.5V16l8 4 8-4V8.5"></path>
                 <path d="M12 13v7"></path>
               </svg>
             </span>
-            <h3>Consumables</h3>
-          </div>
-          <p>Order lab essentials.</p>
-          <span class="home-feature-action">Order Stock</span>
-        </button>
-      </div>
+            <span class="home-action-label">Order Consumables</span>
+            <span class="home-action-copy">Request tubes and consumables</span>
+          </button>
+          <button type="button" class="home-action-tile home-action-tile-contact" data-menu-action="contact-feedback" aria-label="Open Contact and Feedback">
+            <span class="home-action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M6 7.5h12a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-2.5 2.5H11l-4 3v-3H6A2.5 2.5 0 0 1 3.5 15v-5A2.5 2.5 0 0 1 6 7.5Z"></path>
+                <path d="M8.2 11.2h7.6"></path>
+                <path d="M8.2 14h5.1"></path>
+              </svg>
+            </span>
+            <span class="home-action-label">Contact / Feedback</span>
+            <span class="home-action-copy">Get help or send feedback</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="home-dashboard-section" aria-labelledby="homeStatusTitle">
+        <div class="home-dashboard-head">
+          <h2 id="homeStatusTitle">Order Status</h2>
+        </div>
+        <div class="home-status-list" id="homeStatusList"></div>
+      </section>
+
+      <section class="home-dashboard-section home-tip-card" aria-labelledby="homeTipTitle">
+        <div class="home-dashboard-head">
+          <h2 id="homeTipTitle">Collection Tips</h2>
+        </div>
+        <p class="home-tip-text" id="homeTipText">Fill citrate tubes to the line to prevent clotting errors.</p>
+      </section>
     </section>
 
     <section class="clinical-workup-panel" id="clinicalWorkupPanel" aria-labelledby="clinicalWorkupTitle">
@@ -309,23 +303,7 @@
 
     <footer class="site-footer" id="siteFooter">
       <div class="site-footer-copy">
-        <p class="site-footer-title">Find My Tube</p>
-        <p class="site-footer-note">Reference tool only. Always confirm collection details against local lab policy, senior review, and urgent clinical context.</p>
-        <p class="site-footer-feedback-note">Send feedback on WhatsApp. Do not include patient names, DOBs, folder numbers, or other identifiers.</p>
-      </div>
-      <div class="site-footer-links">
-        <a
-          class="footer-link-btn footer-link-btn-whatsapp"
-          href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Send feedback on WhatsApp"
-        >
-          WhatsApp Feedback
-        </a>
-        <button type="button" class="footer-link-btn" data-legal-doc="privacy">Privacy Policy</button>
-        <button type="button" class="footer-link-btn" data-legal-doc="terms">Terms of Use</button>
-        <button type="button" class="footer-link-btn" data-legal-doc="disclaimer">Disclaimer</button>
+        <p class="site-footer-title">findmytube © 2026 | Reference Tool Only</p>
       </div>
     </footer>
   </div>
@@ -353,27 +331,11 @@
   <section class="draw-modal" id="drawModal" hidden>
     <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
       <div class="draw-selection-head">
-        <div>
-          <p class="draw-cart-kicker">Tube Planning</p>
-          <h3 id="drawModalTitle">Tube Plan</h3>
-        </div>
+        <h3 id="drawModalTitle">Tube Plan</h3>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn" aria-label="Close Tube Plan" title="Close Tube Plan">&times;</button>
       </div>
       <div class="draw-selection-actions">
         <p class="draw-selection-count" id="drawSelectionCount">0 tests added</p>
-        <div class="draw-selection-share-actions" id="drawSelectionShareActions">
-          <button type="button" class="draw-tool-btn" id="shareDrawPlanBtn">Share</button>
-          <button type="button" class="draw-tool-btn ghost" id="copyDrawPlanLinkBtn">Copy Link</button>
-          <a
-            class="draw-tool-btn ghost draw-tool-link-btn"
-            id="shareDrawPlanWhatsappBtn"
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            WhatsApp
-          </a>
-        </div>
       </div>
       <div class="draw-selected-list" id="drawSelectedList"></div>
       <div class="draw-result-card" id="drawResultCard" tabindex="-1">
@@ -383,6 +345,49 @@
         <p class="draw-planner-note" id="drawPlannerNote"></p>
       </div>
       <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add More Tests</button>
+    </div>
+  </section>
+
+  <section class="contact-sheet-modal" id="contactFeedbackModal" hidden>
+    <div class="contact-sheet-card" role="dialog" aria-modal="true" aria-labelledby="contactFeedbackTitle">
+      <div class="contact-sheet-head">
+        <h3 id="contactFeedbackTitle">Contact Us</h3>
+        <button type="button" class="contact-sheet-close-btn" id="closeContactFeedbackBtn" aria-label="Close contact panel">&times;</button>
+      </div>
+      <div class="contact-sheet-actions">
+        <a
+          href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="contact-sheet-action contact-sheet-action-whatsapp"
+          id="contactFeedbackWhatsappBtn"
+          aria-label="Message on WhatsApp"
+        >
+          <span class="contact-sheet-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path>
+              <path d="M9.5 10.3c.2-.4.4-.4.6-.4h.4c.1 0 .3 0 .4.4l.7 1.5c.1.2.1.4 0 .5l-.4.5c-.1.1-.1.3 0 .4.3.5.9 1.1 1.6 1.5.2.1.3.1.4 0l.5-.4c.1-.1.3-.1.5 0l1.4.6c.4.2.4.3.4.5 0 .5-.3 1-.8 1.2-.5.2-1.3.2-2.6-.4-1-.5-2.1-1.5-2.8-2.7-.7-1.3-.6-2.1-.4-2.5Z"></path>
+            </svg>
+          </span>
+          <span class="contact-sheet-action-text">Message on WhatsApp</span>
+        </a>
+        <a
+          href="tel:0217996279"
+          class="contact-sheet-action contact-sheet-action-call"
+          id="contactFeedbackCallBtn"
+          aria-label="Call Laboratory"
+        >
+          <span class="contact-sheet-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"></path>
+            </svg>
+          </span>
+          <span class="contact-sheet-action-copy">
+            <span class="contact-sheet-action-title">Call Laboratory</span>
+            <span class="contact-sheet-action-subtitle">021 799 6279</span>
+          </span>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -411,7 +416,7 @@
 
   <script src="assets/data/data.js?v=20260416a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260423a"></script>
+  <script src="assets/js/script.js?v=20260423i"></script>
   <script src="assets/js/find-my-test.js?v=20260416a"></script>
   <script>
     if ("serviceWorker" in navigator) {

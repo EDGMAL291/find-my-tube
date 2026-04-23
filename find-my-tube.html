@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260423a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260423i" />
 </head>
 <body data-app-page="find-my-tube">
   <div class="container">
@@ -71,7 +71,7 @@
           <div class="site-menu-list" role="menu" aria-label="Site menu">
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
-            <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Start a Draw Plan</button>
+            <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Tube Plan</button>
             <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
             <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order Stock / Consumables</button>
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
@@ -176,23 +176,7 @@
 
     <footer class="site-footer" id="siteFooter">
       <div class="site-footer-copy">
-        <p class="site-footer-title">Find My Tube</p>
-        <p class="site-footer-note">Reference tool only. Always confirm collection details against local lab policy, senior review, and urgent clinical context.</p>
-        <p class="site-footer-feedback-note">Send feedback on WhatsApp. Do not include patient names, DOBs, folder numbers, or other identifiers.</p>
-      </div>
-      <div class="site-footer-links">
-        <a
-          class="footer-link-btn footer-link-btn-whatsapp"
-          href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Send feedback on WhatsApp"
-        >
-          WhatsApp Feedback
-        </a>
-        <button type="button" class="footer-link-btn" data-legal-doc="privacy">Privacy Policy</button>
-        <button type="button" class="footer-link-btn" data-legal-doc="terms">Terms of Use</button>
-        <button type="button" class="footer-link-btn" data-legal-doc="disclaimer">Disclaimer</button>
+        <p class="site-footer-title">findmytube © 2026 | Reference Tool Only</p>
       </div>
     </footer>
   </div>
@@ -220,27 +204,11 @@
   <section class="draw-modal" id="drawModal" hidden>
     <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
       <div class="draw-selection-head">
-        <div>
-          <p class="draw-cart-kicker">Tube Planning</p>
-          <h3 id="drawModalTitle">Tube Plan</h3>
-        </div>
+        <h3 id="drawModalTitle">Tube Plan</h3>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn" aria-label="Close Tube Plan" title="Close Tube Plan">&times;</button>
       </div>
       <div class="draw-selection-actions">
         <p class="draw-selection-count" id="drawSelectionCount">0 tests added</p>
-        <div class="draw-selection-share-actions" id="drawSelectionShareActions">
-          <button type="button" class="draw-tool-btn" id="shareDrawPlanBtn">Share</button>
-          <button type="button" class="draw-tool-btn ghost" id="copyDrawPlanLinkBtn">Copy Link</button>
-          <a
-            class="draw-tool-btn ghost draw-tool-link-btn"
-            id="shareDrawPlanWhatsappBtn"
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            WhatsApp
-          </a>
-        </div>
       </div>
       <div class="draw-selected-list" id="drawSelectedList"></div>
       <div class="draw-result-card" id="drawResultCard" tabindex="-1">
@@ -291,7 +259,7 @@
 
   <script src="assets/data/data.js?v=20260416a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260423a"></script>
+  <script src="assets/js/script.js?v=20260423i"></script>
   <script src="assets/js/find-my-test.js?v=20260416a"></script>
   <script>
     if ("serviceWorker" in navigator) {

@@ -13,6 +13,9 @@ const themeModeButtons = document.querySelectorAll("[data-theme-mode]");
 const homeHub = document.getElementById("homeHub");
 const homeTipCard = document.querySelector(".home-brief-card-featured");
 const homeTipText = document.getElementById("homeTipText");
+const homeRecentActivityList = document.getElementById("homeRecentActivityList");
+const homeRecentEmpty = document.getElementById("homeRecentEmpty");
+const homeStatusList = document.getElementById("homeStatusList");
 const heroDrawPlanBtn = document.getElementById("heroDrawPlanBtn");
 const heroOrderStockBtn = document.getElementById("heroOrderStockBtn");
 const tubeLookupPanel = document.getElementById("tubeLookupPanel");
@@ -92,9 +95,6 @@ const drawPlannerCount = document.getElementById("drawPlannerCount");
 const drawPlannerAlerts = document.getElementById("drawPlannerAlerts");
 const drawGroups = document.getElementById("drawGroups");
 const drawPlannerNote = document.getElementById("drawPlannerNote");
-const shareDrawPlanBtn = document.getElementById("shareDrawPlanBtn");
-const copyDrawPlanLinkBtn = document.getElementById("copyDrawPlanLinkBtn");
-const shareDrawPlanWhatsappBtn = document.getElementById("shareDrawPlanWhatsappBtn");
 const openDrawPlannerBtn = document.getElementById("openDrawPlannerBtn");
 const closeDrawPlannerBtn = document.getElementById("closeDrawPlannerBtn");
 const clearDrawSelectionBtn = document.getElementById("clearDrawSelectionBtn");
@@ -112,6 +112,8 @@ const legalModal = document.getElementById("legalModal");
 const legalModalTitle = document.getElementById("legalModalTitle");
 const legalModalBody = document.getElementById("legalModalBody");
 const closeLegalModalBtn = document.getElementById("closeLegalModalBtn");
+const contactFeedbackModal = document.getElementById("contactFeedbackModal");
+const closeContactFeedbackBtn = document.getElementById("closeContactFeedbackBtn");
 const legalDocButtons = document.querySelectorAll("[data-legal-doc]");
 const SEARCH_PLACEHOLDER_BASE = "Search by test or profile";
 const SEARCH_PLACEHOLDER_HINT = `${SEARCH_PLACEHOLDER_BASE} (e.g. CRP or Liver function tests)`;
@@ -175,6 +177,11 @@ const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transf
 const selectedClinicalChipIds = new Set();
 let hasDismissedRackHint = false;
 let lastLegalModalTrigger = null;
+let lastContactFeedbackTrigger = null;
+let aboutInfoModal = null;
+let closeAboutInfoModalBtn = null;
+let aboutInfoLegalButtons = [];
+let lastAboutInfoTrigger = null;
 let clinicalWorkupOutput = null;
 const stockOrderState = Object.create(null);
 let stockOrderStatusMode = "draft";
@@ -210,6 +217,8 @@ const DRAW_PLAN_SHARE_PARAM = "plan";
 const STOCK_ORDER_HOME_URL = "./order-stock.html";
 const STOCK_DASHBOARD_URL = "./stock-dashboard.html";
 const TRACK_ORDERS_URL = "./track-orders.html";
+const HOME_RECENT_ACTIVITY_KEY = "fmt-home-recent-activity";
+const HOME_RECENT_ACTIVITY_MAX_ITEMS = 3;
 const THEME_STORAGE_KEY = "fmt-theme-mode";
 const THEME_COLOR_BY_MODE = {
   light: "#0f766e",
@@ -229,6 +238,13 @@ let mobileBottomNavLastScrollY = 0;
 let mobileBottomNavDownDistance = 0;
 let mobileBottomNavUpDistance = 0;
 let mobileBottomNavIsHidden = false;
+let mobileBottomMenuSheet = null;
+let mobileBottomMenuBackdrop = null;
+let mobileBottomMenuOpen = false;
+let mobileBottomMenuOriginX = 0;
+let mobileBottomMenuOriginY = 0;
+let homeDashboardStockSnapshot = null;
+let homeRecentTestSearchTimer = 0;
 const STOCK_API_CONFIGURED_BASE_URL = typeof window !== "undefined"
   ? String(window.FMT_APP_CONFIG?.stockApiBaseUrl || "").trim()
   : "";
@@ -327,6 +343,10 @@ function setThemePanelOpen(isOpen) {
 
 // Sets site menu open state.
 function setSiteMenuOpen(isOpen) {
+  if (Boolean(isOpen) && shouldShowMobileBottomNav() && isMobileBottomNavViewport()) {
+    setMobileBottomMenuOpen(true);
+    return;
+  }
   isSiteMenuOpen = Boolean(isOpen);
   if (siteMenuPanel) {
     siteMenuPanel.hidden = !isSiteMenuOpen;
@@ -606,42 +626,6 @@ function getDrawPlanShareUrl(testNames = getSelectedTestNamesList()) {
   return url.toString();
 }
 
-// Builds a share summary for messaging apps.
-function getDrawPlanShareText(testNames = getSelectedTestNamesList()) {
-  const validNames = getTestsByNames(testNames).map((test) => test.name);
-  if (!validNames.length) return "Open this Find My Tube draw plan:";
-
-  const previewNames = validNames.slice(0, 6).join("\n");
-  const extraCount = validNames.length - Math.min(validNames.length, 6);
-  const suffix = extraCount > 0 ? `, +${extraCount} more` : "";
-  return `Shared blood draw plan on Find My Tube: ${previewNames}${suffix}. Open the link to review the full tube plan.`;
-}
-
-// Updates draw plan share actions.
-function updateDrawPlanShareActions() {
-  const selectedNames = getSelectedTestNamesList();
-  const hasSelection = selectedNames.length > 0;
-  const shareUrl = hasSelection ? getDrawPlanShareUrl(selectedNames) : "";
-  const shareText = hasSelection ? getDrawPlanShareText(selectedNames) : "";
-
-  if (shareDrawPlanBtn) {
-    shareDrawPlanBtn.disabled = !hasSelection;
-  }
-
-  if (copyDrawPlanLinkBtn) {
-    copyDrawPlanLinkBtn.disabled = !hasSelection;
-  }
-
-  if (shareDrawPlanWhatsappBtn) {
-    shareDrawPlanWhatsappBtn.classList.toggle("is-disabled", !hasSelection);
-    shareDrawPlanWhatsappBtn.setAttribute("aria-disabled", hasSelection ? "false" : "true");
-    shareDrawPlanWhatsappBtn.href = hasSelection
-      ? `https://wa.me/?text=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`
-      : "#";
-    shareDrawPlanWhatsappBtn.tabIndex = hasSelection ? 0 : -1;
-  }
-}
-
 // Loads a shared draw plan from URL.
 function loadSharedDrawPlanFromUrl() {
   if (!sharedPlanToken || isFindMyTestPage) return;
@@ -865,6 +849,7 @@ function openLookupHomeView() {
 
   closeDrawModal();
   closeProfileModal();
+  closeAboutInfoModal({ restoreFocus: false });
   closeLegalModal({ restoreFocus: false });
   scrollPanelIntoView(tubeLookupPanel || preSearchPanel);
   focusMainSearchField({ scroll: "if-needed" });
@@ -1538,6 +1523,15 @@ function initStockOrderPanel() {
         ? " Order saved, but Google Sheets still needs attention."
         : "";
       const submittedRecord = submittedStockOrderRecord;
+      addHomeRecentActivity({
+        type: "stock-submit",
+        title: `Last order: ${payload.wardUnit || "Ward not set"}`,
+        detail: submittedStockOrderRecord?.id
+          ? `${submittedStockOrderRecord.id} • Submitted`
+          : "Submitted",
+        actionType: "menu",
+        actionValue: "stock"
+      });
       showSelectionNotice(submittedStockOrderRecord?.id
         ? `Consumables request submitted. ID ${submittedStockOrderRecord.id}.${sheetSyncWarning}`
         : `Consumables request submitted.${sheetSyncWarning}`);
@@ -1600,16 +1594,13 @@ function initStockOrderPanel() {
 }
 
 // Opens about section.
-function openAboutSection() {
-  if (isFindMyTestPage) {
-    window.location.assign(`${window.location.pathname}#aboutPanel`);
-    return;
-  }
-
+function openAboutSection(trigger = null) {
   closeDrawModal();
   closeProfileModal();
+  closeSectionBrowseModal();
+  closeContactFeedbackModal({ restoreFocus: false });
   closeLegalModal({ restoreFocus: false });
-  scrollPanelIntoView(aboutPanel || siteFooter);
+  openAboutInfoModal(trigger);
 }
 
 // Navigates home.
@@ -4848,7 +4839,12 @@ function updateSelectionCartViewportPosition() {
   if (!selectionCartBar) return;
 
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
-  const baseOffset = isMobile ? 10 : 18;
+  const hasMobileBottomNav = shouldShowMobileBottomNav()
+    && isMobileBottomNavViewport()
+    && document.body.classList.contains("has-mobile-bottom-nav");
+  const baseOffset = hasMobileBottomNav
+    ? 96
+    : (isMobile ? 10 : 18);
   let keyboardOffset = 0;
 
   if (isMobile && window.visualViewport) {
@@ -4894,7 +4890,6 @@ function refreshSelectionUi({ rerenderCards = true } = {}) {
   renderDrawResult();
   updateSelectionCartBar();
   updateDrawPlannerToggleState();
-  updateDrawPlanShareActions();
   if (rerenderCards) applyFilters();
 }
 
@@ -4909,7 +4904,13 @@ function setSelectedTests(nextSelection, options = {}) {
   selectedTestNames.clear();
   nextSelection.forEach((name) => selectedTestNames.add(name));
   collapseProfileSelections(selectedTestNames);
+  if (selectedTestNames.size) {
+    recordDrawPlanRecentActivity();
+  }
   refreshSelectionUi(options);
+  if (isHomePage) {
+    renderHomeDashboard();
+  }
   dispatchFindMyTubeEvent("findmytube:selectionchange", {
     selectedTestNames: getSelectedTestNamesList()
   });
@@ -4993,6 +4994,47 @@ function setMobileBottomNavHidden(isHidden) {
   mobileBottomNav.classList.toggle("is-hidden", mobileBottomNavIsHidden);
 }
 
+function updateMobileBottomMenuOrigin() {
+  if (!mobileBottomMenuSheet) return;
+
+  const menuButtonRect = mobileBottomNavButtons.menu?.getBoundingClientRect();
+  const fallbackX = Math.max(0, window.innerWidth / 2);
+  const fallbackY = Math.max(0, window.innerHeight);
+  const nextX = menuButtonRect ? menuButtonRect.left + (menuButtonRect.width / 2) : fallbackX;
+  const nextY = menuButtonRect ? menuButtonRect.top + (menuButtonRect.height / 2) : fallbackY;
+
+  mobileBottomMenuOriginX = Math.round(nextX);
+  mobileBottomMenuOriginY = Math.round(nextY);
+  mobileBottomMenuSheet.style.setProperty("--mobile-menu-origin-x", `${mobileBottomMenuOriginX}px`);
+  mobileBottomMenuSheet.style.setProperty("--mobile-menu-origin-y", `${mobileBottomMenuOriginY}px`);
+}
+
+function setMobileBottomMenuOpen(isOpen) {
+  mobileBottomMenuOpen = Boolean(isOpen);
+  if (mobileBottomMenuOpen) {
+    updateMobileBottomMenuOrigin();
+  }
+  if (mobileBottomMenuBackdrop) {
+    mobileBottomMenuBackdrop.hidden = !mobileBottomMenuOpen;
+  }
+  if (mobileBottomMenuSheet) {
+    mobileBottomMenuSheet.hidden = !mobileBottomMenuOpen;
+    mobileBottomMenuSheet.classList.toggle("is-open", mobileBottomMenuOpen);
+  }
+  document.body.classList.toggle("mobile-bottom-menu-open", mobileBottomMenuOpen);
+  if (mobileBottomMenuOpen) {
+    setSiteMenuOpen(false);
+    setThemePanelOpen(false);
+    closeDrawModal();
+    setMobileBottomNavHidden(false);
+  }
+  if (mobileBottomNavButtons.menu) {
+    mobileBottomNavButtons.menu.setAttribute("aria-expanded", mobileBottomMenuOpen ? "true" : "false");
+    mobileBottomNavButtons.menu.setAttribute("aria-label", mobileBottomMenuOpen ? "Close menu" : "Open menu");
+  }
+  setMobileBottomNavActiveState();
+}
+
 function resetMobileBottomNavScrollState() {
   mobileBottomNavLastScrollY = Math.max(0, window.scrollY || 0);
   mobileBottomNavDownDistance = 0;
@@ -5002,8 +5044,8 @@ function resetMobileBottomNavScrollState() {
 function setMobileBottomNavActiveState() {
   if (!mobileBottomNavButtons) return;
 
-  const activeKey = isFindMyTubePage && isDrawPlannerOpen()
-    ? "draw"
+  const activeKey = mobileBottomMenuOpen
+    ? "menu"
     : isHomePage
       ? "home"
       : isFindMyTubePage
@@ -5014,7 +5056,7 @@ function setMobileBottomNavActiveState() {
             ? "order"
             : "";
 
-  ["home", "tube", "draw", "test", "order"].forEach((key) => {
+  ["home", "tube", "menu", "test", "order"].forEach((key) => {
     const button = mobileBottomNavButtons[key];
     if (!button) return;
     const isActive = key === activeKey;
@@ -5027,51 +5069,124 @@ function setMobileBottomNavActiveState() {
   });
 }
 
-function handleMobileBottomNavAction(action) {
-  setSiteMenuOpen(false);
-  setThemePanelOpen(false);
+function startDrawPlanFromMenu(trigger = null) {
+  recordHomeQuickActionActivity("draw");
+  if (!isFindMyTubePage) {
+    window.location.assign(getFindMyTubePageUrl());
+    return;
+  }
+  closeProfileModal();
+  closeLegalModal({ restoreFocus: false });
+  closeSectionBrowseModal();
+  scrollPanelIntoView(tubeLookupPanel || preSearchPanel);
+  if (selectedTestNames.size > 0) {
+    openDrawModal();
+    return;
+  }
+  closeDrawModal();
+  focusMainSearchField({ scroll: "if-needed" });
+}
 
+function handleSiteNavigationAction(action, trigger = null) {
   if (action === "home") {
     goHome();
     return;
   }
 
+  if (action === "draw" || action === "start-draw") {
+    startDrawPlanFromMenu(trigger);
+    return;
+  }
+
   if (action === "tube") {
+    recordHomeQuickActionActivity("tube");
     openLookupHomeView();
     return;
   }
 
-  if (action === "draw") {
-    if (!isFindMyTubePage) {
-      window.location.assign(getFindMyTubePageUrl());
-      return;
-    }
-    closeProfileModal();
-    closeLegalModal({ restoreFocus: false });
-    scrollPanelIntoView(tubeLookupPanel || preSearchPanel);
-    if (selectedTestNames.size > 0) {
-      openDrawModal();
-      return;
-    }
-    closeDrawModal();
-    focusMainSearchField({ scroll: "if-needed" });
-    return;
-  }
-
-  if (action === "test") {
+  if (action === "find-my-test") {
+    recordHomeQuickActionActivity("find-my-test");
     window.location.assign("./index.html?tool=find-my-test");
     return;
   }
 
-  if (action === "order") {
+  if (action === "stock") {
+    recordHomeQuickActionActivity("stock");
     openStockSection();
+    return;
+  }
+
+  if (action === "stock-dashboard") {
+    openStockDashboard();
+    return;
+  }
+
+  if (action === "track-orders") {
+    openTrackOrders();
+    return;
+  }
+
+  if (action === "settings") {
+    setThemePanelOpen(true);
+    return;
+  }
+
+  if (action === "about") {
+    openAboutSection(trigger);
+    return;
+  }
+
+  if (action === "contact-feedback") {
+    openContactFeedbackModal(trigger);
+    return;
+  }
+
+  if (["privacy", "terms", "disclaimer"].includes(action)) {
+    openLegalModal(action, trigger);
+  }
+}
+
+function handleMobileBottomNavAction(action) {
+  setSiteMenuOpen(false);
+  setThemePanelOpen(false);
+  if (action !== "menu") {
+    setMobileBottomMenuOpen(false);
+  }
+
+  if (action === "home") {
+    handleSiteNavigationAction("home");
+    return;
+  }
+
+  if (action === "tube") {
+    handleSiteNavigationAction("tube");
+    return;
+  }
+
+  if (action === "menu") {
+    setMobileBottomMenuOpen(!mobileBottomMenuOpen);
+    return;
+  }
+
+  if (action === "test") {
+    handleSiteNavigationAction("find-my-test");
+    return;
+  }
+
+  if (action === "order") {
+    handleSiteNavigationAction("stock");
   }
 }
 
 function handleMobileBottomNavScroll() {
   if (!mobileBottomNav) return;
+  if (mobileBottomMenuOpen) {
+    setMobileBottomNavHidden(false);
+    return;
+  }
   if (!isMobileBottomNavViewport()) {
     setMobileBottomNavHidden(false);
+    setMobileBottomMenuOpen(false);
     resetMobileBottomNavScrollState();
     return;
   }
@@ -5128,11 +5243,20 @@ function initMobileBottomNav() {
         <span class="mobile-bottom-nav-label">Tube</span>
       </button>
     </div>
-    <button type="button" class="mobile-bottom-nav-btn mobile-bottom-nav-draw" data-mobile-nav="draw" aria-label="Start a Draw Plan">
-      <span class="mobile-bottom-nav-draw-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <button type="button" class="mobile-bottom-nav-btn mobile-bottom-nav-menu" data-mobile-nav="menu" aria-label="Open menu" aria-expanded="false" aria-controls="mobileBottomMenuSheet">
+      <span class="mobile-bottom-nav-menu-icon" aria-hidden="true">
+        <svg class="menu-icon-grid" viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="5" width="5" height="5" rx="1.3" fill="currentColor"></rect>
+          <rect x="14" y="5" width="5" height="5" rx="1.3" fill="currentColor"></rect>
+          <rect x="5" y="14" width="5" height="5" rx="1.3" fill="currentColor"></rect>
+          <rect x="14" y="14" width="5" height="5" rx="1.3" fill="currentColor"></rect>
+        </svg>
+        <svg class="menu-icon-close" viewBox="0 0 24 24" fill="none">
+          <path d="M6.5 6.5 17.5 17.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+          <path d="M17.5 6.5 6.5 17.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+        </svg>
       </span>
-      <span class="mobile-bottom-nav-label">Draw Plan</span>
+      <span class="mobile-bottom-nav-label">Menu</span>
     </button>
     <div class="mobile-bottom-nav-group" data-group="right">
       <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" aria-label="Test">
@@ -5151,12 +5275,46 @@ function initMobileBottomNav() {
   `;
 
   document.body.appendChild(nav);
+
+  const menuBackdrop = document.createElement("button");
+  menuBackdrop.type = "button";
+  menuBackdrop.className = "mobile-bottom-menu-backdrop";
+  menuBackdrop.setAttribute("aria-label", "Close menu");
+  menuBackdrop.hidden = true;
+  document.body.appendChild(menuBackdrop);
+
+  const menuSheet = document.createElement("section");
+  menuSheet.className = "mobile-bottom-menu-sheet";
+  menuSheet.id = "mobileBottomMenuSheet";
+  menuSheet.hidden = true;
+  menuSheet.setAttribute("aria-label", "Main mobile menu");
+  menuSheet.innerHTML = `
+    <div class="mobile-bottom-menu-head">
+      <p class="mobile-bottom-menu-kicker">Menu</p>
+      <button type="button" class="mobile-bottom-menu-close" data-mobile-menu-close aria-label="Close menu">&times;</button>
+    </div>
+    <div class="mobile-bottom-menu-list" role="menu" aria-label="Main menu actions">
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="start-draw">Tube Plan</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Find My Test</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock">Order Stock / Consumables</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock-dashboard">Stock Dashboard</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="track-orders">Track Orders</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="settings">Settings</button>
+      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="about">About</button>
+    </div>
+  `;
+  document.body.appendChild(menuSheet);
+
   document.body.classList.add("has-mobile-bottom-nav");
   mobileBottomNav = nav;
+  mobileBottomMenuBackdrop = menuBackdrop;
+  mobileBottomMenuSheet = menuSheet;
   mobileBottomNavButtons = {
     home: nav.querySelector('[data-mobile-nav="home"]'),
     tube: nav.querySelector('[data-mobile-nav="tube"]'),
-    draw: nav.querySelector('[data-mobile-nav="draw"]'),
+    menu: nav.querySelector('[data-mobile-nav="menu"]'),
     test: nav.querySelector('[data-mobile-nav="test"]'),
     order: nav.querySelector('[data-mobile-nav="order"]')
   };
@@ -5168,16 +5326,270 @@ function initMobileBottomNav() {
     });
   });
 
+  menuBackdrop.addEventListener("click", () => {
+    setMobileBottomMenuOpen(false);
+  });
+  menuSheet.querySelector('[data-mobile-menu-close]')?.addEventListener("click", () => {
+    setMobileBottomMenuOpen(false);
+  });
+  menuSheet.querySelectorAll("[data-mobile-menu-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.getAttribute("data-mobile-menu-action") || "";
+      setMobileBottomMenuOpen(false);
+      handleSiteNavigationAction(action, button);
+    });
+  });
+
   resetMobileBottomNavScrollState();
+  updateMobileBottomMenuOrigin();
   setMobileBottomNavHidden(false);
   setMobileBottomNavActiveState();
   handleMobileBottomNavScroll();
 
   window.addEventListener("scroll", handleMobileBottomNavScroll, { passive: true });
   window.addEventListener("resize", () => {
+    updateMobileBottomMenuOrigin();
     handleMobileBottomNavScroll();
+    if (!isMobileBottomNavViewport()) {
+      setMobileBottomMenuOpen(false);
+    }
     setMobileBottomNavActiveState();
   });
+}
+
+function sanitizeDashboardText(value, maxLength = 160) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function readHomeRecentActivity() {
+  try {
+    const raw = localStorage.getItem(HOME_RECENT_ACTIVITY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => ({
+        type: sanitizeDashboardText(entry?.type, 40),
+        title: sanitizeDashboardText(entry?.title, 120),
+        detail: sanitizeDashboardText(entry?.detail, 180),
+        actionType: sanitizeDashboardText(entry?.actionType, 24),
+        actionValue: sanitizeDashboardText(entry?.actionValue, 800),
+        timestamp: sanitizeDashboardText(entry?.timestamp, 40)
+      }))
+      .filter((entry) => entry.type && entry.title);
+  } catch {
+    return [];
+  }
+}
+
+function writeHomeRecentActivity(entries = []) {
+  try {
+    localStorage.setItem(HOME_RECENT_ACTIVITY_KEY, JSON.stringify(entries.slice(0, HOME_RECENT_ACTIVITY_MAX_ITEMS)));
+  } catch {
+    // no-op
+  }
+}
+
+function addHomeRecentActivity(entry) {
+  const type = sanitizeDashboardText(entry?.type, 40);
+  const title = sanitizeDashboardText(entry?.title, 120);
+  if (!type || !title) return;
+
+  const nextEntry = {
+    type,
+    title,
+    detail: sanitizeDashboardText(entry?.detail, 180),
+    actionType: sanitizeDashboardText(entry?.actionType, 24),
+    actionValue: sanitizeDashboardText(entry?.actionValue, 800),
+    timestamp: new Date().toISOString()
+  };
+
+  const existing = readHomeRecentActivity().filter((item) => item.type !== type);
+  existing.unshift(nextEntry);
+  writeHomeRecentActivity(existing);
+}
+
+function recordHomeQuickActionActivity(action) {
+  const safeAction = String(action || "").trim();
+  if (!safeAction) return;
+  const actionByKey = {
+    tube: { title: "Opened Tube lookup", detail: "Find My Tube", actionType: "menu", actionValue: "tube" },
+    "find-my-test": { title: "Opened Test lookup", detail: "Find My Test", actionType: "menu", actionValue: "find-my-test" },
+    draw: { title: "Started Draw Plan", detail: "Start Draw Plan", actionType: "menu", actionValue: "draw" },
+    stock: { title: "Opened Order Stock", detail: "Order Consumables", actionType: "menu", actionValue: "stock" }
+  };
+  const activity = actionByKey[safeAction];
+  if (!activity) return;
+  addHomeRecentActivity({
+    type: "quick-action",
+    ...activity
+  });
+}
+
+function recordDrawPlanRecentActivity() {
+  const selectedNames = getSelectedTestNamesList();
+  if (!selectedNames.length) return;
+  const previewList = selectedNames.slice(0, 2).join(", ");
+  const moreCount = Math.max(0, selectedNames.length - 2);
+  const detail = moreCount
+    ? `${previewList} +${moreCount} more`
+    : previewList;
+  addHomeRecentActivity({
+    type: "draw-plan",
+    title: "Last draw plan",
+    detail: `${selectedNames.length} test${selectedNames.length === 1 ? "" : "s"} • ${detail}`,
+    actionType: "url",
+    actionValue: getDrawPlanShareUrl(selectedNames)
+  });
+}
+
+function queueRecordTestSearchActivity(rawQuery) {
+  const query = sanitizeDashboardText(rawQuery, 120);
+  window.clearTimeout(homeRecentTestSearchTimer);
+  if (!query || query.length < 2) return;
+  homeRecentTestSearchTimer = window.setTimeout(() => {
+    addHomeRecentActivity({
+      type: "test-search",
+      title: "Last test search",
+      detail: query,
+      actionType: "menu",
+      actionValue: "find-my-test"
+    });
+  }, 520);
+}
+
+function formatDashboardTimestamp(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function buildHomeRecentActivityItems() {
+  const items = [...readHomeRecentActivity()];
+  const lastStockRequest = homeDashboardStockSnapshot?.lastRequest || null;
+  if (lastStockRequest?.id) {
+    items.unshift({
+      type: "stock-request",
+      title: `Last order: ${sanitizeDashboardText(lastStockRequest.wardUnit, 80) || "Ward not set"}`,
+      detail: `${lastStockRequest.id} • ${formatStatusLabel(lastStockRequest.status || "submitted")}`,
+      actionType: "url",
+      actionValue: `./track-orders.html?requestId=${encodeURIComponent(lastStockRequest.id)}`,
+      timestamp: sanitizeDashboardText(lastStockRequest.createdAt, 40)
+    });
+  }
+  return items.slice(0, HOME_RECENT_ACTIVITY_MAX_ITEMS);
+}
+
+function handleHomeRecentActivityAction(actionType, actionValue) {
+  if (!actionType || !actionValue) return;
+  if (actionType === "url") {
+    window.location.assign(actionValue);
+    return;
+  }
+  if (actionType === "menu") {
+    handleSiteNavigationAction(actionValue);
+  }
+}
+
+function renderHomeRecentActivity() {
+  if (!homeRecentActivityList || !homeRecentEmpty) return;
+
+  const items = buildHomeRecentActivityItems();
+  if (!items.length) {
+    homeRecentActivityList.innerHTML = "";
+    homeRecentEmpty.hidden = false;
+    return;
+  }
+
+  homeRecentEmpty.hidden = true;
+  homeRecentActivityList.innerHTML = items.map((item) => {
+    const detail = sanitizeDashboardText(item?.detail, 180);
+    const timestamp = formatDashboardTimestamp(item?.timestamp);
+    const tag = item?.actionType ? "button" : "article";
+    const actionAttrs = item?.actionType
+      ? ` type="button" data-home-recent-action="${escapeHtml(item.actionType)}" data-home-recent-value="${escapeHtml(item.actionValue || "")}" aria-label="${escapeHtml(item.title)}"`
+      : "";
+
+    return `
+      <${tag} class="home-recent-item"${actionAttrs}>
+        <p class="home-recent-title">${escapeHtml(item.title)}</p>
+        ${detail ? `<p class="home-recent-detail">${escapeHtml(detail)}</p>` : ""}
+        ${timestamp ? `<p class="home-recent-time">${escapeHtml(timestamp)}</p>` : ""}
+      </${tag}>
+    `;
+  }).join("");
+}
+
+function renderHomeStatusSummary() {
+  if (!homeStatusList) return;
+
+  const activeOrders = Math.max(0, Number(homeDashboardStockSnapshot?.activeRequests || 0));
+  const chips = [];
+
+  if (activeOrders > 0) {
+    chips.push(`<div class="home-status-chip is-warning"><span class="home-status-dot" aria-hidden="true"></span>${activeOrders} pending order${activeOrders === 1 ? "" : "s"}</div>`);
+  } else {
+    chips.push('<div class="home-status-chip"><span class="home-status-dot" aria-hidden="true"></span>No pending orders</div>');
+  }
+
+  homeStatusList.innerHTML = chips.join("");
+}
+
+async function loadHomeDashboardStockSnapshot() {
+  if (!isHomePage) return;
+  try {
+    const response = await fetch(buildStockApiUrl("/api/stock-requests?limit=6"), { cache: "no-store" });
+    if (!response.ok) throw new Error(`status ${response.status}`);
+    const payload = await response.json();
+    const requests = Array.isArray(payload?.requests) ? payload.requests : [];
+    const activeRequests = requests.filter((request) => {
+      const normalizedStatus = normalizeStockRequestStatus(request?.status);
+      return normalizedStatus !== "collected" && normalizedStatus !== "cancelled";
+    });
+    homeDashboardStockSnapshot = {
+      activeRequests: activeRequests.length,
+      lastRequest: requests[0] || null
+    };
+  } catch {
+    homeDashboardStockSnapshot = {
+      activeRequests: 0,
+      lastRequest: null
+    };
+  }
+  renderHomeRecentActivity();
+  renderHomeStatusSummary();
+}
+
+function renderHomeDashboard() {
+  if (!isHomePage) return;
+  renderHomeRecentActivity();
+  renderHomeStatusSummary();
+}
+
+function initHomeDashboard() {
+  if (!isHomePage) return;
+  renderHomeDashboard();
+
+  if (homeRecentActivityList) {
+    homeRecentActivityList.addEventListener("click", (event) => {
+      const trigger = event.target.closest("[data-home-recent-action]");
+      if (!trigger) return;
+      handleHomeRecentActivityAction(
+        trigger.getAttribute("data-home-recent-action") || "",
+        trigger.getAttribute("data-home-recent-value") || ""
+      );
+    });
+  }
+
+  loadHomeDashboardStockSnapshot();
 }
 
 // Opens draw modal.
@@ -5257,13 +5669,104 @@ function closeLegalModal({ restoreFocus = true } = {}) {
   lastLegalModalTrigger = null;
 }
 
+function openContactFeedbackModal(trigger = null) {
+  if (!contactFeedbackModal) return;
+  closeAboutInfoModal({ restoreFocus: false });
+  closeLegalModal({ restoreFocus: false });
+  lastContactFeedbackTrigger = trigger || document.activeElement;
+  contactFeedbackModal.hidden = false;
+  syncModalOpenClass();
+
+  if (closeContactFeedbackBtn) {
+    window.requestAnimationFrame(() => {
+      closeContactFeedbackBtn.focus({ preventScroll: true });
+    });
+  }
+}
+
+function closeContactFeedbackModal({ restoreFocus = true } = {}) {
+  if (!contactFeedbackModal) return;
+  contactFeedbackModal.hidden = true;
+  syncModalOpenClass();
+
+  if (restoreFocus && lastContactFeedbackTrigger && typeof lastContactFeedbackTrigger.focus === "function") {
+    window.requestAnimationFrame(() => {
+      lastContactFeedbackTrigger.focus({ preventScroll: true });
+    });
+  }
+  lastContactFeedbackTrigger = null;
+}
+
+function ensureAboutInfoModal() {
+  if (aboutInfoModal) return;
+
+  const modal = document.createElement("section");
+  modal.className = "profile-modal about-info-modal";
+  modal.id = "aboutInfoModal";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="profile-modal-card about-info-modal-card" role="dialog" aria-modal="true" aria-labelledby="aboutInfoTitle">
+      <div class="profile-modal-head about-info-modal-head">
+        <h3 id="aboutInfoTitle">About</h3>
+        <button type="button" class="profile-modal-close-btn" id="closeAboutInfoModalBtn">Close</button>
+      </div>
+      <div class="about-info-modal-body">
+        <p class="about-info-title">About Find My Tube</p>
+        <p class="about-info-copy">
+          Find My Tube helps clinical teams quickly match tests, tubes, draw plans, and consumables requests.
+          Reference tool only. Confirm urgent and site-specific actions with local protocol.
+        </p>
+        <div class="about-info-links" role="list" aria-label="About links">
+          <button type="button" class="about-info-link-btn" data-about-legal="privacy">Privacy Policy</button>
+          <button type="button" class="about-info-link-btn" data-about-legal="terms">Terms of Use</button>
+          <button type="button" class="about-info-link-btn" data-about-legal="disclaimer">Disclaimer</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  aboutInfoModal = modal;
+  closeAboutInfoModalBtn = modal.querySelector("#closeAboutInfoModalBtn");
+  aboutInfoLegalButtons = Array.from(modal.querySelectorAll("[data-about-legal]"));
+}
+
+function openAboutInfoModal(trigger = null) {
+  ensureAboutInfoModal();
+  if (!aboutInfoModal) return;
+  lastAboutInfoTrigger = trigger || document.activeElement;
+  aboutInfoModal.hidden = false;
+  syncModalOpenClass();
+
+  if (closeAboutInfoModalBtn) {
+    window.requestAnimationFrame(() => {
+      closeAboutInfoModalBtn.focus({ preventScroll: true });
+    });
+  }
+}
+
+function closeAboutInfoModal({ restoreFocus = true } = {}) {
+  if (!aboutInfoModal) return;
+  aboutInfoModal.hidden = true;
+  syncModalOpenClass();
+
+  if (restoreFocus && lastAboutInfoTrigger && typeof lastAboutInfoTrigger.focus === "function") {
+    window.requestAnimationFrame(() => {
+      lastAboutInfoTrigger.focus({ preventScroll: true });
+    });
+  }
+  lastAboutInfoTrigger = null;
+}
+
 // Synchronizes modal open class.
 function syncModalOpenClass() {
   const drawOpen = Boolean(drawModal && !drawModal.hidden);
   const profileOpen = Boolean(profileModal && !profileModal.hidden);
   const legalOpen = Boolean(legalModal && !legalModal.hidden);
   const sectionBrowseOpen = Boolean(sectionBrowseModal && !sectionBrowseModal.hidden);
-  document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen || sectionBrowseOpen);
+  const contactFeedbackOpen = Boolean(contactFeedbackModal && !contactFeedbackModal.hidden);
+  const aboutInfoOpen = Boolean(aboutInfoModal && !aboutInfoModal.hidden);
+  document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen || sectionBrowseOpen || contactFeedbackOpen || aboutInfoOpen);
   updateBackToTopVisibility();
 }
 
@@ -7013,6 +7516,9 @@ function bindEvents() {
       if (searchInput.value.trim() && clinicalWorkupOutput) {
         clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: false, clearStatus: true });
       }
+      if (isFindMyTestPage) {
+        queueRecordTestSearchActivity(searchInput.value);
+      }
       updateSearchClearButton();
       refreshSearchPlaceholder();
       applyFilters();
@@ -7068,6 +7574,10 @@ function bindEvents() {
   if (menuToggleBtn) {
     menuToggleBtn.dataset.coreBound = "1";
     menuToggleBtn.addEventListener("click", () => {
+      if (shouldShowMobileBottomNav() && isMobileBottomNavViewport()) {
+        handleMobileBottomNavAction("menu");
+        return;
+      }
       setThemePanelOpen(false);
       setSiteMenuOpen(!isSiteMenuOpen);
     });
@@ -7078,50 +7588,7 @@ function bindEvents() {
       button.addEventListener("click", () => {
         const action = button.getAttribute("data-menu-action") || "";
         setSiteMenuOpen(false);
-
-        if (action === "home") {
-          goHome();
-          return;
-        }
-
-        if (action === "draw") {
-          openLookupHomeView();
-          return;
-        }
-
-        if (action === "tube") {
-          openLookupHomeView();
-          return;
-        }
-
-        if (action === "find-my-test") {
-          window.location.assign("./index.html?tool=find-my-test");
-          return;
-        }
-
-        if (action === "stock") {
-          openStockSection();
-          return;
-        }
-
-        if (action === "stock-dashboard") {
-          openStockDashboard();
-          return;
-        }
-
-        if (action === "track-orders") {
-          openTrackOrders();
-          return;
-        }
-
-        if (action === "settings") {
-          setThemePanelOpen(true);
-          return;
-        }
-
-        if (action === "about") {
-          openAboutSection();
-        }
+        handleSiteNavigationAction(action, button);
       });
     });
   }
@@ -7135,58 +7602,6 @@ function bindEvents() {
   if (heroOrderStockBtn) {
     heroOrderStockBtn.addEventListener("click", () => {
       openStockSection();
-    });
-  }
-
-  if (shareDrawPlanBtn) {
-    shareDrawPlanBtn.addEventListener("click", async () => {
-      const selectedNames = getSelectedTestNamesList();
-      if (!selectedNames.length) return;
-
-      const shareData = {
-        title: "Find My Tube Draw Plan",
-        text: getDrawPlanShareText(selectedNames),
-        url: getDrawPlanShareUrl(selectedNames)
-      };
-
-      if (navigator.share) {
-        try {
-          await navigator.share(shareData);
-          showSelectionNotice("Draw plan shared.");
-          return;
-        } catch {
-          // Fall back to copying if the native share sheet is dismissed or unavailable.
-        }
-      }
-
-      try {
-        await navigator.clipboard.writeText(shareData.url);
-        showSelectionNotice("Draw plan link copied.");
-      } catch {
-        showSelectionNotice("Sharing is not available here. Use WhatsApp or copy the link instead.");
-      }
-    });
-  }
-
-  if (copyDrawPlanLinkBtn) {
-    copyDrawPlanLinkBtn.addEventListener("click", async () => {
-      const selectedNames = getSelectedTestNamesList();
-      if (!selectedNames.length) return;
-
-      try {
-        await navigator.clipboard.writeText(getDrawPlanShareUrl(selectedNames));
-        showSelectionNotice("Draw plan link copied.");
-      } catch {
-        showSelectionNotice("Could not copy the draw plan link on this device.");
-      }
-    });
-  }
-
-  if (shareDrawPlanWhatsappBtn) {
-    shareDrawPlanWhatsappBtn.addEventListener("click", (event) => {
-      if (shareDrawPlanWhatsappBtn.getAttribute("aria-disabled") === "true") {
-        event.preventDefault();
-      }
     });
   }
 
@@ -7321,6 +7736,47 @@ function bindEvents() {
     });
   }
 
+  if (closeAboutInfoModalBtn) {
+    closeAboutInfoModalBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeAboutInfoModal();
+    });
+  }
+
+  if (aboutInfoModal) {
+    aboutInfoModal.addEventListener("click", (event) => {
+      if (event.target !== aboutInfoModal) return;
+      closeAboutInfoModal();
+    });
+  }
+
+  if (aboutInfoLegalButtons.length) {
+    aboutInfoLegalButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const docId = button.getAttribute("data-about-legal") || "";
+        if (!docId) return;
+        closeAboutInfoModal({ restoreFocus: false });
+        openLegalModal(docId, button);
+      });
+    });
+  }
+
+  if (closeContactFeedbackBtn) {
+    closeContactFeedbackBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeContactFeedbackModal();
+    });
+  }
+
+  if (contactFeedbackModal) {
+    contactFeedbackModal.addEventListener("click", (event) => {
+      if (event.target !== contactFeedbackModal) return;
+      closeContactFeedbackModal();
+    });
+  }
+
   if (surfacePanelBackdrop) {
     surfacePanelBackdrop.addEventListener("click", () => {
       if (isThemePanelOpen) {
@@ -7334,12 +7790,24 @@ function bindEvents() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    if (mobileBottomMenuOpen) {
+      setMobileBottomMenuOpen(false);
+      return;
+    }
     if (isSiteMenuOpen) {
       setSiteMenuOpen(false);
       return;
     }
     if (legalModal && !legalModal.hidden) {
       closeLegalModal();
+      return;
+    }
+    if (aboutInfoModal && !aboutInfoModal.hidden) {
+      closeAboutInfoModal();
+      return;
+    }
+    if (contactFeedbackModal && !contactFeedbackModal.hidden) {
+      closeContactFeedbackModal();
       return;
     }
     if (profileModal && !profileModal.hidden) {
@@ -7392,6 +7860,8 @@ initQuickToolsPanel();
 initFactsPanel();
 initSectionNavigation();
 initMobileBottomNav();
+initHomeDashboard();
+ensureAboutInfoModal();
 renderGroupChips();
 refreshSearchPlaceholder();
 bindEvents();
