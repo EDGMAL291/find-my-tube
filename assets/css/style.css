@@ -1060,20 +1060,16 @@ body.find-my-test-page .about-panel {
 
 .home-action-tile {
   --quick-action-accent: var(--color-info);
-  border: 1px solid color-mix(in srgb, var(--quick-action-accent) 22%, var(--color-border));
+  --quick-action-border: color-mix(in srgb, var(--quick-action-accent) 34%, var(--color-border));
+  --quick-action-surface-a: color-mix(in srgb, var(--quick-action-accent) 13%, var(--color-surface-elevated));
+  --quick-action-surface-b: color-mix(in srgb, var(--quick-action-accent) 4%, var(--color-surface-elevated));
+  --quick-action-art: none;
+  border: 1px solid var(--quick-action-border);
   background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--quick-action-accent) 28%, transparent) 0 3px,
-      transparent 3px
-    ),
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--quick-action-accent) 9%, var(--color-surface-elevated)),
-      var(--color-surface-elevated) 56%
-    );
+    linear-gradient(90deg, color-mix(in srgb, var(--quick-action-accent) 34%, transparent) 0 4px, transparent 4px),
+    linear-gradient(160deg, var(--quick-action-surface-a), var(--quick-action-surface-b) 58%);
   border-radius: 18px;
-  min-height: 98px;
+  min-height: 102px;
   width: 100%;
   padding: 14px 13px;
   display: grid;
@@ -1088,23 +1084,31 @@ body.find-my-test-page .about-panel {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  box-shadow: 0 7px 16px rgba(28, 45, 54, 0.08);
+  box-shadow:
+    0 10px 18px rgba(20, 35, 43, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.home-action-tile > * {
+  position: relative;
+  z-index: 2;
 }
 
 .home-action-tile::before {
   content: "";
   position: absolute;
-  top: -1px;
-  right: -1px;
-  width: 18px;
-  height: 18px;
-  clip-path: polygon(100% 0, 0 0, 100% 100%);
-  background: color-mix(in srgb, var(--quick-action-accent) 14%, var(--color-surface-elevated));
-  box-shadow: -1px 1px 4px rgba(30, 41, 59, 0.09);
-  opacity: 0.9;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 82% 78%, color-mix(in srgb, var(--quick-action-accent) 15%, transparent), transparent 44%),
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.35), transparent 36%),
+    var(--quick-action-art);
+  background-repeat: no-repeat;
+  background-size: auto, auto, min(86%, 320px) auto;
+  background-position: 0 0, 0 0, right -24px center;
+  opacity: 0.44;
   pointer-events: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
-  z-index: 2;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 1;
 }
 
 .home-action-tile::after {
@@ -1112,13 +1116,13 @@ body.find-my-test-page .about-panel {
   position: absolute;
   top: 0;
   right: 0;
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
   clip-path: polygon(100% 0, 0 0, 100% 100%);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(236, 243, 246, 0.84));
-  border-left: 1px solid rgba(114, 133, 141, 0.16);
-  border-bottom: 1px solid rgba(114, 133, 141, 0.16);
-  opacity: 0.92;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.94), rgba(235, 243, 248, 0.85));
+  border-left: 1px solid color-mix(in srgb, var(--quick-action-accent) 24%, var(--color-border));
+  border-bottom: 1px solid color-mix(in srgb, var(--quick-action-accent) 24%, var(--color-border));
+  opacity: 0.88;
   pointer-events: none;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   z-index: 3;
@@ -1127,31 +1131,24 @@ body.find-my-test-page .about-panel {
 .home-action-tile:hover,
 .home-action-tile:focus-visible {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--quick-action-accent) 38%, var(--color-border));
-  box-shadow: 0 12px 22px rgba(31, 50, 58, 0.11);
+  border-color: color-mix(in srgb, var(--quick-action-accent) 42%, var(--color-border));
+  box-shadow:
+    0 14px 24px rgba(20, 35, 43, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
   background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--quick-action-accent) 38%, transparent) 0 3px,
-      transparent 3px
-    ),
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--quick-action-accent) 11%, var(--color-surface-elevated)),
-      var(--color-surface-elevated) 56%
-    );
+    linear-gradient(90deg, color-mix(in srgb, var(--quick-action-accent) 45%, transparent) 0 4px, transparent 4px),
+    linear-gradient(160deg, color-mix(in srgb, var(--quick-action-accent) 16%, var(--color-surface-elevated)), var(--quick-action-surface-b) 58%);
 }
 
 .home-action-tile:hover::before,
 .home-action-tile:focus-visible::before {
-  transform: translate(-1px, 1px);
-  box-shadow: -2px 2px 5px rgba(30, 41, 59, 0.12);
-  opacity: 0.96;
+  transform: translateX(-2px);
+  opacity: 0.52;
 }
 
 .home-action-tile:hover::after,
 .home-action-tile:focus-visible::after {
-  transform: translate(-0.5px, 0.5px);
+  transform: translate(-1px, 1px);
 }
 
 .home-action-tile:active {
@@ -1163,8 +1160,8 @@ body.find-my-test-page .about-panel {
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--quick-action-accent) 34%, var(--color-border));
-  background: color-mix(in srgb, var(--quick-action-accent) 13%, var(--color-surface-elevated));
+  border: 1px solid color-mix(in srgb, var(--quick-action-accent) 36%, var(--color-border));
+  background: color-mix(in srgb, var(--quick-action-accent) 15%, var(--color-surface-elevated));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1198,28 +1195,29 @@ body.find-my-test-page .about-panel {
   max-width: 28ch;
 }
 
-.home-action-tile-lookup {
+.home-action-tile-tube {
   --quick-action-accent: var(--color-info);
+  --quick-action-art: url("../images/quick-actions/find-tube-bg.svg");
 }
 
-.home-action-tile-lookup .home-action-icon {
-  color: var(--quick-action-accent);
+.home-action-tile-test {
+  --quick-action-accent: #2f8e83;
+  --quick-action-art: url("../images/quick-actions/find-test-bg.svg");
+}
+
+.home-action-tile-plan {
+  --quick-action-accent: #7f72c5;
+  --quick-action-art: url("../images/quick-actions/tube-plan-bg.svg");
 }
 
 .home-action-tile-order {
-  --quick-action-accent: var(--color-success);
-}
-
-.home-action-tile-order .home-action-icon {
-  color: var(--quick-action-accent);
+  --quick-action-accent: #b5863a;
+  --quick-action-art: url("../images/quick-actions/consumables-bg.svg");
 }
 
 .home-action-tile-contact {
-  --quick-action-accent: var(--color-primary-strong);
-}
-
-.home-action-tile-contact .home-action-icon {
-  color: var(--quick-action-accent);
+  --quick-action-accent: #b86c74;
+  --quick-action-art: url("../images/quick-actions/contact-bg.svg");
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -7495,10 +7493,20 @@ html[data-theme="neutral"] .stock-order-card,
 html[data-theme="neutral"] .home-recent-item,
 html[data-theme="neutral"] .home-status-chip,
 html[data-theme="neutral"] .home-status-item,
-html[data-theme="neutral"] .home-status-track-btn,
-html[data-theme="neutral"] .home-action-tile {
+html[data-theme="neutral"] .home-status-track-btn {
   border-color: rgba(77, 104, 97, 0.24);
   background: rgba(246, 250, 248, 0.88);
+}
+
+html[data-theme="neutral"] .home-action-tile {
+  border-color: color-mix(in srgb, var(--quick-action-accent) 36%, rgba(77, 104, 97, 0.22));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--quick-action-accent) 46%, transparent) 0 4px, transparent 4px),
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--quick-action-accent) 17%, rgba(247, 251, 249, 0.96)),
+      rgba(240, 247, 244, 0.93) 58%
+    );
 }
 
 html[data-theme="neutral"] .site-menu-group-title {
@@ -7575,13 +7583,35 @@ html[data-theme="dark"] .home-status-item-value {
 
 html[data-theme="dark"] .site-menu-link,
 html[data-theme="dark"] .stock-order-card,
-html[data-theme="dark"] .home-action-tile,
 html[data-theme="dark"] .home-recent-item,
 html[data-theme="dark"] .home-status-chip,
 html[data-theme="dark"] .home-status-item,
 html[data-theme="dark"] .home-status-track-btn {
   border-color: rgba(107, 141, 152, 0.22);
   background: rgba(11, 24, 31, 0.84);
+}
+
+html[data-theme="dark"] .home-action-tile {
+  border-color: color-mix(in srgb, var(--quick-action-accent) 42%, rgba(98, 128, 138, 0.26));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--quick-action-accent) 58%, transparent) 0 4px, transparent 4px),
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--quick-action-accent) 22%, rgba(17, 34, 42, 0.95)),
+      rgba(10, 24, 32, 0.94) 58%
+    );
+  box-shadow:
+    0 14px 24px rgba(2, 6, 23, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="dark"] .home-action-tile::before {
+  opacity: 0.38;
+}
+
+html[data-theme="dark"] .home-action-tile:hover::before,
+html[data-theme="dark"] .home-action-tile:focus-visible::before {
+  opacity: 0.46;
 }
 
 html[data-theme="dark"] .site-menu-group-title {
@@ -7608,8 +7638,8 @@ html[data-theme="dark"] .home-status-track-btn {
 }
 
 html[data-theme="dark"] .home-action-icon {
-  border-color: rgba(107, 141, 152, 0.26);
-  background: rgba(9, 22, 30, 0.92);
+  border-color: color-mix(in srgb, var(--quick-action-accent) 46%, rgba(107, 141, 152, 0.3));
+  background: color-mix(in srgb, var(--quick-action-accent) 22%, rgba(9, 22, 30, 0.95));
 }
 
 html[data-theme="dark"] .home-status-dot {

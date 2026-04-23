@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" fill="none">
+  <defs>
+    <linearGradient id="rackFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6a8ea5" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#6a8ea5" stop-opacity="0.14"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#5d7f94" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5">
+    <rect x="34" y="104" width="252" height="42" rx="12" fill="url(#rackFade)"/>
+    <path d="M76 36h28M82 36v50a18 18 0 0 0 7 14l5 4"/>
+    <path d="M146 28h28M152 28v56a17 17 0 0 0 6 13l6 5"/>
+    <path d="M214 40h28M220 40v45a18 18 0 0 0 7 14l5 4"/>
+    <path d="M58 118h204" opacity="0.64"/>
+    <path d="M58 130h204" opacity="0.46"/>
+  </g>
+</svg>
