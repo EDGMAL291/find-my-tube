@@ -16,6 +16,7 @@ const homeTipText = document.getElementById("homeTipText");
 const homeRecentActivityList = document.getElementById("homeRecentActivityList");
 const homeRecentEmpty = document.getElementById("homeRecentEmpty");
 const homeStatusList = document.getElementById("homeStatusList");
+const homeStatusTrackOrdersBtn = document.getElementById("homeStatusTrackOrdersBtn");
 const heroDrawPlanBtn = document.getElementById("heroDrawPlanBtn");
 const heroOrderStockBtn = document.getElementById("heroOrderStockBtn");
 const tubeLookupPanel = document.getElementById("tubeLookupPanel");
@@ -198,12 +199,16 @@ const isHomePage = currentAppPage === "home";
 const isFindMyTubePage = currentAppPage === "find-my-tube";
 const isFindMyTestPage = currentAppPage === "find-my-test";
 const isStockOrderPage = currentAppPage === "stock-order";
+const isStockDashboardPage = currentAppPage === "stock-dashboard";
+const isTrackOrdersPage = currentAppPage === "track-orders";
 const MOBILE_BOTTOM_NAV_BREAKPOINT = 860;
 const MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y = 88;
 const MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA = 54;
 const MOBILE_BOTTOM_NAV_SHOW_SCROLL_DELTA = 24;
 const MOBILE_BOTTOM_NAV_DEADZONE = 4;
-const MOBILE_BOTTOM_NAV_PAGES = new Set(["home", "find-my-tube", "find-my-test", "stock-order"]);
+const MOBILE_BOTTOM_NAV_PAGES = new Set(["home", "find-my-tube", "find-my-test", "stock-order", "stock-dashboard", "track-orders"]);
+const MOBILE_BOTTOM_MENU_CLOSE_DURATION_MS = 420;
+const HOME_STATUS_MAX_ITEMS = 4;
 const sharedPlanToken = currentPageParams.get("plan") || "";
 const APP_HOME_TITLE = "Find My Tube";
 const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube";
@@ -243,6 +248,7 @@ let mobileBottomMenuBackdrop = null;
 let mobileBottomMenuOpen = false;
 let mobileBottomMenuOriginX = 0;
 let mobileBottomMenuOriginY = 0;
+let mobileBottomMenuCloseTimeoutId = 0;
 let homeDashboardStockSnapshot = null;
 let homeRecentTestSearchTimer = 0;
 const STOCK_API_CONFIGURED_BASE_URL = typeof window !== "undefined"
@@ -5010,18 +5016,48 @@ function updateMobileBottomMenuOrigin() {
 }
 
 function setMobileBottomMenuOpen(isOpen) {
-  mobileBottomMenuOpen = Boolean(isOpen);
+  const nextOpen = Boolean(isOpen);
+  if (nextOpen === mobileBottomMenuOpen && mobileBottomMenuSheet) return;
+  mobileBottomMenuOpen = nextOpen;
+
+  window.clearTimeout(mobileBottomMenuCloseTimeoutId);
+  mobileBottomMenuCloseTimeoutId = 0;
+
   if (mobileBottomMenuOpen) {
     updateMobileBottomMenuOrigin();
+    if (mobileBottomMenuBackdrop) {
+      mobileBottomMenuBackdrop.hidden = false;
+      mobileBottomMenuBackdrop.classList.add("is-open");
+    }
+    if (mobileBottomMenuSheet) {
+      mobileBottomMenuSheet.hidden = false;
+      mobileBottomMenuSheet.classList.remove("is-closing");
+      window.requestAnimationFrame(() => {
+        mobileBottomMenuSheet?.classList.add("is-open");
+      });
+    }
+    document.body.classList.add("mobile-bottom-menu-open");
+  } else {
+    if (mobileBottomMenuBackdrop) {
+      mobileBottomMenuBackdrop.classList.remove("is-open");
+    }
+    if (mobileBottomMenuSheet) {
+      mobileBottomMenuSheet.classList.remove("is-open");
+      mobileBottomMenuSheet.classList.add("is-closing");
+    }
+    document.body.classList.remove("mobile-bottom-menu-open");
+    mobileBottomMenuCloseTimeoutId = window.setTimeout(() => {
+      if (mobileBottomMenuBackdrop) {
+        mobileBottomMenuBackdrop.hidden = true;
+      }
+      if (mobileBottomMenuSheet) {
+        mobileBottomMenuSheet.hidden = true;
+        mobileBottomMenuSheet.classList.remove("is-closing");
+      }
+      mobileBottomMenuCloseTimeoutId = 0;
+    }, MOBILE_BOTTOM_MENU_CLOSE_DURATION_MS);
   }
-  if (mobileBottomMenuBackdrop) {
-    mobileBottomMenuBackdrop.hidden = !mobileBottomMenuOpen;
-  }
-  if (mobileBottomMenuSheet) {
-    mobileBottomMenuSheet.hidden = !mobileBottomMenuOpen;
-    mobileBottomMenuSheet.classList.toggle("is-open", mobileBottomMenuOpen);
-  }
-  document.body.classList.toggle("mobile-bottom-menu-open", mobileBottomMenuOpen);
+
   if (mobileBottomMenuOpen) {
     setSiteMenuOpen(false);
     setThemePanelOpen(false);
@@ -5087,6 +5123,17 @@ function startDrawPlanFromMenu(trigger = null) {
   focusMainSearchField({ scroll: "if-needed" });
 }
 
+function openSettingsPanelFromMenu() {
+  setSiteMenuOpen(false);
+  setThemePanelOpen(true);
+  const firstThemeButton = themeSwitcherPanel?.querySelector("[data-theme-mode]");
+  if (firstThemeButton && typeof firstThemeButton.focus === "function") {
+    window.requestAnimationFrame(() => {
+      firstThemeButton.focus({ preventScroll: true });
+    });
+  }
+}
+
 function handleSiteNavigationAction(action, trigger = null) {
   if (action === "home") {
     goHome();
@@ -5127,7 +5174,7 @@ function handleSiteNavigationAction(action, trigger = null) {
   }
 
   if (action === "settings") {
-    setThemePanelOpen(true);
+    openSettingsPanelFromMenu();
     return;
   }
 
@@ -5180,45 +5227,14 @@ function handleMobileBottomNavAction(action) {
 
 function handleMobileBottomNavScroll() {
   if (!mobileBottomNav) return;
-  if (mobileBottomMenuOpen) {
-    setMobileBottomNavHidden(false);
-    return;
-  }
+
+  // Keep the bottom navigation visible on all supported mobile pages.
+  setMobileBottomNavHidden(false);
+
   if (!isMobileBottomNavViewport()) {
-    setMobileBottomNavHidden(false);
     setMobileBottomMenuOpen(false);
     resetMobileBottomNavScrollState();
     return;
-  }
-
-  const currentY = Math.max(0, window.scrollY || 0);
-  const delta = currentY - mobileBottomNavLastScrollY;
-  mobileBottomNavLastScrollY = currentY;
-
-  if (Math.abs(delta) < MOBILE_BOTTOM_NAV_DEADZONE) return;
-
-  if (currentY <= 20) {
-    mobileBottomNavDownDistance = 0;
-    mobileBottomNavUpDistance = 0;
-    setMobileBottomNavHidden(false);
-    return;
-  }
-
-  if (delta > 0) {
-    mobileBottomNavDownDistance += delta;
-    mobileBottomNavUpDistance = 0;
-    if (currentY > MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y && mobileBottomNavDownDistance >= MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA) {
-      setMobileBottomNavHidden(true);
-      mobileBottomNavDownDistance = 0;
-    }
-    return;
-  }
-
-  mobileBottomNavUpDistance += Math.abs(delta);
-  mobileBottomNavDownDistance = 0;
-  if (mobileBottomNavUpDistance >= MOBILE_BOTTOM_NAV_SHOW_SCROLL_DELTA) {
-    setMobileBottomNavHidden(false);
-    mobileBottomNavUpDistance = 0;
   }
 }
 
@@ -5289,10 +5305,6 @@ function initMobileBottomNav() {
   menuSheet.hidden = true;
   menuSheet.setAttribute("aria-label", "Main mobile menu");
   menuSheet.innerHTML = `
-    <div class="mobile-bottom-menu-head">
-      <p class="mobile-bottom-menu-kicker">Menu</p>
-      <button type="button" class="mobile-bottom-menu-close" data-mobile-menu-close aria-label="Close menu">&times;</button>
-    </div>
     <div class="mobile-bottom-menu-list" role="menu" aria-label="Main menu actions">
       <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
       <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
@@ -5329,15 +5341,19 @@ function initMobileBottomNav() {
   menuBackdrop.addEventListener("click", () => {
     setMobileBottomMenuOpen(false);
   });
-  menuSheet.querySelector('[data-mobile-menu-close]')?.addEventListener("click", () => {
-    setMobileBottomMenuOpen(false);
-  });
   menuSheet.querySelectorAll("[data-mobile-menu-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-mobile-menu-action") || "";
       setMobileBottomMenuOpen(false);
       handleSiteNavigationAction(action, button);
     });
+  });
+
+  const menuItems = Array.from(menuSheet.querySelectorAll(".mobile-bottom-menu-item"));
+  menuSheet.style.setProperty("--menu-item-count", String(menuItems.length));
+  menuItems.forEach((item, index) => {
+    item.style.setProperty("--menu-item-index", String(index));
+    item.style.setProperty("--menu-item-reverse-index", String((menuItems.length - 1) - index));
   });
 
   resetMobileBottomNavScrollState();
@@ -5531,16 +5547,28 @@ function renderHomeRecentActivity() {
 function renderHomeStatusSummary() {
   if (!homeStatusList) return;
 
-  const activeOrders = Math.max(0, Number(homeDashboardStockSnapshot?.activeRequests || 0));
-  const chips = [];
+  const pendingOrders = Array.isArray(homeDashboardStockSnapshot?.pendingOrders)
+    ? homeDashboardStockSnapshot.pendingOrders
+    : [];
 
-  if (activeOrders > 0) {
-    chips.push(`<div class="home-status-chip is-warning"><span class="home-status-dot" aria-hidden="true"></span>${activeOrders} pending order${activeOrders === 1 ? "" : "s"}</div>`);
-  } else {
-    chips.push('<div class="home-status-chip"><span class="home-status-dot" aria-hidden="true"></span>No pending orders</div>');
+  if (!pendingOrders.length) {
+    homeStatusList.innerHTML = '<div class="home-status-chip"><span class="home-status-dot" aria-hidden="true"></span>No pending orders</div>';
+    return;
   }
 
-  homeStatusList.innerHTML = chips.join("");
+  homeStatusList.innerHTML = pendingOrders.slice(0, HOME_STATUS_MAX_ITEMS).map((request) => {
+    const wardUnit = sanitizeDashboardText(request?.wardUnit, 72) || "Ward not set";
+    const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Submitted";
+    return `
+      <article class="home-status-item">
+        <p class="home-status-item-line">
+          <span class="home-status-item-ward">${escapeHtml(wardUnit)}</span>
+          <span class="home-status-item-sep" aria-hidden="true">-</span>
+          <span class="home-status-item-value">${escapeHtml(statusLabel)}</span>
+        </p>
+      </article>
+    `;
+  }).join("");
 }
 
 async function loadHomeDashboardStockSnapshot() {
@@ -5554,14 +5582,31 @@ async function loadHomeDashboardStockSnapshot() {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
       return normalizedStatus !== "collected" && normalizedStatus !== "cancelled";
     });
+    const pendingOrders = activeRequests.map((request) => {
+      const normalizedStatus = normalizeStockRequestStatus(request?.status);
+      const statusLabel = normalizedStatus === "submitted"
+        ? "Submitted"
+        : normalizedStatus === "processing" || normalizedStatus === "in-progress"
+          ? "Processing"
+          : normalizedStatus === "packed" || normalizedStatus === "ready"
+          ? "Ready for collection"
+          : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+      return {
+        wardUnit: request?.wardUnit || "",
+        statusLabel
+      };
+    });
+
     homeDashboardStockSnapshot = {
       activeRequests: activeRequests.length,
-      lastRequest: requests[0] || null
+      lastRequest: requests[0] || null,
+      pendingOrders
     };
   } catch {
     homeDashboardStockSnapshot = {
       activeRequests: 0,
-      lastRequest: null
+      lastRequest: null,
+      pendingOrders: []
     };
   }
   renderHomeRecentActivity();
@@ -5588,6 +5633,10 @@ function initHomeDashboard() {
       );
     });
   }
+
+  homeStatusTrackOrdersBtn?.addEventListener("click", () => {
+    openTrackOrders();
+  });
 
   loadHomeDashboardStockSnapshot();
 }

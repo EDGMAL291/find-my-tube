@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260423i" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260423j" />
 </head>
 <body data-app-page="home">
   <div class="container">
@@ -152,7 +152,10 @@
 
       <section class="home-dashboard-section" aria-labelledby="homeStatusTitle">
         <div class="home-dashboard-head">
-          <h2 id="homeStatusTitle">Order Status</h2>
+          <div class="home-dashboard-head-row">
+            <h2 id="homeStatusTitle">Order Status</h2>
+            <button type="button" class="home-status-track-btn" id="homeStatusTrackOrdersBtn">Track Orders</button>
+          </div>
         </div>
         <div class="home-status-list" id="homeStatusList"></div>
       </section>
@@ -416,7 +419,7 @@
 
   <script src="assets/data/data.js?v=20260416a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260423i"></script>
+  <script src="assets/js/script.js?v=20260423j"></script>
   <script src="assets/js/find-my-test.js?v=20260416a"></script>
   <script>
     if ("serviceWorker" in navigator) {

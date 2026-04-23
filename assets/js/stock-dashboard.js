@@ -101,8 +101,8 @@ const STOCK_DASHBOARD_AUTH_STATE_KEYS = Object.freeze([
   "fmt-stock-dashboard-session"
 ]);
 const STOCK_DASHBOARD_POLL_MS = 30000;
-const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 9 * 60 * 1000;
-const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
+const STOCK_DASHBOARD_INACTIVITY_WARNING_MS = 29 * 60 * 1000;
+const STOCK_DASHBOARD_INACTIVITY_LOGOUT_MS = 30 * 60 * 1000;
 const STOCK_DASHBOARD_LOGIN_TIMEOUT_MS = 5000;
 const STOCK_DASHBOARD_SESSION_CHECK_MS = 20000;
 const STOCK_DASHBOARD_INVALID_LOGIN_TEXT = "Incorrect user number or PIN.";
@@ -112,7 +112,7 @@ const STOCK_DASHBOARD_LOGIN_CONFIG_TEXT = "Server configuration error.";
 const STOCK_DASHBOARD_SAVE_USER_ERROR_TEXT = "Could not save user. Please try again.";
 const STOCK_DASHBOARD_REPLACED_MESSAGE = "You were logged out because this account was signed in somewhere else.";
 const STOCK_DASHBOARD_INACTIVITY_WARNING_TEXT = "You will be logged out in 1 minute due to inactivity.";
-const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out due to inactivity.";
+const STOCK_DASHBOARD_INACTIVITY_LOGOUT_TEXT = "You were logged out after 30 minutes of inactivity.";
 const STOCK_DASHBOARD_AUTH_DEBUG = true;
 const STOCK_DASHBOARD_AUTH_BROADCAST_NAME = "fmt-stock-auth-sync";
 const STOCK_DASHBOARD_AUTH_SYNC_EVENT_KEY = "fmt-stock-auth-sync-event";
@@ -1412,6 +1412,7 @@ function stockDashboardBindInactivityHandlers() {
     "mousemove",
     "click",
     "keydown",
+    "input",
     "scroll",
     "touchstart"
   ].forEach((eventName) => {
