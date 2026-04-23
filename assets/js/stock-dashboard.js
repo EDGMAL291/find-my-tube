@@ -209,7 +209,10 @@ const STOCK_DASHBOARD_USERS_URL = stockDashboardBuildApiUrl("/api/lab/users");
 const STOCK_DASHBOARD_MANUAL_REQUEST_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests/manual");
 const STOCK_DASHBOARD_RECEIPTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-receipts");
 const STOCK_DASHBOARD_INVENTORY_URL = stockDashboardBuildApiUrl("/api/lab/stock-inventory");
+const STOCK_DASHBOARD_RECEIVED_STOCK_URL = stockDashboardBuildApiUrl("/api/lab/received-stock?limit=500");
+const STOCK_DASHBOARD_EXPORT_REQUESTS_URL = stockDashboardBuildApiUrl("/api/lab/stock-requests?limit=100&includeCancelled=true&includeArchived=true");
 const STOCK_DASHBOARD_BATCH_LOOKUP_URL = stockDashboardBuildApiUrl("/api/lab/stock-batches/lookup");
+const STOCK_DASHBOARD_XLSX_CDN_URL = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
 
 async function stockDashboardFetch(url, options = {}) {
   const nextOptions = {
@@ -233,6 +236,7 @@ let stockDashboardManagedUsers = [];
 let stockDashboardApiConfig = null;
 let stockDashboardReceiptFormOpen = false;
 let stockDashboardIsSummaryOpen = false;
+let stockDashboardXlsxLoadPromise = null;
 const stockDashboardDatasets = {
   stockRequests: [],
   receivedStock: [],
@@ -895,6 +899,258 @@ function stockDashboardRefreshDataSectionStatus() {
   const activeCount = stockDashboardDatasets.activeWorkQueue.length;
   const archivedCount = stockDashboardDatasets.archivedCompletedRequests.length;
   stockDashboardDataStatus.textContent = `Requests: ${requestCount} · Received stock records: ${receiptCount} · Active queue: ${activeCount} · Archived/Collected: ${archivedCount}.`;
+}
+
+function stockDashboardSetExportButtonState(isExporting) {
+  if (!stockDashboardExportDataBtn) return;
+  if (!stockDashboardExportDataBtn.dataset.defaultLabel) {
+    stockDashboardExportDataBtn.dataset.defaultLabel = stockDashboardExportDataBtn.textContent || "Export to Excel";
+  }
+  const exporting = Boolean(isExporting);
+  stockDashboardExportDataBtn.disabled = exporting;
+  stockDashboardExportDataBtn.textContent = exporting
+    ? "Exporting..."
+    : (stockDashboardExportDataBtn.dataset.defaultLabel || "Export to Excel");
+}
+
+function stockDashboardBuildExportFileDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function stockDashboardBuildExportTimestamp() {
+  return new Date().toISOString();
+}
+
+function stockDashboardFormatExportDateTime(value) {
+  if (!value) return "";
+  return stockDashboardFormatDateTime(value);
+}
+
+function stockDashboardGetExportUnitLabel(item) {
+  const unitType = String(item?.unitType || "").trim().toLowerCase();
+  if (unitType === "tray") {
+    const traySize = Math.max(0, Number(item?.traySize) || 0);
+    return traySize ? `Tray (${traySize})` : "Tray";
+  }
+  if (unitType === "packet") {
+    const packetSize = Math.max(0, Number(item?.packetSize) || 0);
+    return packetSize ? `Packet (${packetSize})` : "Packet";
+  }
+  if (unitType === "each") return "Each";
+  return unitType || "";
+}
+
+function stockDashboardBuildSheetAoA(headers, rows, exportedAt) {
+  const output = [];
+  output.push([`Exported at: ${exportedAt}`]);
+  output.push([]);
+  output.push(headers);
+  rows.forEach((row) => {
+    output.push(headers.map((header) => row[header]));
+  });
+  return output;
+}
+
+function stockDashboardEstimateColumnWidths(headers, rows) {
+  return headers.map((header) => {
+    const values = rows.map((row) => String(row[header] ?? ""));
+    const longest = values.reduce((max, value) => Math.max(max, value.length), String(header).length);
+    return { wch: Math.min(64, Math.max(12, longest + 2)) };
+  });
+}
+
+function stockDashboardLoadXlsxLibrary() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (stockDashboardXlsxLoadPromise) return stockDashboardXlsxLoadPromise;
+
+  stockDashboardXlsxLoadPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-stock-dashboard-xlsx="true"]');
+    if (existing) {
+      existing.addEventListener("load", () => {
+        if (window.XLSX) resolve(window.XLSX);
+        else reject(new Error("Excel library loaded but XLSX is unavailable."));
+      }, { once: true });
+      existing.addEventListener("error", () => {
+        reject(new Error("Could not load Excel library."));
+      }, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = STOCK_DASHBOARD_XLSX_CDN_URL;
+    script.async = true;
+    script.defer = true;
+    script.dataset.stockDashboardXlsx = "true";
+    script.addEventListener("load", () => {
+      if (window.XLSX) {
+        resolve(window.XLSX);
+        return;
+      }
+      reject(new Error("Excel library loaded but XLSX is unavailable."));
+    }, { once: true });
+    script.addEventListener("error", () => {
+      reject(new Error("Could not load Excel library."));
+    }, { once: true });
+    document.head.appendChild(script);
+  }).catch((error) => {
+    stockDashboardXlsxLoadPromise = null;
+    throw error;
+  });
+
+  return stockDashboardXlsxLoadPromise;
+}
+
+async function stockDashboardFetchExportPayload(url, context) {
+  const response = await stockDashboardFetch(url, {
+    cache: "no-store",
+    headers: stockDashboardGetHeaders()
+  });
+
+  if (await stockDashboardHandleUnauthorizedResponse(response, context)) {
+    throw new Error("Your session expired. Please sign in again.");
+  }
+  if (response.status === 403) {
+    throw new Error("You do not have permission to export this data.");
+  }
+  if (!response.ok) {
+    throw new Error("Could not load export data.");
+  }
+  return response.json().catch(() => ({}));
+}
+
+async function stockDashboardExportDataToExcel() {
+  if (!stockDashboardSession) {
+    window.alert("Sign in to export stock data.");
+    return;
+  }
+
+  stockDashboardSetExportButtonState(true);
+  if (stockDashboardDataStatus) {
+    stockDashboardDataStatus.textContent = "Exporting stock data to Excel...";
+  }
+
+  try {
+    const XLSX = await stockDashboardLoadXlsxLibrary();
+    const [inventoryPayload, requestsPayload, receivedPayload] = await Promise.all([
+      stockDashboardFetchExportPayload(STOCK_DASHBOARD_INVENTORY_URL, "export_inventory"),
+      stockDashboardFetchExportPayload(STOCK_DASHBOARD_EXPORT_REQUESTS_URL, "export_requests"),
+      stockDashboardFetchExportPayload(STOCK_DASHBOARD_RECEIVED_STOCK_URL, "export_received_stock")
+    ]);
+
+    const inventoryRows = Array.isArray(inventoryPayload?.summary) ? inventoryPayload.summary : [];
+    const requests = Array.isArray(requestsPayload?.requests) ? requestsPayload.requests : [];
+    const receipts = Array.isArray(receivedPayload?.receipts) ? receivedPayload.receipts : [];
+
+    const exportedAt = stockDashboardBuildExportTimestamp();
+
+    const inventoryHeaders = ["Item Name", "Quantity On Hand", "Unit", "Last Updated"];
+    const inventorySheetRows = inventoryRows.map((row) => ({
+      "Item Name": String(row?.label || ""),
+      "Quantity On Hand": Math.max(0, Number(row?.onHand) || 0),
+      Unit: String(row?.unit || ""),
+      "Last Updated": stockDashboardFormatExportDateTime(row?.updatedAt)
+    }));
+
+    const requestHeaders = ["Request ID", "Requested By", "Ward / Unit", "Date / Time", "Status"];
+    const requestSheetRows = requests.map((request) => ({
+      "Request ID": String(request?.id || ""),
+      "Requested By": String(request?.requestedBy || ""),
+      "Ward / Unit": String(request?.wardUnit || ""),
+      "Date / Time": stockDashboardFormatExportDateTime(request?.createdAt || request?.submittedAt),
+      Status: stockDashboardFormatStatus(request?.status)
+    }));
+
+    const requestItemHeaders = ["Request ID", "Item Name", "Quantity", "Unit"];
+    const requestItemSheetRows = [];
+    requests.forEach((request) => {
+      const requestId = String(request?.id || "");
+      const items = Array.isArray(request?.items) ? request.items : [];
+      items.forEach((item) => {
+        const displayLabel = stockDashboardGetDisplayLabel(item);
+        requestItemSheetRows.push({
+          "Request ID": requestId,
+          "Item Name": displayLabel,
+          Quantity: Math.max(0, Number(item?.quantity) || 0),
+          Unit: stockDashboardGetExportUnitLabel(item)
+        });
+      });
+    });
+
+    const receivedHeaders = ["Supplier", "Reference", "Date Received", "Item Name", "Quantity Received", "Unit", "Batch / Lot Number", "Expiry Date"];
+    const receivedSheetRows = [];
+    receipts.forEach((receipt) => {
+      const supplier = String(receipt?.supplierName || "");
+      const reference = String(receipt?.reference || "");
+      const dateReceived = stockDashboardFormatExportDateTime(receipt?.submittedAt || receipt?.createdAt);
+      const items = Array.isArray(receipt?.items) ? receipt.items : [];
+      if (!items.length) {
+        receivedSheetRows.push({
+          Supplier: supplier,
+          Reference: reference,
+          "Date Received": dateReceived,
+          "Item Name": "",
+          "Quantity Received": "",
+          Unit: "",
+          "Batch / Lot Number": "",
+          "Expiry Date": ""
+        });
+        return;
+      }
+      items.forEach((item) => {
+        receivedSheetRows.push({
+          Supplier: supplier,
+          Reference: reference,
+          "Date Received": dateReceived,
+          "Item Name": stockDashboardGetDisplayLabel(item),
+          "Quantity Received": Math.max(0, Number(item?.quantity) || 0),
+          Unit: stockDashboardGetExportUnitLabel(item),
+          "Batch / Lot Number": String(item?.batchNumber || ""),
+          "Expiry Date": String(item?.expiryDate || "")
+        });
+      });
+    });
+
+    const workbook = XLSX.utils.book_new();
+
+    const inventorySheet = XLSX.utils.aoa_to_sheet(
+      stockDashboardBuildSheetAoA(inventoryHeaders, inventorySheetRows, exportedAt)
+    );
+    inventorySheet["!cols"] = stockDashboardEstimateColumnWidths(inventoryHeaders, inventorySheetRows);
+    XLSX.utils.book_append_sheet(workbook, inventorySheet, "Inventory");
+
+    const requestsSheet = XLSX.utils.aoa_to_sheet(
+      stockDashboardBuildSheetAoA(requestHeaders, requestSheetRows, exportedAt)
+    );
+    requestsSheet["!cols"] = stockDashboardEstimateColumnWidths(requestHeaders, requestSheetRows);
+    XLSX.utils.book_append_sheet(workbook, requestsSheet, "Requests");
+
+    const requestItemsSheet = XLSX.utils.aoa_to_sheet(
+      stockDashboardBuildSheetAoA(requestItemHeaders, requestItemSheetRows, exportedAt)
+    );
+    requestItemsSheet["!cols"] = stockDashboardEstimateColumnWidths(requestItemHeaders, requestItemSheetRows);
+    XLSX.utils.book_append_sheet(workbook, requestItemsSheet, "Request Items");
+
+    const receivedSheet = XLSX.utils.aoa_to_sheet(
+      stockDashboardBuildSheetAoA(receivedHeaders, receivedSheetRows, exportedAt)
+    );
+    receivedSheet["!cols"] = stockDashboardEstimateColumnWidths(receivedHeaders, receivedSheetRows);
+    XLSX.utils.book_append_sheet(workbook, receivedSheet, "Received Stock");
+
+    const fileName = `findmytube-data-${stockDashboardBuildExportFileDate()}.xlsx`;
+    XLSX.writeFile(workbook, fileName, { compression: true });
+
+    if (stockDashboardDataStatus) {
+      stockDashboardDataStatus.textContent = `Export complete: ${fileName}`;
+    }
+  } catch (error) {
+    console.error("Stock dashboard export failed", error);
+    if (stockDashboardDataStatus) {
+      stockDashboardDataStatus.textContent = "Export failed. Please try again.";
+    }
+    window.alert(error instanceof Error ? error.message : "Export failed. Please try again.");
+  } finally {
+    stockDashboardSetExportButtonState(false);
+  }
 }
 
 function stockDashboardRenderEditorGrid(grid, editorState, editorKey) {
@@ -2431,8 +2687,10 @@ async function stockDashboardSubmitReceipt() {
       method: "POST",
       headers: stockDashboardGetHeaders(true),
       body: JSON.stringify({
+        supplier: supplierName,
         supplierName,
         reference,
+        note: notes,
         notes,
         items: items.map((item) => ({
           id: item.id,
@@ -2451,7 +2709,12 @@ async function stockDashboardSubmitReceipt() {
       })
     });
 
-    if (await stockDashboardHandleUnauthorizedResponse(response, "submit_receipt")) return;
+    if (await stockDashboardHandleUnauthorizedResponse(response, "submit_receipt")) {
+      if (stockDashboardReceiptStatus) {
+        stockDashboardReceiptStatus.textContent = "Not signed in. Please log in and try again.";
+      }
+      return;
+    }
     if (response.status === 403) {
       if (stockDashboardReceiptStatus) {
         stockDashboardReceiptStatus.textContent = "You do not have permission to record received stock.";
@@ -3020,9 +3283,7 @@ stockDashboardViewReceiptsDataBtn?.addEventListener("click", () => {
 });
 
 stockDashboardExportDataBtn?.addEventListener("click", () => {
-  if (stockDashboardDataStatus) {
-    stockDashboardDataStatus.textContent = "Export to Excel is prepared to include item, quantity, unit, batch/lot, expiry date, supplier, reference, notes, and date received once CSV/XLSX output is wired.";
-  }
+  stockDashboardExportDataToExcel();
 });
 
 stockDashboardClearOldDataBtn?.addEventListener("click", () => {

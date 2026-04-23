@@ -391,6 +391,7 @@ function sanitizeReceiptItem(item) {
   if (!safeItem) return null;
   return {
     ...safeItem,
+    id: sanitizeString(item?.id || item?.itemId || item?.stock_item_id, 80),
     batchNumber: sanitizeString(item?.batchNumber, 120),
     expiryDate: sanitizeDateOnly(item?.expiryDate)
   };
@@ -420,14 +421,42 @@ function sanitizeStockReceiptPayload(payload) {
     : [];
 
   return {
-    supplierName: sanitizeString(payload?.supplierName, 120),
+    supplierName: sanitizeString(payload?.supplierName || payload?.supplier, 120),
     reference: sanitizeString(payload?.reference, 120),
-    notes: sanitizeMultilineString(payload?.notes, 500),
+    notes: sanitizeMultilineString(payload?.notes || payload?.note, 500),
     submittedAt: sanitizeString(payload?.submittedAt, 40) || new Date().toISOString(),
     lineItemCount: items.length,
     totalReceivedQuantity: items.reduce((sum, item) => sum + getItemInventoryUnits(item), 0),
     items
   };
+}
+
+function validateStockReceiptPayload(payload) {
+  const rawItems = Array.isArray(payload?.items) ? payload.items : [];
+  if (!rawItems.length) {
+    return "At least one item is required";
+  }
+
+  for (let index = 0; index < rawItems.length; index += 1) {
+    const item = rawItems[index] || {};
+    const itemPosition = `Item ${index + 1}`;
+    const itemId = sanitizeString(item?.id || item?.itemId || item?.stock_item_id, 80);
+    if (!itemId) {
+      return `${itemPosition}: item id is required.`;
+    }
+
+    const quantity = Number(item?.quantity);
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      return `${itemPosition}: quantity must be a positive whole number.`;
+    }
+
+    const inventoryUnits = Number(item?.inventoryUnits);
+    if (!Number.isFinite(inventoryUnits) || inventoryUnits <= 0) {
+      return `${itemPosition}: inventoryUnits must be a positive number.`;
+    }
+  }
+
+  return "";
 }
 
 function validateStockRequestItems(items = []) {
@@ -1263,25 +1292,39 @@ async function dbInsertReceipt(payload, sessionUser) {
   );
 
   if (normalizedItems.length) {
-    await dbSingle(
-      supabase.from("received_stock_items").insert(normalizedItems.map((item) => ({
-        received_stock_id: receiptId,
-        item_id: item.id || null,
-        item_name: item.label,
-        variant_label: item.variantLabel || null,
-        quantity: item.quantity,
-        unit: item.unitType || "each",
-        tray_size: item.traySize || null,
-        packet_size: item.packetSize || null,
-        inventory_units: getItemInventoryUnits(item),
-        formatted_quantity: item.formattedQuantity || null,
-        sheet_column_key: item.sheetColumnKey || null,
-        sheet_tray_column_key: item.sheetTrayColumnKey || null,
-        sheet_single_column_key: item.sheetSingleColumnKey || null,
-        batch_number: item.batchNumber || null,
-        expiry_date: sanitizeDateOnly(item.expiryDate) || null
-      })))
-    );
+    const itemRows = normalizedItems.map((item) => ({
+      received_stock_id: receiptId,
+      item_id: item.id || null,
+      item_name: item.label,
+      variant_label: item.variantLabel || null,
+      quantity: item.quantity,
+      unit: item.unitType || "each",
+      tray_size: item.traySize || null,
+      packet_size: item.packetSize || null,
+      inventory_units: getItemInventoryUnits(item),
+      formatted_quantity: item.formattedQuantity || null,
+      sheet_column_key: item.sheetColumnKey || null,
+      sheet_tray_column_key: item.sheetTrayColumnKey || null,
+      sheet_single_column_key: item.sheetSingleColumnKey || null,
+      batch_number: item.batchNumber || null,
+      expiry_date: sanitizeDateOnly(item.expiryDate) || null
+    }));
+
+    try {
+      await dbSingle(
+        supabase.from("received_stock_items").insert(itemRows)
+      );
+    } catch (error) {
+      if (!isMissingOptionalStockItemColumnsError(error, "received_stock_items")) throw error;
+      const fallbackRows = itemRows.map(({ batch_number: _batchNumber, expiry_date: _expiryDate, ...row }) => row);
+      console.warn("[stock-receipts] received_stock_items-legacy-schema-fallback", {
+        receiptId,
+        errorMessage: getErrorMessage(error)
+      });
+      await dbSingle(
+        supabase.from("received_stock_items").insert(fallbackRows)
+      );
+    }
   }
 
   for (const item of normalizedItems) {
@@ -1297,7 +1340,16 @@ async function dbInsertReceipt(payload, sessionUser) {
   return {
     id: receiptId,
     createdAt: nowIso,
-    receivedBy: normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || ""
+    receivedBy: normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || "",
+    savedItems: normalizedItems.map((item) => ({
+      id: sanitizeString(item?.id, 80),
+      label: sanitizeString(item?.label, 120),
+      quantity: Math.max(0, Number(item?.quantity) || 0),
+      inventoryUnits: Math.max(0, Number(getItemInventoryUnits(item)) || 0),
+      unitType: sanitizeString(item?.unitType, 40),
+      batchNumber: sanitizeString(item?.batchNumber, 120),
+      expiryDate: sanitizeDateOnly(item?.expiryDate)
+    }))
   };
 }
 
@@ -2288,6 +2340,22 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
+  if (req.method === "GET" && pathname === "/api/lab/received-stock") {
+    const session = await requireLabSession(req, res);
+    if (!session) return;
+
+    const limit = Math.min(500, Math.max(1, Number(searchParams.get("limit")) || 120));
+    const rows = await dbListReceipts(limit);
+
+    sendJson(req, res, 200, {
+      receipts: rows,
+      user: {
+        userNumber: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
+      }
+    });
+    return;
+  }
+
   if (req.method === "DELETE" && pathname === "/api/lab/stock-data") {
     const session = await requireOwnerSession(req, res);
     if (!session) return;
@@ -2356,8 +2424,25 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "POST" && pathname === "/api/lab/stock-receipts") {
-    const session = await requireLabSession(req, res);
-    if (!session) return;
+    let session = null;
+    try {
+      session = await dbGetSession(req);
+    } catch (error) {
+      logStockAuthError("stock-receipts-session-check-failed", error, {
+        route: req.url || "",
+        method: req.method
+      });
+      sendJson(req, res, 503, { ok: false, code: "login_service_unavailable", error: STOCK_AUTH_SERVICE_UNAVAILABLE_MESSAGE });
+      return;
+    }
+    if (!session || session.invalidReason) {
+      sendJson(req, res, 401, {
+        ok: false,
+        reason: "session_required",
+        error: "Not signed in"
+      });
+      return;
+    }
 
     let bodyText = "";
     try {
@@ -2372,6 +2457,15 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       payload = bodyText ? JSON.parse(bodyText) : {};
     } catch {
       sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" });
+      return;
+    }
+
+    const payloadValidationError = validateStockReceiptPayload(payload);
+    if (payloadValidationError) {
+      sendJson(req, res, 400, {
+        ok: false,
+        error: payloadValidationError
+      });
       return;
     }
 
@@ -2401,6 +2495,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     sendJson(req, res, 201, {
       ok: true,
+      receiptId: receipt?.id || "",
+      savedItems: Array.isArray(receipt?.savedItems) ? receipt.savedItems : [],
       receipt
     });
     return;

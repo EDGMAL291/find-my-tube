@@ -947,6 +947,29 @@ body.find-my-test-page .about-panel {
   gap: 10px;
 }
 
+@media (max-width: 768px) {
+  .home-dashboard-actions .home-quick-actions-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(260px, 88%);
+    grid-template-columns: none;
+    gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .home-dashboard-actions .home-quick-actions-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-dashboard-actions .home-action-tile {
+    scroll-snap-align: start;
+  }
+}
+
 .home-action-tile {
   border: 1px solid rgba(102, 122, 128, 0.2);
   background: linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(244, 250, 248, 0.94));
