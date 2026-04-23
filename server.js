@@ -1236,7 +1236,7 @@ async function dbListInventorySummary() {
 }
 
 function isMissingDatabaseTableError(error, tableName = "") {
-  const message = getErrorMessage(error).toLowerCase();
+  const message = String(error?.message || error?.details || getErrorMessage(error) || "").toLowerCase();
   const safeTableName = String(tableName || "").toLowerCase();
   if (!message) return false;
   return (
