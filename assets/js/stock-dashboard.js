@@ -223,7 +223,7 @@ async function stockDashboardFetch(url, options = {}) {
   if (response.status === 401) {
     const payload = await response.clone().json().catch(() => ({}));
     if (String(payload?.reason || "").trim().toLowerCase() === "session_replaced") {
-      stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast: true, reload: true });
+      stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { reload: true });
     }
   }
   return response;
@@ -1372,7 +1372,7 @@ async function stockDashboardHandleUnauthorizedResponse(response, context = "") 
 
   if (reason === "session_replaced") {
     stockDashboardLogAuthDebug("unauthorized-session-replaced", { context: contextLabel });
-    stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast: true, reload: true });
+    stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { reload: true });
     return true;
   }
 
@@ -1433,7 +1433,7 @@ function stockDashboardBroadcastAuthEvent(type, message = "") {
   }
 }
 
-function stockDashboardHandleSessionReplaced(message = STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast = true, reload = true } = {}) {
+function stockDashboardHandleSessionReplaced(message = STOCK_DASHBOARD_REPLACED_MESSAGE, { reload = true } = {}) {
   if (stockDashboardHandlingRemoteLogout) return;
   stockDashboardHandlingRemoteLogout = true;
   const safeMessage = String(message || "").trim() || STOCK_DASHBOARD_REPLACED_MESSAGE;
@@ -1442,9 +1442,6 @@ function stockDashboardHandleSessionReplaced(message = STOCK_DASHBOARD_REPLACED_
     setSignedOutOverride: true,
     flashMessage: safeMessage
   });
-  if (broadcast) {
-    stockDashboardBroadcastAuthEvent("session_replaced", safeMessage);
-  }
   if (reload) {
     window.location.assign("/stock-dashboard.html");
     return;
@@ -1464,7 +1461,8 @@ function stockDashboardHandleAuthSyncPayload(payload = {}) {
     });
   }
   if (type === "session_replaced") {
-    stockDashboardHandleSessionReplaced(message || STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast: false, reload: true });
+    // A replaced session is validated by the backend per-tab and should not
+    // force-logout other tabs through client-side sync broadcasts.
     return;
   }
   if (type === "logout") {
@@ -1626,7 +1624,7 @@ async function stockDashboardValidateSession() {
     });
     const payload = await response.json().catch(() => ({}));
     if (response.status === 401 && String(payload?.reason || "").trim().toLowerCase() === "session_replaced") {
-      stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { broadcast: true, reload: true });
+      stockDashboardHandleSessionReplaced(payload?.error || STOCK_DASHBOARD_REPLACED_MESSAGE, { reload: true });
       return;
     }
     if (response.status === 401) {

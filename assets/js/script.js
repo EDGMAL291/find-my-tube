@@ -6175,6 +6175,50 @@ function applyGoldProfileVolumeRule(plan, selectedTests) {
   return "Gold rule applied: use 2 x Gold/Yellow when a listed yellow profile is combined with a hormone/enzyme request, or when 3 listed profiles are combined with another shared yellow-top test.";
 }
 
+// Applies antenatal profile baseline tube minimums.
+function applyAntenatalProfileMinimums(plan, selectedTests) {
+  const hasAntenatalProfile = selectedTests.some(
+    (test) => canonicalDrawRuleName(test?.name) === canonicalDrawRuleName("Antenatal Screen (ANTINV)")
+  );
+  if (!hasAntenatalProfile) return "";
+
+  const minimums = [
+    {
+      key: "Purple",
+      label: "Purple",
+      count: 2,
+      detail: "FBC, blood grouping, and antenatal antibody screen coverage."
+    },
+    {
+      key: "Gold/Yellow",
+      label: "Gold/Yellow",
+      count: 3,
+      detail: "Includes dedicated HIV and RPR tubes plus additional antenatal serology."
+    },
+    {
+      key: "Gray",
+      label: "Gray",
+      count: 1,
+      detail: "For glucose."
+    }
+  ];
+
+  minimums.forEach((minimum) => {
+    let planItem = plan.items.find((item) => item.key === minimum.key);
+    if (!planItem) {
+      planItem = { key: minimum.key, label: minimum.label, count: minimum.count, tests: [] };
+      plan.items.push(planItem);
+    } else {
+      planItem.count = Math.max(planItem.count, minimum.count);
+    }
+
+    appendPlanItemDetail(planItem, minimum.detail);
+  });
+
+  plan.items.sort((a, b) => a.label.localeCompare(b.label));
+  return "Antenatal rule applied: keep baseline draw of 3 x Gold/Yellow, 2 x Purple, and 1 x Gray when ANTINV is included.";
+}
+
 // Applies purple volume rule.
 function applyPurpleVolumeRule(plan, selectedTests) {
   const purpleTests = selectedTests.filter((test) => {
@@ -6266,6 +6310,7 @@ function getLabDrawPlan(selectedTests) {
 function getResolvedDrawPlan(selectedTests) {
   const plan = getLabDrawPlan(selectedTests);
   const guidanceNotes = [
+    applyAntenatalProfileMinimums(plan, selectedTests),
     applyDedicatedGoldTubeRule(plan, selectedTests),
     applyGoldProfileVolumeRule(plan, selectedTests),
     applyPurpleVolumeRule(plan, selectedTests),
