@@ -1374,14 +1374,33 @@ async function dbResetInventoryBalances() {
 async function dbResetStockTransactionalData() {
   const uuidDeleteOptions = { impossibleValue: "00000000-0000-0000-0000-000000000000" };
   const results = [];
+  const runResetStep = async (table, task) => {
+    try {
+      results.push(await task());
+    } catch (error) {
+      console.error("[stock-reset] cleanup-step-failed", {
+        table,
+        errorMessage: getErrorMessage(error)
+      });
+      results.push({
+        table,
+        before: null,
+        deleted: 0,
+        reset: 0,
+        skipped: false,
+        failed: true,
+        error: getErrorMessage(error)
+      });
+    }
+  };
 
-  results.push(await dbDeleteAllRows("stock_request_items", uuidDeleteOptions));
-  results.push(await dbDeleteAllRows("stock_requests"));
-  results.push(await dbDeleteAllRows("received_stock_items", uuidDeleteOptions));
-  results.push(await dbDeleteAllRows("received_stock"));
-  results.push(await dbDeleteAllRows("inventory_batches", uuidDeleteOptions));
-  results.push(await dbResetInventoryBalances());
-  results.push(await dbDeleteStockAuditLogs());
+  await runResetStep("stock_request_items", () => dbDeleteAllRows("stock_request_items", uuidDeleteOptions));
+  await runResetStep("stock_requests", () => dbDeleteAllRows("stock_requests"));
+  await runResetStep("received_stock_items", () => dbDeleteAllRows("received_stock_items", uuidDeleteOptions));
+  await runResetStep("received_stock", () => dbDeleteAllRows("received_stock"));
+  await runResetStep("inventory_balances", () => dbResetInventoryBalances());
+  await runResetStep("inventory_batches", () => dbDeleteAllRows("inventory_batches", uuidDeleteOptions));
+  await runResetStep("audit_logs", () => dbDeleteStockAuditLogs());
 
   return results;
 }
