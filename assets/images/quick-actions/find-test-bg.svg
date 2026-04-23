@@ -1,11 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" fill="none">
-  <g stroke="#56867f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5">
-    <rect x="38" y="28" width="126" height="110" rx="14"/>
-    <path d="M62 56h77M62 76h63M62 96h52"/>
-    <circle cx="228" cy="86" r="28"/>
-    <path d="m247 105 29 29"/>
-    <path d="M205 126h70" opacity="0.54"/>
-    <path d="M188 36h84" opacity="0.44"/>
-    <path d="M214 58h38" opacity="0.54"/>
+  <g stroke="#56867f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.34">
+    <rect x="96" y="36" width="102" height="108" rx="14"/>
+    <path d="M118 66h58M118 86h48M118 106h38"/>
+    <path d="M136 34h22" opacity="0.7"/>
+    <circle cx="230" cy="96" r="24"/>
+    <path d="m247 113 24 24"/>
   </g>
 </svg>

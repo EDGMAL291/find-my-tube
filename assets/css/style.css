@@ -1069,6 +1069,9 @@ body.find-my-test-page .about-panel {
   --quick-action-surface-a: color-mix(in srgb, var(--quick-action-accent) 13%, var(--color-surface-elevated));
   --quick-action-surface-b: color-mix(in srgb, var(--quick-action-accent) 4%, var(--color-surface-elevated));
   --quick-action-art: none;
+  --quick-action-art-size: min(58%, 220px) auto;
+  --quick-action-art-position: right 10px center;
+  --quick-action-art-opacity: 0.3;
   border: 1px solid var(--quick-action-border);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--quick-action-accent) 34%, transparent) 0 4px, transparent 4px),
@@ -1108,11 +1111,11 @@ body.find-my-test-page .about-panel {
     radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.35), transparent 36%),
     var(--quick-action-art);
   background-repeat: no-repeat;
-  background-size: auto, auto, min(86%, 320px) auto;
-  background-position: 0 0, 0 0, right -24px center;
-  opacity: 0.44;
+  background-size: auto, auto, var(--quick-action-art-size);
+  background-position: 0 0, 0 0, var(--quick-action-art-position);
+  opacity: var(--quick-action-art-opacity);
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease, background-size 0.18s ease;
   z-index: 1;
 }
 
@@ -1148,7 +1151,7 @@ body.find-my-test-page .about-panel {
 .home-action-tile:hover::before,
 .home-action-tile:focus-visible::before {
   transform: translateX(-2px);
-  opacity: 0.52;
+  opacity: calc(var(--quick-action-art-opacity) + 0.06);
 }
 
 .home-action-tile:hover::after,
@@ -1285,11 +1288,45 @@ button.home-recent-item:focus-visible {
 }
 
 .home-status-list {
+  position: relative;
+  z-index: 2;
   display: grid;
   gap: 8px;
 }
 
+.home-order-status-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-color: rgba(45, 126, 148, 0.16);
+  background:
+    linear-gradient(145deg, rgba(247, 253, 252, 0.9), rgba(238, 248, 247, 0.76));
+}
+
+.home-order-status-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 86% 18%, rgba(45, 126, 148, 0.11), transparent 30%),
+    radial-gradient(circle at 18% 90%, rgba(15, 118, 110, 0.08), transparent 28%),
+    url("../images/quick-actions/order-status-bg.svg");
+  background-repeat: no-repeat;
+  background-size: auto, auto, min(58%, 230px) auto;
+  background-position: 0 0, 0 0, right 10px top 10px;
+  opacity: 0.26;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.home-order-status-card > * {
+  position: relative;
+  z-index: 2;
+}
+
 .home-status-track-btn {
+  position: relative;
+  z-index: 2;
   min-height: 34px;
   border-radius: 999px;
   border: 1px solid rgba(15, 118, 110, 0.24);
@@ -1310,6 +1347,8 @@ button.home-recent-item:focus-visible {
 }
 
 .home-status-chip {
+  position: relative;
+  z-index: 2;
   border: 1px solid rgba(123, 142, 150, 0.24);
   border-radius: 999px;
   background: rgba(252, 255, 255, 0.84);
@@ -1347,6 +1386,8 @@ button.home-recent-item:focus-visible {
 }
 
 .home-status-item {
+  position: relative;
+  z-index: 2;
   border: 1px solid rgba(123, 142, 150, 0.24);
   border-radius: 12px;
   background: rgba(252, 255, 255, 0.82);
@@ -6150,6 +6191,34 @@ html[data-theme="dark"] .site-footer-title {
     height: 16px;
   }
 
+  .home-action-tile {
+    --quick-action-art-size: min(34vw, 128px) auto;
+    --quick-action-art-position: right 10px bottom 8px;
+    --quick-action-art-opacity: 0.18;
+    min-height: 98px;
+    padding-right: min(34vw, 126px);
+  }
+
+  .home-action-tile::before {
+    filter: blur(0.15px);
+  }
+
+  .home-action-tile:hover::before,
+  .home-action-tile:focus-visible::before {
+    opacity: 0.22;
+  }
+
+  .home-action-copy {
+    color: #405761;
+    font-weight: 500;
+  }
+
+  .home-order-status-card::before {
+    background-size: auto, auto, min(38vw, 148px) auto;
+    background-position: 0 0, 0 0, right 10px top 12px;
+    opacity: 0.18;
+  }
+
   .home-brief-card h2,
   .lookup-shell h2,
   .stock-order-head h2,
@@ -7594,6 +7663,12 @@ html[data-theme="neutral"] .home-action-tile {
     );
 }
 
+html[data-theme="neutral"] .home-order-status-card {
+  border-color: rgba(79, 122, 114, 0.2);
+  background:
+    linear-gradient(145deg, rgba(245, 250, 248, 0.9), rgba(232, 241, 237, 0.78));
+}
+
 html[data-theme="neutral"] .site-menu-group-title {
   color: rgba(63, 90, 85, 0.78);
 }
@@ -7691,16 +7766,41 @@ html[data-theme="dark"] .home-action-tile {
 }
 
 html[data-theme="dark"] .home-action-tile::before {
-  opacity: 0.38;
+  opacity: 0.3;
 }
 
 html[data-theme="dark"] .home-action-tile:hover::before,
 html[data-theme="dark"] .home-action-tile:focus-visible::before {
-  opacity: 0.46;
+  opacity: 0.36;
+}
+
+html[data-theme="dark"] .home-order-status-card {
+  border-color: rgba(98, 128, 138, 0.24);
+  background:
+    linear-gradient(145deg, rgba(13, 31, 39, 0.9), rgba(10, 24, 32, 0.82));
+}
+
+html[data-theme="dark"] .home-order-status-card::before {
+  opacity: 0.22;
 }
 
 html[data-theme="dark"] .site-menu-group-title {
   color: rgba(167, 195, 205, 0.76);
+}
+
+@media (max-width: 600px) {
+  html[data-theme="dark"] .home-action-tile::before {
+    opacity: 0.2;
+  }
+
+  html[data-theme="dark"] .home-action-tile:hover::before,
+  html[data-theme="dark"] .home-action-tile:focus-visible::before {
+    opacity: 0.25;
+  }
+
+  html[data-theme="dark"] .home-order-status-card::before {
+    opacity: 0.18;
+  }
 }
 
 html[data-theme="dark"] .site-menu-link::after {
