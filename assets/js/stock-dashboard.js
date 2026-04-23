@@ -864,18 +864,32 @@ function stockDashboardBuildAuditRows(request) {
   `).join("");
 }
 
+function stockDashboardGetInventoryLevel(onHand) {
+  const quantity = Math.max(0, Number(onHand) || 0);
+  if (quantity <= 0) return "danger";
+  if (quantity <= 20) return "warning";
+  return "success";
+}
+
 function stockDashboardRenderInventory(summary = []) {
-  renderDashboardList(stockDashboardInventoryList, summary, (row) => `
-    <div class="stock-dashboard-list-row">
+  renderDashboardList(stockDashboardInventoryList, summary, (row) => {
+    const onHand = Math.max(0, Number(row?.onHand) || 0);
+    const level = stockDashboardGetInventoryLevel(onHand);
+    return `
+    <div class="stock-dashboard-list-row" data-stock-level="${stockDashboardEscapeHtml(level)}">
       <span>${stockDashboardEscapeHtml(row.label)}</span>
-      <strong>${Number(row.onHand || 0)} left</strong>
+      <strong class="stock-level--${stockDashboardEscapeHtml(level)}">${onHand} left</strong>
     </div>
-  `);
+  `;
+  });
 
   if (stockDashboardInventoryStatus) {
-    const lowRows = summary.filter((row) => Number(row.onHand || 0) <= 0);
-    stockDashboardInventoryStatus.textContent = lowRows.length
-      ? `${lowRows.length} item${lowRows.length === 1 ? "" : "s"} are at zero or below.`
+    const dangerRows = summary.filter((row) => stockDashboardGetInventoryLevel(row?.onHand) === "danger");
+    const warningRows = summary.filter((row) => stockDashboardGetInventoryLevel(row?.onHand) === "warning");
+    stockDashboardInventoryStatus.textContent = dangerRows.length
+      ? `${dangerRows.length} item${dangerRows.length === 1 ? "" : "s"} are out of stock.`
+      : warningRows.length
+        ? `${warningRows.length} item${warningRows.length === 1 ? "" : "s"} are running low.`
       : "Signed-in Medical Technologists can review live stock balances here.";
   }
 }
