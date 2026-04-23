@@ -201,6 +201,13 @@ const isFindMyTestPage = currentAppPage === "find-my-test";
 const isStockOrderPage = currentAppPage === "stock-order";
 const isStockDashboardPage = currentAppPage === "stock-dashboard";
 const isTrackOrdersPage = currentAppPage === "track-orders";
+const MENU_MAIN_ACTION_ORDER = ["home", "tube", "find-my-test", "draw", "stock", "stock-dashboard", "track-orders"];
+const MENU_SECONDARY_ACTION_ORDER = ["settings", "about"];
+const MENU_ACTION_ORDER = [...MENU_MAIN_ACTION_ORDER, ...MENU_SECONDARY_ACTION_ORDER];
+const MENU_ACTION_ORDER_INDEX = MENU_ACTION_ORDER.reduce((acc, action, index) => {
+  acc[action] = index;
+  return acc;
+}, Object.create(null));
 const MOBILE_BOTTOM_NAV_BREAKPOINT = 860;
 const MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y = 88;
 const MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA = 54;
@@ -345,6 +352,7 @@ function setThemePanelOpen(isOpen) {
     themeSettingsBtn.classList.toggle("active", isThemePanelOpen);
   }
   syncSurfacePanelState();
+  updateMenuActiveState();
 }
 
 // Sets site menu open state.
@@ -363,6 +371,105 @@ function setSiteMenuOpen(isOpen) {
     menuToggleBtn.classList.toggle("active", isSiteMenuOpen);
   }
   syncSurfacePanelState();
+  updateMenuActiveState();
+}
+
+function normalizeMenuAction(action) {
+  const safeAction = String(action || "").trim();
+  if (safeAction === "start-draw") return "draw";
+  return safeAction;
+}
+
+function getCurrentPageMenuAction() {
+  if (isThemePanelOpen) return "settings";
+  if (isTrackOrdersPage) return "track-orders";
+  if (isStockDashboardPage) return "stock-dashboard";
+  if (isStockOrderPage) return "stock";
+  if (isFindMyTestPage) return "find-my-test";
+  if (isFindMyTubePage) return "tube";
+  return "home";
+}
+
+function updateMenuActiveState() {
+  const activeAction = getCurrentPageMenuAction();
+
+  const headerMenuButtons = siteMenuPanel
+    ? Array.from(siteMenuPanel.querySelectorAll(".site-menu-link[data-menu-action]"))
+    : [];
+  headerMenuButtons.forEach((button) => {
+    const action = normalizeMenuAction(button.getAttribute("data-menu-action"));
+    const isActive = action === activeAction;
+    button.classList.toggle("is-active", isActive);
+    button.classList.toggle("is-secondary", MENU_SECONDARY_ACTION_ORDER.includes(action));
+    if (isActive) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+  });
+
+  if (!mobileBottomMenuSheet) return;
+  const mobileMenuButtons = Array.from(mobileBottomMenuSheet.querySelectorAll(".mobile-bottom-menu-item[data-mobile-menu-action]"));
+  mobileMenuButtons.forEach((button) => {
+    const action = normalizeMenuAction(button.getAttribute("data-mobile-menu-action"));
+    const isActive = action === activeAction;
+    button.classList.toggle("is-active", isActive);
+    if (isActive) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+  });
+}
+
+function enhanceSiteMenuStructure() {
+  if (!siteMenuPanel) return;
+  const siteMenuList = siteMenuPanel.querySelector(".site-menu-list");
+  if (!(siteMenuList instanceof HTMLElement)) return;
+
+  const buttons = Array.from(siteMenuList.querySelectorAll(".site-menu-link[data-menu-action]"));
+  if (!buttons.length) return;
+
+  buttons.sort((a, b) => {
+    const actionA = normalizeMenuAction(a.getAttribute("data-menu-action"));
+    const actionB = normalizeMenuAction(b.getAttribute("data-menu-action"));
+    const indexA = Number.isInteger(MENU_ACTION_ORDER_INDEX[actionA]) ? MENU_ACTION_ORDER_INDEX[actionA] : 999;
+    const indexB = Number.isInteger(MENU_ACTION_ORDER_INDEX[actionB]) ? MENU_ACTION_ORDER_INDEX[actionB] : 999;
+    return indexA - indexB;
+  });
+
+  const mainButtons = [];
+  const secondaryButtons = [];
+  buttons.forEach((button) => {
+    const action = normalizeMenuAction(button.getAttribute("data-menu-action"));
+    if (MENU_SECONDARY_ACTION_ORDER.includes(action)) {
+      button.dataset.menuGroup = "secondary";
+      secondaryButtons.push(button);
+      return;
+    }
+    button.dataset.menuGroup = "main";
+    mainButtons.push(button);
+  });
+
+  siteMenuList.innerHTML = "";
+
+  const mainGroup = document.createElement("div");
+  mainGroup.className = "site-menu-group";
+  mainGroup.dataset.group = "main";
+  mainGroup.setAttribute("role", "none");
+  mainGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Main Navigation</p>';
+  mainButtons.forEach((button) => mainGroup.appendChild(button));
+  siteMenuList.appendChild(mainGroup);
+
+  if (secondaryButtons.length) {
+    const secondaryGroup = document.createElement("div");
+    secondaryGroup.className = "site-menu-group";
+    secondaryGroup.dataset.group = "secondary";
+    secondaryGroup.setAttribute("role", "none");
+    secondaryGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Secondary</p>';
+    secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
+    siteMenuList.appendChild(secondaryGroup);
+  }
 }
 
 // Synchronizes the shared surface-panel backdrop.
@@ -5069,6 +5176,7 @@ function setMobileBottomMenuOpen(isOpen) {
     mobileBottomNavButtons.menu.setAttribute("aria-label", mobileBottomMenuOpen ? "Close menu" : "Open menu");
   }
   setMobileBottomNavActiveState();
+  updateMenuActiveState();
 }
 
 function resetMobileBottomNavScrollState() {
@@ -5124,7 +5232,21 @@ function startDrawPlanFromMenu(trigger = null) {
 }
 
 function openSettingsPanelFromMenu() {
+  setMobileBottomMenuOpen(false);
   setSiteMenuOpen(false);
+  if (!themeSwitcherPanel) {
+    window.location.assign("./index.html");
+    return;
+  }
+
+  if (isMobileBottomNavViewport() && headerSettings) {
+    headerSettings.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+      inline: "nearest"
+    });
+  }
+
   setThemePanelOpen(true);
   const firstThemeButton = themeSwitcherPanel?.querySelector("[data-theme-mode]");
   if (firstThemeButton && typeof firstThemeButton.focus === "function") {
@@ -5306,15 +5428,21 @@ function initMobileBottomNav() {
   menuSheet.setAttribute("aria-label", "Main mobile menu");
   menuSheet.innerHTML = `
     <div class="mobile-bottom-menu-list" role="menu" aria-label="Main menu actions">
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="start-draw">Tube Plan</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Find My Test</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock">Order Stock / Consumables</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock-dashboard">Stock Dashboard</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="track-orders">Track Orders</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="settings">Settings</button>
-      <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="about">About</button>
+      <section class="mobile-bottom-menu-group" data-group="main" role="none">
+        <p class="mobile-bottom-menu-group-title" role="presentation">Main navigation</p>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Find My Test</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="start-draw">Tube Plan</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock">Order Stock / Consumables</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock-dashboard">Stock Dashboard</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="track-orders">Track Orders</button>
+      </section>
+      <section class="mobile-bottom-menu-group" data-group="secondary" role="none">
+        <p class="mobile-bottom-menu-group-title" role="presentation">Secondary</p>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="settings">Settings</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="about">About</button>
+      </section>
     </div>
   `;
   document.body.appendChild(menuSheet);
@@ -5360,6 +5488,7 @@ function initMobileBottomNav() {
   updateMobileBottomMenuOrigin();
   setMobileBottomNavHidden(false);
   setMobileBottomNavActiveState();
+  updateMenuActiveState();
   handleMobileBottomNavScroll();
 
   window.addEventListener("scroll", handleMobileBottomNavScroll, { passive: true });
@@ -7901,6 +8030,7 @@ function updateFindMyTubePublicApi() {
   };
 }
 
+enhanceSiteMenuStructure();
 initTheme();
 updateFindMyTubePublicApi();
 renderFactsCarousel();
@@ -7914,6 +8044,7 @@ ensureAboutInfoModal();
 renderGroupChips();
 refreshSearchPlaceholder();
 bindEvents();
+updateMenuActiveState();
 initSelectionCartViewportSync();
 applyFilters();
 updateSearchClearButton();
