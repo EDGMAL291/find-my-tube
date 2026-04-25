@@ -8159,7 +8159,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260425a",
+    assetVersion: "20260426b",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,
