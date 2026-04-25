@@ -121,11 +121,22 @@
         <div class="stock-order-request-head">
           <div>
             <p class="stock-order-kicker">Orders</p>
-            <h3 id="trackOrdersListTitle">Requests</h3>
+            <h3 id="trackOrdersListTitle">Active requests</h3>
           </div>
           <p class="stock-order-request-meta" id="trackOrdersCount">0 requests</p>
         </div>
         <div class="track-orders-table" id="trackOrdersTable" role="table" aria-label="Tracked stock requests"></div>
+      </section>
+
+      <section class="stock-order-request-card track-orders-archive-card" aria-labelledby="trackOrdersArchiveTitle">
+        <div class="stock-order-request-head">
+          <div>
+            <p class="stock-order-kicker">Archives</p>
+            <h3 id="trackOrdersArchiveTitle">Completed orders</h3>
+          </div>
+          <p class="stock-order-request-meta" id="trackOrdersArchiveCount">0 archived</p>
+        </div>
+        <div class="track-orders-table" id="trackOrdersArchiveTable" role="table" aria-label="Archived completed stock requests"></div>
       </section>
     </section>
 

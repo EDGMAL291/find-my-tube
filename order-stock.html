@@ -217,10 +217,10 @@
       <section class="stock-order-request-card" id="stockOrderSubmissionCard" hidden aria-labelledby="stockOrderSubmissionTitle">
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Submitted</p>
+            <p class="stock-order-kicker">Received</p>
             <h3 id="stockOrderSubmissionTitle">Order confirmation</h3>
           </div>
-          <p class="stock-order-request-meta" id="stockOrderSubmissionMessage">Request submitted successfully.</p>
+          <p class="stock-order-request-meta" id="stockOrderSubmissionMessage">Request received successfully.</p>
         </div>
         <div class="stock-order-summary-grid">
           <div class="stock-order-summary-item">
@@ -482,12 +482,12 @@
           ? normalizeStockRequestStatus(status)
           : String(status || "").trim().toLowerCase();
         const safe = normalized || "received";
-        const label = safe === "received"
-          ? "Submitted"
+        const label = safe === "received" || safe === "submitted"
+          ? "Received"
           : safe === "packed" || safe === "ready" || safe === "in-progress" || safe === "processing"
             ? "Ready for Collection"
             : safe === "collected" || safe === "completed"
-              ? "Collected"
+              ? "Completed"
               : safe.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
         if (safe === "collected" || safe === "completed") return { label, stage: "completed" };

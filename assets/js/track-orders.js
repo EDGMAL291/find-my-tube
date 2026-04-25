@@ -2,15 +2,17 @@
   if (document.body?.dataset?.appPage !== "track-orders") return;
 
   const table = document.getElementById("trackOrdersTable");
+  const archiveTable = document.getElementById("trackOrdersArchiveTable");
   const meta = document.getElementById("trackOrdersMeta");
   const count = document.getElementById("trackOrdersCount");
+  const archiveCount = document.getElementById("trackOrdersArchiveCount");
   const form = document.getElementById("trackOrdersFiltersForm");
   const refreshBtn = document.getElementById("trackOrdersRefreshBtn");
   const clearBtn = document.getElementById("trackOrdersClearFiltersBtn");
   const requestedByInput = document.getElementById("trackOrdersRequestedByInput");
   const wardInput = document.getElementById("trackOrdersWardInput");
 
-  if (!table || !meta || !count || !requestedByInput || !wardInput) return;
+  if (!table || !archiveTable || !meta || !count || !archiveCount || !requestedByInput || !wardInput) return;
 
   const params = new URLSearchParams(window.location.search || "");
   const highlightedRequestId = String(params.get("requestId") || "").trim().toLowerCase();
@@ -30,17 +32,17 @@
 
   function normalizeStatus(status) {
     const safe = String(status || "").trim().toLowerCase();
-    if (safe === "sent" || safe === "completed") return "collected";
+    if (safe === "sent" || safe === "completed" || safe === "collected") return "completed";
     if (safe === "packed" || safe === "in-progress" || safe === "processing") return "ready";
-    if (safe === "received") return "submitted";
-    return safe || "submitted";
+    if (safe === "received" || safe === "submitted") return "received";
+    return safe || "received";
   }
 
   function getStatusMeta(status) {
     const safe = normalizeStatus(status);
-    if (safe === "submitted") return { key: "submitted", label: "Submitted", stage: "submitted" };
+    if (safe === "received") return { key: "received", label: "Received", stage: "received" };
     if (safe === "ready") return { key: "ready", label: "Ready for Collection", stage: "ready" };
-    if (safe === "collected") return { key: "collected", label: "Collected", stage: "collected" };
+    if (safe === "completed") return { key: "completed", label: "Completed", stage: "completed" };
     if (safe === "cancelled") return { key: "cancelled", label: "Cancelled", stage: "cancelled" };
     return {
       key: safe,
@@ -60,9 +62,9 @@
 
   function getApiUrl() {
     if (typeof buildStockApiUrl === "function") {
-      return buildStockApiUrl("/api/stock-requests?limit=250");
+      return buildStockApiUrl("/api/stock-requests?limit=250&includeArchived=true");
     }
-    return `${window.location.origin}/api/stock-requests?limit=250`;
+    return `${window.location.origin}/api/stock-requests?limit=250&includeArchived=true`;
   }
 
   function getCurrentFilters() {
@@ -85,48 +87,44 @@
     });
   }
 
-  function filteredOrders() {
+  function filterByInputs(rows) {
     const filters = getCurrentFilters();
-    const visibleStatuses = new Set(["submitted", "ready", "collected"]);
 
-    const filtered = trackOrders.filter((order) => {
+    return rows.filter((order) => {
       const requestedBy = String(order?.requestedBy || "").trim().toLowerCase();
       const ward = String(order?.wardUnit || "").trim().toLowerCase();
-      const normalizedStatus = normalizeStatus(order?.status);
 
       if (filters.requestedBy && !requestedBy.includes(filters.requestedBy)) return false;
       if (filters.ward && !ward.includes(filters.ward)) return false;
-      if (!visibleStatuses.has(normalizedStatus)) return false;
 
       return true;
     });
+  }
 
-    return sortByNewestFirst(filtered);
+  function filteredOrders() {
+    const activeOrders = trackOrders.filter((order) => {
+      const normalizedStatus = normalizeStatus(order?.status);
+      return normalizedStatus !== "completed" && normalizedStatus !== "cancelled";
+    });
+
+    return sortByNewestFirst(filterByInputs(activeOrders));
+  }
+
+  function filteredArchivedOrders() {
+    const archivedOrders = trackOrders.filter((order) => normalizeStatus(order?.status) === "completed");
+    return sortByNewestFirst(filterByInputs(archivedOrders));
   }
 
   function getActiveCount(rows) {
     return rows.filter((row) => {
       const status = normalizeStatus(row?.status);
-      return status !== "collected" && status !== "cancelled";
+      return status !== "completed" && status !== "cancelled";
     }).length;
   }
 
-  function renderRows() {
-    const rows = filteredOrders();
-    const filters = getCurrentFilters();
-
-    count.textContent = `${rows.length} request${rows.length === 1 ? "" : "s"}`;
-
+  function buildRowsTable(rows, emptyText) {
     if (!rows.length) {
-      table.innerHTML = '<p class="stock-dashboard-empty">No matching requests found for these filters.</p>';
-      if (filters.ward) {
-        meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (0 active). ${getLastRefreshText()}`.trim();
-      }
-      return;
-    }
-
-    if (filters.ward) {
-      meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (${getActiveCount(rows)} active). ${getLastRefreshText()}`.trim();
+      return `<p class="stock-dashboard-empty">${escapeHtml(emptyText)}</p>`;
     }
 
     const header = `
@@ -154,7 +152,22 @@
       `;
     }).join("");
 
-    table.innerHTML = `<div class="track-orders-grid" role="table">${header}${body}</div>`;
+    return `<div class="track-orders-grid" role="table">${header}${body}</div>`;
+  }
+
+  function renderRows() {
+    const rows = filteredOrders();
+    const archivedRows = filteredArchivedOrders();
+    const filters = getCurrentFilters();
+
+    count.textContent = `${rows.length} active request${rows.length === 1 ? "" : "s"}`;
+    archiveCount.textContent = `${archivedRows.length} archived`;
+    table.innerHTML = buildRowsTable(rows, "No active requests found for these filters.");
+    archiveTable.innerHTML = buildRowsTable(archivedRows, "No completed orders in Archives yet.");
+
+    if (filters.ward) {
+      meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (${getActiveCount(rows)} active). ${getLastRefreshText()}`.trim();
+    }
   }
 
   async function loadOrders({ silent = false } = {}) {

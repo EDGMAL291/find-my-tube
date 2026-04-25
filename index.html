@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260423k" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260425a" />
 </head>
 <body data-app-page="home">
   <div class="container">
@@ -252,10 +252,6 @@
                 id="clinicalConcernInput"
                 placeholder="e.g. ACS, heart failure, CKD, infertility, autoimmune disease"
               />
-              <div class="clinical-workup-chip-slot">
-                <p class="clinical-workup-chip-slot-label">Quick add common concerns</p>
-                <div class="clinical-workup-chip-list clinical-workup-chip-list-inline" id="clinicalConcernChipList" aria-label="Common clinical concerns"></div>
-              </div>
             </div>
 
           </div>
@@ -408,10 +404,10 @@
   <script src="assets/data/data.js?v=20260416a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/script.js?v=20260423j"></script>
-  <script src="assets/js/find-my-test.js?v=20260416a"></script>
+  <script src="assets/js/find-my-test.js?v=20260425a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-16.1";
+      const APP_VERSION = "2026-04-25.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -432,7 +428,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260416a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260425a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

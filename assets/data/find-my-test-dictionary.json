@@ -1,8 +1,8 @@
 {
-  "version": "2026-04-23.v1",
+  "version": "2026-04-25.v2",
   "schemaVersion": "1.0",
   "sourceModel": {
-    "description": "Starter clinical dictionary for Find My Test autocomplete and concern association support. Vocabulary and structure modelled on trusted public symptom/sign resources.",
+    "description": "Starter clinical dictionary for Find My Test autocomplete and concern association support. Concern grouping follows ICD-11 symptom/sign clinical-finding structure, with plain-language wording informed by trusted public symptom indexes.",
     "references": [
       {
         "label": "NHS Symptoms A to Z",
@@ -19,6 +19,18 @@
       {
         "label": "openEHR Symptom/Sign archetype",
         "url": "https://ckm.openehr.org/ckm/archetypes/1013.1.4802"
+      },
+      {
+        "label": "WHO ICD-11 reference guide",
+        "url": "https://icdcdn.who.int/icd11referenceguide/en/refguide.pdf"
+      },
+      {
+        "label": "WHO ICD-11 overview",
+        "url": "https://www.who.int/news-room/fact-sheets/detail/icd-11"
+      },
+      {
+        "label": "MedlinePlus Health Topics",
+        "url": "https://medlineplus.gov/healthtopics.html"
       }
     ]
   },
@@ -4169,7 +4181,50 @@
       "redFlag": true,
       "redFlagNote": "Urgent chest pain or ischemic symptoms require emergency escalation.",
       "searchWeight": 99,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-acs",
+      "normalizedLabel": "acute-coronary-syndrome-risk",
+      "aliases": [
+        "ACS",
+        "possible heart attack",
+        "myocardial ischemia",
+        "chest pain",
+        "central chest pain",
+        "cardiac chest pain",
+        "chest tightness",
+        "chest discomfort",
+        "heart attack",
+        "myocardial infarction",
+        "MI"
+      ],
+      "category": "cardiovascular concern",
+      "keywords": [
+        "ACS",
+        "possible heart attack",
+        "myocardial ischemia",
+        "chest pain",
+        "central chest pain",
+        "cardiac chest pain",
+        "chest tightness",
+        "chest discomfort",
+        "heart attack",
+        "myocardial infarction",
+        "MI",
+        "Acute coronary syndrome risk",
+        "Cardiovascular",
+        "cardiovascular concern",
+        "Cardiac Profile",
+        "Troponin I",
+        "ECG",
+        "U&E"
+      ],
+      "relatedTests": [
+        "Cardiac Profile",
+        "Troponin I",
+        "ECG",
+        "U&E"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-heart-failure",
@@ -4199,7 +4254,48 @@
       "redFlag": true,
       "redFlagNote": "Severe dyspnea, hypoxia, or pulmonary edema requires urgent care.",
       "searchWeight": 95,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-heart-failure",
+      "normalizedLabel": "heart-failure-fluid-overload",
+      "aliases": [
+        "congestive heart failure",
+        "CHF",
+        "cardiac failure",
+        "fluid overload",
+        "oedema",
+        "edema",
+        "leg swelling",
+        "ankle swelling",
+        "shortness of breath",
+        "breathlessness"
+      ],
+      "category": "cardiovascular concern",
+      "keywords": [
+        "congestive heart failure",
+        "CHF",
+        "cardiac failure",
+        "fluid overload",
+        "oedema",
+        "edema",
+        "leg swelling",
+        "ankle swelling",
+        "shortness of breath",
+        "breathlessness",
+        "Heart failure / fluid overload",
+        "Cardiovascular",
+        "cardiovascular concern",
+        "NT-proBNP",
+        "U&E",
+        "Liver Function Tests (LFT)",
+        "Cardiac Profile"
+      ],
+      "relatedTests": [
+        "NT-proBNP",
+        "U&E",
+        "Liver Function Tests (LFT)",
+        "Cardiac Profile"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-arrhythmia",
@@ -4229,7 +4325,38 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 88,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-arrhythmia",
+      "normalizedLabel": "arrhythmia-palpitations",
+      "aliases": [
+        "irregular heartbeat",
+        "palpitations",
+        "tachyarrhythmia",
+        "fast heart rate",
+        "tachycardia"
+      ],
+      "category": "cardiovascular concern",
+      "keywords": [
+        "irregular heartbeat",
+        "palpitations",
+        "tachyarrhythmia",
+        "fast heart rate",
+        "tachycardia",
+        "Arrhythmia / palpitations",
+        "Cardiovascular",
+        "cardiovascular concern",
+        "Cardiac Profile",
+        "TSH",
+        "U&E",
+        "Magnesium"
+      ],
+      "relatedTests": [
+        "Cardiac Profile",
+        "TSH",
+        "U&E",
+        "Magnesium"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-hypertension",
@@ -4258,7 +4385,32 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 76,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-hypertension",
+      "normalizedLabel": "hypertension-blood-pressure-control",
+      "aliases": [
+        "high blood pressure",
+        "BP control"
+      ],
+      "category": "chronic disease context",
+      "keywords": [
+        "high blood pressure",
+        "BP control",
+        "Hypertension / blood pressure control",
+        "Cardiovascular",
+        "chronic disease context",
+        "U&E",
+        "Creatinine",
+        "Lipid Profile / Lipogram",
+        "HbA1c"
+      ],
+      "relatedTests": [
+        "U&E",
+        "Creatinine",
+        "Lipid Profile / Lipogram",
+        "HbA1c"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-thromboembolism",
@@ -4287,7 +4439,44 @@
       "redFlag": true,
       "redFlagNote": "Sudden dyspnea, pleuritic pain, hemoptysis, or unilateral leg swelling is urgent.",
       "searchWeight": 92,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-thromboembolism",
+      "normalizedLabel": "venous-thromboembolism-risk",
+      "aliases": [
+        "DVT / PE concern",
+        "clot risk",
+        "venous clot",
+        "DVT",
+        "PE",
+        "pulmonary embolism",
+        "blood clot",
+        "pleuritic chest pain",
+        "unilateral leg swelling"
+      ],
+      "category": "thrombotic / clotting concern",
+      "keywords": [
+        "DVT / PE concern",
+        "clot risk",
+        "venous clot",
+        "DVT",
+        "PE",
+        "pulmonary embolism",
+        "blood clot",
+        "pleuritic chest pain",
+        "unilateral leg swelling",
+        "Venous thromboembolism risk",
+        "Cardiovascular",
+        "thrombotic / clotting concern",
+        "D-Dimer",
+        "Coagulation Studies",
+        "FBC"
+      ],
+      "relatedTests": [
+        "D-Dimer",
+        "Coagulation Studies",
+        "FBC"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-pneumonia",
@@ -4317,7 +4506,44 @@
       "redFlag": true,
       "redFlagNote": "Hypoxia, respiratory distress, or sepsis features need urgent review.",
       "searchWeight": 90,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-pneumonia",
+      "normalizedLabel": "lower-respiratory-infection",
+      "aliases": [
+        "pneumonia",
+        "chest infection",
+        "LRTI",
+        "cough and fever",
+        "productive cough",
+        "sputum",
+        "shortness of breath",
+        "breathlessness"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "pneumonia",
+        "chest infection",
+        "LRTI",
+        "cough and fever",
+        "productive cough",
+        "sputum",
+        "shortness of breath",
+        "breathlessness",
+        "Lower respiratory infection",
+        "Respiratory",
+        "infection-related concern",
+        "CRP",
+        "Procalcitonin (PCT)",
+        "FBC",
+        "Blood Culture"
+      ],
+      "relatedTests": [
+        "CRP",
+        "Procalcitonin (PCT)",
+        "FBC",
+        "Blood Culture"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-asthma-copd",
@@ -4346,7 +4572,42 @@
       "redFlag": true,
       "redFlagNote": "Severe breathlessness or silent chest requires emergency escalation.",
       "searchWeight": 84,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-asthma-copd",
+      "normalizedLabel": "asthma-copd-exacerbation",
+      "aliases": [
+        "wheeze flare",
+        "bronchospasm",
+        "obstructive airway flare",
+        "wheeze",
+        "wheezing",
+        "asthma flare",
+        "COPD flare",
+        "shortness of breath"
+      ],
+      "category": "respiratory concern",
+      "keywords": [
+        "wheeze flare",
+        "bronchospasm",
+        "obstructive airway flare",
+        "wheeze",
+        "wheezing",
+        "asthma flare",
+        "COPD flare",
+        "shortness of breath",
+        "Asthma / COPD exacerbation",
+        "Respiratory",
+        "respiratory concern",
+        "Blood Gas (ABG)",
+        "CRP",
+        "FBC"
+      ],
+      "relatedTests": [
+        "Blood Gas (ABG)",
+        "CRP",
+        "FBC"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-tb",
@@ -4375,7 +4636,32 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 70,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-tb",
+      "normalizedLabel": "tuberculosis-concern",
+      "aliases": [
+        "TB screening",
+        "possible pulmonary TB"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "TB screening",
+        "possible pulmonary TB",
+        "Tuberculosis concern",
+        "Respiratory",
+        "infection-related concern",
+        "CRP",
+        "ESR",
+        "FBC",
+        "HIV ELISA"
+      ],
+      "relatedTests": [
+        "CRP",
+        "ESR",
+        "FBC",
+        "HIV ELISA"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-sepsis",
@@ -4406,7 +4692,46 @@
       "redFlag": true,
       "redFlagNote": "Possible sepsis is time-critical and requires urgent escalation.",
       "searchWeight": 98,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-sepsis",
+      "normalizedLabel": "sepsis-severe-infection-risk",
+      "aliases": [
+        "systemic infection",
+        "septic presentation",
+        "septic shock risk",
+        "severe infection",
+        "fever and confusion",
+        "low blood pressure",
+        "hypotension",
+        "septic screen"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "systemic infection",
+        "septic presentation",
+        "septic shock risk",
+        "severe infection",
+        "fever and confusion",
+        "low blood pressure",
+        "hypotension",
+        "septic screen",
+        "Sepsis / severe infection risk",
+        "Infectious",
+        "infection-related concern",
+        "CRP",
+        "Procalcitonin (PCT)",
+        "Blood Culture",
+        "Lactate",
+        "FBC"
+      ],
+      "relatedTests": [
+        "CRP",
+        "Procalcitonin (PCT)",
+        "Blood Culture",
+        "Lactate",
+        "FBC"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-viral-illness",
@@ -4434,7 +4759,30 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 64,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-viral-illness",
+      "normalizedLabel": "acute-viral-illness",
+      "aliases": [
+        "flu-like illness",
+        "influenza-like illness",
+        "viral syndrome"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "flu-like illness",
+        "influenza-like illness",
+        "viral syndrome",
+        "Acute viral illness",
+        "Infectious",
+        "infection-related concern",
+        "CRP",
+        "FBC"
+      ],
+      "relatedTests": [
+        "CRP",
+        "FBC"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-hiv",
@@ -4462,7 +4810,30 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 71,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-hiv",
+      "normalizedLabel": "hiv-screening-context",
+      "aliases": [
+        "HIV concern",
+        "HIV exposure"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "HIV concern",
+        "HIV exposure",
+        "HIV screening context",
+        "Infectious",
+        "infection-related concern",
+        "HIV ELISA",
+        "FBC",
+        "Liver Function Tests (LFT)"
+      ],
+      "relatedTests": [
+        "HIV ELISA",
+        "FBC",
+        "Liver Function Tests (LFT)"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-gastroenteritis",
@@ -4491,7 +4862,40 @@
       "redFlag": true,
       "redFlagNote": "Severe dehydration, persistent vomiting, or shock signs are urgent.",
       "searchWeight": 86,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-gastroenteritis",
+      "normalizedLabel": "acute-gastroenteritis-dehydration",
+      "aliases": [
+        "vomiting and diarrhea",
+        "gastro",
+        "acute diarrhea illness",
+        "diarrhoea",
+        "diarrhea",
+        "vomiting",
+        "dehydration"
+      ],
+      "category": "liver / GI concern",
+      "keywords": [
+        "vomiting and diarrhea",
+        "gastro",
+        "acute diarrhea illness",
+        "diarrhoea",
+        "diarrhea",
+        "vomiting",
+        "dehydration",
+        "Acute gastroenteritis / dehydration",
+        "Gastrointestinal",
+        "liver / GI concern",
+        "U&E",
+        "CRP",
+        "FBC"
+      ],
+      "relatedTests": [
+        "U&E",
+        "CRP",
+        "FBC"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-hepatitis",
@@ -4520,7 +4924,40 @@
       "redFlag": true,
       "redFlagNote": "Acute jaundice with confusion/bleeding risk needs urgent assessment.",
       "searchWeight": 82,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-hepatitis",
+      "normalizedLabel": "hepatitis-liver-inflammation",
+      "aliases": [
+        "acute hepatitis",
+        "liver inflammation",
+        "jaundice workup",
+        "jaundice",
+        "icterus",
+        "yellow eyes",
+        "abnormal LFT"
+      ],
+      "category": "liver / GI concern",
+      "keywords": [
+        "acute hepatitis",
+        "liver inflammation",
+        "jaundice workup",
+        "jaundice",
+        "icterus",
+        "yellow eyes",
+        "abnormal LFT",
+        "Hepatitis / liver inflammation",
+        "Gastrointestinal",
+        "liver / GI concern",
+        "Liver Function Tests (LFT)",
+        "Acute Viral Hepatitis Profile",
+        "INR"
+      ],
+      "relatedTests": [
+        "Liver Function Tests (LFT)",
+        "Acute Viral Hepatitis Profile",
+        "INR"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-gi-bleed",
@@ -4550,7 +4987,46 @@
       "redFlag": true,
       "redFlagNote": "Potential GI hemorrhage is an emergency.",
       "searchWeight": 95,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-gi-bleed",
+      "normalizedLabel": "gastrointestinal-bleed-concern",
+      "aliases": [
+        "GI bleeding",
+        "hematemesis or melaena",
+        "digestive tract bleed",
+        "melaena",
+        "melena",
+        "blood in stool",
+        "vomiting blood",
+        "haematemesis",
+        "hematemesis"
+      ],
+      "category": "liver / GI concern",
+      "keywords": [
+        "GI bleeding",
+        "hematemesis or melaena",
+        "digestive tract bleed",
+        "melaena",
+        "melena",
+        "blood in stool",
+        "vomiting blood",
+        "haematemesis",
+        "hematemesis",
+        "Gastrointestinal bleed concern",
+        "Gastrointestinal",
+        "liver / GI concern",
+        "FBC",
+        "U&E",
+        "INR",
+        "Group and Save"
+      ],
+      "relatedTests": [
+        "FBC",
+        "U&E",
+        "INR",
+        "Group and Save"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-pancreatitis",
@@ -4579,7 +5055,32 @@
       "redFlag": true,
       "redFlagNote": "Severe abdominal pain with systemic upset needs urgent review.",
       "searchWeight": 74,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-pancreatitis",
+      "normalizedLabel": "acute-pancreatitis-concern",
+      "aliases": [
+        "pancreatic inflammation",
+        "pancreatitis"
+      ],
+      "category": "liver / GI concern",
+      "keywords": [
+        "pancreatic inflammation",
+        "pancreatitis",
+        "Acute pancreatitis concern",
+        "Gastrointestinal",
+        "liver / GI concern",
+        "Amylase",
+        "Lipase",
+        "Liver Function Tests (LFT)",
+        "U&E"
+      ],
+      "relatedTests": [
+        "Amylase",
+        "Lipase",
+        "Liver Function Tests (LFT)",
+        "U&E"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-stroke",
@@ -4609,7 +5110,44 @@
       "redFlag": true,
       "redFlagNote": "New focal neurological deficit requires emergency stroke pathway.",
       "searchWeight": 99,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-stroke",
+      "normalizedLabel": "acute-stroke-tia-risk",
+      "aliases": [
+        "CVA concern",
+        "neurological deficit",
+        "FAST positive",
+        "stroke symptoms",
+        "TIA",
+        "weakness one side",
+        "facial droop",
+        "slurred speech"
+      ],
+      "category": "clinical syndrome / presentation",
+      "keywords": [
+        "CVA concern",
+        "neurological deficit",
+        "FAST positive",
+        "stroke symptoms",
+        "TIA",
+        "weakness one side",
+        "facial droop",
+        "slurred speech",
+        "Acute stroke / TIA risk",
+        "Neurological",
+        "clinical syndrome / presentation",
+        "FBC",
+        "U&E",
+        "Glucose",
+        "INR"
+      ],
+      "relatedTests": [
+        "FBC",
+        "U&E",
+        "Glucose",
+        "INR"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-seizure",
@@ -4639,7 +5177,34 @@
       "redFlag": true,
       "redFlagNote": "Status epilepticus or reduced consciousness is urgent.",
       "searchWeight": 83,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-seizure",
+      "normalizedLabel": "seizure-disorder-new-seizure",
+      "aliases": [
+        "convulsion",
+        "fits",
+        "epileptic event"
+      ],
+      "category": "clinical syndrome / presentation",
+      "keywords": [
+        "convulsion",
+        "fits",
+        "epileptic event",
+        "Seizure disorder / new seizure",
+        "Neurological",
+        "clinical syndrome / presentation",
+        "Glucose",
+        "U&E",
+        "Calcium",
+        "Magnesium"
+      ],
+      "relatedTests": [
+        "Glucose",
+        "U&E",
+        "Calcium",
+        "Magnesium"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-meningitis",
@@ -4669,7 +5234,42 @@
       "redFlag": true,
       "redFlagNote": "Suspected meningitis is a medical emergency.",
       "searchWeight": 97,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-meningitis",
+      "normalizedLabel": "meningitis-cns-infection-concern",
+      "aliases": [
+        "meningoencephalitis",
+        "meningism",
+        "CNS sepsis",
+        "neck stiffness",
+        "photophobia",
+        "severe headache with fever",
+        "CNS infection"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "meningoencephalitis",
+        "meningism",
+        "CNS sepsis",
+        "neck stiffness",
+        "photophobia",
+        "severe headache with fever",
+        "CNS infection",
+        "Meningitis / CNS infection concern",
+        "Neurological",
+        "infection-related concern",
+        "CRP",
+        "FBC",
+        "Blood Culture",
+        "CSF Profile"
+      ],
+      "relatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture",
+        "CSF Profile"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-headache-secondary",
@@ -4698,7 +5298,32 @@
       "redFlag": true,
       "redFlagNote": "Sudden severe headache or focal deficits require urgent evaluation.",
       "searchWeight": 79,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-headache-secondary",
+      "normalizedLabel": "secondary-headache-red-flag-concern",
+      "aliases": [
+        "dangerous headache",
+        "sudden severe headache",
+        "thunderclap headache"
+      ],
+      "category": "clinical syndrome / presentation",
+      "keywords": [
+        "dangerous headache",
+        "sudden severe headache",
+        "thunderclap headache",
+        "Secondary headache red flag concern",
+        "Neurological",
+        "clinical syndrome / presentation",
+        "CRP",
+        "ESR",
+        "FBC"
+      ],
+      "relatedTests": [
+        "CRP",
+        "ESR",
+        "FBC"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-diabetes",
@@ -4727,7 +5352,42 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 88,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-diabetes",
+      "normalizedLabel": "diabetes-screening-hyperglycemia",
+      "aliases": [
+        "high sugar concern",
+        "possible diabetes mellitus",
+        "hyperglycemia",
+        "high glucose",
+        "hyperglycaemia",
+        "thirst",
+        "polyuria",
+        "diabetes screen"
+      ],
+      "category": "metabolic / endocrine concern",
+      "keywords": [
+        "high sugar concern",
+        "possible diabetes mellitus",
+        "hyperglycemia",
+        "high glucose",
+        "hyperglycaemia",
+        "thirst",
+        "polyuria",
+        "diabetes screen",
+        "Diabetes screening / hyperglycemia",
+        "Endocrine/Metabolic",
+        "metabolic / endocrine concern",
+        "Glucose",
+        "HbA1c",
+        "U&E"
+      ],
+      "relatedTests": [
+        "Glucose",
+        "HbA1c",
+        "U&E"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-hypoglycemia",
@@ -4755,7 +5415,38 @@
       "redFlag": true,
       "redFlagNote": "Symptomatic hypoglycemia with altered consciousness is urgent.",
       "searchWeight": 78,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-hypoglycemia",
+      "normalizedLabel": "hypoglycemia-concern",
+      "aliases": [
+        "low blood sugar",
+        "hypo episodes",
+        "low glucose",
+        "low sugar",
+        "sweating and confusion",
+        "hypo"
+      ],
+      "category": "metabolic / endocrine concern",
+      "keywords": [
+        "low blood sugar",
+        "hypo episodes",
+        "low glucose",
+        "low sugar",
+        "sweating and confusion",
+        "hypo",
+        "Hypoglycemia concern",
+        "Endocrine/Metabolic",
+        "metabolic / endocrine concern",
+        "Glucose",
+        "HbA1c",
+        "U&E"
+      ],
+      "relatedTests": [
+        "Glucose",
+        "HbA1c",
+        "U&E"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-thyroid",
@@ -4785,7 +5476,46 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 86,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-thyroid",
+      "normalizedLabel": "thyroid-dysfunction",
+      "aliases": [
+        "hypothyroidism concern",
+        "hyperthyroidism concern",
+        "thyroid disorder",
+        "thyroid disease",
+        "weight change",
+        "heat intolerance",
+        "cold intolerance",
+        "goitre",
+        "goiter"
+      ],
+      "category": "metabolic / endocrine concern",
+      "keywords": [
+        "hypothyroidism concern",
+        "hyperthyroidism concern",
+        "thyroid disorder",
+        "thyroid disease",
+        "weight change",
+        "heat intolerance",
+        "cold intolerance",
+        "goitre",
+        "goiter",
+        "Thyroid dysfunction",
+        "Endocrine/Metabolic",
+        "metabolic / endocrine concern",
+        "TSH",
+        "Free T4",
+        "Free T3",
+        "Thyroid Antibodies (TPO and Tg Ab)"
+      ],
+      "relatedTests": [
+        "TSH",
+        "Free T4",
+        "Free T3",
+        "Thyroid Antibodies (TPO and Tg Ab)"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-adrenal",
@@ -4813,7 +5543,30 @@
       "redFlag": true,
       "redFlagNote": "Possible adrenal crisis is urgent.",
       "searchWeight": 65,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-adrenal",
+      "normalizedLabel": "adrenal-insufficiency-concern",
+      "aliases": [
+        "Addisonian concern",
+        "adrenal failure"
+      ],
+      "category": "metabolic / endocrine concern",
+      "keywords": [
+        "Addisonian concern",
+        "adrenal failure",
+        "Adrenal insufficiency concern",
+        "Endocrine/Metabolic",
+        "metabolic / endocrine concern",
+        "Cortisol",
+        "U&E",
+        "Glucose"
+      ],
+      "relatedTests": [
+        "Cortisol",
+        "U&E",
+        "Glucose"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-aki",
@@ -4842,7 +5595,42 @@
       "redFlag": true,
       "redFlagNote": "Rapidly rising creatinine, oliguria, or hyperkalemia is urgent.",
       "searchWeight": 92,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-aki",
+      "normalizedLabel": "acute-kidney-injury-concern",
+      "aliases": [
+        "AKI",
+        "worsening renal function",
+        "acute renal impairment",
+        "acute kidney injury",
+        "raised creatinine",
+        "reduced urine",
+        "oliguria",
+        "renal impairment"
+      ],
+      "category": "renal concern",
+      "keywords": [
+        "AKI",
+        "worsening renal function",
+        "acute renal impairment",
+        "acute kidney injury",
+        "raised creatinine",
+        "reduced urine",
+        "oliguria",
+        "renal impairment",
+        "Acute kidney injury concern",
+        "Renal/Urinary",
+        "renal concern",
+        "U&E",
+        "Creatinine",
+        "Potassium"
+      ],
+      "relatedTests": [
+        "U&E",
+        "Creatinine",
+        "Potassium"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-ckd",
@@ -4872,7 +5660,42 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 81,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-ckd",
+      "normalizedLabel": "chronic-kidney-disease-monitoring",
+      "aliases": [
+        "CKD follow-up",
+        "chronic renal disease",
+        "chronic kidney disease",
+        "kidney function monitoring",
+        "renal monitoring",
+        "proteinuria"
+      ],
+      "category": "renal concern",
+      "keywords": [
+        "CKD follow-up",
+        "chronic renal disease",
+        "chronic kidney disease",
+        "kidney function monitoring",
+        "renal monitoring",
+        "proteinuria",
+        "Chronic kidney disease monitoring",
+        "Renal/Urinary",
+        "renal concern",
+        "U&E",
+        "Creatinine",
+        "Calcium",
+        "Phosphate",
+        "PTH"
+      ],
+      "relatedTests": [
+        "U&E",
+        "Creatinine",
+        "Calcium",
+        "Phosphate",
+        "PTH"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-uti",
@@ -4901,7 +5724,42 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 80,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-uti",
+      "normalizedLabel": "urinary-tract-infection-concern",
+      "aliases": [
+        "UTI",
+        "cystitis",
+        "pyelonephritis concern",
+        "urinary tract infection",
+        "dysuria",
+        "frequency",
+        "burning urine",
+        "urine infection"
+      ],
+      "category": "renal concern",
+      "keywords": [
+        "UTI",
+        "cystitis",
+        "pyelonephritis concern",
+        "urinary tract infection",
+        "dysuria",
+        "frequency",
+        "burning urine",
+        "urine infection",
+        "Urinary tract infection concern",
+        "Renal/Urinary",
+        "renal concern",
+        "Urine MC&S",
+        "CRP",
+        "FBC"
+      ],
+      "relatedTests": [
+        "Urine MC&S",
+        "CRP",
+        "FBC"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-anemia",
@@ -4931,7 +5789,50 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 93,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-anemia",
+      "normalizedLabel": "anaemia-anemia-workup",
+      "aliases": [
+        "low hemoglobin",
+        "anaemic symptoms",
+        "anemia workup",
+        "anaemia",
+        "anemia",
+        "fatigue",
+        "tiredness",
+        "pallor",
+        "pale",
+        "low haemoglobin",
+        "iron deficiency"
+      ],
+      "category": "haematology concern",
+      "keywords": [
+        "low hemoglobin",
+        "anaemic symptoms",
+        "anemia workup",
+        "anaemia",
+        "anemia",
+        "fatigue",
+        "tiredness",
+        "pallor",
+        "pale",
+        "low haemoglobin",
+        "iron deficiency",
+        "Anaemia / anemia workup",
+        "Haematology",
+        "haematology concern",
+        "FBC",
+        "Fe Studies",
+        "Ferritin",
+        "Vitamin B12"
+      ],
+      "relatedTests": [
+        "FBC",
+        "Fe Studies",
+        "Ferritin",
+        "Vitamin B12"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-bleeding-disorder",
@@ -4960,7 +5861,42 @@
       "redFlag": true,
       "redFlagNote": "Active bleeding or severe thrombocytopenia requires urgent management.",
       "searchWeight": 90,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-bleeding-disorder",
+      "normalizedLabel": "bleeding-tendency-coagulopathy",
+      "aliases": [
+        "coagulation disorder",
+        "easy bleeding",
+        "bleeding diathesis",
+        "easy bruising",
+        "bleeding tendency",
+        "coagulopathy",
+        "prolonged bleeding",
+        "INR concern"
+      ],
+      "category": "haematology concern",
+      "keywords": [
+        "coagulation disorder",
+        "easy bleeding",
+        "bleeding diathesis",
+        "easy bruising",
+        "bleeding tendency",
+        "coagulopathy",
+        "prolonged bleeding",
+        "INR concern",
+        "Bleeding tendency / coagulopathy",
+        "Haematology",
+        "haematology concern",
+        "Coagulation Studies",
+        "Fibrinogen",
+        "FBC"
+      ],
+      "relatedTests": [
+        "Coagulation Studies",
+        "Fibrinogen",
+        "FBC"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-thrombocytopenia",
@@ -4988,7 +5924,36 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 75,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-thrombocytopenia",
+      "normalizedLabel": "thrombocytopenia-concern",
+      "aliases": [
+        "low platelets",
+        "platelet drop",
+        "platelet count low",
+        "petechiae",
+        "purpura"
+      ],
+      "category": "haematology concern",
+      "keywords": [
+        "low platelets",
+        "platelet drop",
+        "platelet count low",
+        "petechiae",
+        "purpura",
+        "Thrombocytopenia concern",
+        "Haematology",
+        "haematology concern",
+        "FBC",
+        "Blood Film",
+        "Coagulation Studies"
+      ],
+      "relatedTests": [
+        "FBC",
+        "Blood Film",
+        "Coagulation Studies"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-autoimmune",
@@ -5018,7 +5983,40 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 73,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-autoimmune",
+      "normalizedLabel": "systemic-autoimmune-inflammation",
+      "aliases": [
+        "connective tissue disease",
+        "autoimmune flare",
+        "inflammatory autoimmune disease",
+        "autoimmune screen",
+        "inflammatory disease",
+        "joint pain and rash"
+      ],
+      "category": "general inflammatory / autoimmune concern",
+      "keywords": [
+        "connective tissue disease",
+        "autoimmune flare",
+        "inflammatory autoimmune disease",
+        "autoimmune screen",
+        "inflammatory disease",
+        "joint pain and rash",
+        "Systemic autoimmune inflammation",
+        "Musculoskeletal",
+        "general inflammatory / autoimmune concern",
+        "ANA Screen and Reflex ENA Antibodies",
+        "CRP",
+        "ESR",
+        "Rheumatoid Factor (RF)"
+      ],
+      "relatedTests": [
+        "ANA Screen and Reflex ENA Antibodies",
+        "CRP",
+        "ESR",
+        "Rheumatoid Factor (RF)"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-rheumatoid",
@@ -5047,7 +6045,40 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 72,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-rheumatoid",
+      "normalizedLabel": "inflammatory-arthritis-concern",
+      "aliases": [
+        "rheumatoid arthritis concern",
+        "polyarthritis",
+        "inflammatory arthritis",
+        "joint swelling",
+        "morning stiffness",
+        "rheumatoid arthritis"
+      ],
+      "category": "general inflammatory / autoimmune concern",
+      "keywords": [
+        "rheumatoid arthritis concern",
+        "polyarthritis",
+        "inflammatory arthritis",
+        "joint swelling",
+        "morning stiffness",
+        "rheumatoid arthritis",
+        "Inflammatory arthritis concern",
+        "Musculoskeletal",
+        "general inflammatory / autoimmune concern",
+        "CRP",
+        "ESR",
+        "Rheumatoid Factor (RF)",
+        "Anti-CCP Antibody"
+      ],
+      "relatedTests": [
+        "CRP",
+        "ESR",
+        "Rheumatoid Factor (RF)",
+        "Anti-CCP Antibody"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-pregnancy-booking",
@@ -5077,7 +6108,48 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 91,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-pregnancy-booking",
+      "normalizedLabel": "pregnancy-booking-antenatal-profile",
+      "aliases": [
+        "antenatal booking",
+        "first pregnancy bloods",
+        "ANTINV context",
+        "pregnancy",
+        "pregnant",
+        "antenatal",
+        "prenatal",
+        "gestational",
+        "booking bloods",
+        "first antenatal visit"
+      ],
+      "category": "reproductive / antenatal context",
+      "keywords": [
+        "antenatal booking",
+        "first pregnancy bloods",
+        "ANTINV context",
+        "pregnancy",
+        "pregnant",
+        "antenatal",
+        "prenatal",
+        "gestational",
+        "booking bloods",
+        "first antenatal visit",
+        "Pregnancy booking / antenatal profile",
+        "Reproductive/Gynae",
+        "reproductive / antenatal context",
+        "Antenatal Screen (ANTINV)",
+        "Blood Group & Rh",
+        "RPR (Syphilis Screen)",
+        "HIV ELISA"
+      ],
+      "relatedTests": [
+        "Antenatal Screen (ANTINV)",
+        "Blood Group & Rh",
+        "RPR (Syphilis Screen)",
+        "HIV ELISA"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-ectopic-miscarriage",
@@ -5106,7 +6178,38 @@
       "redFlag": true,
       "redFlagNote": "Pregnancy bleeding with pain can be life-threatening.",
       "searchWeight": 93,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-ectopic-miscarriage",
+      "normalizedLabel": "early-pregnancy-pain-or-bleeding-risk",
+      "aliases": [
+        "possible ectopic",
+        "pregnancy bleeding",
+        "threatened miscarriage",
+        "early pregnancy bleeding",
+        "pelvic pain pregnancy",
+        "miscarriage"
+      ],
+      "category": "reproductive / antenatal context",
+      "keywords": [
+        "possible ectopic",
+        "pregnancy bleeding",
+        "threatened miscarriage",
+        "early pregnancy bleeding",
+        "pelvic pain pregnancy",
+        "miscarriage",
+        "Early pregnancy pain or bleeding risk",
+        "Reproductive/Gynae",
+        "reproductive / antenatal context",
+        "Beta-hCG",
+        "Blood Group & Rh",
+        "FBC"
+      ],
+      "relatedTests": [
+        "Beta-hCG",
+        "Blood Group & Rh",
+        "FBC"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-preeclampsia",
@@ -5135,7 +6238,44 @@
       "redFlag": true,
       "redFlagNote": "Severe hypertension, headache, visual symptoms, or RUQ pain in pregnancy is urgent.",
       "searchWeight": 90,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-preeclampsia",
+      "normalizedLabel": "pre-eclampsia-concern",
+      "aliases": [
+        "pregnancy hypertension concern",
+        "pre-eclampsia symptoms",
+        "pre-eclampsia",
+        "preeclampsia",
+        "pregnancy hypertension",
+        "headache in pregnancy",
+        "proteinuria",
+        "gestational hypertension"
+      ],
+      "category": "reproductive / antenatal context",
+      "keywords": [
+        "pregnancy hypertension concern",
+        "pre-eclampsia symptoms",
+        "pre-eclampsia",
+        "preeclampsia",
+        "pregnancy hypertension",
+        "headache in pregnancy",
+        "proteinuria",
+        "gestational hypertension",
+        "Pre-eclampsia concern",
+        "Reproductive/Gynae",
+        "reproductive / antenatal context",
+        "U&E",
+        "Liver Function Tests (LFT)",
+        "FBC",
+        "Uric Acid"
+      ],
+      "relatedTests": [
+        "U&E",
+        "Liver Function Tests (LFT)",
+        "FBC",
+        "Uric Acid"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-sti",
@@ -5165,7 +6305,44 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 68,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-sti",
+      "normalizedLabel": "sexually-transmitted-infection-concern",
+      "aliases": [
+        "STI concern",
+        "genital infection concern",
+        "urethritis/vaginitis concern",
+        "STI",
+        "STD",
+        "urethral discharge",
+        "vaginal discharge",
+        "sexual health screen"
+      ],
+      "category": "reproductive / antenatal context",
+      "keywords": [
+        "STI concern",
+        "genital infection concern",
+        "urethritis/vaginitis concern",
+        "STI",
+        "STD",
+        "urethral discharge",
+        "vaginal discharge",
+        "sexual health screen",
+        "Sexually transmitted infection concern",
+        "Reproductive/Gynae",
+        "reproductive / antenatal context",
+        "HIV ELISA",
+        "RPR (Syphilis Screen)",
+        "Hepatitis B Surface Antigen (HBsAg)",
+        "Urine MC&S"
+      ],
+      "relatedTests": [
+        "HIV ELISA",
+        "RPR (Syphilis Screen)",
+        "Hepatitis B Surface Antigen (HBsAg)",
+        "Urine MC&S"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-dermatitis",
@@ -5193,7 +6370,30 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 56,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-dermatitis",
+      "normalizedLabel": "dermatitis-inflammatory-skin-condition",
+      "aliases": [
+        "eczema flare",
+        "inflammatory rash"
+      ],
+      "category": "clinical syndrome / presentation",
+      "keywords": [
+        "eczema flare",
+        "inflammatory rash",
+        "Dermatitis / inflammatory skin condition",
+        "Skin/Hair",
+        "clinical syndrome / presentation",
+        "CRP",
+        "FBC",
+        "IgE"
+      ],
+      "relatedTests": [
+        "CRP",
+        "FBC",
+        "IgE"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-cellulitis",
@@ -5222,7 +6422,36 @@
       "redFlag": true,
       "redFlagNote": "Rapidly spreading redness, fever, or systemic signs needs urgent review.",
       "searchWeight": 74,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-cellulitis",
+      "normalizedLabel": "cellulitis-skin-soft-tissue-infection",
+      "aliases": [
+        "skin infection",
+        "erysipelas concern",
+        "infected skin",
+        "red swollen skin",
+        "soft tissue infection"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "skin infection",
+        "erysipelas concern",
+        "infected skin",
+        "red swollen skin",
+        "soft tissue infection",
+        "Cellulitis / skin soft tissue infection",
+        "Skin/Hair",
+        "infection-related concern",
+        "CRP",
+        "FBC",
+        "Blood Culture"
+      ],
+      "relatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-depression-anxiety",
@@ -5251,7 +6480,42 @@
       "redFlag": false,
       "redFlagNote": "",
       "searchWeight": 62,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-depression-anxiety",
+      "normalizedLabel": "depression-anxiety-symptom-burden",
+      "aliases": [
+        "low mood concern",
+        "anxiety symptoms",
+        "psychological distress",
+        "low mood",
+        "anxiety",
+        "panic symptoms",
+        "sleep disturbance",
+        "behaviour change"
+      ],
+      "category": "mental health / behavioural concern",
+      "keywords": [
+        "low mood concern",
+        "anxiety symptoms",
+        "psychological distress",
+        "low mood",
+        "anxiety",
+        "panic symptoms",
+        "sleep disturbance",
+        "behaviour change",
+        "Depression / anxiety symptom burden",
+        "Mental Health/Behaviour",
+        "mental health / behavioural concern",
+        "TSH",
+        "FBC",
+        "Vitamin B12"
+      ],
+      "relatedTests": [
+        "TSH",
+        "FBC",
+        "Vitamin B12"
+      ],
+      "urgent": false
     },
     {
       "id": "concern-neonatal-sepsis",
@@ -5280,7 +6544,40 @@
       "redFlag": true,
       "redFlagNote": "Any unwell neonate may deteriorate quickly and needs urgent escalation.",
       "searchWeight": 94,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-neonatal-sepsis",
+      "normalizedLabel": "neonatal-sepsis-concern",
+      "aliases": [
+        "newborn infection concern",
+        "early neonatal sepsis",
+        "newborn fever",
+        "poor feeding newborn",
+        "lethargic newborn",
+        "neonate infection"
+      ],
+      "category": "infection-related concern",
+      "keywords": [
+        "newborn infection concern",
+        "early neonatal sepsis",
+        "newborn fever",
+        "poor feeding newborn",
+        "lethargic newborn",
+        "neonate infection",
+        "Neonatal sepsis concern",
+        "Paediatrics/Neonatal",
+        "infection-related concern",
+        "CRP",
+        "FBC",
+        "Blood Culture",
+        "Lactate"
+      ],
+      "relatedTests": [
+        "CRP",
+        "FBC",
+        "Blood Culture",
+        "Lactate"
+      ],
+      "urgent": true
     },
     {
       "id": "concern-neonatal-jaundice",
@@ -5308,7 +6605,68 @@
       "redFlag": true,
       "redFlagNote": "Very early jaundice, poor feeding, or lethargy requires urgent neonatal review.",
       "searchWeight": 83,
-      "active": true
+      "active": true,
+      "normalizedKey": "concern-neonatal-jaundice",
+      "normalizedLabel": "neonatal-jaundice-concern",
+      "aliases": [
+        "newborn jaundice",
+        "infant jaundice",
+        "yellow newborn",
+        "neonatal bilirubin"
+      ],
+      "category": "clinical syndrome / presentation",
+      "keywords": [
+        "newborn jaundice",
+        "infant jaundice",
+        "yellow newborn",
+        "neonatal bilirubin",
+        "Neonatal jaundice concern",
+        "Paediatrics/Neonatal",
+        "clinical syndrome / presentation",
+        "Total Serum Bilirubin (TSB)",
+        "Conjugated Bilirubin (Direct)",
+        "FBC"
+      ],
+      "relatedTests": [
+        "Total Serum Bilirubin (TSB)",
+        "Conjugated Bilirubin (Direct)",
+        "FBC"
+      ],
+      "urgent": true
     }
-  ]
+  ],
+  "concernModel": {
+    "purpose": "Grouped concern entries for autocomplete and future concern-to-test association logic. These are not diagnoses.",
+    "backbone": "ICD-11-style symptoms, signs, clinical findings, and body-system groupings, normalized into practical lab workflow categories.",
+    "fields": [
+      "id",
+      "term",
+      "normalizedKey",
+      "normalizedLabel",
+      "type",
+      "aliases",
+      "category",
+      "keywords",
+      "relatedTests",
+      "urgent",
+      "active"
+    ],
+    "categories": [
+      "symptom",
+      "sign",
+      "clinical syndrome / presentation",
+      "chronic disease context",
+      "reproductive / antenatal context",
+      "infection-related concern",
+      "metabolic / endocrine concern",
+      "haematology concern",
+      "renal concern",
+      "liver / GI concern",
+      "cardiovascular concern",
+      "respiratory concern",
+      "mental health / behavioural concern",
+      "thrombotic / clotting concern",
+      "general inflammatory / autoimmune concern"
+    ]
+  }
 }

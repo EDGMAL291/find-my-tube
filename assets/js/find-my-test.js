@@ -119,6 +119,56 @@
     return "symptom";
   }
 
+  function getDictionaryEntriesForField(field) {
+    const dictionaryType = getDictionaryTypeForField(field);
+    if (dictionaryType !== "concern") {
+      return state.dictionaryByType[dictionaryType] || [];
+    }
+
+    // Concern entry accepts concern, symptom, and sign context so clinicians can type the words they have.
+    return [
+      ...(state.dictionaryByType.concern || []),
+      ...(state.dictionaryByType.symptom || []),
+      ...(state.dictionaryByType.sign || [])
+    ];
+  }
+
+  function getDictionaryEntryTypeLabel(entry) {
+    if (entry?.type === "symptom") return "Symptom";
+    if (entry?.type === "sign") return "Sign";
+    return "Concern";
+  }
+
+  function getDictionaryEntryCategory(entry) {
+    return String(entry?.category || entry?.bodySystem || "General").trim() || "General";
+  }
+
+  function getDictionaryEntryTypeRank(field, entry) {
+    if (field !== "concern") return 0;
+    if (entry?.type === "concern") return 0;
+    if (entry?.type === "symptom") return 1;
+    if (entry?.type === "sign") return 2;
+    return 3;
+  }
+
+  function getEntrySearchPhrases(entry) {
+    const synonymValues = uniqueStrings([
+      ...(entry?.synonyms || []),
+      ...(entry?.aliases || [])
+    ]);
+    const keywordValues = uniqueStrings([
+      ...(entry?.keywords || []),
+      getDictionaryEntryCategory(entry),
+      entry?.bodySystem || ""
+    ]);
+
+    return {
+      term: String(entry?.term || "").trim(),
+      synonyms: synonymValues,
+      keywords: keywordValues
+    };
+  }
+
   function getAutocompletePanelId(field) {
     return `clinicalWorkupAutocomplete-${field}`;
   }
@@ -147,7 +197,9 @@
     }
 
     input.setAttribute("autocomplete", "off");
+    input.setAttribute("aria-autocomplete", "list");
     input.setAttribute("aria-controls", panelId);
+    input.setAttribute("aria-expanded", "false");
     return panel;
   }
 
@@ -174,8 +226,7 @@
   function buildDictionaryAutocompleteMatches(field, normalizedQuery) {
     if (!normalizedQuery) return [];
 
-    const dictionaryType = getDictionaryTypeForField(field);
-    const candidates = state.dictionaryByType[dictionaryType] || [];
+    const candidates = getDictionaryEntriesForField(field);
     const matches = [];
 
     candidates.forEach((entry) => {
@@ -193,7 +244,8 @@
       } else if (normalizedTerm.includes(normalizedQuery)) {
         tier = 1;
       } else {
-        const synonymMatches = (entry.synonyms || [])
+        const searchPhrases = getEntrySearchPhrases(entry);
+        const synonymMatches = searchPhrases.synonyms
           .map((synonym) => String(synonym || "").trim())
           .filter(Boolean)
           .map((synonym) => ({
@@ -210,6 +262,24 @@
         } else if (synonymContains) {
           tier = 3;
           matchValue = synonymContains.value;
+        } else {
+          const keywordMatches = searchPhrases.keywords
+            .map((keyword) => String(keyword || "").trim())
+            .filter(Boolean)
+            .map((keyword) => ({
+              value: keyword,
+              normalized: normalize(keyword)
+            }))
+            .filter((keyword) => keyword.normalized);
+          const keywordPrefix = keywordMatches.find((keyword) => keyword.normalized.startsWith(normalizedQuery));
+          const keywordContains = keywordMatches.find((keyword) => keyword.normalized.includes(normalizedQuery));
+          if (keywordPrefix) {
+            tier = 4;
+            matchValue = keywordPrefix.value;
+          } else if (keywordContains) {
+            tier = 5;
+            matchValue = keywordContains.value;
+          }
         }
       }
 
@@ -218,6 +288,7 @@
       matches.push({
         ...entry,
         tier,
+        typeRank: getDictionaryEntryTypeRank(field, entry),
         matchValue,
         searchWeight: Number.isFinite(entry.searchWeight) ? entry.searchWeight : 0
       });
@@ -225,6 +296,7 @@
 
     matches.sort((left, right) => {
       if (left.tier !== right.tier) return left.tier - right.tier;
+      if (left.typeRank !== right.typeRank) return left.typeRank - right.typeRank;
       if (right.searchWeight !== left.searchWeight) return right.searchWeight - left.searchWeight;
       return left.term.localeCompare(right.term);
     });
@@ -242,6 +314,8 @@
       panel.hidden = true;
       panel.innerHTML = "";
     }
+    const input = getQuickPickInput(field);
+    input?.setAttribute("aria-expanded", "false");
   }
 
   function closeAllAutocomplete() {
@@ -256,17 +330,26 @@
     if (!stateForField.open || !stateForField.items.length) {
       panel.hidden = true;
       panel.innerHTML = "";
+      getQuickPickInput(field)?.setAttribute("aria-expanded", "false");
       return;
     }
 
     panel.hidden = false;
+    getQuickPickInput(field)?.setAttribute("aria-expanded", "true");
     panel.innerHTML = stateForField.items
       .map((item, index) => {
         const highlighted = index === stateForField.highlightedIndex;
         const synonymHint = item.matchValue && item.matchValue !== item.term
           ? `<span class="clinical-workup-autocomplete-match">Matched: ${escapeHtml(item.matchValue)}</span>`
           : "";
-        const concernCount = Array.isArray(item.associatedConcerns) ? item.associatedConcerns.length : 0;
+        const linkedTestCount = Array.isArray(item.relatedTests || item.associatedTests)
+          ? (item.relatedTests || item.associatedTests).length
+          : 0;
+        const entryTypeLabel = getDictionaryEntryTypeLabel(item);
+        const categoryLabel = getDictionaryEntryCategory(item);
+        const urgentBadge = item.urgent || item.redFlag
+          ? `<span class="clinical-workup-autocomplete-urgent">Urgent</span>`
+          : "";
 
         return `
           <button
@@ -279,7 +362,10 @@
           >
             <span class="clinical-workup-autocomplete-term">${escapeHtml(item.term)}</span>
             <span class="clinical-workup-autocomplete-meta">
-              ${escapeHtml(item.bodySystem || "General")} · weight ${item.searchWeight}${concernCount ? ` · ${concernCount} concern link${concernCount === 1 ? "" : "s"}` : ""}
+              <span class="clinical-workup-autocomplete-type">${escapeHtml(entryTypeLabel)}</span>
+              <span>${escapeHtml(categoryLabel)}</span>
+              ${linkedTestCount ? `<span>${linkedTestCount} linked test${linkedTestCount === 1 ? "" : "s"}</span>` : ""}
+              ${urgentBadge}
             </span>
             ${synonymHint}
           </button>
@@ -1582,6 +1668,13 @@
           pregnancyRelevance: String(entry?.pregnancyRelevance || "not_specific").trim() || "not_specific",
           associatedConcerns: uniqueStrings(entry?.associatedConcerns || []),
           associatedTests: uniqueStrings(entry?.associatedTests || []),
+          normalizedKey: String(entry?.normalizedKey || entry?.normalizedLabel || entry?.id || entry?.term || "").trim(),
+          normalizedLabel: String(entry?.normalizedLabel || entry?.normalizedKey || entry?.term || "").trim(),
+          aliases: uniqueStrings(entry?.aliases || entry?.synonyms || []),
+          category: String(entry?.category || entry?.bodySystem || "General").trim() || "General",
+          keywords: uniqueStrings(entry?.keywords || []),
+          relatedTests: uniqueStrings(entry?.relatedTests || entry?.associatedTests || []),
+          urgent: Boolean(entry?.urgent || entry?.redFlag),
           redFlag: Boolean(entry?.redFlag),
           redFlagNote: String(entry?.redFlagNote || "").trim(),
           searchWeight: Number.isFinite(entry?.searchWeight) ? entry.searchWeight : 50,

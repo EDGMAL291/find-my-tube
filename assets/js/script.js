@@ -208,6 +208,7 @@ const MENU_ACTION_ORDER_INDEX = MENU_ACTION_ORDER.reduce((acc, action, index) =>
   acc[action] = index;
   return acc;
 }, Object.create(null));
+const SITE_MENU_CLOSE_DURATION_MS = 190;
 const MENU_ACTION_ICONS = Object.freeze({
   home: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   tube: '<svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v8.6c0 1.7.9 3.3 2.4 4.2l.3.2a5 5 0 0 1 2.3 4.2V21H9v-.8a5 5 0 0 1 2.3-4.2l.3-.2A5 5 0 0 0 14 11.6V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -218,6 +219,17 @@ const MENU_ACTION_ICONS = Object.freeze({
   "track-orders": '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h10v8H5zM15 10h3.5l2 2.4V15H15zM7.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4ZM17.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   settings: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 13.2v-2.4l2-.7.6-1.4-.9-1.9 1.7-1.7 1.9.9 1.4-.6.7-2h2.4l.7 2 1.4.6 1.9-.9 1.7 1.7-.9 1.9.6 1.4 2 .7v2.4l-2 .7-.6 1.4.9 1.9-1.7 1.7-1.9-.9-1.4.6-.7 2h-2.4l-.7-2-1.4-.6-1.9.9-1.7-1.7.9-1.9-.6-1.4-2-.7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   about: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+});
+const MENU_ACTION_META = Object.freeze({
+  home: "Start screen and quick actions",
+  tube: "Match tests to tube colours",
+  "find-my-test": "Symptoms and signs to suggested tests",
+  draw: "Review selected tubes before collection",
+  stock: "Request tubes and consumables",
+  "stock-dashboard": "Manage requests and stock levels",
+  "track-orders": "Check active request status",
+  settings: "Theme and display preferences",
+  about: "Reference use and app information"
 });
 const MOBILE_BOTTOM_NAV_BREAKPOINT = 860;
 const MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y = 88;
@@ -267,6 +279,7 @@ let mobileBottomMenuOpen = false;
 let mobileBottomMenuOriginX = 0;
 let mobileBottomMenuOriginY = 0;
 let mobileBottomMenuCloseTimeoutId = 0;
+let siteMenuCloseTimeoutId = 0;
 let homeDashboardStockSnapshot = null;
 let homeRecentTestSearchTimer = 0;
 const STOCK_API_CONFIGURED_BASE_URL = typeof window !== "undefined"
@@ -372,9 +385,32 @@ function setSiteMenuOpen(isOpen) {
     setMobileBottomMenuOpen(true);
     return;
   }
-  isSiteMenuOpen = Boolean(isOpen);
+  const nextOpen = Boolean(isOpen);
+  isSiteMenuOpen = nextOpen;
+
+  window.clearTimeout(siteMenuCloseTimeoutId);
+  siteMenuCloseTimeoutId = 0;
+
   if (siteMenuPanel) {
-    siteMenuPanel.hidden = !isSiteMenuOpen;
+    if (nextOpen) {
+      siteMenuPanel.hidden = false;
+      siteMenuPanel.classList.remove("is-closing");
+      window.requestAnimationFrame(() => {
+        siteMenuPanel?.classList.add("is-open");
+      });
+    } else {
+      siteMenuPanel.classList.remove("is-open");
+      if (!siteMenuPanel.hidden) {
+        siteMenuPanel.classList.add("is-closing");
+        siteMenuCloseTimeoutId = window.setTimeout(() => {
+          if (siteMenuPanel) {
+            siteMenuPanel.hidden = true;
+            siteMenuPanel.classList.remove("is-closing");
+          }
+          siteMenuCloseTimeoutId = 0;
+        }, SITE_MENU_CLOSE_DURATION_MS);
+      }
+    }
   }
   if (menuToggleBtn) {
     menuToggleBtn.setAttribute("aria-expanded", isSiteMenuOpen ? "true" : "false");
@@ -399,10 +435,14 @@ function enhanceMenuButton(button, actionAttribute) {
   if (!(button instanceof HTMLElement) || button.dataset.menuEnhanced === "true") return;
   const action = normalizeMenuAction(button.getAttribute(actionAttribute));
   const label = String(button.textContent || "").trim();
+  const meta = MENU_ACTION_META[action] || "";
   button.dataset.menuEnhanced = "true";
   button.innerHTML = `
     <span class="menu-action-icon" aria-hidden="true">${getMenuActionIconSvg(action)}</span>
-    <span class="menu-action-label">${label}</span>
+    <span class="menu-action-copy">
+      <span class="menu-action-label">${label}</span>
+      ${meta ? `<span class="menu-action-meta">${meta}</span>` : ""}
+    </span>
   `;
 }
 
@@ -488,20 +528,20 @@ function enhanceSiteMenuStructure() {
   mainButtons.forEach((button) => mainGroup.appendChild(button));
   siteMenuList.appendChild(mainGroup);
 
-	  if (secondaryButtons.length) {
-	    const secondaryGroup = document.createElement("div");
-	    secondaryGroup.className = "site-menu-group";
+  if (secondaryButtons.length) {
+    const secondaryGroup = document.createElement("div");
+    secondaryGroup.className = "site-menu-group";
     secondaryGroup.dataset.group = "secondary";
     secondaryGroup.setAttribute("role", "none");
     secondaryGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Secondary</p>';
-	    secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
-	    siteMenuList.appendChild(secondaryGroup);
-	  }
+    secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
+    siteMenuList.appendChild(secondaryGroup);
+  }
 
-	  [...mainButtons, ...secondaryButtons].forEach((button, index) => {
-	    button.style.setProperty("--menu-item-index", String(index));
-	  });
-	}
+  [...mainButtons, ...secondaryButtons].forEach((button, index) => {
+    button.style.setProperty("--menu-item-index", String(index));
+  });
+}
 
 // Synchronizes the shared surface-panel backdrop.
 function syncSurfacePanelState() {
@@ -1046,9 +1086,9 @@ function formatStockRequestDateTime(value) {
 // Normalizes legacy stock request statuses to the current UI model.
 function normalizeStockRequestStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
-  if (safeStatus === "sent" || safeStatus === "completed") return "collected";
-  if (safeStatus === "received") return "submitted";
-  return safeStatus || "submitted";
+  if (safeStatus === "sent" || safeStatus === "completed" || safeStatus === "collected") return "completed";
+  if (safeStatus === "received" || safeStatus === "submitted") return "received";
+  return safeStatus || "received";
 }
 
 // Gets a consistent stock item label for cards, summaries, and payload previews.
@@ -1066,7 +1106,7 @@ function renderStockTrackingList(requests) {
   const activeRequests = Array.isArray(requests)
     ? requests.filter((request) => {
       const normalized = normalizeStockRequestStatus(request?.status);
-      return normalized !== "collected" && normalized !== "cancelled";
+      return normalized !== "completed" && normalized !== "cancelled";
     })
     : [];
 
@@ -1086,14 +1126,14 @@ function renderStockTrackingList(requests) {
     const updateMeta = request?.statusUpdatedAt || request?.updatedAt
       ? `Last update ${formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
       : "";
-    const statusLabel = normalizedStatus === "submitted"
-      ? "Submitted"
+    const statusLabel = normalizedStatus === "received"
+      ? "Received"
       : normalizedStatus === "packed"
         ? "Ready for Collection"
       : normalizedStatus === "ready"
         ? "Ready for Collection"
-        : normalizedStatus === "collected"
-          ? "Collected"
+        : normalizedStatus === "completed"
+          ? "Completed"
           : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
     return `
@@ -1235,12 +1275,12 @@ function getStockOrderStatusLabel() {
   if (isSubmittingStockOrder) return "Submitting";
   if (stockOrderStatusMode === "submitted") {
     const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
-    if (submittedStatus === "submitted") return "Submitted";
+    if (submittedStatus === "received") return "Received";
     if (submittedStatus === "packed") return "Ready for Collection";
     if (submittedStatus === "ready") return "Ready for Collection";
-    if (submittedStatus === "collected") return "Collected";
+    if (submittedStatus === "completed") return "Completed";
     if (submittedStatus === "cancelled") return "Cancelled";
-    return "Submitted";
+    return "Received";
   }
   if (stockOrderStatusMode === "submit-failed") return "Submit failed";
   if (stockOrderStatusMode === "copied") return "Copied";
@@ -1557,7 +1597,7 @@ function showStockOrderSubmissionConfirmation(record = null, payload = null) {
   }
 
   if (stockOrderSubmissionMessage) {
-    stockOrderSubmissionMessage.textContent = "Request submitted successfully. Use Track Orders to follow status updates.";
+    stockOrderSubmissionMessage.textContent = "Request received successfully. Use Track Orders to follow status updates.";
   }
 
   if (stockOrderTrackOrderBtn) {
@@ -1671,8 +1711,8 @@ function initStockOrderPanel() {
         type: "stock-submit",
         title: `Last order: ${payload.wardUnit || "Ward not set"}`,
         detail: submittedStockOrderRecord?.id
-          ? `${submittedStockOrderRecord.id} • Submitted`
-          : "Submitted",
+          ? `${submittedStockOrderRecord.id} • Received`
+          : "Received",
         actionType: "menu",
         actionValue: "stock"
       });
@@ -5172,6 +5212,7 @@ function setMobileBottomMenuOpen(isOpen) {
       mobileBottomMenuSheet.classList.remove("is-closing");
       window.requestAnimationFrame(() => {
         mobileBottomMenuSheet?.classList.add("is-open");
+        mobileBottomMenuSheet?.querySelector(".mobile-bottom-menu-close")?.focus({ preventScroll: true });
       });
     }
     document.body.classList.add("mobile-bottom-menu-open");
@@ -5456,18 +5497,21 @@ function initMobileBottomNav() {
   menuSheet.className = "mobile-bottom-menu-sheet";
   menuSheet.id = "mobileBottomMenuSheet";
   menuSheet.hidden = true;
-	  menuSheet.setAttribute("aria-label", "Main mobile menu");
-	  menuSheet.innerHTML = `
-	    <div class="mobile-bottom-menu-head">
-	      <div>
-	        <p class="mobile-bottom-menu-kicker">Find My Tube</p>
-	        <p class="mobile-bottom-menu-title">Menu</p>
-	      </div>
-	      <button type="button" class="mobile-bottom-menu-close" aria-label="Close menu">&times;</button>
-	    </div>
-	    <div class="mobile-bottom-menu-list" role="menu" aria-label="Main menu actions">
-      <section class="mobile-bottom-menu-group" data-group="main" role="none">
-        <p class="mobile-bottom-menu-group-title" role="presentation">Main navigation</p>
+  menuSheet.setAttribute("aria-label", "Main mobile menu");
+  menuSheet.setAttribute("role", "dialog");
+  menuSheet.setAttribute("aria-modal", "true");
+  menuSheet.innerHTML = `
+    <div class="mobile-bottom-menu-head">
+      <div>
+        <p class="mobile-bottom-menu-kicker">Find My Tube</p>
+        <p class="mobile-bottom-menu-title">Menu</p>
+        <p class="mobile-bottom-menu-subtitle">Navigate, manage stock, and adjust display.</p>
+      </div>
+      <button type="button" class="mobile-bottom-menu-close" aria-label="Close menu">&times;</button>
+    </div>
+    <div class="mobile-bottom-menu-list" aria-label="Main menu actions">
+      <section class="mobile-bottom-menu-group" data-group="main">
+        <p class="mobile-bottom-menu-group-title">Main navigation</p>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Find My Test</button>
@@ -5476,8 +5520,8 @@ function initMobileBottomNav() {
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock-dashboard">Stock Dashboard</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="track-orders">Track Orders</button>
       </section>
-      <section class="mobile-bottom-menu-group" data-group="secondary" role="none">
-        <p class="mobile-bottom-menu-group-title" role="presentation">Secondary</p>
+      <section class="mobile-bottom-menu-group" data-group="secondary">
+        <p class="mobile-bottom-menu-group-title">Secondary</p>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="settings">Settings</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="about">About</button>
       </section>
@@ -5504,15 +5548,15 @@ function initMobileBottomNav() {
     });
   });
 
-	  menuBackdrop.addEventListener("click", () => {
-	    setMobileBottomMenuOpen(false);
-	  });
-	  menuSheet.querySelector(".mobile-bottom-menu-close")?.addEventListener("click", () => {
-	    setMobileBottomMenuOpen(false);
-	  });
-	  menuSheet.querySelectorAll("[data-mobile-menu-action]").forEach((button) => {
-	    enhanceMenuButton(button, "data-mobile-menu-action");
-	    button.addEventListener("click", () => {
+  menuBackdrop.addEventListener("click", () => {
+    setMobileBottomMenuOpen(false);
+  });
+  menuSheet.querySelector(".mobile-bottom-menu-close")?.addEventListener("click", () => {
+    setMobileBottomMenuOpen(false);
+  });
+  menuSheet.querySelectorAll("[data-mobile-menu-action]").forEach((button) => {
+    enhanceMenuButton(button, "data-mobile-menu-action");
+    button.addEventListener("click", () => {
       const action = button.getAttribute("data-mobile-menu-action") || "";
       setMobileBottomMenuOpen(false);
       handleSiteNavigationAction(action, button);
@@ -5729,7 +5773,7 @@ function renderHomeStatusSummary() {
 
   homeStatusList.innerHTML = pendingOrders.slice(0, HOME_STATUS_MAX_ITEMS).map((request) => {
     const wardUnit = sanitizeDashboardText(request?.wardUnit, 72) || "Ward not set";
-    const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Submitted";
+    const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Received";
     return `
       <article class="home-status-item">
         <p class="home-status-item-line">
@@ -5751,16 +5795,18 @@ async function loadHomeDashboardStockSnapshot() {
     const requests = Array.isArray(payload?.requests) ? payload.requests : [];
     const activeRequests = requests.filter((request) => {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
-      return normalizedStatus !== "collected" && normalizedStatus !== "cancelled";
+      return normalizedStatus !== "completed" && normalizedStatus !== "cancelled";
     });
     const pendingOrders = activeRequests.map((request) => {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
-      const statusLabel = normalizedStatus === "submitted"
-        ? "Submitted"
+      const statusLabel = normalizedStatus === "received"
+        ? "Received"
         : normalizedStatus === "processing" || normalizedStatus === "in-progress"
           ? "Processing"
           : normalizedStatus === "packed" || normalizedStatus === "ready"
           ? "Ready for collection"
+          : normalizedStatus === "completed"
+          ? "Completed"
           : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
       return {
         wardUnit: request?.wardUnit || "",
@@ -8113,7 +8159,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260323a",
+    assetVersion: "20260425a",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

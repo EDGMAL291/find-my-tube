@@ -251,16 +251,15 @@ function normalizeUserStatus(value) {
 function slugifyStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "completed";
-  if (safeStatus === "received") return "submitted";
   return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "submitted";
 }
 
 function formatStatusLabel(status) {
   const safeStatus = slugifyStatus(status);
-  if (safeStatus === "submitted") return "Submitted";
+  if (safeStatus === "submitted" || safeStatus === "received") return "Received";
   if (safeStatus === "packed") return "Ready for Collection";
   if (safeStatus === "ready") return "Ready for Collection";
-  if (safeStatus === "collected" || safeStatus === "completed") return "Collected";
+  if (safeStatus === "collected" || safeStatus === "completed") return "Completed";
   if (safeStatus === "cancelled") return "Cancelled";
   return safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 }
@@ -526,7 +525,7 @@ function appendStatusAudit(record, status, userNumber, timestamp) {
   });
   record.statusHistory = history;
 
-  if (safeStatus === "submitted") {
+  if (safeStatus === "submitted" || safeStatus === "received") {
     record.receivedAt = safeTimestamp;
     record.receivedBy = safeUserNumber;
   }
@@ -989,6 +988,7 @@ async function dbListRequests(limit = 25, {
     .filter((row) => {
       const status = slugifyStatus(row?.status);
       if (!includeCancelled && status === "cancelled") return false;
+      if (!includeArchived && (status === "completed" || status === "collected")) return false;
       if (!includeArchived && isArchivedCancelledRequest(row, nowMs)) return false;
       return true;
     });
@@ -1015,7 +1015,7 @@ async function dbInsertRequest(payload, sessionUser = null) {
     ward_or_unit: payload.wardUnit,
     notes: payload.notes,
     request_text: payload.requestText,
-    status: "submitted",
+    status: "received",
     line_item_count: payload.lineItemCount,
     total_requested_quantity: payload.totalRequestedQuantity,
     submitted_at: payload.submittedAt || nowIso,
@@ -1024,7 +1024,7 @@ async function dbInsertRequest(payload, sessionUser = null) {
     requested_by_user_id: null,
     entered_by_user_id: sessionUser?.id || null,
     status_updated_by_user_id: sessionUser?.id || null,
-    status_history: [{ status: "submitted", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
+    status_history: [{ status: "received", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
   };
 
   try {
@@ -1035,8 +1035,8 @@ async function dbInsertRequest(payload, sessionUser = null) {
     // Backward compatibility for databases that still enforce legacy status values.
     const fallbackRecord = {
       ...record,
-      status: "received",
-      status_history: [{ status: "received", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
+      status: "submitted",
+      status_history: [{ status: "submitted", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
     };
     console.warn("[stock-submit] status-constraint-fallback", {
       requestId,
@@ -1530,7 +1530,7 @@ async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
   const request = mapRequestFromDb(dbRecord);
   const previousStatus = slugifyStatus(request.status);
   const wasDeducted = isRequestInventoryDeducted(request);
-  const shouldDeductInventory = nextStatus === "collected" && !wasDeducted;
+  const shouldDeductInventory = (nextStatus === "completed" || nextStatus === "collected") && !wasDeducted;
 
   if (shouldDeductInventory) {
     const inventoryMap = await dbGetInventoryMap();
@@ -2879,7 +2879,9 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       if (updatedResult?.error === "insufficient-stock") {
         sendJson(req, res, 409, {
           ok: false,
-          error: "Not enough stock on hand to mark this order as collected.",
+          error: nextStatus === "completed"
+            ? "Not enough stock on hand to complete this order."
+            : "Not enough stock on hand to mark this order as collected.",
           shortages: updatedResult.shortages || []
         });
         return;
