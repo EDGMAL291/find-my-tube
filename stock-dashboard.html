@@ -24,7 +24,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260426b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260427a" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -56,6 +56,7 @@
               <path d="M4 17h16"></path>
             </svg>
           </span>
+          <span class="header-menu-label">Menu</span>
         </button>
         <div class="site-menu-panel" id="siteMenuPanel" hidden>
           <p class="site-menu-title">Menu</p>
@@ -385,11 +386,11 @@
 
   <script src="assets/data/data.js?v=20260420a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
-  <script src="assets/js/script.js?v=20260426b"></script>
+  <script src="assets/js/script.js?v=20260427a"></script>
   <script src="assets/js/stock-dashboard.js?v=20260426a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-26.2";
+      const APP_VERSION = "2026-04-27.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -421,7 +422,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260426b", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260427a", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

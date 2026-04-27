@@ -1055,11 +1055,11 @@ const tests = [
   },
   {
     name: "NT-proBNP",
-    tubeColor: "Gray",
-    specimen: "Fluoride plasma",
+    tubeColor: "Green (Heparinised) or Gold-Yellow",
+    specimen: "Heparinised plasma or serum",
     turnaroundTime: "4-12 hours",
-    notes: "Cardiac strain/heart failure marker.",
-    borderColor: "gray"
+    notes: "Cardiac strain/heart failure marker. Confirm preferred serum or heparin plasma tube with local laboratory protocol.",
+    borderColor: "yellow"
   },
   {
     name: "HDL Cholesterol",

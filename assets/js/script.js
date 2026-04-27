@@ -1091,6 +1091,18 @@ function normalizeStockRequestStatus(status) {
   return safeStatus || "received";
 }
 
+// Keeps local tracking state in sync without blocking the visible request list.
+function syncTrackedStockRequestStatuses(requests) {
+  if (!Array.isArray(requests)) return;
+
+  requests.forEach((request) => {
+    const requestId = String(request?.id || "").trim();
+    if (!requestId) return;
+    stockTrackedRequestStatuses[requestId] = normalizeStockRequestStatus(request?.status);
+  });
+  hasLoadedStockTrackingOnce = true;
+}
+
 // Gets a consistent stock item label for cards, summaries, and payload previews.
 function getStockDisplayLabel(item) {
   const label = String(item?.label || "").trim();
@@ -2139,6 +2151,7 @@ const factTips = [
   "Document collection time clearly for tests with strict timing requirements."
 ];
 const HOME_TIP_CYCLE_MS = 8200;
+const HOME_TIP_FALLBACK = "Label each sample immediately at bedside to reduce ID errors.";
 
 const stockRequesterGroups = [
   {
@@ -3640,6 +3653,100 @@ function getTubeSwatchColor(tubeGroup) {
   };
 
   return swatch[tubeGroup] || "#94a3b8";
+}
+
+const tubeCardStyleTokens = {
+  yellow: {
+    background: "rgba(255, 249, 222, 0.9)",
+    border: "rgba(202, 138, 4, 0.2)",
+    accent: "rgba(202, 138, 4, 0.28)",
+    chip: "rgba(254, 243, 199, 0.9)"
+  },
+  purple: {
+    background: "rgba(248, 245, 255, 0.92)",
+    border: "rgba(124, 58, 237, 0.16)",
+    accent: "rgba(124, 58, 237, 0.22)",
+    chip: "rgba(243, 232, 255, 0.78)"
+  },
+  blue: {
+    background: "rgba(238, 248, 253, 0.92)",
+    border: "rgba(14, 116, 144, 0.16)",
+    accent: "rgba(14, 116, 144, 0.22)",
+    chip: "rgba(224, 242, 254, 0.82)"
+  },
+  green: {
+    background: "rgba(240, 253, 246, 0.9)",
+    border: "rgba(22, 101, 52, 0.14)",
+    accent: "rgba(22, 101, 52, 0.2)",
+    chip: "rgba(220, 252, 231, 0.76)"
+  },
+  grey: {
+    background: "rgba(246, 248, 250, 0.92)",
+    border: "rgba(100, 116, 139, 0.16)",
+    accent: "rgba(100, 116, 139, 0.22)",
+    chip: "rgba(241, 245, 249, 0.86)"
+  },
+  pearl: {
+    background: "rgba(248, 247, 252, 0.92)",
+    border: "rgba(129, 140, 168, 0.16)",
+    accent: "rgba(129, 140, 168, 0.22)",
+    chip: "rgba(244, 243, 248, 0.86)"
+  },
+  tan: {
+    background: "rgba(251, 247, 240, 0.92)",
+    border: "rgba(146, 104, 63, 0.16)",
+    accent: "rgba(146, 104, 63, 0.22)",
+    chip: "rgba(245, 235, 220, 0.78)"
+  },
+  pink: {
+    background: "rgba(253, 244, 248, 0.9)",
+    border: "rgba(190, 24, 93, 0.14)",
+    accent: "rgba(190, 24, 93, 0.2)",
+    chip: "rgba(252, 231, 243, 0.74)"
+  },
+  neutral: {
+    background: "rgba(249, 251, 252, 0.88)",
+    border: "rgba(100, 116, 139, 0.14)",
+    accent: "rgba(100, 116, 139, 0.18)",
+    chip: "rgba(248, 250, 252, 0.86)"
+  }
+};
+
+function getTubeCardStyleKey(tubeGroup) {
+  const keyByTubeGroup = {
+    Tan: "tan",
+    Purple: "purple",
+    Pink: "pink",
+    Blue: "blue",
+    "Gold/Yellow": "yellow",
+    "Pearl/White": "pearl",
+    Green: "green",
+    Gray: "grey"
+  };
+
+  return keyByTubeGroup[tubeGroup] || "neutral";
+}
+
+function getTubeCardStyleData(tubeGroups = []) {
+  const styleKeys = [...new Set(tubeGroups.map(getTubeCardStyleKey).filter(Boolean))];
+  const activeStyleKeys = styleKeys.length && styleKeys.length <= 2 ? styleKeys : ["neutral"];
+  const firstStyle = tubeCardStyleTokens[activeStyleKeys[0]] || tubeCardStyleTokens.neutral;
+  const secondStyle = tubeCardStyleTokens[activeStyleKeys[1]] || firstStyle;
+  const isSplit = activeStyleKeys.length === 2;
+
+  return {
+    className: `tube-tinted-card${isSplit ? " tube-card-split" : ""}`,
+    dataTube: activeStyleKeys[0],
+    dataTubes: activeStyleKeys.join(","),
+    style: [
+      `--tube-card-bg-one: ${firstStyle.background}`,
+      `--tube-card-bg-two: ${secondStyle.background}`,
+      `--tube-card-border: ${isSplit ? secondStyle.border : firstStyle.border}`,
+      `--tube-card-accent-one: ${firstStyle.accent}`,
+      `--tube-card-accent-two: ${secondStyle.accent}`,
+      `--tube-card-chip-bg: ${firstStyle.chip}`
+    ].join("; ")
+  };
 }
 
 // Gets tube additive label.
@@ -7183,16 +7290,23 @@ function startCarousel(items, textElement, dotsElement, intervalMs = 4200) {
 }
 
 function startHomeTipRotation() {
-  if (!homeTipText || factTips.length < 2) return;
-  homeTipText.textContent = factTips[0];
-  if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+  if (!homeTipText) return;
+  const tips = factTips.length ? factTips : [HOME_TIP_FALLBACK];
+  homeTipText.textContent = tips[0] || HOME_TIP_FALLBACK;
+  if (tips.length < 2) return;
 
   let current = 0;
+  const shouldAnimate = !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
   window.setInterval(() => {
-    current = (current + 1) % factTips.length;
+    current = (current + 1) % tips.length;
+    if (!shouldAnimate) {
+      homeTipText.textContent = tips[current] || HOME_TIP_FALLBACK;
+      return;
+    }
+
     homeTipText.classList.add("is-changing");
     window.setTimeout(() => {
-      homeTipText.textContent = factTips[current];
+      homeTipText.textContent = tips[current] || HOME_TIP_FALLBACK;
       homeTipText.classList.remove("is-changing");
     }, 180);
   }, HOME_TIP_CYCLE_MS);
@@ -7590,6 +7704,11 @@ function renderCards(filteredTests) {
     const profileComponents = profileComponentsByName[test.name] || [];
     const hasProfileComponents = profileComponents.length > 0;
     const tubeGroups = getTubeGroups(test.tubeColor);
+    const tubeCardStyleData = getTubeCardStyleData(tubeGroups);
+    card.classList.add(...tubeCardStyleData.className.split(" "));
+    card.dataset.tube = tubeCardStyleData.dataTube;
+    card.dataset.tubes = tubeCardStyleData.dataTubes;
+    card.setAttribute("style", tubeCardStyleData.style);
     const tubeIconSizeClass = tubeGroups.length >= 4
       ? " tube-icon-mini"
       : tubeGroups.length >= 3
@@ -8159,7 +8278,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260426b",
+    assetVersion: "20260427a",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,
