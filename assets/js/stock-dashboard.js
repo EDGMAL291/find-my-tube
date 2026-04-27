@@ -455,9 +455,20 @@ function stockDashboardSetCreateUserMessage(message) {
 }
 
 function stockDashboardGetDisplayLabel(item) {
+  if (typeof getStockDisplayLabel === "function") {
+    return getStockDisplayLabel(item);
+  }
   const label = String(item?.label || "").trim();
   const variantLabel = String(item?.variantLabel || "").trim();
   return variantLabel ? `${label} - ${variantLabel}` : label;
+}
+
+function stockDashboardGetLabelMarkup(item, label, options = {}) {
+  const safeLabel = String(label || "").trim() || "Stock item";
+  if (typeof getStockDisplayLabelMarkup === "function") {
+    return getStockDisplayLabelMarkup(item, safeLabel, options);
+  }
+  return stockDashboardEscapeHtml(safeLabel);
 }
 
 function stockDashboardGetItemQuantityLabel(item) {
@@ -717,7 +728,7 @@ function stockDashboardRenderReceiptSummaryRows(summaryRows = []) {
 
   stockDashboardReceiptSummaryList.innerHTML = summaryRows.map((row) => `
     <div class="stock-dashboard-list-row">
-      <span>${stockDashboardEscapeHtml(row.label)} · ${stockDashboardEscapeHtml(row.quantityLabel)} · ${stockDashboardEscapeHtml(row.unitLabel)}</span>
+      <span>${stockDashboardGetLabelMarkup(row, row.label, { wrapperClassName: "stock-item-title-row-compact", glyphClassName: "stock-item-glyph-compact" })} · ${stockDashboardEscapeHtml(row.quantityLabel)} · ${stockDashboardEscapeHtml(row.unitLabel)}</span>
       <strong>${stockDashboardEscapeHtml(`${row.totalUnits} units`)}</strong>
     </div>
   `).join("");
@@ -926,6 +937,7 @@ function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
         ? `Packet (${Number(item.packetSize || 0) || 50} each)`
         : "Each";
     summaryRows.push({
+      id: item.id,
       label: stockDashboardGetDisplayLabel(item),
       quantityLabel: String(item.quantity),
       unitLabel,
@@ -960,9 +972,10 @@ function stockDashboardRenderInventory(summary = []) {
   renderDashboardList(stockDashboardInventoryList, summary, (row) => {
     const onHand = Math.max(0, Number(row?.onHand) || 0);
     const level = stockDashboardGetInventoryLevel(onHand);
+    const rowItem = { id: row?.id || row?.itemId || "", label: row?.label || "" };
     return `
     <div class="stock-dashboard-list-row" data-stock-level="${stockDashboardEscapeHtml(level)}">
-      <span>${stockDashboardEscapeHtml(row.label)}</span>
+      <span>${stockDashboardGetLabelMarkup(rowItem, row?.label || "", { wrapperClassName: "stock-item-title-row-compact", glyphClassName: "stock-item-glyph-compact" })}</span>
       <strong class="stock-level--${stockDashboardEscapeHtml(level)}">${onHand} left</strong>
     </div>
   `;
@@ -1261,7 +1274,7 @@ function stockDashboardRenderEditorGrid(grid, editorState, editorKey) {
   grid.innerHTML = stockConsumableItems.map((item) => `
     <article class="stock-order-card stock-order-item-card" data-dashboard-editor="${stockDashboardEscapeHtml(editorKey)}" data-dashboard-item="${stockDashboardEscapeHtml(item.id)}">
       <div class="stock-order-item-head">
-        <span class="stock-order-item-kicker">${stockDashboardEscapeHtml(stockDashboardGetDisplayLabel(item))}</span>
+        <span class="stock-order-item-kicker">${stockDashboardGetLabelMarkup(item, stockDashboardGetDisplayLabel(item), { wrapperClassName: "stock-item-title-row-compact", glyphClassName: "stock-item-glyph-compact" })}</span>
         <h3>${stockDashboardEscapeHtml(item.unitType === "tray" ? `Tray of ${item.traySize}` : item.unitType === "packet" ? `Packet of ${item.packetSize}` : "Singles")}</h3>
       </div>
       <div class="stock-order-qty-row">
@@ -2943,7 +2956,7 @@ function renderStockDashboardStats(stats) {
 
   renderDashboardList(stockDashboardTopItems, safeStats.topItems || [], (item) => `
     <div class="stock-dashboard-list-row">
-      <span>${stockDashboardEscapeHtml(item.label)}</span>
+      <span>${stockDashboardGetLabelMarkup(item, item.label, { wrapperClassName: "stock-item-title-row-compact", glyphClassName: "stock-item-glyph-compact" })}</span>
       <strong>${Number(item.quantity || 0)}</strong>
     </div>
   `);
@@ -2978,10 +2991,14 @@ function renderStockDashboardRequests(requests) {
     const safeStatus = stockDashboardNormalizeStatus(request?.status);
     const statusMeta = stockDashboardGetQueueStatusMeta(safeStatus);
     const items = Array.isArray(request.items) ? request.items : [];
-    const itemSummary = items.map((item) => {
-      const label = item.variantLabel ? `${item.label} - ${item.variantLabel}` : item.label;
-      return `${label}: ${item.formattedQuantity || item.quantity}`;
-    }).join(" | ");
+    const itemSummaryMarkup = items.map((item) => {
+      const labelMarkup = stockDashboardGetLabelMarkup(item, stockDashboardGetDisplayLabel(item), {
+        wrapperClassName: "stock-item-title-row-compact",
+        glyphClassName: "stock-item-glyph-compact"
+      });
+      const quantityLabel = stockDashboardEscapeHtml(item.formattedQuantity || String(item.quantity || ""));
+      return `<span class="stock-dashboard-queue-item-line">${labelMarkup}: ${quantityLabel}</span>`;
+    }).join("");
     const statusButtons = STOCK_DASHBOARD_STATUS_ORDER.map((status) => `
       <button
         type="button"
@@ -2998,7 +3015,7 @@ function renderStockDashboardRequests(requests) {
         <div class="stock-dashboard-queue-cell" data-label="Requested by">${stockDashboardEscapeHtml(request.requestedBy || "Unknown requester")}</div>
         <div class="stock-dashboard-queue-cell" data-label="Ward / Unit">${stockDashboardEscapeHtml(request.wardUnit || "No ward set")}</div>
         <div class="stock-dashboard-queue-cell" data-label="Date / Time">${stockDashboardEscapeHtml(stockDashboardFormatDateTime(request.createdAt))}</div>
-        <div class="stock-dashboard-queue-cell stock-dashboard-queue-items" data-label="Items requested">${stockDashboardEscapeHtml(itemSummary || "No items listed")}</div>
+        <div class="stock-dashboard-queue-cell stock-dashboard-queue-items" data-label="Items requested">${itemSummaryMarkup || "No items listed"}</div>
         <div class="stock-dashboard-queue-cell" data-label="Status">
           <span class="stock-dashboard-queue-status-badge" data-stage="${stockDashboardEscapeHtml(statusMeta.stage)}">${stockDashboardEscapeHtml(statusMeta.label)}</span>
         </div>

@@ -237,6 +237,14 @@ const MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA = 54;
 const MOBILE_BOTTOM_NAV_SHOW_SCROLL_DELTA = 24;
 const MOBILE_BOTTOM_NAV_DEADZONE = 4;
 const MOBILE_BOTTOM_NAV_PAGES = new Set(["home", "find-my-tube", "find-my-test", "stock-order", "stock-dashboard", "track-orders"]);
+const MOBILE_BOTTOM_NAV_KEY_BY_MENU_ACTION = Object.freeze({
+  home: "home",
+  tube: "tube",
+  "find-my-test": "test",
+  stock: "order",
+  "stock-dashboard": "order",
+  "track-orders": "order"
+});
 const MOBILE_BOTTOM_MENU_CLOSE_DURATION_MS = 420;
 const HOME_STATUS_MAX_ITEMS = 4;
 const sharedPlanToken = currentPageParams.get("plan") || "";
@@ -1037,6 +1045,7 @@ function openLookupHomeView() {
   closeLegalModal({ restoreFocus: false });
   scrollPanelIntoView(tubeLookupPanel || preSearchPanel);
   focusMainSearchField({ scroll: "if-needed" });
+  setMobileBottomNavActiveState();
 }
 
 // Opens stock section.
@@ -1055,6 +1064,7 @@ function openStockSection() {
   closeProfileModal();
   closeLegalModal({ restoreFocus: false });
   scrollPanelIntoView(stockOrderPanel);
+  setMobileBottomNavActiveState();
 }
 
 // Opens the stock dashboard page.
@@ -1103,9 +1113,115 @@ function syncTrackedStockRequestStatuses(requests) {
   hasLoadedStockTrackingOnce = true;
 }
 
+const stockBloodCultureBottleMetaById = Object.freeze({
+  "blood-culture-bottle-aerobic": Object.freeze({
+    displayName: "Aerobic Blood Culture Bottle (Blue)",
+    accentColor: "#2563eb",
+    accentSoftColor: "#dbeafe"
+  }),
+  "blood-culture-bottle-anaerobic": Object.freeze({
+    displayName: "Anaerobic Blood Culture Bottle (Orange)",
+    accentColor: "#f97316",
+    accentSoftColor: "#ffedd5"
+  }),
+  "blood-culture-bottle-paediatric-aerobic": Object.freeze({
+    displayName: "Paediatric Aerobic Blood Culture Bottle (Yellow)",
+    accentColor: "#eab308",
+    accentSoftColor: "#fef9c3"
+  }),
+  "blood-culture-bottle-mycobacterial-tb": Object.freeze({
+    displayName: "Mycobacterial Blood Culture Bottle (Red)",
+    accentColor: "#dc2626",
+    accentSoftColor: "#fee2e2"
+  }),
+  "blood-culture-bottle-fungal-mycology": Object.freeze({
+    displayName: "Fungal / Mycology Blood Culture Bottle (Green)",
+    accentColor: "#16a34a",
+    accentSoftColor: "#dcfce7"
+  })
+});
+
+const stockBloodCultureBottleIdByLegacyLabel = Object.freeze({
+  "blood culture bottle - aerobic": "blood-culture-bottle-aerobic",
+  "blood culture bottle - anaerobic": "blood-culture-bottle-anaerobic",
+  "blood culture bottle - paediatric aerobic": "blood-culture-bottle-paediatric-aerobic",
+  "blood culture bottle - mycobacterial / tb": "blood-culture-bottle-mycobacterial-tb",
+  "blood culture bottle - fungal / mycology": "blood-culture-bottle-fungal-mycology",
+  "aerobic blood culture bottle (blue)": "blood-culture-bottle-aerobic",
+  "anaerobic blood culture bottle (orange)": "blood-culture-bottle-anaerobic",
+  "paediatric aerobic blood culture bottle (yellow)": "blood-culture-bottle-paediatric-aerobic",
+  "mycobacterial blood culture bottle (red)": "blood-culture-bottle-mycobacterial-tb",
+  "fungal / mycology blood culture bottle (green)": "blood-culture-bottle-fungal-mycology"
+});
+
+function normalizeStockLabelKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function getBloodCultureBottleMetadata(itemOrId) {
+  const safeId = typeof itemOrId === "string"
+    ? String(itemOrId || "").trim()
+    : String(itemOrId?.id || "").trim();
+
+  if (safeId && stockBloodCultureBottleMetaById[safeId]) {
+    return stockBloodCultureBottleMetaById[safeId];
+  }
+
+  const safeLabel = typeof itemOrId === "string"
+    ? ""
+    : normalizeStockLabelKey(itemOrId?.label);
+  const mappedId = safeLabel ? stockBloodCultureBottleIdByLegacyLabel[safeLabel] : "";
+  return mappedId ? stockBloodCultureBottleMetaById[mappedId] || null : null;
+}
+
+function isBloodCultureBottleItem(itemOrId) {
+  return Boolean(getBloodCultureBottleMetadata(itemOrId));
+}
+
+function getBloodCultureBottleGlyphSvg() {
+  return `
+    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="M9 3.5h6" />
+      <path d="M10 3.5v3.2l-1.9 2.1v8.3a2.4 2.4 0 0 0 2.4 2.4h3a2.4 2.4 0 0 0 2.4-2.4V8.8L14 6.7V3.5" />
+      <path d="M8.1 9.4h7.8" />
+      <path d="M8.8 12.9h6.4" />
+    </svg>
+  `;
+}
+
+function getStockItemGlyphMarkup(item, options = {}) {
+  const meta = getBloodCultureBottleMetadata(item);
+  if (!meta) return "";
+
+  const glyphClassName = String(options.glyphClassName || "").trim();
+  const classSuffix = glyphClassName ? ` ${glyphClassName}` : "";
+  const safeAccentColor = escapeHtml(meta.accentColor || "#2563eb");
+  const safeAccentSoft = escapeHtml(meta.accentSoftColor || "#dbeafe");
+
+  return `
+    <span class="stock-item-glyph stock-item-glyph-blood-culture${classSuffix}" style="--stock-item-glyph-color:${safeAccentColor};--stock-item-glyph-bg:${safeAccentSoft};" aria-hidden="true">
+      ${getBloodCultureBottleGlyphSvg()}
+    </span>
+  `;
+}
+
+function getStockDisplayLabelMarkup(item, label, options = {}) {
+  const safeLabel = escapeHtml(label || "Stock item");
+  const glyphMarkup = getStockItemGlyphMarkup(item, options);
+  if (!glyphMarkup) return safeLabel;
+
+  const wrapperClassName = String(options.wrapperClassName || "").trim();
+  const classSuffix = wrapperClassName ? ` ${wrapperClassName}` : "";
+  return `<span class="stock-item-title-row${classSuffix}">${glyphMarkup}<span>${safeLabel}</span></span>`;
+}
+
 // Gets a consistent stock item label for cards, summaries, and payload previews.
 function getStockDisplayLabel(item) {
-  const label = String(item?.label || "").trim();
+  const bloodCultureMeta = getBloodCultureBottleMetadata(item);
+  const label = String(bloodCultureMeta?.displayName || item?.label || "").trim();
   const variantLabel = String(item?.variantLabel || "").trim();
   if (label && variantLabel) return `${label} - ${variantLabel}`;
   return label || "Stock item";
@@ -1133,8 +1249,15 @@ function renderStockTrackingList(requests) {
     const normalizedStatus = normalizeStockRequestStatus(request?.status);
     const items = Array.isArray(request.items) ? request.items : [];
     const orderedItems = items
-      .map((item) => `${escapeHtml(getStockDisplayLabel(item))}: ${escapeHtml(item.formattedQuantity || String(item.quantity || ""))}`)
-      .join("\n");
+      .map((item) => {
+        const itemLabelMarkup = getStockDisplayLabelMarkup(item, getStockDisplayLabel(item), {
+          wrapperClassName: "stock-item-title-row-compact",
+          glyphClassName: "stock-item-glyph-compact"
+        });
+        const quantityLabel = escapeHtml(item.formattedQuantity || String(item.quantity || ""));
+        return `<span class="stock-dashboard-request-item-line">${itemLabelMarkup}: ${quantityLabel}</span>`;
+      })
+      .join("");
     const updateMeta = request?.statusUpdatedAt || request?.updatedAt
       ? `Last update ${formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
       : "";
@@ -1465,6 +1588,7 @@ function renderStockOrderItems() {
   stockOrderGrid.innerHTML = stockConsumableItems
     .map((item) => {
       const cardLabel = getStockDisplayLabel(item);
+      const cardLabelMarkup = getStockDisplayLabelMarkup(item, cardLabel);
       const cardKicker = item.variantLabel
         ? item.unitType === "tray"
           ? `${item.variantLabel} · Tray of ${item.traySize}`
@@ -1481,7 +1605,7 @@ function renderStockOrderItems() {
       <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}">
         <div class="stock-order-item-head">
           <span class="stock-order-item-kicker">${cardKicker}</span>
-          <h3>${cardLabel}</h3>
+          <h3>${cardLabelMarkup}</h3>
         </div>
         <div class="stock-order-qty-row">
           <button
@@ -1489,7 +1613,7 @@ function renderStockOrderItems() {
             class="stock-order-qty-btn"
             data-stock-qty-step="${item.id}"
             data-stock-qty-direction="-1"
-            aria-label="Reduce ${item.label}"
+            aria-label="Reduce ${escapeHtml(cardLabel)}"
           >
             −
           </button>
@@ -1510,7 +1634,7 @@ function renderStockOrderItems() {
             class="stock-order-qty-btn"
             data-stock-qty-step="${item.id}"
             data-stock-qty-direction="1"
-            aria-label="Increase ${item.label}"
+            aria-label="Increase ${escapeHtml(cardLabel)}"
           >
             +
           </button>
@@ -1814,6 +1938,7 @@ function goHome() {
   clearClinicalWorkupOutput({ preserveInputs: true, rerenderCards: false, clearStatus: true });
 
   setSectionView("", { historyMode: "push", scrollToTop: false, clearSearch: true });
+  setMobileBottomNavActiveState();
   scrollHomeViewportToTop();
 }
 
@@ -2243,11 +2368,11 @@ const stockConsumableItems = [
   }),
   { id: "specimen-jars", label: "Specimen jars", unitType: "each", maxQuantity: 50, note: "Requested individually." },
   { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, note: "Packed in 50s." },
-  { id: "blood-culture-bottle-aerobic", label: "Blood culture bottle - Aerobic", unitType: "each", note: "Requested individually." },
-  { id: "blood-culture-bottle-paediatric-aerobic", label: "Blood culture bottle - Paediatric Aerobic", unitType: "each", note: "Requested individually." },
-  { id: "blood-culture-bottle-anaerobic", label: "Blood culture bottle - Anaerobic", unitType: "each", note: "Requested individually." },
-  { id: "blood-culture-bottle-fungal-mycology", label: "Blood culture bottle - Fungal / Mycology", unitType: "each", note: "Requested individually." },
-  { id: "blood-culture-bottle-mycobacterial-tb", label: "Blood culture bottle - Mycobacterial / TB", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-aerobic", label: "Aerobic Blood Culture Bottle (Blue)", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-paediatric-aerobic", label: "Paediatric Aerobic Blood Culture Bottle (Yellow)", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-anaerobic", label: "Anaerobic Blood Culture Bottle (Orange)", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-fungal-mycology", label: "Fungal / Mycology Blood Culture Bottle (Green)", unitType: "each", note: "Requested individually." },
+  { id: "blood-culture-bottle-mycobacterial-tb", label: "Mycobacterial Blood Culture Bottle (Red)", unitType: "each", note: "Requested individually." },
   { id: "blood-gas-syringes", label: "Blood gas syringes", unitType: "each", note: "Requested individually." },
   { id: "swabs-transport-media", label: "Swabs with transport media", unitType: "each", note: "Requested individually." }
 ];
@@ -5364,32 +5489,29 @@ function resetMobileBottomNavScrollState() {
   mobileBottomNavUpDistance = 0;
 }
 
-function setMobileBottomNavActiveState() {
-  if (!mobileBottomNavButtons) return;
+function getMobileBottomNavActiveKey() {
+  if (mobileBottomMenuOpen) return "menu";
+  const action = getCurrentPageMenuAction();
+  return MOBILE_BOTTOM_NAV_KEY_BY_MENU_ACTION[action] || "";
+}
 
-  const activeKey = mobileBottomMenuOpen
-    ? "menu"
-    : isHomePage
-      ? "home"
-      : isFindMyTubePage
-        ? "tube"
-        : isFindMyTestPage
-          ? "test"
-          : isStockOrderPage
-            ? "order"
-            : "";
-
-  ["home", "tube", "menu", "test", "order"].forEach((key) => {
-    const button = mobileBottomNavButtons[key];
-    if (!button) return;
-    const isActive = key === activeKey;
-    button.classList.toggle("is-active", isActive);
+function setBottomNavActive(targetKey = "") {
+  if (!mobileBottomNav) return;
+  const navItems = mobileBottomNav.querySelectorAll("[data-bottom-nav]");
+  navItems.forEach((item) => {
+    const key = item.getAttribute("data-bottom-nav") || "";
+    const isActive = Boolean(targetKey) && key === targetKey;
+    item.classList.toggle("is-active", isActive);
     if (isActive) {
-      button.setAttribute("aria-current", "page");
+      item.setAttribute("aria-current", "page");
     } else {
-      button.removeAttribute("aria-current");
+      item.removeAttribute("aria-current");
     }
   });
+}
+
+function setMobileBottomNavActiveState() {
+  setBottomNavActive(getMobileBottomNavActiveKey());
 }
 
 function startDrawPlanFromMenu(trigger = null) {
@@ -5502,12 +5624,16 @@ function handleMobileBottomNavAction(action) {
   }
 
   if (action === "home") {
+    setBottomNavActive("home");
     handleSiteNavigationAction("home");
+    setMobileBottomNavActiveState();
     return;
   }
 
   if (action === "tube") {
+    setBottomNavActive("tube");
     handleSiteNavigationAction("tube");
+    setMobileBottomNavActiveState();
     return;
   }
 
@@ -5517,12 +5643,16 @@ function handleMobileBottomNavAction(action) {
   }
 
   if (action === "test") {
+    setBottomNavActive("test");
     handleSiteNavigationAction("find-my-test");
+    setMobileBottomNavActiveState();
     return;
   }
 
   if (action === "order") {
+    setBottomNavActive("order");
     handleSiteNavigationAction("stock");
+    setMobileBottomNavActiveState();
   }
 }
 
@@ -5547,20 +5677,20 @@ function initMobileBottomNav() {
   nav.setAttribute("aria-label", "Main mobile navigation");
   nav.innerHTML = `
     <div class="mobile-bottom-nav-group" data-group="left">
-      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="home" aria-label="Home">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="home" data-bottom-nav="home" aria-label="Home">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         <span class="mobile-bottom-nav-label">Home</span>
       </button>
-      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="tube" aria-label="Tube">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="tube" data-bottom-nav="tube" aria-label="Tube">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v8.6c0 1.7.9 3.3 2.4 4.2l.3.2a5 5 0 0 1 2.3 4.2V21H9v-.8a5 5 0 0 1 2.3-4.2l.3-.2A5 5 0 0 0 14 11.6V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         <span class="mobile-bottom-nav-label">Tube</span>
       </button>
     </div>
-    <button type="button" class="mobile-bottom-nav-btn mobile-bottom-nav-menu" data-mobile-nav="menu" aria-label="Open menu" aria-expanded="false" aria-controls="mobileBottomMenuSheet">
+    <button type="button" class="mobile-bottom-nav-btn mobile-bottom-nav-menu" data-mobile-nav="menu" data-bottom-nav="menu" aria-label="Open menu" aria-expanded="false" aria-controls="mobileBottomMenuSheet">
       <span class="mobile-bottom-nav-menu-icon" aria-hidden="true">
         <svg class="menu-icon-grid" viewBox="0 0 24 24" fill="none">
           <rect x="5" y="5" width="5" height="5" rx="1.3" fill="currentColor"></rect>
@@ -5576,13 +5706,13 @@ function initMobileBottomNav() {
       <span class="mobile-bottom-nav-label">Menu</span>
     </button>
     <div class="mobile-bottom-nav-group" data-group="right">
-      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" aria-label="Test">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" data-bottom-nav="test" aria-label="Test">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>
         </span>
         <span class="mobile-bottom-nav-label">Test</span>
       </button>
-      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="order" aria-label="Order">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="order" data-bottom-nav="order" aria-label="Order">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M3.8 8.2 12 4l8.2 4.2M3.8 8.2V16L12 20l8.2-4V8.2M3.8 8.2 12 12.4m8.2-4.2L12 12.4m0 0V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
@@ -5649,9 +5779,14 @@ function initMobileBottomNav() {
   };
 
   nav.querySelectorAll("[data-mobile-nav]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
       const action = button.getAttribute("data-mobile-nav") || "";
       handleMobileBottomNavAction(action);
+      if (event.detail !== 0 && typeof button.blur === "function") {
+        window.requestAnimationFrame(() => {
+          button.blur();
+        });
+      }
     });
   });
 
