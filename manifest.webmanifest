@@ -1,8 +1,8 @@
 {
   "name": "Find My Tube",
-  "short_name": "Find My Tube",
-  "description": "Lab test lookup for tube type, specimen requirements, and turnaround guidance.",
-  "start_url": "./index.html",
+  "short_name": "FindMyTube",
+  "description": "Reference-only clinical support for specimen tube lookup, suggested tests, tube planning, and consumables workflows.",
+  "start_url": "/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f7efe0",

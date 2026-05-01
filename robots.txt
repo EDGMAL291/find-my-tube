@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /stock-dashboard.html
+
+Sitemap: https://findmytube.co.za/sitemap.xml
