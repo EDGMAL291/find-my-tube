@@ -255,14 +255,20 @@ const APP_HOME_TITLE = "Find My Tube | Specimen Tubes, Suggested Tests, and Coll
 const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube | Match Lab Tests to the Correct Collection Tube";
 const FIND_MY_TEST_PAGE_TITLE = "Find My Test | Suggested Tests from Symptoms, Signs, and Clinical Concerns";
 const STOCK_ORDER_PAGE_TITLE = "Order Lab Consumables | Find My Tube";
+const STOCK_DASHBOARD_PAGE_TITLE = "Stock Dashboard | Find My Tube";
+const TRACK_ORDERS_PAGE_TITLE = "Track Lab Orders | Find My Tube";
 const APP_HOME_APP_TITLE = "Find My Tube";
 const FIND_MY_TUBE_APP_TITLE = "Find My Tube";
 const FIND_MY_TEST_APP_TITLE = "Find My Test";
 const STOCK_ORDER_APP_TITLE = "Order Stock";
+const STOCK_DASHBOARD_APP_TITLE = "Stock Dashboard";
+const TRACK_ORDERS_APP_TITLE = "Track Orders";
 const APP_HOME_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TUBE_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
 const STOCK_ORDER_HEADER_COPY = "Consumables, stock requests, and order status.";
+const STOCK_DASHBOARD_HEADER_COPY = "Local request dashboard, status tracking, and quick stats.";
+const TRACK_ORDERS_HEADER_COPY = "Track stock request status by ward, status, and requester.";
 const DRAW_PLAN_SHARE_PARAM = "plan";
 const STOCK_ORDER_HOME_URL = "./order-stock.html";
 const STOCK_DASHBOARD_URL = "./stock-dashboard.html";
@@ -619,7 +625,11 @@ document.title = isFindMyTestPage
     ? FIND_MY_TUBE_PAGE_TITLE
     : isStockOrderPage
       ? STOCK_ORDER_PAGE_TITLE
-      : APP_HOME_TITLE;
+      : isStockDashboardPage
+        ? STOCK_DASHBOARD_PAGE_TITLE
+        : isTrackOrdersPage
+          ? TRACK_ORDERS_PAGE_TITLE
+          : APP_HOME_TITLE;
 if (headerIntroText) {
   headerIntroText.textContent = isFindMyTestPage
     ? FIND_MY_TEST_HEADER_COPY
@@ -627,7 +637,11 @@ if (headerIntroText) {
       ? FIND_MY_TUBE_HEADER_COPY
       : isStockOrderPage
         ? STOCK_ORDER_HEADER_COPY
-        : APP_HOME_HEADER_COPY;
+        : isStockDashboardPage
+          ? STOCK_DASHBOARD_HEADER_COPY
+          : isTrackOrdersPage
+            ? TRACK_ORDERS_HEADER_COPY
+            : APP_HOME_HEADER_COPY;
 }
 if (appleMobileAppTitleMeta) {
   appleMobileAppTitleMeta.setAttribute(
@@ -638,7 +652,11 @@ if (appleMobileAppTitleMeta) {
         ? FIND_MY_TUBE_APP_TITLE
         : isStockOrderPage
           ? STOCK_ORDER_APP_TITLE
-          : APP_HOME_APP_TITLE
+          : isStockDashboardPage
+            ? STOCK_DASHBOARD_APP_TITLE
+            : isTrackOrdersPage
+              ? TRACK_ORDERS_APP_TITLE
+              : APP_HOME_APP_TITLE
   );
 }
 
@@ -8452,7 +8470,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260505a",
+    assetVersion: "20260505b",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

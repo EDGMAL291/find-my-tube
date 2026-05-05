@@ -37,7 +37,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260505a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260505b" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -338,13 +338,6 @@
     <footer class="site-footer" id="siteFooter">
       <div class="footer-card">
         <p class="site-footer-title">findmytube © 2026 | Reference Tool Only</p>
-        <p class="home-tip-text">
-          <a href="./index.html">Home</a> ·
-          <a href="./order-stock.html">Order Consumables</a> ·
-          <a href="./track-orders.html">Track Orders</a> ·
-          <a href="./about.html">About</a> ·
-          <a href="./disclaimer.html">Disclaimer</a>
-        </p>
       </div>
     </footer>
   </div>
@@ -406,11 +399,11 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
-  <script src="assets/js/script.js?v=20260505a"></script>
+  <script src="assets/js/script.js?v=20260505b"></script>
   <script src="assets/js/stock-dashboard.js?v=20260426a"></script>
   <script>
-    if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-05-05.1";
+    if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
+      const APP_VERSION = "2026-05-05.3";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -442,7 +435,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260505a", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260505c", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

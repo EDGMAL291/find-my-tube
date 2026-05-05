@@ -4426,6 +4426,14 @@ body.find-my-tube-page .group-chip-icon svg {
   border-color: rgba(30, 113, 167, 0.3);
 }
 
+.contact-page-actions {
+  margin: 14px 0 12px;
+}
+
+.contact-page-note {
+  margin-bottom: 0;
+}
+
 .about-info-modal-card {
   width: min(560px, calc(100vw - 28px));
   max-height: min(82vh, 720px);
@@ -5185,10 +5193,6 @@ body.find-my-tube-page .group-chip-icon svg {
 }
 
 .site-footer-note {
-  display: none;
-}
-
-.site-footer .home-tip-text {
   display: none;
 }
 
