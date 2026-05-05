@@ -165,7 +165,7 @@ html[data-theme="neutral"] {
 }
 
 body {
-  font-family: "Plus Jakarta Sans", "Avenir Next", "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   color: var(--text-main);
   min-height: 100vh;
   padding: 28px;
@@ -755,18 +755,6 @@ body[data-app-page="home"] .header {
   color: #0d605a;
 }
 
-.site-menu-title::after {
-  content: "Navigation and settings";
-  display: block;
-  margin-top: 5px;
-  color: rgba(75, 92, 101, 0.76);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.2;
-  text-transform: none;
-}
-
 .site-menu-list {
   display: grid;
   grid-template-columns: 1fr;
@@ -841,11 +829,14 @@ body[data-app-page="home"] .header {
 }
 
 .site-menu-link::after {
-  content: "\203A";
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-top: 1.6px solid currentColor;
+  border-right: 1.6px solid currentColor;
   color: rgba(98, 121, 128, 0.54);
-  font-size: 1.15rem;
-  line-height: 1;
-  opacity: 0.74;
+  opacity: 0.72;
+  transform: rotate(45deg);
   transition: transform 0.18s ease, color 0.18s ease;
 }
 
@@ -920,7 +911,7 @@ body[data-app-page="home"] .header {
 
 .site-menu-link:hover::after,
 .site-menu-link:focus-visible::after {
-  transform: translateX(2px);
+  transform: translateX(2px) rotate(45deg);
   color: var(--menu-action-accent, #0d605a);
 }
 
@@ -1373,6 +1364,7 @@ body.find-my-test-page .about-panel {
   color: var(--quick-action-text);
   text-align: left;
   font: inherit;
+  text-decoration: none;
   cursor: pointer;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
   position: relative;
@@ -1659,6 +1651,7 @@ button.home-recent-item:focus-visible {
   font-weight: 700;
   letter-spacing: 0.01em;
   padding: 6px 12px;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -5195,6 +5188,10 @@ body.find-my-tube-page .group-chip-icon svg {
   display: none;
 }
 
+.site-footer .home-tip-text {
+  display: none;
+}
+
 .site-footer-feedback-note {
   display: none;
 }
@@ -6583,10 +6580,13 @@ body.find-my-tube-page .group-chip-icon svg {
   }
 
   .mobile-bottom-menu-item::after {
-    content: "\203A";
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-top: 1.6px solid currentColor;
+    border-right: 1.6px solid currentColor;
     color: rgba(98, 121, 128, 0.54);
-    font-size: 1.2rem;
-    line-height: 1;
+    transform: rotate(45deg);
   }
 
   .mobile-bottom-menu-item:hover::after,
@@ -8489,10 +8489,6 @@ html[data-theme="neutral"] .site-menu-group-title {
   color: rgba(63, 90, 85, 0.78);
 }
 
-html[data-theme="neutral"] .site-menu-title::after {
-  color: rgba(63, 90, 85, 0.68);
-}
-
 html[data-theme="neutral"] .menu-action-meta {
   color: rgba(63, 90, 85, 0.68);
 }
@@ -8668,10 +8664,6 @@ html[data-theme="dark"] .site-menu-group-title {
 
 html[data-theme="dark"] .site-menu-title {
   color: #bff8ef;
-}
-
-html[data-theme="dark"] .site-menu-title::after {
-  color: rgba(184, 210, 220, 0.72);
 }
 
 html[data-theme="dark"] .site-menu-link:hover .menu-action-meta,

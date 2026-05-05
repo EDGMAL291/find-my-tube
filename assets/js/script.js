@@ -195,6 +195,9 @@ const currentPageParams = new URLSearchParams(window.location.search);
 const currentAppPage = currentPageParams.get("tool") === "find-my-test"
   ? "find-my-test"
   : (document.body.dataset.appPage || "home");
+const initialSearchQuery = String(currentPageParams.get("q") || currentPageParams.get("search") || "")
+  .trim()
+  .slice(0, 120);
 const isHomePage = currentAppPage === "home";
 const isFindMyTubePage = currentAppPage === "find-my-tube";
 const isFindMyTestPage = currentAppPage === "find-my-test";
@@ -248,10 +251,14 @@ const MOBILE_BOTTOM_NAV_KEY_BY_MENU_ACTION = Object.freeze({
 const MOBILE_BOTTOM_MENU_CLOSE_DURATION_MS = 420;
 const HOME_STATUS_MAX_ITEMS = 4;
 const sharedPlanToken = currentPageParams.get("plan") || "";
-const APP_HOME_TITLE = "Find My Tube";
-const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube";
-const FIND_MY_TEST_PAGE_TITLE = "Find My Test";
-const STOCK_ORDER_PAGE_TITLE = "Order Stock";
+const APP_HOME_TITLE = "Find My Tube | Specimen Tubes, Suggested Tests, and Collection Guidance";
+const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube | Match Lab Tests to the Correct Collection Tube";
+const FIND_MY_TEST_PAGE_TITLE = "Find My Test | Suggested Tests from Symptoms, Signs, and Clinical Concerns";
+const STOCK_ORDER_PAGE_TITLE = "Order Lab Consumables | Find My Tube";
+const APP_HOME_APP_TITLE = "Find My Tube";
+const FIND_MY_TUBE_APP_TITLE = "Find My Tube";
+const FIND_MY_TEST_APP_TITLE = "Find My Test";
+const STOCK_ORDER_APP_TITLE = "Order Stock";
 const APP_HOME_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TUBE_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
@@ -626,13 +633,17 @@ if (appleMobileAppTitleMeta) {
   appleMobileAppTitleMeta.setAttribute(
     "content",
     isFindMyTestPage
-      ? FIND_MY_TEST_PAGE_TITLE
+      ? FIND_MY_TEST_APP_TITLE
       : isFindMyTubePage
-        ? FIND_MY_TUBE_PAGE_TITLE
+        ? FIND_MY_TUBE_APP_TITLE
         : isStockOrderPage
-          ? STOCK_ORDER_PAGE_TITLE
-          : APP_HOME_TITLE
+          ? STOCK_ORDER_APP_TITLE
+          : APP_HOME_APP_TITLE
   );
+}
+
+if (isFindMyTubePage && searchInput && initialSearchQuery) {
+  searchInput.value = initialSearchQuery;
 }
 
 // Dispatches find my tube event.
@@ -3096,7 +3107,31 @@ const aliasByName = {
     "Autoimmune Profile (ESR, FBC, CRP, RF, CCP, ANA Screen)",
     "Autoimmune Profile (FBC, ESR, CRP, RF, CCP, ANA Screen)"
   ],
-  "ANA Screen and Reflex ENA Antibodies": ["ANA Screen", "ANA Reflex ENA", "ANA Screen and Reflex ENA"],
+  "ANA (Antinuclear Antibody)": [
+    "ANA",
+    "A-NA",
+    "ANA test",
+    "Antinuclear antibody"
+  ],
+  "ANA Screen and Reflex ENA Antibodies": [
+    "ANA Screen",
+    "ANA Reflex ENA",
+    "ANA Screen and Reflex ENA",
+    "A-NA screen"
+  ],
+  "Anti-dsDNA": [
+    "Anti dsDNA",
+    "anti ds dna",
+    "anti-ds dna",
+    "anti double stranded dna",
+    "anti double stranded deoxyribonucleic acid"
+  ],
+  "dsDNA (Quantitative)": [
+    "dsDNA",
+    "double stranded dna",
+    "double-stranded dna",
+    "anti double stranded dna"
+  ],
   "Anti-CCP Antibody": ["CCP", "ACCP", "Anti CCP"],
   "Malaria Profile": ["Malaria panel", "Malaria screen", "Malaria studies"],
   "Parathyroid Hormone (PTH)": ["PTH", "Parathyroid hormone", "Parathormone"],
@@ -6093,7 +6128,8 @@ function initHomeDashboard() {
     });
   }
 
-  homeStatusTrackOrdersBtn?.addEventListener("click", () => {
+  homeStatusTrackOrdersBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
     openTrackOrders();
   });
 
@@ -8164,7 +8200,10 @@ function bindEvents() {
 
   if (siteMenuLinks.length) {
     siteMenuLinks.forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", (event) => {
+        if (button instanceof HTMLAnchorElement) {
+          event.preventDefault();
+        }
         const action = button.getAttribute("data-menu-action") || "";
         setSiteMenuOpen(false);
         handleSiteNavigationAction(action, button);
@@ -8413,7 +8452,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260427a",
+    assetVersion: "20260505a",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

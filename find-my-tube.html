@@ -10,17 +10,21 @@
   <meta name="apple-mobile-web-app-title" content="Find My Tube" />
   <title>Find My Tube | Match Lab Tests to the Correct Collection Tube</title>
   <meta name="description" content="Search for laboratory tests and match them to the correct specimen tube quickly. Designed to support safer, faster sample collection." />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
   <link rel="canonical" href="https://findmytube.co.za/find-my-tube.html" />
   <meta property="og:title" content="Find My Tube | Match Lab Tests to the Correct Collection Tube" />
   <meta property="og:description" content="Search for laboratory tests and match them to the correct specimen tube quickly. Designed to support safer, faster sample collection." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://findmytube.co.za/find-my-tube.html" />
   <meta property="og:site_name" content="Find My Tube" />
+  <meta property="og:locale" content="en_ZA" />
   <meta property="og:image" content="https://findmytube.co.za/assets/icons/icon-512.png" />
+  <meta property="og:image:alt" content="Find My Tube clinical reference app icon" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Find My Tube | Match Lab Tests to the Correct Collection Tube" />
   <meta name="twitter:description" content="Search for laboratory tests and match them to the correct specimen tube quickly. Designed to support safer, faster sample collection." />
   <meta name="twitter:image" content="https://findmytube.co.za/assets/icons/icon-512.png" />
+  <meta name="twitter:image:alt" content="Find My Tube clinical reference app icon" />
   <link rel="manifest" href="manifest.webmanifest?v=20260317a" />
   <link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg?v=20260317a" />
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=20260317a" />
@@ -36,7 +40,24 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260427a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260505a" />
+  <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "@id": "https://findmytube.co.za/find-my-tube.html#webpage",
+        "url": "https://findmytube.co.za/find-my-tube.html",
+        "name": "Find My Tube | Match Lab Tests to the Correct Collection Tube",
+        "description": "Search for laboratory tests and match them to the correct specimen tube quickly. Designed to support safer, faster sample collection.",
+        "inLanguage": "en-ZA",
+        "isPartOf": {
+            "@id": "https://findmytube.co.za/#website"
+        },
+        "publisher": {
+            "@id": "https://findmytube.co.za/#organization"
+        }
+    }
+  </script>
 </head>
 <body data-app-page="find-my-tube">
   <div class="container">
@@ -278,13 +299,13 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260416a"></script>
+  <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260427a"></script>
+  <script src="assets/js/script.js?v=20260505a"></script>
   <script src="assets/js/find-my-test.js?v=20260416a"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = "2026-04-27.1";
+      const APP_VERSION = "2026-05-05.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -305,7 +326,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260427a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260505a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

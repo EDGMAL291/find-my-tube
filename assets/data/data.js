@@ -2813,5 +2813,21 @@ const tests = [
     turnaroundTime: "3-10 days",
     notes: "HIV drug resistance genotyping.",
     borderColor: "purple"
+  },
+  {
+    name: "HLA-B27",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "1-3 days",
+    notes: "Human leukocyte antigen B27 typing.",
+    borderColor: "purple"
+  },
+  {
+    name: "EPO / Erythropoietin / Erythropoetin",
+    tubeColor: "Yellow (Gold)",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Erythropoietin level.",
+    borderColor: "yellow"
   }
 ];
