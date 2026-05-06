@@ -40,7 +40,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260505b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260506a" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -425,7 +425,7 @@
             padding: 0 10px;
             color: #5a6d79;
             font-size: 0.7rem;
-            font-weight: 800;
+            font-weight: 650;
             letter-spacing: 0.08em;
             text-transform: uppercase;
           }
@@ -452,7 +452,7 @@
             background: rgba(240, 253, 250, 0.92);
             color: #0d605a;
             font-size: 0.72rem;
-            font-weight: 800;
+            font-weight: 650;
             line-height: 1.1;
             white-space: nowrap;
           }
@@ -491,7 +491,7 @@
             .stock-order-track-cell::before {
               content: attr(data-label);
               font-size: 0.64rem;
-              font-weight: 800;
+              font-weight: 650;
               letter-spacing: 0.08em;
               text-transform: uppercase;
               color: #5a6d79;
@@ -1129,7 +1129,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-05-05.3";
+      const APP_VERSION = "2026-05-06.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1150,7 +1150,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260505c", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260506a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

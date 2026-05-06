@@ -390,7 +390,7 @@ body[data-app-page="stock-dashboard"] {
   gap: 0.01em;
   width: auto;
   max-width: 100%;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .brand-home-btn,
@@ -430,7 +430,7 @@ body[data-app-page="stock-dashboard"] {
   background: rgba(15, 118, 110, 0.12);
   color: #0d605a;
   font-size: 0.7rem;
-  font-weight: 900;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -633,7 +633,7 @@ body[data-app-page="home"] .header {
 .header-menu-label {
   color: currentColor;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.01em;
   line-height: 1;
   white-space: nowrap;
@@ -749,7 +749,7 @@ body[data-app-page="home"] .header {
   padding: 3px 2px 0;
   border-bottom: 0;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #0d605a;
@@ -779,7 +779,7 @@ body[data-app-page="home"] .header {
   margin: 0;
   padding: 0 2px;
   font-size: 0.64rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -814,7 +814,7 @@ body[data-app-page="home"] .header {
   text-align: left;
   font: inherit;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   white-space: normal;
   cursor: pointer;
@@ -889,14 +889,14 @@ body[data-app-page="home"] .header {
   overflow: hidden;
   color: color-mix(in srgb, var(--text-muted) 88%, var(--menu-action-accent, #0d605a));
   font-size: 0.68rem;
-  font-weight: 650;
+  font-weight: 550;
   line-height: 1.25;
   text-overflow: ellipsis;
 }
 
 .site-menu-link.is-secondary {
   font-size: 0.8rem;
-  font-weight: 650;
+  font-weight: 550;
   color: color-mix(in srgb, var(--text-main) 82%, var(--text-muted));
 }
 
@@ -1002,7 +1002,7 @@ body[data-app-page="home"] .header {
 .theme-switcher-title {
   margin: 0 0 8px;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -1027,7 +1027,7 @@ body[data-app-page="home"] .header {
   color: var(--text-muted);
   font: inherit;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1167,7 +1167,7 @@ body.find-my-test-page .about-panel {
 .home-feature-kicker {
   margin: 0;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent-strong);
@@ -1267,7 +1267,7 @@ body.find-my-test-page .about-panel {
   background: none;
   color: rgba(13, 96, 90, 0.8);
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.84;
@@ -1470,7 +1470,7 @@ body.find-my-test-page .about-panel {
 
 .home-action-label {
   font-size: 0.93rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.01em;
   line-height: 1.24;
   color: var(--quick-action-text);
@@ -1563,7 +1563,7 @@ button.home-recent-item:focus-visible {
   margin: 0;
   color: #1c353b;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -1648,7 +1648,7 @@ button.home-recent-item:focus-visible {
   color: color-mix(in srgb, var(--home-track-accent) 82%, #0f172a);
   font: inherit;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
   padding: 6px 12px;
   text-decoration: none;
@@ -1674,7 +1674,7 @@ button.home-recent-item:focus-visible {
   gap: 8px;
   color: var(--home-track-text);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .home-status-dot {
@@ -1721,7 +1721,7 @@ button.home-recent-item:focus-visible {
 }
 
 .home-status-item-ward {
-  font-weight: 700;
+  font-weight: 600;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1841,7 +1841,7 @@ button.home-recent-item:focus-visible {
   color: color-mix(in srgb, var(--home-tips-accent) 88%, #14532d);
   padding: 3px 8px;
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
@@ -1851,7 +1851,7 @@ button.home-recent-item:focus-visible {
   margin: 0;
   color: var(--home-tips-text);
   font-size: 0.92rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.48;
   max-width: 40rem;
   transition: opacity 0.22s ease, transform 0.22s ease;
@@ -1932,7 +1932,7 @@ button.home-recent-item:focus-visible {
 
 .stock-order-field-label {
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent-strong);
@@ -2047,7 +2047,7 @@ button.home-recent-item:focus-visible {
 
 .stock-order-item-kicker {
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent-strong);
@@ -2123,7 +2123,7 @@ button.home-recent-item:focus-visible {
   color: #0d605a;
   font: inherit;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 650;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -2148,7 +2148,7 @@ button.home-recent-item:focus-visible {
 
 .stock-order-qty-input {
   text-align: center;
-  font-weight: 800;
+  font-weight: 650;
   touch-action: manipulation;
 }
 
@@ -2208,7 +2208,7 @@ button.home-recent-item:focus-visible {
 
 .stock-order-track-orders-label {
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.2;
   color: inherit;
 }
@@ -2255,7 +2255,7 @@ button.home-recent-item:focus-visible {
   background: var(--color-info-tint);
   color: var(--color-primary-strong);
   font-size: 0.74rem;
-  font-weight: 900;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -2312,7 +2312,7 @@ button.home-recent-item:focus-visible {
 .stock-order-request-meta {
   color: #52636d;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   text-align: right;
 }
 
@@ -2388,7 +2388,7 @@ button.home-recent-item:focus-visible {
 .track-orders-header {
   padding: 0 0.25rem;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted-text);
@@ -2420,7 +2420,7 @@ button.home-recent-item:focus-visible {
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 42, 0.12);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -2472,7 +2472,7 @@ button.home-recent-item:focus-visible {
 
 .stock-order-summary-label {
   font-size: 0.66rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #5a6d79;
@@ -2481,7 +2481,7 @@ button.home-recent-item:focus-visible {
 .stock-order-summary-value {
   color: #17343a;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.45;
   white-space: pre-line;
 }
@@ -2640,7 +2640,7 @@ body.find-my-test-page .find-my-test-page-bar {
   color: #0d605a;
   text-decoration: none;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .find-my-test-page-back::before {
@@ -2663,7 +2663,7 @@ body.find-my-test-page .find-my-test-page-bar {
   background: rgba(237, 250, 247, 0.92);
   color: #0d605a;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.2;
 }
 
@@ -2758,7 +2758,7 @@ body.find-my-test-page .clinical-workup-context-pair {
 .clinical-workup-kicker {
   margin: 0 0 8px;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #0b5d57;
@@ -2796,7 +2796,7 @@ body.find-my-test-page .clinical-workup-context-pair {
 .clinical-workup-chip-slot-label {
   margin: 0;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #607480;
 }
 
@@ -2811,7 +2811,7 @@ body.find-my-test-page .clinical-workup-context-pair {
   color: #21414d;
   font-family: inherit;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   padding: 9px 12px;
   cursor: pointer;
@@ -2986,12 +2986,12 @@ body.find-my-test-page .clinical-workup-form {
 
 .clinical-workup-dob-control.has-value .clinical-workup-dob-assist {
   color: #0d605a;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .clinical-workup-dob-control.is-invalid .clinical-workup-dob-assist {
   color: #b45309;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .clinical-workup-field-wide {
@@ -3001,7 +3001,7 @@ body.find-my-test-page .clinical-workup-form {
 .clinical-workup-field span,
 .clinical-workup-field-label {
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #5a6d79;
@@ -3097,7 +3097,7 @@ body.find-my-test-page .clinical-workup-form {
 
 .clinical-workup-autocomplete-term {
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.3;
 }
 
@@ -3122,7 +3122,7 @@ body.find-my-test-page .clinical-workup-form {
   border-radius: 999px;
   padding: 2px 7px;
   font-size: 0.66rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
@@ -3150,7 +3150,7 @@ body.find-my-test-page .clinical-workup-form {
 .clinical-workup-results-add-all-btn {
   border-radius: 16px;
   font-family: inherit;
-  font-weight: 800;
+  font-weight: 650;
   cursor: pointer;
   transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
 }
@@ -3218,7 +3218,7 @@ body.find-my-test-page .clinical-workup-form {
   margin: 0;
   color: #0d605a;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -3303,7 +3303,7 @@ body.find-my-test-page .clinical-workup-rule-list {
   background: rgba(236, 250, 247, 0.96);
   color: #0d605a;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   padding: 7px 10px;
 }
@@ -3328,7 +3328,7 @@ body.find-my-test-page .clinical-workup-rule-list {
 .clinical-workup-rule-label {
   margin: 0;
   font-size: 0.66rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #5a6d79;
@@ -3427,7 +3427,7 @@ body.find-my-test-page .clinical-workup-rule-list {
 .clinical-workup-test-name {
   margin: 0;
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.25;
   color: #17343a;
 }
@@ -3436,7 +3436,7 @@ body.find-my-test-page .clinical-workup-rule-list {
   flex-shrink: 0;
   color: #0d605a;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.2;
   text-align: right;
 }
@@ -3568,7 +3568,7 @@ body.find-my-tube-page .group-hints {
 .find-my-test-launch-kicker {
   margin: 0;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #0b5d57;
@@ -3586,7 +3586,7 @@ body.find-my-tube-page .group-hints {
   background: rgba(255, 255, 255, 0.82);
   color: #0d605a;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .find-my-test-launch-card h3 {
@@ -3618,7 +3618,7 @@ body.find-my-tube-page .group-hints {
   background: linear-gradient(180deg, rgba(255, 254, 250, 0.96), rgba(237, 252, 250, 0.92));
   color: #0d605a;
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.2;
   box-shadow: 0 10px 18px rgba(15, 118, 110, 0.1);
 }
@@ -3669,7 +3669,7 @@ body.find-my-tube-page .group-hints {
   background: transparent;
   color: #0d605a;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.2;
 }
 
@@ -3681,7 +3681,7 @@ body.find-my-tube-page .group-hints {
   color: #ffffff;
   font-family: inherit;
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 650;
   padding: 12px 14px;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -3725,7 +3725,7 @@ body.find-my-tube-page .group-hints {
   color: var(--color-text-muted);
   font-family: inherit;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 9px 12px;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
@@ -3887,7 +3887,7 @@ body.find-my-tube-page .group-hints {
 
 .selection-cart-kicker {
   font-size: 0.58rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #0b5d57;
@@ -3895,7 +3895,7 @@ body.find-my-tube-page .group-hints {
 
 .selection-cart-label {
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 650;
   color: #1d3139;
   line-height: 1;
 }
@@ -3916,7 +3916,7 @@ body.find-my-tube-page .group-hints {
   border: 2px solid rgba(255, 251, 245, 0.98);
   box-shadow: 0 10px 20px rgba(13, 96, 90, 0.28);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1;
   z-index: 2;
 }
@@ -3943,7 +3943,7 @@ body.find-my-tube-page .group-hints {
 .fact-kicker {
   margin: 0;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 650;
   color: #17343a;
 }
 
@@ -4015,7 +4015,7 @@ body.find-my-tube-page .group-hints {
 .group-chip-label {
   display: block;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -4199,7 +4199,7 @@ body.find-my-tube-page .group-chip-icon svg {
 .chemistry-browse-chip-label {
   flex: 1 1 auto;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25;
 }
 
@@ -4253,7 +4253,7 @@ body.find-my-tube-page .group-chip-icon svg {
   color: #3d5360;
   font-family: inherit;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 7px 10px;
   cursor: pointer;
 }
@@ -4384,7 +4384,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .contact-sheet-action-text {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .contact-sheet-action-copy {
@@ -4394,7 +4394,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .contact-sheet-action-title {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -4453,7 +4453,7 @@ body.find-my-tube-page .group-chip-icon svg {
   margin: 0;
   color: #1e3139;
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -4481,7 +4481,7 @@ body.find-my-tube-page .group-chip-icon svg {
   text-align: left;
   font: inherit;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
@@ -4586,7 +4586,7 @@ body.find-my-tube-page .group-chip-icon svg {
 .section-browse-option-label {
   margin-top: auto;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.2;
 }
 
@@ -4620,7 +4620,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .legal-copy h4 {
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #0b5d57;
@@ -4699,7 +4699,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .draw-cart-kicker {
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #0b5d57;
@@ -4730,7 +4730,7 @@ body.find-my-tube-page .group-chip-icon svg {
   color: #35505d;
   font-family: inherit;
   font-size: 0.79rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 8px 10px;
   cursor: pointer;
   transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
@@ -4769,7 +4769,7 @@ body.find-my-tube-page .group-chip-icon svg {
 .draw-selection-count {
   font-size: 0.84rem;
   color: #40545f;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .draw-selected-list {
@@ -4802,7 +4802,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .draw-selected-chip-name {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #1e3139;
 }
 
@@ -4816,7 +4816,7 @@ body.find-my-tube-page .group-chip-icon svg {
   padding: 0;
   font-size: 1.02rem;
   line-height: 1;
-  font-weight: 800;
+  font-weight: 650;
   color: #0d605a;
   background: transparent;
   cursor: pointer;
@@ -4837,7 +4837,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .draw-planner-count {
   margin-bottom: 8px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -4954,7 +4954,7 @@ body.find-my-tube-page .group-chip-icon svg {
   background: rgba(15, 118, 110, 0.12);
   color: #0d605a;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1;
   text-align: center;
 }
@@ -5007,7 +5007,7 @@ body.find-my-tube-page .group-chip-icon svg {
   color: #0d605a;
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.1;
   padding: 9px 12px;
   cursor: pointer;
@@ -5028,7 +5028,7 @@ body.find-my-tube-page .group-chip-icon svg {
   min-width: 0;
   color: #3f5761;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
   text-align: right;
 }
 
@@ -5058,7 +5058,7 @@ body.find-my-tube-page .group-chip-icon svg {
   color: rgba(53, 80, 93, 0.62);
   font-family: inherit;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
   padding: 0;
   cursor: pointer;
@@ -5100,7 +5100,7 @@ body.find-my-tube-page .group-chip-icon svg {
   box-shadow: 0 18px 32px rgba(65, 53, 38, 0.2);
   color: #21414d;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
   text-align: center;
   pointer-events: none;
@@ -5184,7 +5184,7 @@ body.find-my-tube-page .group-chip-icon svg {
 .site-footer-title {
   margin: 0;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #6b7280;
   line-height: 1.4;
   letter-spacing: 0.01em;
@@ -5214,7 +5214,7 @@ body.find-my-tube-page .group-chip-icon svg {
   color: #21414d;
   font-family: inherit;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 9px 12px;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
@@ -5356,7 +5356,7 @@ body.find-my-tube-page .group-chip-icon svg {
   display: block;
   margin-bottom: 0;
   font-size: 1.08rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: #1e3139;
@@ -5429,7 +5429,7 @@ body.find-my-tube-page .group-chip-icon svg {
   background: rgba(255, 255, 255, 0.92);
   color: #0d605a;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -5442,7 +5442,7 @@ body.find-my-tube-page .group-chip-icon svg {
   background: transparent;
   color: #0d605a;
   font-size: 1.45rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 0.9;
 }
 
@@ -5461,7 +5461,7 @@ body.find-my-tube-page .group-chip-icon svg {
   display: block;
   margin-top: 6px;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #0d605a;
 }
 
@@ -5506,7 +5506,7 @@ body.find-my-tube-page .group-chip-icon svg {
   display: block;
   color: #17343a;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -5604,7 +5604,7 @@ body.find-my-tube-page .group-chip-icon svg {
   padding: 5px 9px;
   font-family: inherit;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   align-self: flex-start;
 }
@@ -5613,7 +5613,7 @@ body.find-my-tube-page .group-chip-icon svg {
   display: inline-flex;
   border-radius: 999px;
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 500;
   padding: 4px 9px;
   margin: 0 0 10px 0;
   color: #35505d;
@@ -5646,12 +5646,12 @@ body.find-my-tube-page .group-chip-icon svg {
   padding: 7px 10px;
   font-family: inherit;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .label {
-  font-weight: 700;
+  font-weight: 600;
   display: block;
   margin-bottom: 2px;
   color: #26424f;
@@ -5702,7 +5702,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .tube-option-separator {
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #5e7280;
@@ -5717,7 +5717,7 @@ body.find-my-tube-page .group-chip-icon svg {
 .tube-option-label {
   font-size: 0.74rem;
   color: #35505d;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -5991,7 +5991,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .no-results-handoff {
   color: #17343a;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .no-results-link-btn {
@@ -6005,7 +6005,7 @@ body.find-my-tube-page .group-chip-icon svg {
   background: linear-gradient(180deg, rgba(225, 248, 243, 0.98), rgba(212, 242, 236, 0.96));
   color: #0d605a;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 650;
   text-decoration: none;
   box-shadow: 0 12px 22px rgba(15, 118, 110, 0.12);
   transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
@@ -6260,7 +6260,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
   .mobile-bottom-nav-label {
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.01em;
     line-height: 1.1;
     white-space: nowrap;
@@ -6437,7 +6437,7 @@ body.find-my-tube-page .group-chip-icon svg {
   .mobile-bottom-menu-kicker {
     margin: 0;
     font-size: 0.68rem;
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: 0.11em;
     text-transform: uppercase;
     color: rgba(13, 96, 90, 0.78);
@@ -6447,7 +6447,7 @@ body.find-my-tube-page .group-chip-icon svg {
     margin: 3px 0 0;
     color: #15343a;
     font-size: 1.16rem;
-    font-weight: 850;
+    font-weight: 650;
     letter-spacing: -0.03em;
     line-height: 1.1;
   }
@@ -6457,7 +6457,7 @@ body.find-my-tube-page .group-chip-icon svg {
     max-width: 28ch;
     color: rgba(64, 87, 97, 0.78);
     font-size: 0.78rem;
-    font-weight: 650;
+    font-weight: 550;
     line-height: 1.3;
   }
 
@@ -6507,7 +6507,7 @@ body.find-my-tube-page .group-chip-icon svg {
   .mobile-bottom-menu-group-title {
     margin: 0 2px 3px;
     font-size: 0.64rem;
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: 0.09em;
     text-transform: uppercase;
     color: rgba(75, 85, 99, 0.82);
@@ -6541,7 +6541,7 @@ body.find-my-tube-page .group-chip-icon svg {
     text-align: left;
     font: inherit;
     font-size: 0.88rem;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     white-space: normal;
     padding: 9px 12px;
@@ -8926,7 +8926,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
   background: rgba(255, 244, 228, 0.98);
   color: #9a3412;
   font-size: 0.76rem;
-  font-weight: 900;
+  font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -9052,7 +9052,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
   color: var(--color-primary-strong, #0d605a);
   font: inherit;
   font-size: 1.15rem;
-  font-weight: 900;
+  font-weight: 650;
   line-height: 1;
   cursor: pointer;
   transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
@@ -9089,7 +9089,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
   box-shadow: none;
   color: var(--text-main);
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 650;
   text-align: center;
   -moz-appearance: textfield;
 }
@@ -9109,7 +9109,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
   overflow: hidden;
   color: var(--muted-text);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.15;
   text-align: left;
   text-overflow: ellipsis;
@@ -9126,7 +9126,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
   background: color-mix(in srgb, var(--color-primary, #0f766e) 8%, rgba(255, 255, 255, 0.9));
   color: var(--color-primary-strong, #0d605a);
   font-size: 0.86rem;
-  font-weight: 850;
+  font-weight: 650;
   line-height: 1.2;
 }
 
@@ -9180,7 +9180,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
   border: 1px solid rgba(15, 118, 110, 0.18);
   background: rgba(15, 118, 110, 0.08);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--heading-color);
 }
 
@@ -9338,7 +9338,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
 .stock-dashboard-queue-head {
   padding: 0 0.6rem;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--muted-text);
   text-transform: uppercase;
@@ -9382,7 +9382,7 @@ body.stock-dashboard-session-restoring .stock-dashboard-chip-list {
   background: rgba(59, 130, 246, 0.16);
   color: #1e3a8a;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -9583,7 +9583,7 @@ html[data-theme="dark"] .stock-dashboard-list-row[data-stock-level="success"] {
     content: attr(data-label);
     color: var(--muted-text);
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
@@ -9606,7 +9606,7 @@ html[data-theme="dark"] .stock-dashboard-list-row[data-stock-level="success"] {
     content: attr(data-label);
     color: var(--muted-text);
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
@@ -9765,7 +9765,7 @@ body[data-app-page="stock-dashboard"] .stock-dashboard-alert-badge,
   background: rgba(255, 255, 255, 0.78);
   color: var(--muted-text);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.03em;
 }
 
