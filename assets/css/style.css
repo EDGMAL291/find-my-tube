@@ -5691,7 +5691,7 @@ body.find-my-tube-page .group-chip-icon svg {
 
 .tube-tinted-card .tube-option {
   border: 1px solid color-mix(in srgb, var(--tube-card-border) 72%, transparent);
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 2px 7px 2px 3px;
   background: var(--tube-card-chip-bg);
 }
@@ -6150,11 +6150,11 @@ body.find-my-tube-page .group-chip-icon svg {
   }
 
   body.has-mobile-bottom-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 122px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 104px);
   }
 
   body.has-mobile-bottom-nav.has-selection-cart {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 122px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 104px);
   }
 
   body.has-mobile-bottom-nav .container {
@@ -6162,32 +6162,28 @@ body.find-my-tube-page .group-chip-icon svg {
   }
 
   body.has-mobile-bottom-nav .selection-cart-bar {
-    bottom: calc(env(safe-area-inset-bottom) + 96px);
+    bottom: calc(env(safe-area-inset-bottom) + 84px);
   }
 
   .mobile-bottom-nav {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
     z-index: 1110;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: stretch;
-    gap: 8px;
-    padding: 8px 10px calc(env(safe-area-inset-bottom) + 8px);
-    border: 1px solid rgba(86, 107, 114, 0.24);
-    border-top: 1px solid rgba(255, 255, 255, 0.24);
-    border-bottom: 0;
-    border-radius: 24px 24px 0 0;
-    background:
-      radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 34%),
-      linear-gradient(145deg, rgba(251, 249, 243, 0.985), rgba(237, 245, 243, 0.98));
+    gap: 6px;
+    padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 18px;
+    background: rgba(247, 250, 251, 0.96);
     box-shadow:
-      0 -8px 20px rgba(16, 24, 40, 0.12),
-      0 -2px 8px rgba(15, 118, 110, 0.08);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+      0 14px 30px rgba(15, 23, 42, 0.12),
+      0 2px 8px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     transform: translateY(0);
     opacity: 1;
     transition: transform 0.26s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.2s ease;
@@ -6202,38 +6198,36 @@ body.find-my-tube-page .group-chip-icon svg {
   .mobile-bottom-nav-group {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
+    gap: 2px;
     min-width: 0;
     align-items: stretch;
   }
 
   .mobile-bottom-nav-group[data-group="left"] {
-    padding-right: 8px;
-    border-right: 1px solid rgba(95, 117, 124, 0.2);
+    padding-right: 4px;
   }
 
   .mobile-bottom-nav-group[data-group="right"] {
-    padding-left: 8px;
-    border-left: 1px solid rgba(95, 117, 124, 0.2);
+    padding-left: 4px;
   }
 
   .mobile-bottom-nav-btn {
     border: 1px solid transparent;
     background: transparent;
-    color: rgba(48, 70, 80, 0.88);
+    color: rgba(51, 65, 85, 0.92);
     min-width: 44px;
-    height: 64px;
-    min-height: 64px;
-    border-radius: 15px;
+    height: 56px;
+    min-height: 56px;
+    border-radius: 12px;
     font: inherit;
     cursor: pointer;
     display: grid;
     justify-items: center;
     align-content: center;
-    gap: 4px;
-    padding: 8px 6px;
+    gap: 3px;
+    padding: 6px 4px;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .mobile-bottom-nav-btn:focus:not(:focus-visible) {
@@ -6259,8 +6253,8 @@ body.find-my-tube-page .group-chip-icon svg {
   }
 
   .mobile-bottom-nav-label {
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.68rem;
+    font-weight: 650;
     letter-spacing: 0.01em;
     line-height: 1.1;
     white-space: nowrap;
@@ -6268,31 +6262,30 @@ body.find-my-tube-page .group-chip-icon svg {
 
   .mobile-bottom-nav-btn.is-active:not(.mobile-bottom-nav-menu),
   .mobile-bottom-nav-btn[aria-current="page"]:not(.mobile-bottom-nav-menu) {
-    background: rgba(15, 118, 110, 0.14);
-    border-color: rgba(15, 118, 110, 0.24);
+    background: rgba(15, 118, 110, 0.1);
+    border-color: rgba(15, 118, 110, 0.18);
     color: #0b4c4e;
+    box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.08);
   }
 
   .mobile-bottom-nav-menu {
-    width: 96px;
-    height: 64px;
-    min-height: 64px;
-    padding: 8px 8px;
-    border-radius: 16px;
-    border-color: rgba(15, 118, 110, 0.3);
-    background: linear-gradient(180deg, rgba(247, 254, 252, 0.98), rgba(225, 241, 246, 0.95));
+    width: 84px;
+    height: 56px;
+    min-height: 56px;
+    padding: 6px 6px;
+    border-radius: 12px;
+    border-color: rgba(148, 163, 184, 0.22);
+    background: rgba(255, 255, 255, 0.92);
     color: #0b5d57;
-    box-shadow:
-      0 10px 18px rgba(15, 118, 110, 0.16),
-      0 4px 10px rgba(15, 23, 42, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.46);
   }
 
   .mobile-bottom-nav-menu-icon {
     position: relative;
-    width: 31px;
-    height: 31px;
-    border-radius: 11px;
-    border: 1px solid rgba(15, 118, 110, 0.28);
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -6328,10 +6321,8 @@ body.find-my-tube-page .group-chip-icon svg {
 
   .mobile-bottom-nav-menu.is-active,
   .mobile-bottom-nav-menu[aria-current="page"] {
-    border-color: rgba(15, 118, 110, 0.48);
-    box-shadow:
-      0 16px 26px rgba(15, 118, 110, 0.28),
-      0 8px 14px rgba(15, 23, 42, 0.14);
+    border-color: rgba(15, 118, 110, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.08);
   }
 
   .mobile-bottom-menu-backdrop {
@@ -9779,4 +9770,246 @@ body[data-app-page="stock-dashboard"] .stock-dashboard-alert-badge,
   border-color: rgba(217, 119, 6, 0.35);
   background: rgba(255, 247, 237, 0.9);
   color: #9a3412;
+}
+
+/* Conservative clinical polish */
+.header h1 {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.home-quick-actions-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.home-dashboard-actions .home-action-tile {
+  justify-content: center;
+}
+
+.home-dashboard-actions .home-action-copy {
+  max-width: 24ch;
+}
+
+.home-action-tile-order {
+  --quick-action-accent: #8a5a20;
+  --quick-action-soft-bg: #fef3df;
+  --quick-action-border: rgba(138, 90, 32, 0.22);
+  --quick-action-glow: rgba(191, 122, 50, 0.14);
+}
+
+.home-dashboard-contact {
+  display: none;
+}
+
+.home-reference-card,
+.home-help-card {
+  background: color-mix(in srgb, var(--color-surface-elevated) 82%, transparent);
+}
+
+.home-reference-card {
+  border-left: 4px solid rgba(63, 130, 173, 0.55);
+}
+
+.home-reference-card p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.home-help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.home-help-actions a {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(71, 85, 105, 0.22);
+  background: rgba(255, 255, 255, 0.88);
+  color: #22323a;
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.home-help-actions a:hover,
+.home-help-actions a:focus-visible {
+  border-color: rgba(15, 118, 110, 0.28);
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.08);
+}
+
+.home-order-status-card {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, #fdf7e8 80%, #ffffff),
+      color-mix(in srgb, #fdf7e8 58%, #ffffff)
+    );
+}
+
+.home-status-item {
+  padding: 12px 13px;
+}
+
+.home-status-item-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.home-status-item-requester,
+.home-status-item-ward {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-status-item-requester {
+  color: #20333a;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.home-status-item-ward {
+  color: var(--color-text-muted);
+  font-size: 0.79rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.home-status-item-line {
+  margin-top: 10px;
+  grid-template-columns: 1fr;
+}
+
+.home-status-item-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  background: rgba(255, 247, 237, 0.92);
+  color: #8a5a20;
+  font-size: 0.74rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.clinical-workup-form-grid {
+  grid-template-columns: 1fr;
+}
+
+.clinical-workup-group {
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.clinical-workup-group legend {
+  padding: 0 6px;
+  color: #0b5d57;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.clinical-workup-group-patient {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+}
+
+.clinical-workup-group-picture {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.clinical-workup-concern-field {
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(237, 250, 247, 0.74);
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.04);
+}
+
+.clinical-workup-concern-field .clinical-workup-field-label {
+  color: #0f5d58;
+  font-weight: 700;
+}
+
+.clinical-workup-concern-field input,
+.clinical-workup-concern-field textarea {
+  border-color: rgba(15, 118, 110, 0.28);
+  font-weight: 600;
+  min-height: 108px;
+}
+
+.clinical-workup-note {
+  border: 1px solid rgba(63, 130, 173, 0.18);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(232, 242, 247, 0.72);
+}
+
+.selection-cart-bar {
+  width: auto;
+  min-width: 148px;
+  min-height: 58px;
+  align-items: center;
+  padding: 12px 14px 12px 52px;
+}
+
+.selection-cart-icon {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.selection-cart-copy {
+  gap: 0;
+}
+
+.selection-cart-label {
+  white-space: nowrap;
+}
+
+body.has-mobile-bottom-nav .selection-cart-bar {
+  bottom: calc(env(safe-area-inset-bottom) + 82px);
+}
+
+@media (max-width: 860px) {
+  .home-quick-actions-grid,
+  .clinical-workup-group-patient,
+  .clinical-workup-group-picture {
+    grid-template-columns: 1fr;
+  }
+
+  .home-help-actions a {
+    flex: 1 1 100%;
+  }
+
+  .home-status-item-head {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .home-status-item-ward {
+    text-align: right;
+  }
+
+  .home-status-item-line {
+    grid-template-columns: 1fr;
+  }
 }

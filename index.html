@@ -9,11 +9,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Find My Tube" />
   <title>Find My Tube | Specimen Tubes, Suggested Tests, and Collection Guidance</title>
-  <meta name="description" content="Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, draw plans, and consumables guidance. Reference tool only." />
+  <meta name="description" content="Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, Tube Plans, and consumables guidance. Reference tool only." />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <link rel="canonical" href="https://findmytube.co.za/" />
   <meta property="og:title" content="Find My Tube | Specimen Tubes, Suggested Tests, and Collection Guidance" />
-  <meta property="og:description" content="Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, draw plans, and consumables guidance. Reference tool only." />
+  <meta property="og:description" content="Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, Tube Plans, and consumables guidance. Reference tool only." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://findmytube.co.za/" />
   <meta property="og:site_name" content="Find My Tube" />
@@ -22,7 +22,7 @@
   <meta property="og:image:alt" content="Find My Tube clinical reference app icon" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Find My Tube | Specimen Tubes, Suggested Tests, and Collection Guidance" />
-  <meta name="twitter:description" content="Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, draw plans, and consumables guidance. Reference tool only." />
+  <meta name="twitter:description" content="Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, Tube Plans, and consumables guidance. Reference tool only." />
   <meta name="twitter:image" content="https://findmytube.co.za/assets/icons/icon-512.png" />
   <meta name="twitter:image:alt" content="Find My Tube clinical reference app icon" />
   <link rel="manifest" href="manifest.webmanifest?v=20260317a" />
@@ -40,7 +40,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260506a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260603b" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -83,7 +83,7 @@
           "@id": "https://findmytube.co.za/#webpage",
           "url": "https://findmytube.co.za/",
           "name": "Find My Tube | Specimen Tubes, Suggested Tests, and Collection Guidance",
-          "description": "Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, draw plans, and consumables guidance. Reference tool only.",
+          "description": "Find My Tube helps clinical teams quickly identify specimen tubes, suggested tests, Tube Plans, and consumables guidance. Reference tool only.",
           "inLanguage": "en-ZA",
           "isPartOf": {
             "@id": "https://findmytube.co.za/#website"
@@ -136,7 +136,7 @@
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
             <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Tube Plan</button>
-            <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
+            <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Suggest Tests</button>
             <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order Stock / Consumables</button>
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
             <button type="button" class="site-menu-link" data-menu-action="track-orders" role="menuitem">Track Orders</button>
@@ -160,36 +160,16 @@
     <section class="home-hub home-dashboard" id="homeHub">
       <section class="home-dashboard-actions" aria-label="Primary actions">
         <div class="home-quick-actions-grid">
-          <a href="./find-my-tube.html" class="home-action-tile home-action-tile-tube" data-menu-action="tube" aria-label="Open Find My Tube">
-            <span class="home-action-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
-                <path d="M9 3h6M10 3v8.6c0 1.7.9 3.3 2.4 4.2l.3.2a5 5 0 0 1 2.3 4.2V21H9v-.8a5 5 0 0 1 2.3-4.2l.3-.2A5 5 0 0 0 14 11.6V3"></path>
-              </svg>
-            </span>
-            <span class="home-action-label">Find My Tube</span>
+          <a href="./find-my-tube.html" class="home-action-tile home-action-tile-tube" data-menu-action="tube" aria-label="Open Find a Tube">
+            <span class="home-action-label">Find a Tube</span>
             <span class="home-action-copy">Find the right collection tube</span>
           </a>
-          <a href="./find-my-test.html" class="home-action-tile home-action-tile-test" data-menu-action="find-my-test" aria-label="Open Find My Test">
-            <span class="home-action-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
-                <path d="M4 6h16"></path>
-                <path d="M7 11h10"></path>
-                <path d="M9.5 16h5"></path>
-                <rect x="3" y="4" width="18" height="16" rx="3"></rect>
-              </svg>
-            </span>
-            <span class="home-action-label">Find My Test</span>
-            <span class="home-action-copy">Search by test or clinical need</span>
+          <a href="./find-my-test.html" class="home-action-tile home-action-tile-test" data-menu-action="find-my-test" aria-label="Open Suggest Tests">
+            <span class="home-action-label">Suggest Tests</span>
+            <span class="home-action-copy">Search by symptoms, signs, or clinical concern</span>
           </a>
           <a href="./order-stock.html" class="home-action-tile home-action-tile-order" data-menu-action="stock" aria-label="Open Order Stock">
-            <span class="home-action-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
-                <path d="M3.8 8.2 12 4l8.2 4.2"></path>
-                <path d="M3.8 8.2V16L12 20l8.2-4V8.2"></path>
-                <path d="M3.8 8.2 12 12.4m8.2-4.2L12 12.4m0 0V20"></path>
-              </svg>
-            </span>
-            <span class="home-action-label">Order Consumables</span>
+            <span class="home-action-label">Order Stock</span>
             <span class="home-action-copy">Request tubes and consumables</span>
           </a>
         </div>
@@ -198,24 +178,16 @@
       <section class="home-dashboard-section home-order-status-card" aria-labelledby="homeStatusTitle">
         <div class="home-dashboard-head">
           <div class="home-dashboard-head-row">
-            <h2 id="homeStatusTitle">Order Status</h2>
-            <a href="./track-orders.html" class="home-status-track-btn" id="homeStatusTrackOrdersBtn">Track Orders</a>
+            <h2 id="homeStatusTitle">Recent Stock Requests</h2>
+            <a href="./track-orders.html" class="home-status-track-btn" id="homeStatusTrackOrdersBtn">View all orders</a>
           </div>
         </div>
         <div class="home-status-list" id="homeStatusList"></div>
       </section>
 
-      <a href="./contact-feedback.html" class="home-action-tile home-action-tile-contact home-dashboard-contact" data-menu-action="contact-feedback" aria-label="Open Contact and Feedback">
-        <span class="home-action-icon" aria-hidden="true">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
-            <path d="M6 7.5h12a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-2.5 2.5H11l-4 3v-3H6A2.5 2.5 0 0 1 3.5 15v-5A2.5 2.5 0 0 1 6 7.5Z"></path>
-            <path d="M8.2 11.2h7.6"></path>
-            <path d="M8.2 14h5.1"></path>
-          </svg>
-        </span>
-        <span class="home-action-label">Contact / Feedback</span>
-        <span class="home-action-copy">Get help or send feedback</span>
-      </a>
+      <section class="home-dashboard-section home-reference-card" aria-label="Reference use only">
+        <p>Reference use only. Confirm urgent, paediatric, transfusion, and site-specific requirements with local protocol or senior review.</p>
+      </section>
 
       <section class="home-dashboard-section home-tip-card" aria-labelledby="homeTipTitle">
         <div class="home-tip-head">
@@ -233,107 +205,123 @@
         <p class="home-tip-text" id="homeTipText">Fill citrate tubes to the line to prevent clotting errors.</p>
       </section>
 
+      <section class="home-dashboard-section home-help-card" aria-labelledby="homeHelpTitle">
+        <div class="home-dashboard-head">
+          <h2 id="homeHelpTitle">Contact the lab</h2>
+        </div>
+        <div class="home-help-actions">
+          <a href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20" target="_blank" rel="noopener noreferrer">WhatsApp Feedback</a>
+          <a href="tel:0217996279">Call Laboratory</a>
+        </div>
+      </section>
+
     </section>
 
     <section class="clinical-workup-panel" id="clinicalWorkupPanel" aria-labelledby="clinicalWorkupTitle">
       <div class="clinical-workup-shell">
         <form class="clinical-workup-form" id="clinicalWorkupForm">
-          <h2 id="clinicalWorkupTitle" class="sr-only">Find My Test form</h2>
+          <h2 id="clinicalWorkupTitle" class="sr-only">Suggest Tests form</h2>
           <div class="clinical-workup-form-grid">
-            <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
-              <span id="clinicalDobLabel">Date of birth</span>
-              <div class="clinical-workup-dob-control" id="clinicalDobControl">
-                <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
-                  <input
-                    type="text"
-                    id="clinicalDobInput"
-                    inputmode="numeric"
-                    autocomplete="bday"
-                    maxlength="14"
-                    placeholder="DD / MM / YYYY"
-                    aria-describedby="clinicalDobAssist"
-                  />
-                  <label
-                    class="clinical-workup-field-glyph clinical-workup-field-glyph-button clinical-workup-dob-picker-label"
-                    for="clinicalDobPickerInput"
-                    aria-label="Pick date of birth from calendar"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6H8v1a1 1 0 1 1-2 0V6H5Zm3 7a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Z"></path>
-                    </svg>
+            <fieldset class="clinical-workup-group clinical-workup-group-patient">
+              <legend>Patient details</legend>
+              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
+                <span id="clinicalDobLabel">Date of birth</span>
+                <div class="clinical-workup-dob-control" id="clinicalDobControl">
+                  <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
                     <input
-                      type="date"
-                      id="clinicalDobPickerInput"
-                      class="clinical-workup-dob-picker-native"
-                      tabindex="-1"
-                      aria-hidden="true"
+                      type="text"
+                      id="clinicalDobInput"
+                      inputmode="numeric"
+                      autocomplete="bday"
+                      maxlength="14"
+                      placeholder="DD / MM / YYYY"
+                      aria-describedby="clinicalDobAssist"
                     />
-                  </label>
+                    <label
+                      class="clinical-workup-field-glyph clinical-workup-field-glyph-button clinical-workup-dob-picker-label"
+                      for="clinicalDobPickerInput"
+                      aria-label="Pick date of birth from calendar"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6H8v1a1 1 0 1 1-2 0V6H5Zm3 7a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Z"></path>
+                      </svg>
+                      <input
+                        type="date"
+                        id="clinicalDobPickerInput"
+                        class="clinical-workup-dob-picker-native"
+                        tabindex="-1"
+                        aria-hidden="true"
+                      />
+                    </label>
+                  </div>
+                  <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
                 </div>
-                <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
-              </div>
-            </label>
+              </label>
 
-            <div class="clinical-workup-context-pair">
-              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
-                <span>Sex</span>
-                <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
-                  <select id="clinicalSexSelect">
-                    <option value="unspecified">Not specified</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="other">Other</option>
+              <div class="clinical-workup-context-pair">
+                <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
+                  <span>Sex</span>
+                  <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
+                    <select id="clinicalSexSelect">
+                      <option value="unspecified">Not specified</option>
+                      <option value="female">Female</option>
+                      <option value="male">Male</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <span class="clinical-workup-field-glyph clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
+                  </div>
+                </label>
+
+                <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
+                  <span>Pregnancy status</span>
+                  <select id="clinicalPregnancySelect">
+                    <option value="unknown">Unknown / not applicable</option>
+                    <option value="pregnant">Pregnant / possible pregnancy</option>
+                    <option value="not-pregnant">Not pregnant</option>
                   </select>
-                  <span class="clinical-workup-field-glyph clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
-                </div>
-              </label>
+                </label>
+              </div>
+            </fieldset>
 
-              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
-                <span>Pregnancy</span>
-                <select id="clinicalPregnancySelect">
-                  <option value="unknown">Unknown / not applicable</option>
-                  <option value="pregnant">Pregnant / possible pregnancy</option>
-                  <option value="not-pregnant">Not pregnant</option>
-                </select>
-              </label>
-            </div>
+            <fieldset class="clinical-workup-group clinical-workup-group-picture">
+              <legend>Clinical picture</legend>
+              <div class="clinical-workup-field clinical-workup-field-wide">
+                <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
+                <textarea
+                  id="clinicalSymptomsInput"
+                  rows="3"
+                  placeholder="fever, vomiting, chest pain"
+                ></textarea>
+              </div>
 
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
-              <textarea
-                id="clinicalSymptomsInput"
-                rows="3"
-                placeholder="e.g. chest pain radiating to the left arm, fever, frothy urine, weight loss"
-              ></textarea>
-            </div>
+              <div class="clinical-workup-field clinical-workup-field-wide">
+                <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
+                <textarea
+                  id="clinicalSignsInput"
+                  rows="3"
+                  placeholder="jaundice, pallor, dehydration"
+                ></textarea>
+              </div>
 
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
-              <textarea
-                id="clinicalSignsInput"
-                rows="3"
-                placeholder="e.g. pallor, jaundice, oedema, hypotension, tachycardia"
-              ></textarea>
-            </div>
-
-            <div class="clinical-workup-field clinical-workup-field-wide">
-              <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
-              <input
-                type="text"
-                id="clinicalConcernInput"
-                placeholder="e.g. ACS, heart failure, CKD, infertility, autoimmune disease"
-              />
-            </div>
+              <div class="clinical-workup-field clinical-workup-field-wide clinical-workup-concern-field">
+                <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
+                <textarea
+                  id="clinicalConcernInput"
+                  rows="4"
+                  placeholder="sepsis, DKA, anaemia, renal failure"
+                ></textarea>
+              </div>
+            </fieldset>
 
           </div>
 
           <div class="clinical-workup-actions">
             <button type="submit" class="clinical-workup-submit-btn" id="clinicalWorkupSubmitBtn">Suggest Tests</button>
-            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">New patient</button>
+            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">Clear patient details</button>
           </div>
 
           <p class="clinical-workup-note">
-            Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.
+            Reference use only. Confirm urgent, paediatric, transfusion, and site-specific requirements with local protocol or senior review.
           </p>
           <p class="clinical-workup-status" id="clinicalWorkupStatus" role="status" aria-live="polite"></p>
         </form>
@@ -343,12 +331,12 @@
     <section class="clinical-workup-results" id="clinicalWorkupResults" aria-labelledby="clinicalWorkupResultsTitle" hidden>
       <div class="clinical-workup-results-head">
         <div>
-          <p class="clinical-workup-kicker">Find My Test</p>
+          <p class="clinical-workup-kicker">Suggest Tests</p>
           <h3 id="clinicalWorkupResultsTitle">Suggested tests</h3>
         </div>
         <div class="clinical-workup-results-actions">
-          <button type="button" class="clinical-workup-results-add-all-btn" id="addAllClinicalWorkupResultsBtn">Add all to Tube Plan</button>
-          <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear suggestions</button>
+          <button type="button" class="clinical-workup-results-add-all-btn" id="addAllClinicalWorkupResultsBtn">Add suggested tests to Tube Plan</button>
+          <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear results</button>
         </div>
       </div>
       <p class="clinical-workup-results-copy" id="clinicalWorkupResultsCopy"></p>
@@ -366,7 +354,7 @@
     </footer>
   </div>
 
-  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Draw Plan" hidden>
+  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Tube Plan: 0" hidden>
     <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0</span>
     <span class="selection-cart-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -381,8 +369,7 @@
       </svg>
     </span>
     <span class="selection-cart-copy">
-      <span class="selection-cart-kicker">Draw</span>
-      <span class="selection-cart-label">Plan</span>
+      <span class="selection-cart-label">Tube Plan: 0</span>
     </span>
   </button>
 
@@ -402,7 +389,7 @@
         <div class="draw-groups" id="drawGroups"></div>
         <p class="draw-planner-note" id="drawPlannerNote"></p>
       </div>
-      <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add More Tests</button>
+      <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add another test</button>
     </div>
   </section>
 
@@ -474,11 +461,11 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260505b"></script>
-  <script src="assets/js/find-my-test.js?v=20260425a"></script>
+  <script src="assets/js/script.js?v=20260603b"></script>
+  <script src="assets/js/find-my-test.js?v=20260603b"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-05-06.1";
+      const APP_VERSION = "2026-06-03.2";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -499,7 +486,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260506a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260603b", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

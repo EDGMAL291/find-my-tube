@@ -249,23 +249,23 @@ const MOBILE_BOTTOM_NAV_KEY_BY_MENU_ACTION = Object.freeze({
   "track-orders": "order"
 });
 const MOBILE_BOTTOM_MENU_CLOSE_DURATION_MS = 420;
-const HOME_STATUS_MAX_ITEMS = 4;
+const HOME_STATUS_MAX_ITEMS = 3;
 const sharedPlanToken = currentPageParams.get("plan") || "";
 const APP_HOME_TITLE = "Find My Tube | Specimen Tubes, Suggested Tests, and Collection Guidance";
 const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube | Match Lab Tests to the Correct Collection Tube";
-const FIND_MY_TEST_PAGE_TITLE = "Find My Test | Suggested Tests from Symptoms, Signs, and Clinical Concerns";
+const FIND_MY_TEST_PAGE_TITLE = "Suggest Tests | Suggested Tests from Symptoms, Signs, and Clinical Concerns";
 const STOCK_ORDER_PAGE_TITLE = "Order Lab Consumables | Find My Tube";
 const STOCK_DASHBOARD_PAGE_TITLE = "Stock Dashboard | Find My Tube";
 const TRACK_ORDERS_PAGE_TITLE = "Track Lab Orders | Find My Tube";
 const APP_HOME_APP_TITLE = "Find My Tube";
 const FIND_MY_TUBE_APP_TITLE = "Find My Tube";
-const FIND_MY_TEST_APP_TITLE = "Find My Test";
+const FIND_MY_TEST_APP_TITLE = "Suggest Tests";
 const STOCK_ORDER_APP_TITLE = "Order Stock";
 const STOCK_DASHBOARD_APP_TITLE = "Stock Dashboard";
 const TRACK_ORDERS_APP_TITLE = "Track Orders";
 const APP_HOME_HEADER_COPY = "The right tube. The right test. Right now.";
 const FIND_MY_TUBE_HEADER_COPY = "The right tube. The right test. Right now.";
-const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs and context to suggested tests and draw plan. Do not enter patient identifiers.";
+const FIND_MY_TEST_HEADER_COPY = "Symptoms, signs, and clinical concern to suggested tests and Tube Plan. Do not enter patient identifiers.";
 const STOCK_ORDER_HEADER_COPY = "Consumables, stock requests, and order status.";
 const STOCK_DASHBOARD_HEADER_COPY = "Local request dashboard, status tracking, and quick stats.";
 const TRACK_ORDERS_HEADER_COPY = "Track stock request status by ward, status, and requester.";
@@ -857,7 +857,7 @@ function loadSharedDrawPlanFromUrl() {
   setSelectedTests(new Set(sharedTestNames), { rerenderCards: false });
   window.requestAnimationFrame(() => {
     openDrawModal();
-    showSelectionNotice("Shared draw plan loaded.");
+    showSelectionNotice("Shared Tube Plan loaded.");
   });
 }
 
@@ -1221,18 +1221,85 @@ function getBloodCultureBottleGlyphSvg() {
   `;
 }
 
+function getStockTubeGroup(item) {
+  const safeId = String(item?.id || "").trim().toLowerCase();
+  const safeLabel = String(item?.label || "").trim().toLowerCase();
+  const safeSheetKey = String(item?.sheetColumnKey || "").trim().toLowerCase();
+
+  if (
+    safeId.startsWith("yellow-")
+    || safeId.includes("paediatric-yellow")
+    || safeLabel.includes("yellow")
+    || safeSheetKey.includes("yellow")
+  ) return "Gold/Yellow";
+  if (
+    safeId.startsWith("grey-")
+    || safeId.includes("paediatric-grey")
+    || safeLabel.includes("grey")
+    || safeLabel.includes("fluoride")
+    || safeSheetKey.includes("grey")
+  ) return "Gray";
+  if (
+    safeId.startsWith("purple-")
+    || safeId.includes("paediatric-purple")
+    || safeLabel.includes("purple")
+    || safeLabel.includes("edta")
+    || safeSheetKey.includes("purple")
+  ) return "Purple";
+  if (
+    safeId.startsWith("green-")
+    || safeLabel.includes("green")
+    || safeLabel.includes("heparin")
+    || safeSheetKey.includes("green")
+  ) return "Green";
+  if (
+    safeId.startsWith("blue-")
+    || safeLabel.includes("blue")
+    || safeLabel.includes("citrate")
+    || safeSheetKey.includes("blue")
+  ) return "Blue";
+  if (
+    safeId.startsWith("pearl-")
+    || safeLabel.includes("pearl")
+    || safeSheetKey.includes("pearl")
+  ) return "Pearl/White";
+  if (
+    safeId.startsWith("tan-")
+    || safeLabel.includes("tan")
+    || safeSheetKey.includes("tan")
+  ) return "Tan";
+  if (
+    safeId.startsWith("pink-")
+    || safeLabel.includes("pink")
+    || safeSheetKey.includes("pink")
+  ) return "Pink";
+
+  return "";
+}
+
 function getStockItemGlyphMarkup(item, options = {}) {
   const meta = getBloodCultureBottleMetadata(item);
-  if (!meta) return "";
-
   const glyphClassName = String(options.glyphClassName || "").trim();
   const classSuffix = glyphClassName ? ` ${glyphClassName}` : "";
-  const safeAccentColor = escapeHtml(meta.accentColor || "#2563eb");
-  const safeAccentSoft = escapeHtml(meta.accentSoftColor || "#dbeafe");
+
+  if (meta) {
+    const safeAccentColor = escapeHtml(meta.accentColor || "#2563eb");
+    const safeAccentSoft = escapeHtml(meta.accentSoftColor || "#dbeafe");
+
+    return `
+      <span class="stock-item-glyph stock-item-glyph-blood-culture${classSuffix}" style="--stock-item-glyph-color:${safeAccentColor};--stock-item-glyph-bg:${safeAccentSoft};" aria-hidden="true">
+        ${getBloodCultureBottleGlyphSvg()}
+      </span>
+    `;
+  }
+
+  const tubeGroup = getStockTubeGroup(item);
+  if (!tubeGroup) return "";
+  const tubeColor = escapeHtml(getTubeSwatchColor(tubeGroup));
 
   return `
-    <span class="stock-item-glyph stock-item-glyph-blood-culture${classSuffix}" style="--stock-item-glyph-color:${safeAccentColor};--stock-item-glyph-bg:${safeAccentSoft};" aria-hidden="true">
-      ${getBloodCultureBottleGlyphSvg()}
+    <span class="stock-item-glyph stock-item-glyph-tube${classSuffix}" style="--stock-item-glyph-color:${tubeColor};" aria-hidden="true">
+      ${getTubeVisualMarkup(tubeGroup, " tube-icon-mini")}
     </span>
   `;
 }
@@ -2395,6 +2462,30 @@ const stockConsumableItems = [
     maxSingles: 5,
     note: "Blood bank tubes must go with the blood bank form."
   }),
+  {
+    id: "paediatric-yellow-microtainer",
+    label: "Paediatric Yellow (Gel) microtainer",
+    unitType: "each",
+    maxQuantity: 50,
+    note: "Requested individually.",
+    sheetColumnKey: "PaediatricYellowMicrotainer"
+  },
+  {
+    id: "paediatric-purple-microtainer",
+    label: "Paediatric Purple (EDTA) microtainer",
+    unitType: "each",
+    maxQuantity: 50,
+    note: "Requested individually.",
+    sheetColumnKey: "PaediatricPurpleMicrotainer"
+  },
+  {
+    id: "paediatric-grey-microtainer",
+    label: "Paediatric Grey (Fluoride) microtainer",
+    unitType: "each",
+    maxQuantity: 50,
+    note: "Requested individually.",
+    sheetColumnKey: "PaediatricGreyMicrotainer"
+  },
   { id: "specimen-jars", label: "Specimen jars", unitType: "each", maxQuantity: 50, note: "Requested individually." },
   { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, note: "Packed in 50s." },
   { id: "blood-culture-bottle-aerobic", label: "Aerobic Blood Culture Bottle (Blue)", unitType: "each", note: "Requested individually." },
@@ -5067,15 +5158,15 @@ function getMatchedConditionShortcut(normalizedQuery) {
   return null;
 }
 
-// Builds the Find My Test handoff when a condition search lands in Find My Tube.
+// Builds the Suggest Tests handoff when a condition search lands in Find My Tube.
 function getFindMyTestHandoffMarkup(queryLabel = "") {
   const escapedQuery = escapeHtml(queryLabel || "this condition");
 
   return `
     <div class="no-results no-results-handoff-card">
       <p class="no-results-handoff">Find My Tube works best for test and profile names.</p>
-      <p>Use Find My Test for condition-based searches like <strong>${escapedQuery}</strong>.</p>
-      <a class="no-results-link-btn" href="./index.html?tool=find-my-test">Open Find My Test</a>
+      <p>Use Suggest Tests for condition-based searches like <strong>${escapedQuery}</strong>.</p>
+      <a class="no-results-link-btn" href="./index.html?tool=find-my-test">Open Suggest Tests</a>
     </div>
   `;
 }
@@ -5153,8 +5244,8 @@ function updateDrawSelectionTools() {
     quickToolsClearBtn.setAttribute(
       "aria-label",
       hasSelection && isClearDrawSelectionConfirming
-        ? "Confirm clearing all tests from current draw plan"
-        : "Clear all tests from current draw plan"
+        ? "Confirm clearing all tests from current Tube Plan"
+        : "Clear all tests from current Tube Plan"
     );
   }
 }
@@ -5196,7 +5287,7 @@ function updateQuickToolsPanelState() {
   if (!count) {
     quickToolsPanel.classList.add("inactive-plan");
     quickToolsPanel.classList.remove("active-plan");
-    quickToolsTitle.textContent = "Start a Draw Plan";
+    quickToolsTitle.textContent = "Start a Tube Plan";
     quickToolsDescription.textContent = "Add tests as you search to combine tubes and save consumables.";
     if (quickToolsStats) quickToolsStats.hidden = true;
     if (quickToolsTestsStat) quickToolsTestsStat.textContent = "";
@@ -5212,7 +5303,7 @@ function updateQuickToolsPanelState() {
 
   quickToolsPanel.classList.remove("inactive-plan");
   quickToolsPanel.classList.add("active-plan");
-  quickToolsTitle.textContent = "Current Draw Plan";
+  quickToolsTitle.textContent = "Current Tube Plan";
   quickToolsDescription.textContent = "Keep searching to add more tests, or open your plan to review the current selections.";
   if (quickToolsStats) quickToolsStats.hidden = false;
   if (quickToolsTestsStat) {
@@ -5275,8 +5366,11 @@ function updateSelectionCartBar() {
   const hasHighAttentionTest = selectedTests.some((test) => AUTO_EXPAND_CRITICAL_NOTE_TESTS.has(test.name));
   if (!count) {
     selectionCartCount.textContent = "0";
-    selectionCartBar.setAttribute("aria-label", "Tube Plan");
-    selectionCartBar.title = "Tube Plan";
+    const emptyPlanLabel = "Tube Plan: 0";
+    const emptyCartLabel = selectionCartBar.querySelector(".selection-cart-label");
+    if (emptyCartLabel) emptyCartLabel.textContent = emptyPlanLabel;
+    selectionCartBar.setAttribute("aria-label", emptyPlanLabel);
+    selectionCartBar.title = emptyPlanLabel;
     selectionCartBar.hidden = true;
     selectionCartBar.classList.remove("requires-attention");
     document.body.classList.remove("has-selection-cart");
@@ -5293,10 +5387,12 @@ function updateSelectionCartBar() {
 
   selectionCartBar.hidden = false;
   selectionCartCount.textContent = badgeCount;
+  const selectionCartLabel = selectionCartBar.querySelector(".selection-cart-label");
+  if (selectionCartLabel) selectionCartLabel.textContent = `Tube Plan: ${badgeCount}`;
   selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
-    `Tube Plan. ${count} added test${count !== 1 ? "s" : ""}, ${countLabel} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
+    `Tube Plan: ${badgeCount}. ${countLabel} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
   );
   selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
   document.body.classList.add("has-selection-cart");
@@ -5759,11 +5855,11 @@ function initMobileBottomNav() {
       <span class="mobile-bottom-nav-label">Menu</span>
     </button>
     <div class="mobile-bottom-nav-group" data-group="right">
-      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" data-bottom-nav="test" aria-label="Test">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" data-bottom-nav="test" aria-label="Suggest Tests">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>
         </span>
-        <span class="mobile-bottom-nav-label">Test</span>
+        <span class="mobile-bottom-nav-label">Suggest</span>
       </button>
       <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="order" data-bottom-nav="order" aria-label="Order">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
@@ -5804,7 +5900,7 @@ function initMobileBottomNav() {
         <p class="mobile-bottom-menu-group-title">Main navigation</p>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
-        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Find My Test</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Suggest Tests</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="start-draw">Tube Plan</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock">Order Stock / Consumables</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock-dashboard">Stock Dashboard</button>
@@ -5943,9 +6039,9 @@ function recordHomeQuickActionActivity(action) {
   if (!safeAction) return;
   const actionByKey = {
     tube: { title: "Opened Tube lookup", detail: "Find My Tube", actionType: "menu", actionValue: "tube" },
-    "find-my-test": { title: "Opened Test lookup", detail: "Find My Test", actionType: "menu", actionValue: "find-my-test" },
-    draw: { title: "Started Draw Plan", detail: "Start Draw Plan", actionType: "menu", actionValue: "draw" },
-    stock: { title: "Opened Order Stock", detail: "Order Consumables", actionType: "menu", actionValue: "stock" }
+    "find-my-test": { title: "Opened Suggest Tests", detail: "Suggest Tests", actionType: "menu", actionValue: "find-my-test" },
+    draw: { title: "Started Tube Plan", detail: "Start Tube Plan", actionType: "menu", actionValue: "draw" },
+    stock: { title: "Opened Order Stock", detail: "Order Stock", actionType: "menu", actionValue: "stock" }
   };
   const activity = actionByKey[safeAction];
   if (!activity) return;
@@ -5965,7 +6061,7 @@ function recordDrawPlanRecentActivity() {
     : previewList;
   addHomeRecentActivity({
     type: "draw-plan",
-    title: "Last draw plan",
+    title: "Last Tube Plan",
     detail: `${selectedNames.length} test${selectedNames.length === 1 ? "" : "s"} • ${detail}`,
     actionType: "url",
     actionValue: getDrawPlanShareUrl(selectedNames)
@@ -6062,19 +6158,22 @@ function renderHomeStatusSummary() {
     : [];
 
   if (!pendingOrders.length) {
-    homeStatusList.innerHTML = '<div class="home-status-chip"><span class="home-status-dot" aria-hidden="true"></span>No pending orders</div>';
+    homeStatusList.innerHTML = '<div class="home-status-chip"><span class="home-status-dot" aria-hidden="true"></span>No recent stock requests</div>';
     return;
   }
 
   homeStatusList.innerHTML = pendingOrders.slice(0, HOME_STATUS_MAX_ITEMS).map((request) => {
-    const wardUnit = sanitizeDashboardText(request?.wardUnit, 72) || "Ward not set";
-    const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Received";
+    const requestedBy = sanitizeDashboardText(request?.requestedBy, 56) || "Unknown requester";
+    const wardUnit = sanitizeDashboardText(request?.wardUnit, 56) || "Ward not set";
+    const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Request received";
     return `
       <article class="home-status-item">
-        <p class="home-status-item-line">
+        <div class="home-status-item-head">
+          <span class="home-status-item-requester">${escapeHtml(requestedBy)}</span>
           <span class="home-status-item-ward">${escapeHtml(wardUnit)}</span>
-          <span class="home-status-item-sep" aria-hidden="true">-</span>
-          <span class="home-status-item-value">${escapeHtml(statusLabel)}</span>
+        </div>
+        <p class="home-status-item-line">
+          <span class="home-status-item-value home-status-item-status">${escapeHtml(statusLabel)}</span>
         </p>
       </article>
     `;
@@ -6095,15 +6194,16 @@ async function loadHomeDashboardStockSnapshot() {
     const pendingOrders = activeRequests.map((request) => {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
       const statusLabel = normalizedStatus === "received"
-        ? "Received"
+        ? "Request received"
         : normalizedStatus === "processing" || normalizedStatus === "in-progress"
-          ? "Processing"
+          ? "Preparing"
           : normalizedStatus === "packed" || normalizedStatus === "ready"
           ? "Ready for collection"
           : normalizedStatus === "completed"
-          ? "Completed"
+          ? "Collected"
           : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
       return {
+        requestedBy: request?.requestedBy || "",
         wardUnit: request?.wardUnit || "",
         statusLabel
       };
@@ -6275,7 +6375,7 @@ function ensureAboutInfoModal() {
       <div class="about-info-modal-body">
         <p class="about-info-title">About Find My Tube</p>
         <p class="about-info-copy">
-          Find My Tube helps clinical teams quickly match tests, tubes, draw plans, and consumables requests.
+          Find My Tube helps clinical teams quickly match tests, tubes, Tube Plans, and consumables requests.
           Reference tool only. Confirm urgent and site-specific actions with local protocol.
         </p>
         <div class="about-info-links" role="list" aria-label="About links">
@@ -7845,7 +7945,7 @@ function renderCards(filteredTests) {
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
   const isClinicalSuggestionsMode = !normalizedQuery && !activeSectionGroup && hasClinicalWorkupState();
   const shouldShowFindMyTestHandoff = !isClinicalSuggestionsMode && Boolean(matchedConditionShortcut);
-  const clinicalModeLabel = clinicalWorkupOutput?.modeLabel || "Find My Test";
+  const clinicalModeLabel = clinicalWorkupOutput?.modeLabel || "Suggest Tests";
   const resultsContextLabel = !normalizedQuery && activeSectionGroup
     ? getResultsContextLabel(activeSectionGroup)
     : "";
@@ -7856,7 +7956,7 @@ function renderCards(filteredTests) {
       isClinicalSuggestionsMode
         ? `${clinicalModeLabel}. 0 tests found. ${CLINICAL_WORKUP_DISCLAIMER}`
         : shouldShowFindMyTestHandoff
-        ? `${resultsPrefix}Find My Tube is test-first. Use Find My Test for condition-based suggestions.`
+        ? `${resultsPrefix}Find My Tube is test-first. Use Suggest Tests for condition-based suggestions.`
         : `${resultsPrefix}0 tests found`
     );
     cardsContainer.innerHTML = isClinicalSuggestionsMode
@@ -8466,11 +8566,11 @@ function bindEvents() {
   });
 }
 
-// Expose the small public API that the Find My Test module uses to share search and draw-plan state.
+// Expose the small public API that the Suggest Tests module uses to share search and draw-plan state.
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260505b",
+    assetVersion: "20260603b",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

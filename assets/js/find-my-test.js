@@ -1371,7 +1371,7 @@
       .filter(Boolean);
 
     return {
-      modeLabel: state.dataset?.sourceLabel || "Find My Test",
+      modeLabel: state.dataset?.sourceLabel || "Suggest Tests",
       resultsTitle: suggestedTests.length ? "Suggested tests" : "No strong match yet",
       emptyStateLabel: "Next Step",
       emptyStateTitle: "Refine the presentation",
@@ -1384,7 +1384,7 @@
       matchedRules: suggestedTests.length ? [] : matchedPresentations.map((presentation) => ({
         label: "Matched presentation",
         title: presentation.label,
-        rationale: presentation.summary || "Matched to the current Find My Test dataset.",
+        rationale: presentation.summary || "Matched to the current Suggest Tests dataset.",
         tests: (presentation.tests || []).map((test) => test.name).filter(Boolean),
         caution: presentation.caution || "",
         matchedSignals: presentation.matchedSignals || []
@@ -1454,7 +1454,7 @@
     refs.addAllResultsBtn.hidden = !hasSuggestions;
     refs.addAllResultsBtn.disabled = !pendingTestNames.length;
     refs.addAllResultsBtn.textContent = pendingTestNames.length
-      ? "Add all to Tube Plan"
+      ? "Add suggested tests to Tube Plan"
       : "All added";
   }
 
@@ -1519,7 +1519,7 @@
   // Runs find my test.
   function runFindMyTest() {
     if (!state.dataset) {
-      setStatus("Find My Test is still loading. Please try again in a moment.");
+      setStatus("Suggest Tests is still loading. Please try again in a moment.");
       return;
     }
 
@@ -1625,7 +1625,7 @@
 
     return {
       version: String(rawDataset?.version || "").trim(),
-      sourceLabel: String(rawDataset?.sourceLabel || "Find My Test").trim(),
+      sourceLabel: String(rawDataset?.sourceLabel || "Suggest Tests").trim(),
       disclaimer: String(rawDataset?.disclaimer || "").trim(),
       quickPicks,
       quickPickById: Object.fromEntries(quickPicks.map((quickPick) => [quickPick.id, quickPick])),
@@ -1943,7 +1943,7 @@
 
   // Boot the module by loading the latest datasets, then render the empty ready state.
   async function loadDataset() {
-    setStatus("Loading Find My Test...");
+    setStatus("Loading Suggest Tests...");
 
     try {
       const [mapResponse, dictionaryResponse] = await Promise.all([
@@ -1983,8 +1983,8 @@
         });
       }
     } catch (error) {
-      console.error("Find My Test dataset failed to load.", error);
-      setStatus("Find My Test could not load its dictionary or symptom-to-test map. Use the main search while we fix it.");
+      console.error("Suggest Tests dataset failed to load.", error);
+      setStatus("Suggest Tests could not load its dictionary or symptom-to-test map. Use the main search while we fix it.");
     }
   }
 
