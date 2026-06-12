@@ -80,7 +80,7 @@ const stockDashboardTopWards = document.getElementById("stockDashboardTopWards")
 const stockDashboardTopItems = document.getElementById("stockDashboardTopItems");
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
-const STOCK_DASHBOARD_STATUS_ORDER = ["received", "packed", "completed", "cancelled"];
+const STOCK_DASHBOARD_STATUS_ORDER = ["pending", "packed", "ready", "completed", "no-stock", "cancelled"];
 const STOCK_DASHBOARD_LEGACY_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_SESSION_TOKEN_KEY = "fmt-stock-lab-session-token";
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
@@ -275,10 +275,11 @@ function stockDashboardEscapeHtml(value) {
 
 function stockDashboardFormatStatus(status) {
   const safeStatus = String(status || "submitted").trim().toLowerCase();
-  if (safeStatus === "submitted" || safeStatus === "received") return "Received";
-  if (safeStatus === "packed") return "Ready for Collection";
+  if (safeStatus === "submitted" || safeStatus === "received" || safeStatus === "pending") return "Pending";
+  if (safeStatus === "packed" || safeStatus === "processing" || safeStatus === "in-progress") return "Processing";
   if (safeStatus === "ready") return "Ready for Collection";
   if (safeStatus === "collected" || safeStatus === "completed" || safeStatus === "sent") return "Completed";
+  if (safeStatus === "no-stock" || safeStatus === "no_stock" || safeStatus === "no stock") return "No Stock";
   return safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 }
 
@@ -371,19 +372,21 @@ function stockDashboardBuildUserApiUrlById(userId) {
 function stockDashboardNormalizeStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent" || safeStatus === "completed" || safeStatus === "collected") return "completed";
-  if (safeStatus === "received" || safeStatus === "submitted") return "received";
-  return safeStatus || "received";
+  if (safeStatus === "received" || safeStatus === "submitted") return "pending";
+  if (safeStatus === "processing" || safeStatus === "in-progress") return "packed";
+  if (safeStatus === "no_stock" || safeStatus === "no stock" || safeStatus === "out-of-stock" || safeStatus === "out of stock") return "no-stock";
+  return safeStatus || "pending";
 }
 
 function stockDashboardGetQueueStatusMeta(status) {
   const safeStatus = stockDashboardNormalizeStatus(status);
-  if (safeStatus === "received") return { label: "Received", stage: "received" };
-  if (safeStatus === "processing" || safeStatus === "in-progress") return { label: "Ready for Collection", stage: "ready" };
-  if (safeStatus === "packed") return { label: "Ready for Collection", stage: "ready" };
+  if (safeStatus === "pending") return { label: "Pending", stage: "pending" };
+  if (safeStatus === "packed") return { label: "Processing", stage: "processing" };
   if (safeStatus === "ready") return { label: "Ready for Collection", stage: "ready" };
   if (safeStatus === "completed") return { label: "Completed", stage: "completed" };
+  if (safeStatus === "no-stock") return { label: "No Stock", stage: "no-stock" };
   if (safeStatus === "cancelled" || safeStatus === "rejected" || safeStatus === "failed") return { label: "Cancelled", stage: "cancelled" };
-  return { label: "Received", stage: "received" };
+  return { label: "Pending", stage: "pending" };
 }
 
 function stockDashboardGetHeaders(includeJson = false) {
@@ -997,9 +1000,9 @@ function stockDashboardPrepareDatasets(requests = [], recentReceipts = []) {
   const safeReceipts = Array.isArray(recentReceipts) ? recentReceipts : [];
   const activeWorkQueue = safeRequests.filter((request) => {
     const status = stockDashboardNormalizeStatus(request?.status);
-    return status !== "completed" && status !== "cancelled";
+    return status !== "completed" && status !== "cancelled" && status !== "no-stock";
   });
-  const archivedCompletedRequests = safeRequests.filter((request) => stockDashboardNormalizeStatus(request?.status) === "completed");
+  const archivedCompletedRequests = safeRequests.filter((request) => ["completed", "no-stock"].includes(stockDashboardNormalizeStatus(request?.status)));
 
   stockDashboardDatasets.stockRequests = safeRequests;
   stockDashboardDatasets.receivedStock = safeReceipts;
@@ -2101,7 +2104,7 @@ async function loadPublicStockDashboardRequests() {
 
     if (stockDashboardStatus && !stockDashboardSession) {
       stockDashboardStatus.textContent = requests.length
-        ? `Showing ${requests.length} recent received request${requests.length === 1 ? "" : "s"}. Sign in to manage statuses.`
+        ? `Showing ${requests.length} recent pending request${requests.length === 1 ? "" : "s"}. Sign in to manage statuses.`
         : "No consumables requests yet. New ward requests will appear here automatically.";
     }
   } catch {
@@ -2916,8 +2919,8 @@ function renderDashboardList(container, rows, renderRow) {
 
 function stockDashboardGetStatusCount(stats, status) {
   const counts = stats?.statusCounts || {};
-  if (status === "received") {
-    return Number(counts.received || 0) + Number(counts.submitted || 0);
+  if (status === "pending") {
+    return Number(counts.pending || 0) + Number(counts.received || 0) + Number(counts.submitted || 0);
   }
   if (status === "completed") {
     return Number(counts.completed || 0) + Number(counts.collected || 0) + Number(counts.sent || 0);
@@ -2978,7 +2981,7 @@ function renderStockDashboardRequests(requests) {
   const activeRequests = Array.isArray(requests)
     ? requests.filter((request) => {
       const status = stockDashboardNormalizeStatus(request?.status);
-      return status !== "completed" && status !== "cancelled";
+      return status !== "completed" && status !== "cancelled" && status !== "no-stock";
     })
     : [];
 
@@ -3128,6 +3131,10 @@ async function updateStockDashboardRequestStatus(requestId, status) {
   const safeStatus = stockDashboardNormalizeStatus(status);
   if (safeStatus === "completed" || safeStatus === "collected") {
     const confirmed = window.confirm("Complete this order? Stock on hand will be deducted once and the order will move to Archives.");
+    if (!confirmed) return;
+  }
+  if (safeStatus === "no-stock") {
+    const confirmed = window.confirm("Mark this order as No Stock? It will move out of the active queue without deducting stock.");
     if (!confirmed) return;
   }
 

@@ -40,7 +40,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260603b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260612a" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -251,10 +251,10 @@
       <section class="stock-order-request-card" id="stockOrderSubmissionCard" hidden aria-labelledby="stockOrderSubmissionTitle">
         <div class="stock-order-request-head">
           <div>
-            <p class="stock-order-kicker">Received</p>
+            <p class="stock-order-kicker">Pending</p>
             <h3 id="stockOrderSubmissionTitle">Order confirmation</h3>
           </div>
-          <p class="stock-order-request-meta" id="stockOrderSubmissionMessage">Request received successfully.</p>
+          <p class="stock-order-request-meta" id="stockOrderSubmissionMessage">Request pending with the lab.</p>
         </div>
         <div class="stock-order-summary-grid">
           <div class="stock-order-summary-item">
@@ -292,7 +292,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
-  <script src="assets/js/script.js?v=20260603b"></script>
+  <script src="assets/js/script.js?v=20260612a"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -515,16 +515,21 @@
         const normalized = typeof normalizeStockRequestStatus === "function"
           ? normalizeStockRequestStatus(status)
           : String(status || "").trim().toLowerCase();
-        const safe = normalized || "received";
-        const label = safe === "received" || safe === "submitted"
-          ? "Received"
-          : safe === "packed" || safe === "ready" || safe === "in-progress" || safe === "processing"
-            ? "Ready for Collection"
+        const safe = normalized || "pending";
+        const label = safe === "received" || safe === "submitted" || safe === "pending"
+          ? "Pending"
+          : safe === "packed" || safe === "in-progress" || safe === "processing"
+            ? "Processing"
+            : safe === "ready"
+              ? "Ready for Collection"
             : safe === "collected" || safe === "completed"
               ? "Completed"
-              : safe.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+              : safe === "no-stock" || safe === "no_stock" || safe === "no stock"
+                ? "No Stock"
+                : safe.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
         if (safe === "collected" || safe === "completed") return { label, stage: "completed" };
+        if (safe === "no-stock" || safe === "no_stock" || safe === "no stock") return { label, stage: "issue" };
         if (safe === "cancelled" || safe === "rejected" || safe === "failed") return { label, stage: "issue" };
         if (safe === "packed" || safe === "ready" || safe === "in-progress" || safe === "processing") {
           return { label, stage: "in-progress" };
@@ -1150,7 +1155,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260603b", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260612a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

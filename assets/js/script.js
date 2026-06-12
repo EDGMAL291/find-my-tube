@@ -1126,8 +1126,21 @@ function formatStockRequestDateTime(value) {
 function normalizeStockRequestStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent" || safeStatus === "completed" || safeStatus === "collected") return "completed";
-  if (safeStatus === "received" || safeStatus === "submitted") return "received";
-  return safeStatus || "received";
+  if (safeStatus === "received" || safeStatus === "submitted") return "pending";
+  if (safeStatus === "processing" || safeStatus === "in-progress") return "packed";
+  if (safeStatus === "no_stock" || safeStatus === "no stock" || safeStatus === "out-of-stock" || safeStatus === "out of stock") return "no-stock";
+  return safeStatus || "pending";
+}
+
+function formatStockRequestStatusLabel(status) {
+  const normalizedStatus = normalizeStockRequestStatus(status);
+  if (normalizedStatus === "pending") return "Pending";
+  if (normalizedStatus === "packed") return "Processing";
+  if (normalizedStatus === "ready") return "Ready for Collection";
+  if (normalizedStatus === "completed") return "Completed";
+  if (normalizedStatus === "no-stock") return "No Stock";
+  if (normalizedStatus === "cancelled") return "Cancelled";
+  return normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 // Keeps local tracking state in sync without blocking the visible request list.
@@ -1277,6 +1290,23 @@ function getStockTubeGroup(item) {
   return "";
 }
 
+function toConsistentNameCase(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((segment) => segment
+      .split(/([-'])/)
+      .map((part) => {
+        if (part === "-" || part === "'") return part;
+        const lower = part.toLowerCase();
+        return lower ? `${lower.charAt(0).toUpperCase()}${lower.slice(1)}` : "";
+      })
+      .join(""))
+    .join(" ");
+}
+
 function getStockItemGlyphMarkup(item, options = {}) {
   const meta = getBloodCultureBottleMetadata(item);
   const glyphClassName = String(options.glyphClassName || "").trim();
@@ -1330,7 +1360,7 @@ function renderStockTrackingList(requests) {
   const activeRequests = Array.isArray(requests)
     ? requests.filter((request) => {
       const normalized = normalizeStockRequestStatus(request?.status);
-      return normalized !== "completed" && normalized !== "cancelled";
+      return normalized !== "completed" && normalized !== "cancelled" && normalized !== "no-stock";
     })
     : [];
 
@@ -1357,14 +1387,16 @@ function renderStockTrackingList(requests) {
     const updateMeta = request?.statusUpdatedAt || request?.updatedAt
       ? `Last update ${formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
       : "";
-    const statusLabel = normalizedStatus === "received"
-      ? "Received"
+    const statusLabel = normalizedStatus === "pending"
+      ? "Pending"
       : normalizedStatus === "packed"
-        ? "Ready for Collection"
+        ? "Processing"
       : normalizedStatus === "ready"
         ? "Ready for Collection"
         : normalizedStatus === "completed"
           ? "Completed"
+          : normalizedStatus === "no-stock"
+            ? "No Stock"
           : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
     return `
@@ -1455,7 +1487,7 @@ function formatStockQuantity(item) {
 
 // Builds a structured consumables payload for integrations.
 function buildStockOrderPayload() {
-  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterName = toConsistentNameCase(stockOrderRequesterNameInput?.value);
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const notes = String(stockOrderNoteInput?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
@@ -1499,19 +1531,20 @@ function getStockItemMaxQuantity(itemId) {
 
 // Gets the current consumables status label.
 function getStockOrderStatusLabel() {
-  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterName = toConsistentNameCase(stockOrderRequesterNameInput?.value);
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
 
   if (isSubmittingStockOrder) return "Submitting";
   if (stockOrderStatusMode === "submitted") {
     const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
-    if (submittedStatus === "received") return "Received";
-    if (submittedStatus === "packed") return "Ready for Collection";
+    if (submittedStatus === "pending") return "Pending";
+    if (submittedStatus === "packed") return "Processing";
     if (submittedStatus === "ready") return "Ready for Collection";
     if (submittedStatus === "completed") return "Completed";
+    if (submittedStatus === "no-stock") return "No Stock";
     if (submittedStatus === "cancelled") return "Cancelled";
-    return "Received";
+    return "Pending";
   }
   if (stockOrderStatusMode === "submit-failed") return "Submit failed";
   if (stockOrderStatusMode === "copied") return "Copied";
@@ -1531,7 +1564,7 @@ function getStockOrderItemsSummary(selectedItems = getSelectedStockConsumables()
 
 // Builds the consumables request text.
 function buildStockOrderRequestText() {
-  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterName = toConsistentNameCase(stockOrderRequesterNameInput?.value);
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const notes = String(stockOrderNoteInput?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
@@ -1565,7 +1598,7 @@ function buildStockOrderRequestText() {
 function updateStockOrderPreview() {
   if (!stockOrderRequestPreview || !stockOrderRequestMeta) return;
 
-  const requesterName = String(stockOrderRequesterNameInput?.value || "").trim();
+  const requesterName = toConsistentNameCase(stockOrderRequesterNameInput?.value);
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
   const itemCount = selectedItems.reduce((sum, item) => sum + getStockInventoryUnits(item), 0);
@@ -1818,7 +1851,7 @@ function showStockOrderSubmissionConfirmation(record = null, payload = null) {
   if (!stockOrderSubmissionCard) return;
 
   const requestId = String(record?.id || "").trim();
-  const requestedBy = String(record?.requestedBy || payload?.requestedBy || "").trim();
+  const requestedBy = toConsistentNameCase(record?.requestedBy || payload?.requestedBy || "");
   const wardUnit = String(record?.wardUnit || payload?.wardUnit || "").trim();
 
   stockOrderSubmissionCard.hidden = !requestId;
@@ -1829,7 +1862,7 @@ function showStockOrderSubmissionConfirmation(record = null, payload = null) {
   }
 
   if (stockOrderSubmissionMessage) {
-    stockOrderSubmissionMessage.textContent = "Request received successfully. Use Track Orders to follow status updates.";
+    stockOrderSubmissionMessage.textContent = "Request pending with the lab. Use Track Orders to follow status updates.";
   }
 
   if (stockOrderTrackOrderBtn) {
@@ -1943,8 +1976,8 @@ function initStockOrderPanel() {
         type: "stock-submit",
         title: `Last order: ${payload.wardUnit || "Ward not set"}`,
         detail: submittedStockOrderRecord?.id
-          ? `${submittedStockOrderRecord.id} • Received`
-          : "Received",
+          ? `${submittedStockOrderRecord.id} • Pending`
+          : "Pending",
         actionType: "menu",
         actionValue: "stock"
       });
@@ -6101,7 +6134,7 @@ function buildHomeRecentActivityItems() {
     items.unshift({
       type: "stock-request",
       title: `Last order: ${sanitizeDashboardText(lastStockRequest.wardUnit, 80) || "Ward not set"}`,
-      detail: `${lastStockRequest.id} • ${formatStatusLabel(lastStockRequest.status || "submitted")}`,
+      detail: `${lastStockRequest.id} • ${formatStockRequestStatusLabel(lastStockRequest.status || "pending")}`,
       actionType: "url",
       actionValue: `./track-orders.html?requestId=${encodeURIComponent(lastStockRequest.id)}`,
       timestamp: sanitizeDashboardText(lastStockRequest.createdAt, 40)
@@ -6165,7 +6198,7 @@ function renderHomeStatusSummary() {
   homeStatusList.innerHTML = pendingOrders.slice(0, HOME_STATUS_MAX_ITEMS).map((request) => {
     const requestedBy = sanitizeDashboardText(request?.requestedBy, 56) || "Unknown requester";
     const wardUnit = sanitizeDashboardText(request?.wardUnit, 56) || "Ward not set";
-    const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Request received";
+    const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Pending";
     return `
       <article class="home-status-item">
         <div class="home-status-item-head">
@@ -6189,18 +6222,22 @@ async function loadHomeDashboardStockSnapshot() {
     const requests = Array.isArray(payload?.requests) ? payload.requests : [];
     const activeRequests = requests.filter((request) => {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
-      return normalizedStatus !== "completed" && normalizedStatus !== "cancelled";
+      return normalizedStatus !== "completed" && normalizedStatus !== "cancelled" && normalizedStatus !== "no-stock";
     });
     const pendingOrders = activeRequests.map((request) => {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
-      const statusLabel = normalizedStatus === "received"
-        ? "Request received"
+      const statusLabel = normalizedStatus === "pending"
+        ? "Pending"
         : normalizedStatus === "processing" || normalizedStatus === "in-progress"
           ? "Preparing"
-          : normalizedStatus === "packed" || normalizedStatus === "ready"
+          : normalizedStatus === "packed"
+          ? "Processing"
+          : normalizedStatus === "ready"
           ? "Ready for collection"
           : normalizedStatus === "completed"
           ? "Collected"
+          : normalizedStatus === "no-stock"
+          ? "No stock"
           : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
       return {
         requestedBy: request?.requestedBy || "",
@@ -8570,7 +8607,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260603b",
+    assetVersion: "20260612a",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

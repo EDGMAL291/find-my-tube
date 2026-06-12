@@ -28,7 +28,7 @@ const MAX_BODY_BYTES = 1024 * 1024;
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const CANCELLED_ARCHIVE_WINDOW_MS = 5 * 60 * 60 * 1000;
 const AUTH_COOKIE_NAME = "fmt_lab_session";
-const VALID_REQUEST_STATUSES = new Set(["submitted", "received", "packed", "ready", "collected", "completed", "cancelled"]);
+const VALID_REQUEST_STATUSES = new Set(["pending", "submitted", "received", "packed", "ready", "collected", "completed", "cancelled", "no-stock"]);
 
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
@@ -251,15 +251,19 @@ function normalizeUserStatus(value) {
 function slugifyStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "completed";
-  return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "submitted";
+  if (safeStatus === "submitted" || safeStatus === "received") return "pending";
+  if (safeStatus === "processing" || safeStatus === "in-progress") return "packed";
+  if (safeStatus === "no_stock" || safeStatus === "no stock" || safeStatus === "out-of-stock" || safeStatus === "out of stock") return "no-stock";
+  return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "pending";
 }
 
 function formatStatusLabel(status) {
   const safeStatus = slugifyStatus(status);
-  if (safeStatus === "submitted" || safeStatus === "received") return "Received";
-  if (safeStatus === "packed") return "Ready for Collection";
+  if (safeStatus === "pending") return "Pending";
+  if (safeStatus === "packed") return "Processing";
   if (safeStatus === "ready") return "Ready for Collection";
   if (safeStatus === "collected" || safeStatus === "completed") return "Completed";
+  if (safeStatus === "no-stock") return "No Stock";
   if (safeStatus === "cancelled") return "Cancelled";
   return safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 }
@@ -525,7 +529,7 @@ function appendStatusAudit(record, status, userNumber, timestamp) {
   });
   record.statusHistory = history;
 
-  if (safeStatus === "submitted" || safeStatus === "received") {
+  if (safeStatus === "pending") {
     record.receivedAt = safeTimestamp;
     record.receivedBy = safeUserNumber;
   }
@@ -566,7 +570,7 @@ function buildStockStats(records) {
   const totalRequests = requests.length;
   const totalLineItems = requests.reduce((sum, request) => sum + Number(request.lineItemCount || 0), 0);
   const totalUnitsRequested = requests.reduce((sum, request) => sum + Number(request.totalRequestedQuantity || 0), 0);
-  const openRequests = requests.filter((request) => !["collected", "completed", "cancelled"].includes(slugifyStatus(request.status))).length;
+  const openRequests = requests.filter((request) => !["collected", "completed", "cancelled", "no-stock"].includes(slugifyStatus(request.status))).length;
   const statusCounts = {};
   const wards = new Map();
   const items = new Map();
@@ -988,7 +992,7 @@ async function dbListRequests(limit = 25, {
     .filter((row) => {
       const status = slugifyStatus(row?.status);
       if (!includeCancelled && status === "cancelled") return false;
-      if (!includeArchived && (status === "completed" || status === "collected")) return false;
+      if (!includeArchived && (status === "completed" || status === "collected" || status === "no-stock")) return false;
       if (!includeArchived && isArchivedCancelledRequest(row, nowMs)) return false;
       return true;
     });
@@ -1015,7 +1019,7 @@ async function dbInsertRequest(payload, sessionUser = null) {
     ward_or_unit: payload.wardUnit,
     notes: payload.notes,
     request_text: payload.requestText,
-    status: "received",
+    status: "pending",
     line_item_count: payload.lineItemCount,
     total_requested_quantity: payload.totalRequestedQuantity,
     submitted_at: payload.submittedAt || nowIso,
@@ -1024,7 +1028,7 @@ async function dbInsertRequest(payload, sessionUser = null) {
     requested_by_user_id: null,
     entered_by_user_id: sessionUser?.id || null,
     status_updated_by_user_id: sessionUser?.id || null,
-    status_history: [{ status: "received", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
+    status_history: [{ status: "pending", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
   };
 
   try {

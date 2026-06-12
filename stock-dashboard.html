@@ -37,7 +37,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260603b" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260612a" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -399,8 +399,8 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
-  <script src="assets/js/script.js?v=20260603b"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260426a"></script>
+  <script src="assets/js/script.js?v=20260612a"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260612a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
       const APP_VERSION = "2026-06-03.2";
@@ -435,7 +435,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260603b", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260612a", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

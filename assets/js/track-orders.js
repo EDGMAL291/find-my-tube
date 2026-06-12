@@ -33,16 +33,19 @@
   function normalizeStatus(status) {
     const safe = String(status || "").trim().toLowerCase();
     if (safe === "sent" || safe === "completed" || safe === "collected") return "completed";
-    if (safe === "packed" || safe === "in-progress" || safe === "processing") return "ready";
-    if (safe === "received" || safe === "submitted") return "received";
-    return safe || "received";
+    if (safe === "packed" || safe === "in-progress" || safe === "processing") return "packed";
+    if (safe === "received" || safe === "submitted") return "pending";
+    if (safe === "no_stock" || safe === "no stock" || safe === "out-of-stock" || safe === "out of stock") return "no-stock";
+    return safe || "pending";
   }
 
   function getStatusMeta(status) {
     const safe = normalizeStatus(status);
-    if (safe === "received") return { key: "received", label: "Received", stage: "received" };
+    if (safe === "pending") return { key: "pending", label: "Pending", stage: "pending" };
+    if (safe === "packed") return { key: "packed", label: "Processing", stage: "processing" };
     if (safe === "ready") return { key: "ready", label: "Ready for Collection", stage: "ready" };
     if (safe === "completed") return { key: "completed", label: "Completed", stage: "completed" };
+    if (safe === "no-stock") return { key: "no-stock", label: "No Stock", stage: "no-stock" };
     if (safe === "cancelled") return { key: "cancelled", label: "Cancelled", stage: "cancelled" };
     return {
       key: safe,
@@ -104,21 +107,21 @@
   function filteredOrders() {
     const activeOrders = trackOrders.filter((order) => {
       const normalizedStatus = normalizeStatus(order?.status);
-      return normalizedStatus !== "completed" && normalizedStatus !== "cancelled";
+      return normalizedStatus !== "completed" && normalizedStatus !== "cancelled" && normalizedStatus !== "no-stock";
     });
 
     return sortByNewestFirst(filterByInputs(activeOrders));
   }
 
   function filteredArchivedOrders() {
-    const archivedOrders = trackOrders.filter((order) => normalizeStatus(order?.status) === "completed");
+    const archivedOrders = trackOrders.filter((order) => ["completed", "no-stock"].includes(normalizeStatus(order?.status)));
     return sortByNewestFirst(filterByInputs(archivedOrders));
   }
 
   function getActiveCount(rows) {
     return rows.filter((row) => {
       const status = normalizeStatus(row?.status);
-      return status !== "completed" && status !== "cancelled";
+      return status !== "completed" && status !== "cancelled" && status !== "no-stock";
     }).length;
   }
 
