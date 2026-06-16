@@ -404,14 +404,29 @@ function sanitizeStockRequestPayload(payload) {
   const items = Array.isArray(payload?.items)
     ? payload.items.map(sanitizeItem).filter(Boolean)
     : [];
+  const repeatOverrideReason = sanitizeString(payload?.repeatOverrideReason, 120);
+  const repeatOverrideItems = Array.isArray(payload?.repeatOverrideItems)
+    ? payload.repeatOverrideItems.map((item) => sanitizeString(item, 120)).filter(Boolean).slice(0, 12)
+    : [];
+  const repeatOverrideNote = repeatOverrideReason
+    ? `48h override: ${repeatOverrideReason}${repeatOverrideItems.length ? ` (${repeatOverrideItems.join(", ")})` : ""}`
+    : "";
+  const rawNotes = sanitizeMultilineString(payload?.notes, 500);
+  const rawRequestText = sanitizeMultilineString(payload?.requestText, 4000);
+  const shouldAppendRepeatNoteToNotes = repeatOverrideNote && !/48h override/i.test(rawNotes);
+  const shouldAppendRepeatNoteToRequestText = repeatOverrideNote && !/48h override/i.test(rawRequestText);
+  const notes = [rawNotes, shouldAppendRepeatNoteToNotes ? repeatOverrideNote : ""].filter(Boolean).join("\n");
+  const requestText = [rawRequestText, shouldAppendRepeatNoteToRequestText ? repeatOverrideNote : ""].filter(Boolean).join("\n");
 
   return {
     source: sanitizeString(payload?.source || "find-my-tube", 60),
     submittedAt: sanitizeString(payload?.submittedAt, 40) || new Date().toISOString(),
     requestedBy: sanitizeString(payload?.requestedBy, 120),
     wardUnit: sanitizeString(payload?.wardUnit, 120),
-    notes: sanitizeMultilineString(payload?.notes, 500),
-    requestText: sanitizeMultilineString(payload?.requestText, 4000),
+    notes: sanitizeMultilineString(notes, 700),
+    requestText: sanitizeMultilineString(requestText, 4200),
+    repeatOverrideReason,
+    repeatOverrideItems,
     lineItemCount: items.length,
     totalRequestedQuantity: items.reduce((sum, item) => sum + getItemInventoryUnits(item), 0),
     items
@@ -503,8 +518,91 @@ function getStockInventoryLabel(item) {
   return sanitizeString(item?.label, 120) || sanitizeString(item?.id, 80) || "Item";
 }
 
+function getDuplicateStockItemKey(item) {
+  return sanitizeString(item?.sheetColumnKey || item?.sheetTrayColumnKey || item?.sheetSingleColumnKey || item?.id || item?.label, 160)
+    .toLowerCase();
+}
+
+function isHighVolumeStockItem(item) {
+  const unitType = sanitizeString(item?.unitType || item?.unit, 40).toLowerCase();
+  const quantity = Math.max(0, Number(item?.quantity) || 0);
+  const inventoryUnits = Math.max(0, Number(getItemInventoryUnits(item)) || 0);
+  return (unitType === "tray" && quantity >= 1) || inventoryUnits >= 50 || quantity >= 50;
+}
+
+function isStockRequestWithinHours(request, hours = 48) {
+  const timestamp = Date.parse(request?.createdAt || request?.submittedAt || request?.updatedAt || "");
+  if (!Number.isFinite(timestamp)) return false;
+  return Date.now() - timestamp <= hours * 60 * 60 * 1000;
+}
+
+function buildRepeatCheckPayload(payload, requests = []) {
+  const ward = sanitizeString(payload?.wardUnit, 120).toLowerCase();
+  const selectedItems = Array.isArray(payload?.items) ? payload.items : [];
+  const selectedKeys = new Map(selectedItems
+    .map((item) => [getDuplicateStockItemKey(item), item])
+    .filter(([key]) => key));
+  const activeStatuses = new Set(["pending", "submitted", "packed", "ready"]);
+  const fulfilledStatuses = new Set(["completed", "collected", "received"]);
+  const recentWarnings = [];
+  const warnedKeys = new Set();
+  let activeBlock = null;
+
+  if (!ward || !selectedKeys.size) return { activeBlock, recentWarnings };
+
+  requests.forEach((request) => {
+    if (!request || sanitizeString(request.wardUnit, 120).toLowerCase() !== ward) return;
+    if (!isStockRequestWithinHours(request, 48)) return;
+
+    const rawStatus = sanitizeString(request.originalStatus || request.status, 40).toLowerCase();
+    const status = rawStatus === "received" ? "received" : slugifyStatus(request.status);
+    const items = Array.isArray(request.items) ? request.items : [];
+    items.forEach((item) => {
+      const key = getDuplicateStockItemKey(item);
+      if (!key || !selectedKeys.has(key)) return;
+
+      if (!activeBlock && activeStatuses.has(status)) {
+        activeBlock = { request, item, selectedItem: selectedKeys.get(key) };
+        return;
+      }
+
+      if (fulfilledStatuses.has(status) && !warnedKeys.has(key) && isHighVolumeStockItem(item)) {
+        warnedKeys.add(key);
+        recentWarnings.push({ request, item, selectedItem: selectedKeys.get(key) });
+      }
+    });
+  });
+
+  return { activeBlock, recentWarnings };
+}
+
+async function dbCheckRepeatStockRequest(payload) {
+  const requests = await dbListRequests(100, {
+    includeManual: false,
+    includeCancelled: true,
+    includeArchived: true
+  });
+  return buildRepeatCheckPayload(payload, requests);
+}
+
 function getStockBatchKey(item) {
   return getStockInventoryKey(item);
+}
+
+const STOCK_LOW_STOCK_DEFAULT_THRESHOLD = 5;
+
+function getStockStatusFromQuantity(onHand, threshold = STOCK_LOW_STOCK_DEFAULT_THRESHOLD) {
+  const quantity = Math.max(0, Number(onHand) || 0);
+  const lowThreshold = Math.max(1, Number(threshold) || STOCK_LOW_STOCK_DEFAULT_THRESHOLD);
+  if (quantity <= 0) return "no-stock";
+  if (quantity <= lowThreshold) return "low-stock";
+  return "in-stock";
+}
+
+function getStockStatusLabel(status) {
+  if (status === "no-stock") return "No Stock";
+  if (status === "low-stock") return "Low stock";
+  return "In stock";
 }
 
 function buildBatchExpiryConflictMessage(itemLabel, expiryDate) {
@@ -769,6 +867,7 @@ function mapRequestFromDb(row) {
     totalRequestedQuantity: Math.max(0, Number(row?.total_requested_quantity) || 0),
     createdAt: sanitizeString(row?.created_at, 40),
     updatedAt: sanitizeString(row?.updated_at, 40),
+    originalStatus: sanitizeString(row?.status, 40),
     status: slugifyStatus(row?.status),
     statusUpdatedAt: sanitizeString(row?.updated_at, 40),
     statusUpdatedBy: "",
@@ -1239,6 +1338,23 @@ async function dbListInventorySummary() {
   }));
 }
 
+async function dbListPublicInventorySummary() {
+  const summary = await dbListInventorySummary();
+  return summary.map((row) => {
+    const threshold = STOCK_LOW_STOCK_DEFAULT_THRESHOLD;
+    const status = getStockStatusFromQuantity(row.onHand, threshold);
+    return {
+      key: row.key,
+      label: row.label,
+      onHand: row.onHand,
+      status,
+      statusLabel: getStockStatusLabel(status),
+      lowStockThreshold: threshold,
+      updatedAt: row.updatedAt
+    };
+  });
+}
+
 function isMissingDatabaseTableError(error, tableName = "") {
   const message = String(error?.message || error?.details || getErrorMessage(error) || "").toLowerCase();
   const safeTableName = String(tableName || "").toLowerCase();
@@ -1282,67 +1398,6 @@ async function dbDeleteAllRows(tableName, { idColumn = "id", impossibleValue = "
   }
 
   return { table: tableName, before, deleted: Math.max(0, Number(count) || 0), skipped: false };
-}
-
-async function dbDeleteStockAuditLogs() {
-  const stockAuditTargetTypes = [
-    "stock_request",
-    "stock_requests",
-    "stock_request_item",
-    "stock_request_items",
-    "received_stock",
-    "received_stock_item",
-    "received_stock_items",
-    "inventory_balance",
-    "inventory_balances",
-    "inventory_batch",
-    "inventory_batches"
-  ];
-  const stockAuditActions = [
-    "create-request",
-    "create-received-stock",
-    "update-stock-request-status",
-    "clear-stock-data"
-  ];
-
-  const before = await dbCountTableRows("audit_logs");
-  if (before === null) {
-    return { table: "audit_logs", before: null, deleted: 0, skipped: true };
-  }
-
-  const byTarget = await supabase
-    .from("audit_logs")
-    .delete({ count: "exact" })
-    .in("target_type", stockAuditTargetTypes);
-  if (byTarget.error) {
-    if (isMissingDatabaseTableError(byTarget.error, "audit_logs")) {
-      return { table: "audit_logs", before, deleted: 0, skipped: true };
-    }
-    throw new Error(byTarget.error.message || "Could not clear stock audit logs");
-  }
-
-  const byAction = await supabase
-    .from("audit_logs")
-    .delete({ count: "exact" })
-    .in("action", stockAuditActions);
-  if (byAction.error) {
-    if (isMissingDatabaseTableError(byAction.error, "audit_logs")) {
-      return {
-        table: "audit_logs",
-        before,
-        deleted: Math.max(0, Number(byTarget.count) || 0),
-        skipped: true
-      };
-    }
-    throw new Error(byAction.error.message || "Could not clear stock audit logs");
-  }
-
-  return {
-    table: "audit_logs",
-    before,
-    deleted: Math.max(0, Number(byTarget.count) || 0) + Math.max(0, Number(byAction.count) || 0),
-    skipped: false
-  };
 }
 
 async function dbResetInventoryBalances() {
@@ -1398,13 +1453,17 @@ async function dbResetStockTransactionalData() {
     }
   };
 
-  await runResetStep("stock_request_items", () => dbDeleteAllRows("stock_request_items", uuidDeleteOptions));
-  await runResetStep("stock_requests", () => dbDeleteAllRows("stock_requests"));
+  // Fresh-stock reset scope:
+  // - Preserve stock_requests and stock_request_items so Track Orders, archives,
+  //   request audit/status history, wards, requester names, and old order exports
+  //   remain available.
+  // - Preserve users, sessions, roles, settings, and the static stock catalogue.
+  // - Clear only stock-on-hand state and receiving/batch records so new receipts
+  //   rebuild balances from zero.
   await runResetStep("received_stock_items", () => dbDeleteAllRows("received_stock_items", uuidDeleteOptions));
   await runResetStep("received_stock", () => dbDeleteAllRows("received_stock"));
   await runResetStep("inventory_balances", () => dbResetInventoryBalances());
   await runResetStep("inventory_batches", () => dbDeleteAllRows("inventory_batches", uuidDeleteOptions));
-  await runResetStep("audit_logs", () => dbDeleteStockAuditLogs());
 
   return results;
 }
@@ -2455,6 +2514,15 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
+  if (req.method === "GET" && pathname === "/api/stock-inventory") {
+    const summary = await dbListPublicInventorySummary();
+    sendJson(req, res, 200, {
+      summary,
+      lowStockDefaultThreshold: STOCK_LOW_STOCK_DEFAULT_THRESHOLD
+    });
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/api/lab/stock-requests") {
     const session = await requireLabSession(req, res);
     if (!session) return;
@@ -2539,7 +2607,15 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     const clearedTables = await dbResetStockTransactionalData();
 
     await dbCreateAuditLog(session.user.id, "clear-stock-data", "maintenance", "stock-transactional-data", {
-      clearedTables
+      clearedTables,
+      resetScope: "current stock balances, received stock records, and inventory batches only",
+      preservedTables: [
+        "stock_requests",
+        "stock_request_items",
+        "users",
+        "lab_sessions",
+        "audit_logs"
+      ]
     });
 
     sendJson(req, res, 200, {
@@ -2547,8 +2623,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       cleared: true,
       clearedTables,
       preserved: [
+        "stock_requests",
+        "stock_request_items",
         "users",
         "lab_sessions",
+        "audit_logs",
         "app configuration",
         "static catalog/reference content",
         "tube and test definitions"
@@ -2797,6 +2876,48 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       sendJson(req, res, 400, {
         ok: false,
         error: itemValidationError
+      });
+      return;
+    }
+
+    const repeatCheck = await dbCheckRepeatStockRequest(cleanPayload);
+    if (repeatCheck.activeBlock) {
+      const activeRequest = repeatCheck.activeBlock.request || {};
+      const activeItem = repeatCheck.activeBlock.item || repeatCheck.activeBlock.selectedItem || {};
+      sendJson(req, res, 409, {
+        ok: false,
+        code: "active_duplicate_stock_request",
+        error: "Already ordered for this ward.",
+        detail: `Stock already ordered by ${sanitizeString(activeRequest.requestedBy, 120) || "this requester"} for ${sanitizeString(activeRequest.wardUnit, 120) || cleanPayload.wardUnit}. Please check Track Orders before requesting more.`,
+        activeOrder: {
+          id: sanitizeString(activeRequest.id, 80),
+          requestedBy: sanitizeString(activeRequest.requestedBy, 120),
+          wardUnit: sanitizeString(activeRequest.wardUnit, 120),
+          createdAt: sanitizeString(activeRequest.createdAt || activeRequest.submittedAt, 40),
+          status: slugifyStatus(activeRequest.status),
+          item: getStockInventoryLabel(activeItem)
+        }
+      });
+      return;
+    }
+
+    if (repeatCheck.recentWarnings.length && !cleanPayload.repeatOverrideReason) {
+      const warning = repeatCheck.recentWarnings[0] || {};
+      const warningRequest = warning.request || {};
+      const warningItem = warning.item || warning.selectedItem || {};
+      sendJson(req, res, 409, {
+        ok: false,
+        code: "repeat_stock_request_override_required",
+        error: "Stock was received within the last 48 hours.",
+        detail: "Please give a reason if more stock is genuinely needed.",
+        recentOrder: {
+          id: sanitizeString(warningRequest.id, 80),
+          requestedBy: sanitizeString(warningRequest.requestedBy, 120),
+          wardUnit: sanitizeString(warningRequest.wardUnit, 120),
+          createdAt: sanitizeString(warningRequest.createdAt || warningRequest.submittedAt, 40),
+          status: slugifyStatus(warningRequest.status),
+          item: getStockInventoryLabel(warningItem)
+        }
       });
       return;
     }

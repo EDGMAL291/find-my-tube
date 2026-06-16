@@ -30,6 +30,37 @@
       .replace(/'/g, "&#39;");
   }
 
+  function getDisplayRequesterName(value) {
+    if (typeof formatRequesterName === "function") return formatRequesterName(value);
+
+    const safeValue = String(value || "").trim().replace(/\s+/g, " ");
+    if (!safeValue) return "";
+    const titleCase = (part) => String(part || "")
+      .split(/([-'])/)
+      .map((piece) => {
+        if (piece === "-" || piece === "'") return piece;
+        const lower = piece.toLowerCase();
+        return lower ? `${lower.charAt(0).toUpperCase()}${lower.slice(1)}` : "";
+      })
+      .join("");
+    const parts = safeValue.split(" ").filter(Boolean);
+    if (parts.length === 1) return titleCase(parts[0]);
+    const initials = parts.slice(1, -1)
+      .map((part) => {
+        const safePart = String(part || "").trim();
+        if (!safePart) return "";
+        if (/^[A-Za-z]\.$/.test(safePart)) return `${safePart.charAt(0).toUpperCase()}.`;
+        if (/^[A-Za-z]{1,3}$/.test(safePart)) return safePart.toUpperCase();
+        return titleCase(safePart);
+      })
+      .filter(Boolean)
+      .join(" ");
+    return [titleCase(parts[0]), initials, titleCase(parts[parts.length - 1])]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
+
   function normalizeStatus(status) {
     const safe = String(status || "").trim().toLowerCase();
     if (safe === "sent" || safe === "completed" || safe === "collected") return "completed";
@@ -60,6 +91,15 @@
     return new Intl.DateTimeFormat("en-ZA", {
       dateStyle: "medium",
       timeStyle: "short"
+    }).format(date);
+  }
+
+  function formatDateOnly(value) {
+    if (typeof formatStockRequestDateOnly === "function") return formatStockRequestDateOnly(value);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Unknown date";
+    return new Intl.DateTimeFormat("en-ZA", {
+      dateStyle: "medium"
     }).format(date);
   }
 
@@ -136,6 +176,7 @@
         <span>Ward / Unit</span>
         <span>Date</span>
         <span>Status</span>
+        <span>Items ordered</span>
       </div>
     `;
 
@@ -143,13 +184,21 @@
       const statusMeta = getStatusMeta(request?.status);
       const requestId = String(request?.id || "Request");
       const isHighlighted = highlightedRequestId && requestId.toLowerCase() === highlightedRequestId;
+      const detailKey = typeof registerStockRequestForDetails === "function" ? registerStockRequestForDetails(request) : requestId;
+      const itemSummary = typeof getStockRequestCompactItemsMarkup === "function"
+        ? getStockRequestCompactItemsMarkup(request, 3)
+        : '<p class="stock-request-compact-empty">No items listed</p>';
       return `
         <div class="track-orders-row${isHighlighted ? " is-highlighted" : ""}" role="row">
-          <span class="track-orders-cell" data-label="Requested by">${escapeHtml(request?.requestedBy || "Unknown requester")}</span>
+          <span class="track-orders-cell" data-label="Requested by">${escapeHtml(getDisplayRequesterName(request?.requestedBy) || "Unknown requester")}</span>
           <span class="track-orders-cell" data-label="Ward / Unit">${escapeHtml(request?.wardUnit || "Ward not set")}</span>
-          <span class="track-orders-cell" data-label="Date">${escapeHtml(formatDateTime(request?.createdAt || request?.submittedAt))}</span>
+          <span class="track-orders-cell" data-label="Date">${escapeHtml(formatDateOnly(request?.createdAt || request?.submittedAt))}</span>
           <span class="track-orders-cell" data-label="Status">
             <span class="track-orders-status-badge" data-stage="${escapeHtml(statusMeta.stage)}">${escapeHtml(statusMeta.label)}</span>
+          </span>
+          <span class="track-orders-cell track-orders-items-cell" data-label="Items ordered">
+            ${itemSummary}
+            <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${escapeHtml(detailKey)}">View order</button>
           </span>
         </div>
       `;
@@ -226,6 +275,9 @@
   refreshBtn?.addEventListener("click", () => {
     loadOrders();
   });
+
+  table.addEventListener("click", handleStockRequestDetailsClick);
+  archiveTable.addEventListener("click", handleStockRequestDetailsClick);
 
   clearBtn?.addEventListener("click", () => {
     wardInput.value = "";

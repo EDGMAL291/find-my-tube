@@ -77,6 +77,12 @@ const stockOrderRequestMeta = document.getElementById("stockOrderRequestMeta");
 const stockOrderSummaryName = document.getElementById("stockOrderSummaryName");
 const stockOrderSummaryWard = document.getElementById("stockOrderSummaryWard");
 const stockOrderSummaryItems = document.getElementById("stockOrderSummaryItems");
+const stockOrderRepeatWarning = document.getElementById("stockOrderRepeatWarning");
+const stockOrderRepeatBadge = document.getElementById("stockOrderRepeatBadge");
+const stockOrderRepeatMessage = document.getElementById("stockOrderRepeatMessage");
+const stockOrderRepeatReasonWrap = document.getElementById("stockOrderRepeatReasonWrap");
+const stockOrderRepeatReasonSelect = document.getElementById("stockOrderRepeatReasonSelect");
+const stockOrderRepeatTrackLink = document.getElementById("stockOrderRepeatTrackLink");
 const stockOrderRequestPreview = document.getElementById("stockOrderRequestPreview");
 const submitStockOrderBtn = document.getElementById("submitStockOrderBtn");
 const copyStockOrderBtn = document.getElementById("copyStockOrderBtn");
@@ -346,6 +352,11 @@ const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
   ? String(STOCK_API_CONFIGURED_SUBMIT_URL || buildStockApiUrl("/api/stock-requests")).trim()
   : "";
 const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=12");
+const STOCK_ORDER_DUPLICATE_CHECK_URL = buildStockApiUrl("/api/stock-requests?limit=100&includeArchived=true&includeCancelled=true");
+const STOCK_ORDER_INVENTORY_URL = buildStockApiUrl("/api/stock-inventory");
+const STOCK_LOW_STOCK_DEFAULT_THRESHOLD = 5;
+const stockOrderInventoryByKey = new Map();
+let stockOrderRecentRequestsForChecks = [];
 
 function stockRequestsNeedConfiguredBackend() {
   if (typeof window === "undefined") return false;
@@ -361,8 +372,26 @@ function stockRequestsNeedConfiguredBackend() {
 }
 
 function getStockSubmitBlockedReason() {
-  if (!stockRequestsNeedConfiguredBackend()) return "";
-  return "Live stock submit needs the local backend on localhost:3000 or a configured stockApiBaseUrl.";
+  if (stockRequestsNeedConfiguredBackend()) {
+    return "Live stock submit needs the local backend on localhost:3000 or a configured stockApiBaseUrl.";
+  }
+  if (!stockOrderRequesterSelect) return "";
+
+  const selectedItems = typeof getSelectedStockConsumables === "function" ? getSelectedStockConsumables() : [];
+  const repeatAnalysis = typeof analyzeStockRepeatRequest === "function"
+    ? analyzeStockRepeatRequest({
+      wardUnit: String(stockOrderRequesterSelect.value || "").trim(),
+      items: selectedItems.map((item) => ({
+        ...item,
+        inventoryUnits: typeof getStockInventoryUnits === "function" ? getStockInventoryUnits(item) : Number(item?.inventoryUnits || 0)
+      }))
+    })
+    : { activeBlock: null, recentWarnings: [] };
+  if (repeatAnalysis.activeBlock) return "Already ordered for this ward. Please check Track Orders before requesting more.";
+  if (repeatAnalysis.recentWarnings.length && !getStockRepeatOverrideReason()) {
+    return "Stock was received within the last 48 hours. Please give a reason if more stock is genuinely needed.";
+  }
+  return "";
 }
 
 // Updates theme meta.
@@ -1122,6 +1151,15 @@ function formatStockRequestDateTime(value) {
   }).format(date);
 }
 
+function formatStockRequestDateOnly(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown date";
+
+  return new Intl.DateTimeFormat("en-ZA", {
+    dateStyle: "medium"
+  }).format(date);
+}
+
 // Normalizes legacy stock request statuses to the current UI model.
 function normalizeStockRequestStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
@@ -1307,6 +1345,28 @@ function toConsistentNameCase(value) {
     .join(" ");
 }
 
+function formatRequesterName(value) {
+  const safeValue = String(value || "").trim().replace(/\s+/g, " ");
+  if (!safeValue) return "";
+
+  const parts = safeValue.split(" ").filter(Boolean);
+  if (parts.length === 1) return toConsistentNameCase(parts[0]);
+
+  const rank = toConsistentNameCase(parts[0]);
+  const initials = parts.slice(1, -1)
+    .map((part) => {
+      const safePart = String(part || "").trim();
+      if (!safePart) return "";
+      if (/^[A-Za-z]\.$/.test(safePart)) return `${safePart.charAt(0).toUpperCase()}.`;
+      if (/^[A-Za-z]{1,3}$/.test(safePart)) return safePart.toUpperCase();
+      return toConsistentNameCase(safePart);
+    })
+    .filter(Boolean)
+    .join(" ");
+  const surname = toConsistentNameCase(parts[parts.length - 1]);
+  return [rank, initials, surname].filter(Boolean).join(" ").trim();
+}
+
 function getStockItemGlyphMarkup(item, options = {}) {
   const meta = getBloodCultureBottleMetadata(item);
   const glyphClassName = String(options.glyphClassName || "").trim();
@@ -1353,6 +1413,377 @@ function getStockDisplayLabel(item) {
   return label || "Stock item";
 }
 
+function getStockInventoryKeyForItem(item) {
+  return String(item?.sheetColumnKey || item?.id || item?.label || "").trim();
+}
+
+function getStockLowStockThreshold(item = null) {
+  const explicit = Number(item?.lowStockThreshold);
+  return Number.isFinite(explicit) && explicit > 0
+    ? explicit
+    : STOCK_LOW_STOCK_DEFAULT_THRESHOLD;
+}
+
+function getStockStatusFromBalance(onHand, threshold = STOCK_LOW_STOCK_DEFAULT_THRESHOLD) {
+  const quantity = Math.max(0, Number(onHand) || 0);
+  const lowThreshold = Math.max(1, Number(threshold) || STOCK_LOW_STOCK_DEFAULT_THRESHOLD);
+  if (quantity <= 0) return "no-stock";
+  if (quantity <= lowThreshold) return "low-stock";
+  return "in-stock";
+}
+
+function getStockStatusLabel(status) {
+  if (status === "no-stock") return "No Stock";
+  if (status === "low-stock") return "Low stock";
+  return "In stock";
+}
+
+function getStockStatusTone(status) {
+  if (status === "no-stock") return "danger";
+  if (status === "low-stock") return "warning";
+  return "success";
+}
+
+function getStockStatusForItem(item) {
+  const key = getStockInventoryKeyForItem(item);
+  const balance = key ? stockOrderInventoryByKey.get(key) : null;
+  const threshold = Math.max(1, Number(balance?.lowStockThreshold || getStockLowStockThreshold(item)) || STOCK_LOW_STOCK_DEFAULT_THRESHOLD);
+  const onHand = Math.max(0, Number(balance?.onHand) || 0);
+  const status = getStockStatusFromBalance(onHand, threshold);
+  return {
+    key,
+    onHand,
+    status,
+    label: getStockStatusLabel(status),
+    tone: getStockStatusTone(status),
+    lowStockThreshold: threshold,
+    isKnown: Boolean(balance)
+  };
+}
+
+function getStockStatusBadgeMarkup(stockStatus, options = {}) {
+  const safeStatus = String(stockStatus?.status || "no-stock");
+  const safeTone = String(stockStatus?.tone || getStockStatusTone(safeStatus));
+  const safeLabel = escapeHtml(stockStatus?.label || getStockStatusLabel(safeStatus));
+  const className = options.className ? ` ${escapeHtml(options.className)}` : "";
+  return `<span class="stock-status-badge${className}" data-stock-status="${escapeHtml(safeStatus)}" data-stock-tone="${escapeHtml(safeTone)}">${safeLabel}</span>`;
+}
+
+function getStockStatusLineMarkup(item, stockStatus = getStockStatusForItem(item)) {
+  const countLabel = stockStatus.status === "no-stock"
+    ? "0 available"
+    : `${stockStatus.onHand} available`;
+  const detail = stockStatus.status === "no-stock"
+    ? "Request only - no stock available"
+    : stockStatus.status === "low-stock"
+      ? `Low stock - ${countLabel}`
+      : countLabel;
+  return `
+    <div class="stock-status-line" data-stock-status="${escapeHtml(stockStatus.status)}">
+      ${getStockStatusBadgeMarkup(stockStatus)}
+      <span>${escapeHtml(detail)}</span>
+    </div>
+  `;
+}
+
+const stockRequestDetailsByKey = new Map();
+
+function getStockRequestStatusLabel(status) {
+  const normalizedStatus = normalizeStockRequestStatus(status);
+  if (normalizedStatus === "pending") return "Pending";
+  if (normalizedStatus === "packed") return "Processing";
+  if (normalizedStatus === "ready") return "Ready for Collection";
+  if (normalizedStatus === "completed") return "Completed";
+  if (normalizedStatus === "no-stock") return "No Stock";
+  if (normalizedStatus === "cancelled") return "Cancelled";
+  return normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getStockItemTextName(item) {
+  const rawLabel = String(item?.label || getStockDisplayLabel(item) || "Stock item").trim();
+  const compactLabel = rawLabel
+    .replace(/\s*-\s*(Tray|Each|Singles)$/i, "")
+    .replace(/\s+tubes?$/i, "")
+    .trim();
+  const variant = String(item?.variantLabel || "").trim();
+  if (variant && !/^(tray|each|singles)$/i.test(variant) && !compactLabel.toLowerCase().includes(variant.toLowerCase())) {
+    return `${compactLabel || rawLabel} ${variant}`.trim();
+  }
+  return compactLabel || rawLabel;
+}
+
+function getStockItemQuantityText(item) {
+  const quantity = Math.max(0, Number(item?.quantity) || 0);
+  const unitType = String(item?.unitType || item?.unit || "").trim().toLowerCase();
+  const formatted = String(item?.formattedQuantity || "").trim();
+  const isTube = /tube|microtainer/i.test(`${item?.id || ""} ${item?.label || ""} ${item?.sheetColumnKey || ""}`);
+
+  if (unitType === "tray") return `${quantity} tray${quantity === 1 ? "" : "s"}`;
+  if (unitType === "packet") return `${quantity} packet${quantity === 1 ? "" : "s"}`;
+  if (isTube) return `${quantity} tube${quantity === 1 ? "" : "s"}`;
+  if (formatted) return formatted.replace(/\s*\([^)]*\)\s*$/g, "");
+  return `${quantity} each`;
+}
+
+function getCompactStockItemText(item) {
+  return `${getStockItemTextName(item)} × ${getStockItemQuantityText(item)}`;
+}
+
+function requestHasRepeatOverride(request) {
+  return /48h override|repeat request/i.test(String(request?.notes || request?.requestText || ""));
+}
+
+function getStockDuplicateItemKey(item) {
+  return String(item?.sheetColumnKey || item?.sheetTrayColumnKey || item?.sheetSingleColumnKey || item?.id || item?.label || "")
+    .trim()
+    .toLowerCase();
+}
+
+function isStockHighVolumeItem(item) {
+  const unitType = String(item?.unitType || item?.unit || "").trim().toLowerCase();
+  const quantity = Math.max(0, Number(item?.quantity) || 0);
+  const inventoryUnits = Math.max(0, Number(item?.inventoryUnits) || getStockInventoryUnits(item) || 0);
+  return unitType === "tray" && quantity >= 1 || inventoryUnits >= 50 || quantity >= 50;
+}
+
+function isStockRequestWithinHours(request, hours = 48) {
+  const submittedAt = new Date(request?.createdAt || request?.submittedAt || request?.updatedAt || "");
+  if (Number.isNaN(submittedAt.getTime())) return false;
+  return Date.now() - submittedAt.getTime() <= hours * 60 * 60 * 1000;
+}
+
+function getStockRequestDetailUrl(request) {
+  const url = new URL(TRACK_ORDERS_URL, window.location.href);
+  if (request?.id) url.searchParams.set("requestId", String(request.id));
+  if (request?.requestedBy) url.searchParams.set("requestedBy", formatRequesterName(request.requestedBy));
+  if (request?.wardUnit) url.searchParams.set("ward", String(request.wardUnit));
+  return `${url.pathname}${url.search}`;
+}
+
+function analyzeStockRepeatRequest(payload, requests = stockOrderRecentRequestsForChecks) {
+  const ward = String(payload?.wardUnit || "").trim().toLowerCase();
+  const selectedItems = Array.isArray(payload?.items) ? payload.items : [];
+  if (!ward || !selectedItems.length || !Array.isArray(requests)) {
+    return { activeBlock: null, recentWarnings: [] };
+  }
+
+  const selectedKeys = new Map(selectedItems
+    .map((item) => [getStockDuplicateItemKey(item), item])
+    .filter(([key]) => key));
+  const activeStatuses = new Set(["pending", "packed", "ready"]);
+  const fulfilledStatuses = new Set(["completed", "collected"]);
+  let activeBlock = null;
+  const recentWarnings = [];
+  const warnedKeys = new Set();
+
+  requests.forEach((request) => {
+    if (!request || String(request.wardUnit || "").trim().toLowerCase() !== ward) return;
+    if (!isStockRequestWithinHours(request, 48)) return;
+
+    const rawStatus = String(request.status || "").trim().toLowerCase();
+    const status = rawStatus === "received" ? "received" : normalizeStockRequestStatus(request.status);
+    const requestItems = Array.isArray(request.items) ? request.items : [];
+    requestItems.forEach((requestItem) => {
+      const key = getStockDuplicateItemKey(requestItem);
+      if (!key || !selectedKeys.has(key)) return;
+
+      if (!activeBlock && activeStatuses.has(status)) {
+        activeBlock = {
+          type: "active",
+          request,
+          item: selectedKeys.get(key),
+          matchedItem: requestItem,
+          message: `Stock already ordered by ${formatRequesterName(request.requestedBy) || "this requester"} for ${request.wardUnit || "this ward"}. Please check Track Orders before requesting more.`
+        };
+        return;
+      }
+
+      if ((fulfilledStatuses.has(status) || status === "received") && !warnedKeys.has(key) && isStockHighVolumeItem(requestItem)) {
+        warnedKeys.add(key);
+        recentWarnings.push({
+          type: "recent-high-volume",
+          request,
+          item: selectedKeys.get(key),
+          matchedItem: requestItem,
+          message: `${request.wardUnit || "This ward"} received ${getStockItemTextName(requestItem)} within the last 48 hours. Please give a reason if more stock is genuinely needed.`
+        });
+      }
+    });
+  });
+
+  return { activeBlock, recentWarnings };
+}
+
+function getStockRepeatOverrideReason() {
+  return String(stockOrderRepeatReasonSelect?.value || "").trim();
+}
+
+function registerStockRequestForDetails(request) {
+  const key = String(request?.id || `request-${stockRequestDetailsByKey.size + 1}`).trim();
+  if (key) stockRequestDetailsByKey.set(key, request);
+  return key;
+}
+
+function getStockRequestCompactItemsMarkup(request, maxItems = 3) {
+  const items = Array.isArray(request?.items) ? request.items : [];
+  if (!items.length) return '<p class="stock-request-compact-empty">No items listed</p>';
+
+  const visibleItems = items.slice(0, maxItems);
+  const extraCount = Math.max(0, items.length - visibleItems.length);
+  return `
+    <div class="stock-request-compact-items">
+      <p class="stock-request-compact-title">Items ordered</p>
+      <ul>
+        ${visibleItems.map((item) => `<li>${escapeHtml(getCompactStockItemText(item))}</li>`).join("")}
+        ${extraCount ? `<li class="stock-request-compact-more">+ ${extraCount} more</li>` : ""}
+      </ul>
+    </div>
+  `;
+}
+
+function getStockRequestItemStatus(item) {
+  if (item?.stockStatus || item?.stockStatusLabel) {
+    const status = String(item.stockStatus || "").trim() || "in-stock";
+    return {
+      status,
+      label: String(item.stockStatusLabel || getStockStatusLabel(status)),
+      tone: getStockStatusTone(status),
+      onHand: Math.max(0, Number(item.stockOnHand) || 0)
+    };
+  }
+  if (typeof stockDashboardGetInventoryStatusForItem === "function") return stockDashboardGetInventoryStatusForItem(item);
+  if (typeof getStockStatusForItem === "function") {
+    const status = getStockStatusForItem(item);
+    return status?.isKnown ? status : null;
+  }
+  return null;
+}
+
+function ensureStockRequestDetailsModal() {
+  let modal = document.getElementById("stockRequestDetailsModal");
+  if (modal) return modal;
+
+  modal = document.createElement("section");
+  modal.id = "stockRequestDetailsModal";
+  modal.className = "stock-request-detail-modal";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="stock-request-detail-backdrop" data-stock-request-close></div>
+    <div class="stock-request-detail-card" role="dialog" aria-modal="true" aria-labelledby="stockRequestDetailsTitle">
+      <div class="stock-request-detail-head">
+        <div>
+          <p class="stock-order-kicker">Order details</p>
+          <h3 id="stockRequestDetailsTitle">Stock request</h3>
+        </div>
+        <button type="button" class="profile-modal-close-btn" data-stock-request-close>Close</button>
+      </div>
+      <div class="stock-request-detail-body" id="stockRequestDetailsBody"></div>
+    </div>
+  `;
+  modal.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest("[data-stock-request-close]")) return;
+    modal.hidden = true;
+    document.body.classList.remove("stock-request-detail-open");
+  });
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function showStockRequestDetails(requestOrKey) {
+  const request = typeof requestOrKey === "string"
+    ? stockRequestDetailsByKey.get(requestOrKey)
+    : requestOrKey;
+  if (!request) return;
+
+  const modal = ensureStockRequestDetailsModal();
+  const body = modal.querySelector("#stockRequestDetailsBody");
+  const title = modal.querySelector("#stockRequestDetailsTitle");
+  const items = Array.isArray(request.items) ? request.items : [];
+  const statusLabel = getStockRequestStatusLabel(request.status);
+  const submittedAt = formatStockRequestDateTime(request.createdAt || request.submittedAt);
+  const requester = formatRequesterName(request.requestedBy) || "Unknown requester";
+  const repeatOverrideBadge = requestHasRepeatOverride(request)
+    ? '<span class="stock-order-repeat-mini-badge">48h override</span>'
+    : "";
+
+  if (title) title.textContent = request.id ? `Order ${request.id}` : "Stock request";
+  if (body) {
+    body.innerHTML = `
+      <div class="stock-request-detail-grid">
+        <div><span>Requester</span><strong>${escapeHtml(requester)}</strong></div>
+        <div><span>Ward / Unit</span><strong>${escapeHtml(request.wardUnit || "Ward not set")}</strong></div>
+        <div><span>Date submitted</span><strong>${escapeHtml(submittedAt)}</strong></div>
+        <div><span>Status</span><strong>${escapeHtml(statusLabel)}</strong>${repeatOverrideBadge}</div>
+      </div>
+      ${request.notes ? `<div class="stock-request-detail-notes"><span>Notes</span><p>${escapeHtml(request.notes)}</p></div>` : ""}
+      <div class="stock-request-detail-items">
+        <h4>Items ordered</h4>
+        ${items.length ? items.map((item) => {
+          const stockStatus = getStockRequestItemStatus(item);
+          return `
+            <div class="stock-request-detail-item">
+              <div>
+                <strong>${escapeHtml(getStockItemTextName(item))}</strong>
+                <span>${escapeHtml(getStockItemQuantityText(item))}</span>
+              </div>
+              ${stockStatus ? getStockStatusBadgeMarkup(stockStatus) : ""}
+            </div>
+          `;
+        }).join("") : '<p class="stock-dashboard-empty">No items listed.</p>'}
+      </div>
+      ${request.statusUpdatedAt || request.updatedAt ? `<p class="stock-request-detail-admin">Last update ${escapeHtml(formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt))}${request.statusUpdatedBy ? ` by lab user ${escapeHtml(request.statusUpdatedBy)}` : ""}</p>` : ""}
+    `;
+  }
+
+  modal.hidden = false;
+  document.body.classList.add("stock-request-detail-open");
+  modal.querySelector("[data-stock-request-close]")?.focus?.({ preventScroll: true });
+}
+
+function handleStockRequestDetailsClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  const button = target?.closest("[data-stock-request-view]");
+  if (!(button instanceof HTMLElement)) return;
+  showStockRequestDetails(button.getAttribute("data-stock-request-view") || "");
+}
+
+async function loadStockOrderInventory() {
+  if (!stockOrderGrid) return;
+
+  try {
+    const response = await fetch(STOCK_ORDER_INVENTORY_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Inventory fetch failed with status ${response.status}`);
+    const payload = await response.json().catch(() => ({}));
+    const rows = Array.isArray(payload?.summary) ? payload.summary : [];
+    stockOrderInventoryByKey.clear();
+    rows.forEach((row) => {
+      const key = String(row?.key || "").trim();
+      if (!key) return;
+      stockOrderInventoryByKey.set(key, {
+        key,
+        label: String(row?.label || ""),
+        onHand: Math.max(0, Number(row?.onHand) || 0),
+        status: String(row?.status || ""),
+        statusLabel: String(row?.statusLabel || ""),
+        lowStockThreshold: Math.max(1, Number(row?.lowStockThreshold) || STOCK_LOW_STOCK_DEFAULT_THRESHOLD),
+        updatedAt: String(row?.updatedAt || "")
+      });
+    });
+  } catch (error) {
+    console.warn("Stock inventory status unavailable", error);
+  } finally {
+    renderStockOrderItems();
+    updateStockOrderPreview();
+    if (typeof window !== "undefined" && typeof window.applyUnifiedTubeUi === "function") {
+      window.applyUnifiedTubeUi();
+    }
+    if (typeof window !== "undefined" && typeof window.syncUnifiedTubeInputs === "function") {
+      window.syncUnifiedTubeInputs();
+    }
+  }
+}
+
 // Renders the stock tracking list on the order page.
 function renderStockTrackingList(requests) {
   if (!stockOrderTrackingList) return;
@@ -1373,47 +1804,26 @@ function renderStockTrackingList(requests) {
 
   stockOrderTrackingList.innerHTML = activeRequests.map((request) => {
     const normalizedStatus = normalizeStockRequestStatus(request?.status);
-    const items = Array.isArray(request.items) ? request.items : [];
-    const orderedItems = items
-      .map((item) => {
-        const itemLabelMarkup = getStockDisplayLabelMarkup(item, getStockDisplayLabel(item), {
-          wrapperClassName: "stock-item-title-row-compact",
-          glyphClassName: "stock-item-glyph-compact"
-        });
-        const quantityLabel = escapeHtml(item.formattedQuantity || String(item.quantity || ""));
-        return `<span class="stock-dashboard-request-item-line">${itemLabelMarkup}: ${quantityLabel}</span>`;
-      })
-      .join("");
-    const updateMeta = request?.statusUpdatedAt || request?.updatedAt
-      ? `Last update ${formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt)}${request.statusUpdatedBy ? ` by lab user ${request.statusUpdatedBy}` : ""}`
+    const detailKey = registerStockRequestForDetails(request);
+    const statusLabel = getStockRequestStatusLabel(normalizedStatus);
+    const repeatBadge = requestHasRepeatOverride(request)
+      ? '<span class="stock-order-repeat-mini-badge">48h override</span>'
       : "";
-    const statusLabel = normalizedStatus === "pending"
-      ? "Pending"
-      : normalizedStatus === "packed"
-        ? "Processing"
-      : normalizedStatus === "ready"
-        ? "Ready for Collection"
-        : normalizedStatus === "completed"
-          ? "Completed"
-          : normalizedStatus === "no-stock"
-            ? "No Stock"
-          : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
     return `
-      <article class="stock-dashboard-request-card">
-        <div class="stock-dashboard-request-top">
-          <div>
-            <p class="stock-order-kicker">${escapeHtml(request.id || "Request")}</p>
-            <h4>${escapeHtml(request.requestedBy || "Unknown requester")}</h4>
-          </div>
+      <article class="stock-dashboard-request-card stock-request-compact-card">
+        <div class="stock-request-compact-head">
+          <h4>${escapeHtml(formatRequesterName(request.requestedBy) || "Unknown requester")}</h4>
+          ${repeatBadge}
+        </div>
+        <div class="stock-request-compact-meta">
+          <span>${escapeHtml(request.wardUnit || "Ward not set")} · ${escapeHtml(formatStockRequestDateOnly(request.createdAt || request.submittedAt))}</span>
           <span class="stock-order-status-badge" data-status="${escapeHtml(normalizedStatus)}">${escapeHtml(statusLabel)}</span>
         </div>
-        <div class="stock-dashboard-request-meta">
-          <span>${escapeHtml(request.wardUnit || "Ward not set")}</span>
-          <span>${escapeHtml(formatStockRequestDateTime(request.createdAt))}</span>
+        ${getStockRequestCompactItemsMarkup(request, 3)}
+        <div class="stock-request-compact-actions">
+          <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${escapeHtml(detailKey)}">View order</button>
         </div>
-        <p class="stock-dashboard-request-items">${orderedItems || "No items listed"}</p>
-        ${updateMeta ? `<p class="stock-dashboard-request-note">${escapeHtml(updateMeta)}</p>` : ""}
       </article>
     `;
   }).join("");
@@ -1445,6 +1855,21 @@ async function loadStockTrackingList() {
     stockOrderTrackingMeta.textContent = "Tracking is unavailable right now. Use Refresh to try again.";
   } finally {
     if (refreshStockTrackingBtn) refreshStockTrackingBtn.disabled = false;
+  }
+}
+
+async function loadStockDuplicateCheckRequests() {
+  try {
+    const response = await fetch(STOCK_ORDER_DUPLICATE_CHECK_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Duplicate check fetch failed with status ${response.status}`);
+    const payload = await response.json().catch(() => ({}));
+    stockOrderRecentRequestsForChecks = Array.isArray(payload?.requests) ? payload.requests : [];
+    syncTrackedStockRequestStatuses(stockOrderRecentRequestsForChecks);
+  } catch (error) {
+    console.warn("Stock repeat check unavailable", error);
+    stockOrderRecentRequestsForChecks = [];
+  } finally {
+    updateStockOrderPreview();
   }
 }
 
@@ -1491,13 +1916,28 @@ function buildStockOrderPayload() {
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const notes = String(stockOrderNoteInput?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
+  const preliminaryPayload = {
+    wardUnit: requesterWard,
+    items: selectedItems.map((item) => ({
+      ...item,
+      inventoryUnits: getStockInventoryUnits(item)
+    }))
+  };
+  const repeatAnalysis = analyzeStockRepeatRequest(preliminaryPayload);
+  const repeatOverrideReason = repeatAnalysis.recentWarnings.length ? getStockRepeatOverrideReason() : "";
+  const repeatNote = repeatOverrideReason
+    ? `48h override: ${repeatOverrideReason}`
+    : "";
+  const finalNotes = [notes, repeatNote].filter(Boolean).join("\n");
 
   return {
     source: "find-my-tube",
     submittedAt: new Date().toISOString(),
     requestedBy: requesterName,
     wardUnit: requesterWard,
-    notes,
+    notes: finalNotes,
+    repeatOverrideReason,
+    repeatOverrideItems: repeatAnalysis.recentWarnings.map((warning) => getStockItemTextName(warning.matchedItem || warning.item)),
     lineItemCount: selectedItems.length,
     totalRequestedQuantity: selectedItems.reduce((sum, item) => sum + getStockInventoryUnits(item), 0),
     requestText: buildStockOrderRequestText(),
@@ -1513,7 +1953,11 @@ function buildStockOrderPayload() {
       inventoryUnits: getStockInventoryUnits(item),
       sheetColumnKey: item.sheetColumnKey || "",
       sheetTrayColumnKey: item.sheetTrayColumnKey || "",
-      sheetSingleColumnKey: item.sheetSingleColumnKey || ""
+      sheetSingleColumnKey: item.sheetSingleColumnKey || "",
+      stockStatus: getStockStatusForItem(item).status,
+      stockStatusLabel: getStockStatusForItem(item).label,
+      stockOnHand: getStockStatusForItem(item).onHand,
+      lowStockThreshold: getStockStatusForItem(item).lowStockThreshold
     }))
   };
 }
@@ -1558,8 +2002,48 @@ function getStockOrderItemsSummary(selectedItems = getSelectedStockConsumables()
   if (!selectedItems.length) return "No items selected";
 
   return selectedItems
-    .map((item) => `${getStockDisplayLabel(item)} x ${formatStockQuantity(item)}`)
+    .map((item) => {
+      const status = getStockStatusForItem(item);
+      const suffix = status.status === "no-stock"
+        ? " - No Stock"
+        : status.status === "low-stock"
+          ? " - Low stock"
+          : "";
+      return `${getStockDisplayLabel(item)} x ${formatStockQuantity(item)}${suffix}`;
+    })
     .join("\n");
+}
+
+function getStockOrderSelectedItemsMarkup(selectedItems = getSelectedStockConsumables()) {
+  if (!selectedItems.length) return "No items selected";
+
+  return `
+    <div class="stock-order-selected-list" aria-label="Selected consumables">
+      ${selectedItems.map((item) => {
+        const status = getStockStatusForItem(item);
+        const label = getStockDisplayLabel(item);
+        return `
+          <article class="stock-order-selected-card" data-stock-status="${escapeHtml(status.status)}">
+            <div class="stock-order-selected-main">
+              <span class="stock-order-selected-name">${getStockDisplayLabelMarkup(item, label, {
+                wrapperClassName: "stock-item-title-row-compact",
+                glyphClassName: "stock-item-glyph-compact"
+              })}</span>
+              <span class="stock-order-selected-quantity">${escapeHtml(formatStockQuantity(item))}</span>
+            </div>
+            ${getStockStatusLineMarkup(item, status)}
+            ${status.status === "no-stock" ? '<p class="stock-order-no-stock-warning">Request only - no stock available.</p>' : ""}
+            <div class="stock-order-selected-actions">
+              <button type="button" class="stock-order-qty-btn stock-order-selected-step" data-stock-summary-step="${escapeHtml(item.id)}" data-stock-summary-direction="-1" aria-label="Reduce ${escapeHtml(label)}">−</button>
+              <input class="stock-order-qty-input stock-order-selected-input" type="number" min="0" step="1" value="${Number(item.quantity || 0)}" inputmode="numeric" pattern="[0-9]*" data-stock-summary-input="${escapeHtml(item.id)}" aria-label="${escapeHtml(label)} selected quantity" />
+              <button type="button" class="stock-order-qty-btn stock-order-selected-step" data-stock-summary-step="${escapeHtml(item.id)}" data-stock-summary-direction="1" aria-label="Increase ${escapeHtml(label)}">+</button>
+              <button type="button" class="quick-tool-clear-btn stock-order-selected-remove" data-stock-summary-remove="${escapeHtml(item.id)}">Remove</button>
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
 // Builds the consumables request text.
@@ -1568,6 +2052,14 @@ function buildStockOrderRequestText() {
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const notes = String(stockOrderNoteInput?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
+  const repeatAnalysis = analyzeStockRepeatRequest({
+    wardUnit: requesterWard,
+    items: selectedItems.map((item) => ({
+      ...item,
+      inventoryUnits: getStockInventoryUnits(item)
+    }))
+  });
+  const repeatOverrideReason = repeatAnalysis.recentWarnings.length ? getStockRepeatOverrideReason() : "";
 
   const lines = ["Consumables request"];
 
@@ -1582,7 +2074,11 @@ function buildStockOrderRequestText() {
     lines.push("");
     lines.push("Items:");
     selectedItems.forEach((item) => {
-      lines.push(`- ${getStockDisplayLabel(item)}: ${formatStockQuantity(item)}`);
+      const status = getStockStatusForItem(item);
+      lines.push(`- ${getStockDisplayLabel(item)}: ${formatStockQuantity(item)} (${status.label}, ${status.onHand} on hand)`);
+      if (status.status === "no-stock") {
+        lines.push("  Request only - no stock available.");
+      }
     });
   }
 
@@ -1590,8 +2086,48 @@ function buildStockOrderRequestText() {
     lines.push("");
     lines.push(`Notes: ${notes}`);
   }
+  if (repeatOverrideReason) {
+    lines.push("");
+    lines.push(`48h override: ${repeatOverrideReason}`);
+  }
 
   return lines.join("\n");
+}
+
+function updateStockRepeatWarningPanel(repeatAnalysis) {
+  if (!stockOrderRepeatWarning || !stockOrderRepeatMessage) return;
+
+  const activeBlock = repeatAnalysis?.activeBlock || null;
+  const warnings = Array.isArray(repeatAnalysis?.recentWarnings) ? repeatAnalysis.recentWarnings : [];
+  const hasWarning = Boolean(activeBlock || warnings.length);
+  stockOrderRepeatWarning.hidden = !hasWarning;
+  stockOrderRepeatWarning.dataset.repeatMode = activeBlock ? "blocked" : warnings.length ? "override" : "";
+  if (!hasWarning) return;
+
+  if (activeBlock) {
+    const request = activeBlock.request || {};
+    const itemName = getStockItemTextName(activeBlock.matchedItem || activeBlock.item);
+    const statusLabel = getStockRequestStatusLabel(request.status);
+    const dateLabel = formatStockRequestDateOnly(request.createdAt || request.submittedAt);
+    stockOrderRepeatBadge.textContent = "Already ordered";
+    stockOrderRepeatMessage.textContent = `${request.wardUnit || "This ward"} already has an active ${itemName} request. ${formatRequesterName(request.requestedBy) || "Requester"} · ${dateLabel} · ${statusLabel}.`;
+    if (stockOrderRepeatReasonWrap) stockOrderRepeatReasonWrap.hidden = true;
+    if (stockOrderRepeatTrackLink) {
+      stockOrderRepeatTrackLink.hidden = false;
+      stockOrderRepeatTrackLink.href = getStockRequestDetailUrl(request);
+    }
+    return;
+  }
+
+  const firstWarning = warnings[0];
+  const itemList = warnings
+    .map((warning) => getStockItemTextName(warning.matchedItem || warning.item))
+    .filter(Boolean)
+    .join(", ");
+  stockOrderRepeatBadge.textContent = "48h override";
+  stockOrderRepeatMessage.textContent = `${firstWarning?.request?.wardUnit || "This ward"} received ${itemList || "this stock"} within the last 48 hours. Request again only if stock is finished, damaged, or patient load was unusually high.`;
+  if (stockOrderRepeatReasonWrap) stockOrderRepeatReasonWrap.hidden = false;
+  if (stockOrderRepeatTrackLink) stockOrderRepeatTrackLink.hidden = true;
 }
 
 // Updates the consumables request preview.
@@ -1603,11 +2139,19 @@ function updateStockOrderPreview() {
   const selectedItems = getSelectedStockConsumables();
   const itemCount = selectedItems.reduce((sum, item) => sum + getStockInventoryUnits(item), 0);
   const hasRequest = Boolean(requesterName && requesterWard && selectedItems.length);
+  const repeatAnalysis = analyzeStockRepeatRequest({
+    wardUnit: requesterWard,
+    items: selectedItems.map((item) => ({
+      ...item,
+      inventoryUnits: getStockInventoryUnits(item)
+    }))
+  });
   const requestText = buildStockOrderRequestText();
   const statusLabel = getStockOrderStatusLabel();
   const blockedReason = getStockSubmitBlockedReason();
 
   stockOrderRequestPreview.value = requestText;
+  updateStockRepeatWarningPanel(repeatAnalysis);
   if (stockOrderStatusBadge) {
     stockOrderStatusBadge.textContent = statusLabel;
     stockOrderStatusBadge.dataset.status = statusLabel.toLowerCase();
@@ -1619,7 +2163,7 @@ function updateStockOrderPreview() {
     stockOrderSummaryWard.textContent = requesterWard || "Not selected";
   }
   if (stockOrderSummaryItems) {
-    stockOrderSummaryItems.textContent = getStockOrderItemsSummary(selectedItems);
+    stockOrderSummaryItems.innerHTML = getStockOrderSelectedItemsMarkup(selectedItems);
   }
   stockOrderRequestMeta.textContent = hasRequest
     ? blockedReason
@@ -1647,6 +2191,7 @@ function updateStockOrderPreview() {
       : "#";
     shareStockOrderWhatsappBtn.tabIndex = hasRequest ? 0 : -1;
   }
+  bindStockOrderSummaryControls();
 }
 
 // Sets a consumables quantity.
@@ -1667,6 +2212,35 @@ function setStockItemQuantity(itemId, quantity) {
 
   syncStockOrderItemState(itemId);
   updateStockOrderPreview();
+}
+
+function bindStockOrderSummaryControls() {
+  if (!stockOrderSummaryItems || stockOrderSummaryItems.dataset.summaryControlsBound === "1") return;
+  stockOrderSummaryItems.dataset.summaryControlsBound = "1";
+
+  stockOrderSummaryItems.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const removeBtn = target.closest("[data-stock-summary-remove]");
+    if (removeBtn) {
+      setStockItemQuantity(removeBtn.getAttribute("data-stock-summary-remove") || "", 0);
+      return;
+    }
+
+    const stepBtn = target.closest("[data-stock-summary-step]");
+    if (stepBtn) {
+      const itemId = stepBtn.getAttribute("data-stock-summary-step") || "";
+      const direction = Number(stepBtn.getAttribute("data-stock-summary-direction") || "0");
+      setStockItemQuantity(itemId, Number(stockOrderState[itemId] || 0) + direction);
+    }
+  });
+
+  stockOrderSummaryItems.addEventListener("input", (event) => {
+    const target = event.target instanceof HTMLInputElement ? event.target : null;
+    if (!target || !target.matches("[data-stock-summary-input]")) return;
+    setStockItemQuantity(target.getAttribute("data-stock-summary-input") || "", target.value);
+  });
 }
 
 // Binds a control for both mobile taps and standard clicks without double-firing.
@@ -1718,6 +2292,7 @@ function renderStockOrderItems() {
     .map((item) => {
       const cardLabel = getStockDisplayLabel(item);
       const cardLabelMarkup = getStockDisplayLabelMarkup(item, cardLabel);
+      const stockStatus = getStockStatusForItem(item);
       const cardKicker = item.variantLabel
         ? item.unitType === "tray"
           ? `${item.variantLabel} · Tray of ${item.traySize}`
@@ -1731,11 +2306,16 @@ function renderStockOrderItems() {
         : "Each";
 
       return `
-      <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}">
+      <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}" data-stock-status="${escapeHtml(stockStatus.status)}">
         <div class="stock-order-item-head">
-          <span class="stock-order-item-kicker">${cardKicker}</span>
+          <div class="stock-order-item-meta">
+            <span class="stock-order-item-kicker">${cardKicker}</span>
+            ${getStockStatusBadgeMarkup(stockStatus)}
+          </div>
           <h3>${cardLabelMarkup}</h3>
         </div>
+        ${getStockStatusLineMarkup(item, stockStatus)}
+        ${stockStatus.status === "no-stock" ? '<p class="stock-order-no-stock-warning">Request only - no stock available.</p>' : ""}
         <div class="stock-order-qty-row">
           <button
             type="button"
@@ -1833,6 +2413,7 @@ function resetStockOrderForm() {
   stockOrderStatusMode = "draft";
   submittedStockOrderRecord = null;
   lastStockSubmitErrorMessage = "";
+  if (stockOrderRepeatReasonSelect) stockOrderRepeatReasonSelect.value = "";
 
   if (stockOrderForm) {
     stockOrderForm.reset();
@@ -1851,7 +2432,7 @@ function showStockOrderSubmissionConfirmation(record = null, payload = null) {
   if (!stockOrderSubmissionCard) return;
 
   const requestId = String(record?.id || "").trim();
-  const requestedBy = toConsistentNameCase(record?.requestedBy || payload?.requestedBy || "");
+  const requestedBy = formatRequesterName(record?.requestedBy || payload?.requestedBy || "");
   const wardUnit = String(record?.wardUnit || payload?.wardUnit || "").trim();
 
   stockOrderSubmissionCard.hidden = !requestId;
@@ -1899,6 +2480,9 @@ function initStockOrderPanel() {
   renderStockOrderItems();
   updateStockOrderPreview();
   loadStockTrackingList();
+  loadStockDuplicateCheckRequests();
+  loadStockOrderInventory();
+  stockOrderTrackingList?.addEventListener("click", handleStockRequestDetailsClick);
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
     hideStockOrderSubmissionConfirmation();
@@ -1928,9 +2512,20 @@ function initStockOrderPanel() {
     }
     updateStockOrderPreview();
   });
+  stockOrderRepeatReasonSelect?.addEventListener("change", () => {
+    hideStockOrderSubmissionConfirmation();
+    if (["copied", "shared", "submitted", "submit-failed"].includes(stockOrderStatusMode)) {
+      stockOrderStatusMode = "ready";
+      submittedStockOrderRecord = null;
+      lastStockSubmitErrorMessage = "";
+    }
+    updateStockOrderPreview();
+  });
 
   bindPressAction(submitStockOrderBtn, async () => {
     if (isSubmittingStockOrder) return;
+
+    await loadStockDuplicateCheckRequests();
 
     const blockedReason = getStockSubmitBlockedReason();
     if (blockedReason) {
@@ -1987,6 +2582,7 @@ function initStockOrderPanel() {
       resetStockOrderForm();
       showStockOrderSubmissionConfirmation(submittedRecord, payload);
       loadStockTrackingList();
+      loadStockDuplicateCheckRequests();
     } catch (error) {
       submittedStockOrderRecord = null;
       stockOrderStatusMode = "submit-failed";
@@ -6196,7 +6792,7 @@ function renderHomeStatusSummary() {
   }
 
   homeStatusList.innerHTML = pendingOrders.slice(0, HOME_STATUS_MAX_ITEMS).map((request) => {
-    const requestedBy = sanitizeDashboardText(request?.requestedBy, 56) || "Unknown requester";
+    const requestedBy = sanitizeDashboardText(formatRequesterName(request?.requestedBy), 56) || "Unknown requester";
     const wardUnit = sanitizeDashboardText(request?.wardUnit, 56) || "Ward not set";
     const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Pending";
     return `

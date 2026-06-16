@@ -243,8 +243,14 @@ const stockDashboardDatasets = {
   stockRequests: [],
   receivedStock: [],
   activeWorkQueue: [],
-  archivedCompletedRequests: []
+  archivedCompletedRequests: [],
+  inventorySummary: []
 };
+
+function stockDashboardFormatRequesterName(value) {
+  if (typeof formatRequesterName === "function") return formatRequesterName(value);
+  return String(value || "").trim();
+}
 
 async function stockDashboardLoadApiConfig() {
   try {
@@ -479,6 +485,83 @@ function stockDashboardGetItemQuantityLabel(item) {
     return formatStockQuantity(item);
   }
   return String(item?.quantity || 0);
+}
+
+function stockDashboardGetInventoryKey(item) {
+  return String(item?.sheetColumnKey || item?.id || item?.label || "").trim();
+}
+
+function stockDashboardBuildFullInventorySummary(summary = []) {
+  const rowsByKey = new Map();
+  (Array.isArray(summary) ? summary : []).forEach((row) => {
+    const key = String(row?.key || row?.id || row?.itemId || row?.label || "").trim();
+    if (!key) return;
+    rowsByKey.set(key, {
+      ...row,
+      key,
+      label: String(row?.label || key),
+      onHand: Math.max(0, Number(row?.onHand) || 0)
+    });
+  });
+
+  // The orderable item catalogue is static front-end data, not a Supabase table.
+  // Merge it with live balances so a fresh reset still shows every selectable
+  // stock item as zero instead of hiding items that have no balance row yet.
+  if (Array.isArray(stockConsumableItems)) {
+    stockConsumableItems.forEach((item) => {
+      const key = stockDashboardGetInventoryKey(item);
+      if (!key || rowsByKey.has(key)) return;
+      rowsByKey.set(key, {
+        key,
+        id: item.id,
+        itemId: item.id,
+        label: String(item.label || "").trim() || stockDashboardGetDisplayLabel(item),
+        onHand: 0,
+        updatedAt: ""
+      });
+    });
+  }
+
+  return Array.from(rowsByKey.values()).sort((a, b) => String(a.label || "").localeCompare(String(b.label || "")));
+}
+
+function stockDashboardGetStockStatus(row) {
+  if (typeof getStockStatusFromBalance === "function" && typeof getStockStatusLabel === "function" && typeof getStockStatusTone === "function") {
+    const threshold = Math.max(1, Number(row?.lowStockThreshold) || 5);
+    const status = getStockStatusFromBalance(row?.onHand, threshold);
+    return {
+      status,
+      label: getStockStatusLabel(status),
+      tone: getStockStatusTone(status),
+      onHand: Math.max(0, Number(row?.onHand) || 0),
+      lowStockThreshold: threshold
+    };
+  }
+
+  const onHand = Math.max(0, Number(row?.onHand) || 0);
+  const status = onHand <= 0 ? "no-stock" : onHand <= 5 ? "low-stock" : "in-stock";
+  return {
+    status,
+    label: status === "no-stock" ? "No Stock" : status === "low-stock" ? "Low stock" : "In stock",
+    tone: status === "no-stock" ? "danger" : status === "low-stock" ? "warning" : "success",
+    onHand,
+    lowStockThreshold: 5
+  };
+}
+
+function stockDashboardGetInventoryStatusForItem(item) {
+  const key = typeof getStockInventoryKeyForItem === "function"
+    ? getStockInventoryKeyForItem(item)
+    : stockDashboardGetInventoryKey(item);
+  const row = stockDashboardDatasets.inventorySummary.find((entry) => String(entry?.key || "") === key);
+  return stockDashboardGetStockStatus(row || { key, label: item?.label || "", onHand: 0 });
+}
+
+function stockDashboardStockStatusBadgeMarkup(status) {
+  if (typeof getStockStatusBadgeMarkup === "function") {
+    return getStockStatusBadgeMarkup(status);
+  }
+  return `<span class="stock-status-badge" data-stock-status="${stockDashboardEscapeHtml(status.status)}" data-stock-tone="${stockDashboardEscapeHtml(status.tone)}">${stockDashboardEscapeHtml(status.label)}</span>`;
 }
 
 function stockDashboardSetEditorState(editorState) {
@@ -972,21 +1055,47 @@ function stockDashboardGetInventoryLevel(onHand) {
 }
 
 function stockDashboardRenderInventory(summary = []) {
-  renderDashboardList(stockDashboardInventoryList, summary, (row) => {
-    const onHand = Math.max(0, Number(row?.onHand) || 0);
-    const level = stockDashboardGetInventoryLevel(onHand);
+  const fullSummary = stockDashboardBuildFullInventorySummary(summary);
+  stockDashboardDatasets.inventorySummary = fullSummary;
+  const renderInventoryRow = (row) => {
+    const status = stockDashboardGetStockStatus(row);
+    const level = status.tone;
     const rowItem = { id: row?.id || row?.itemId || "", label: row?.label || "" };
     return `
-    <div class="stock-dashboard-list-row" data-stock-level="${stockDashboardEscapeHtml(level)}">
+    <div class="stock-dashboard-list-row" data-stock-level="${stockDashboardEscapeHtml(level)}" data-stock-status="${stockDashboardEscapeHtml(status.status)}">
       <span>${stockDashboardGetLabelMarkup(rowItem, row?.label || "", { wrapperClassName: "stock-item-title-row-compact", glyphClassName: "stock-item-glyph-compact" })}</span>
-      <strong class="stock-level--${stockDashboardEscapeHtml(level)}">${onHand} left</strong>
+      <div class="stock-dashboard-stock-cell">
+        ${stockDashboardStockStatusBadgeMarkup(status)}
+        <strong class="stock-level--${stockDashboardEscapeHtml(level)}">${status.onHand} left</strong>
+      </div>
     </div>
   `;
-  });
+  };
+
+  if (stockDashboardInventoryList) {
+    const noStockRows = fullSummary.filter((row) => stockDashboardGetStockStatus(row).status === "no-stock");
+    const lowStockRows = fullSummary.filter((row) => stockDashboardGetStockStatus(row).status === "low-stock");
+    const inStockRows = fullSummary.filter((row) => stockDashboardGetStockStatus(row).status === "in-stock");
+    const renderSection = (title, rows, emptyText) => `
+      <section class="stock-dashboard-inventory-section" data-stock-section="${stockDashboardEscapeHtml(title.toLowerCase().replace(/\s+/g, "-"))}">
+        <div class="stock-dashboard-inventory-section-head">
+          <h4>${stockDashboardEscapeHtml(title)}</h4>
+          <span>${rows.length}</span>
+        </div>
+        ${rows.length ? rows.map(renderInventoryRow).join("") : `<p class="stock-dashboard-empty">${stockDashboardEscapeHtml(emptyText)}</p>`}
+      </section>
+    `;
+
+    stockDashboardInventoryList.innerHTML = [
+      renderSection("No Stock", noStockRows, "No zero-stock items."),
+      renderSection("Low Stock", lowStockRows, "No low-stock items."),
+      renderSection("In Stock", inStockRows, "No stocked items yet.")
+    ].join("");
+  }
 
   if (stockDashboardInventoryStatus) {
-    const dangerRows = summary.filter((row) => stockDashboardGetInventoryLevel(row?.onHand) === "danger");
-    const warningRows = summary.filter((row) => stockDashboardGetInventoryLevel(row?.onHand) === "warning");
+    const dangerRows = fullSummary.filter((row) => stockDashboardGetStockStatus(row).status === "no-stock");
+    const warningRows = fullSummary.filter((row) => stockDashboardGetStockStatus(row).status === "low-stock");
     stockDashboardInventoryStatus.textContent = dangerRows.length
       ? `${dangerRows.length} item${dangerRows.length === 1 ? "" : "s"} are out of stock.`
       : warningRows.length
@@ -1172,7 +1281,7 @@ async function stockDashboardExportDataToExcel() {
     const requestHeaders = ["Request ID", "Requested By", "Ward / Unit", "Date / Time", "Status"];
     const requestSheetRows = requests.map((request) => ({
       "Request ID": String(request?.id || ""),
-      "Requested By": String(request?.requestedBy || ""),
+      "Requested By": stockDashboardFormatRequesterName(request?.requestedBy),
       "Ward / Unit": String(request?.wardUnit || ""),
       "Date / Time": stockDashboardFormatExportDateTime(request?.createdAt || request?.submittedAt),
       Status: stockDashboardFormatStatus(request?.status)
@@ -1891,7 +2000,7 @@ function stockDashboardNotifyBrowser(newRequests) {
 
   const newestRequest = newRequests[0];
   const body = newRequests.length === 1
-    ? `${newestRequest.requestedBy || "A ward"} · ${newestRequest.wardUnit || "No ward"}`
+    ? `${stockDashboardFormatRequesterName(newestRequest.requestedBy) || "A ward"} · ${newestRequest.wardUnit || "No ward"}`
     : `${newRequests.length} new stock requests are waiting in the dashboard.`;
 
   const notification = new Notification("Find My Tube Lab Alert", {
@@ -2993,15 +3102,18 @@ function renderStockDashboardRequests(requests) {
   const queueRows = activeRequests.map((request) => {
     const safeStatus = stockDashboardNormalizeStatus(request?.status);
     const statusMeta = stockDashboardGetQueueStatusMeta(safeStatus);
-    const items = Array.isArray(request.items) ? request.items : [];
-    const itemSummaryMarkup = items.map((item) => {
-      const labelMarkup = stockDashboardGetLabelMarkup(item, stockDashboardGetDisplayLabel(item), {
-        wrapperClassName: "stock-item-title-row-compact",
-        glyphClassName: "stock-item-glyph-compact"
-      });
-      const quantityLabel = stockDashboardEscapeHtml(item.formattedQuantity || String(item.quantity || ""));
-      return `<span class="stock-dashboard-queue-item-line">${labelMarkup}: ${quantityLabel}</span>`;
-    }).join("");
+    const detailKey = typeof registerStockRequestForDetails === "function"
+      ? registerStockRequestForDetails(request)
+      : String(request?.id || "");
+    const itemSummaryMarkup = typeof getStockRequestCompactItemsMarkup === "function"
+      ? getStockRequestCompactItemsMarkup(request, 3)
+      : '<p class="stock-request-compact-empty">No items listed</p>';
+    const compactDate = typeof formatStockRequestDateOnly === "function"
+      ? formatStockRequestDateOnly(request.createdAt || request.submittedAt)
+      : stockDashboardFormatDateTime(request.createdAt || request.submittedAt);
+    const repeatBadge = typeof requestHasRepeatOverride === "function" && requestHasRepeatOverride(request)
+      ? '<span class="stock-order-repeat-mini-badge">48h override</span>'
+      : "";
     const statusButtons = STOCK_DASHBOARD_STATUS_ORDER.map((status) => `
       <button
         type="button"
@@ -3015,14 +3127,18 @@ function renderStockDashboardRequests(requests) {
 
     return `
       <div class="stock-dashboard-queue-row" role="row" data-dashboard-request="${stockDashboardEscapeHtml(request.id)}">
-        <div class="stock-dashboard-queue-cell" data-label="Requested by">${stockDashboardEscapeHtml(request.requestedBy || "Unknown requester")}</div>
+        <div class="stock-dashboard-queue-cell" data-label="Requested by">
+          <span>${stockDashboardEscapeHtml(stockDashboardFormatRequesterName(request.requestedBy) || "Unknown requester")}</span>
+          ${repeatBadge}
+        </div>
         <div class="stock-dashboard-queue-cell" data-label="Ward / Unit">${stockDashboardEscapeHtml(request.wardUnit || "No ward set")}</div>
-        <div class="stock-dashboard-queue-cell" data-label="Date / Time">${stockDashboardEscapeHtml(stockDashboardFormatDateTime(request.createdAt))}</div>
+        <div class="stock-dashboard-queue-cell" data-label="Date">${stockDashboardEscapeHtml(compactDate)}</div>
         <div class="stock-dashboard-queue-cell stock-dashboard-queue-items" data-label="Items requested">${itemSummaryMarkup || "No items listed"}</div>
         <div class="stock-dashboard-queue-cell" data-label="Status">
           <span class="stock-dashboard-queue-status-badge" data-stage="${stockDashboardEscapeHtml(statusMeta.stage)}">${stockDashboardEscapeHtml(statusMeta.label)}</span>
         </div>
         <div class="stock-dashboard-queue-actions">
+          <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${stockDashboardEscapeHtml(detailKey)}">View order</button>
           ${statusButtons}
         </div>
       </div>
@@ -3034,7 +3150,7 @@ function renderStockDashboardRequests(requests) {
       <div class="stock-dashboard-queue-head" role="row">
         <span>Requested by</span>
         <span>Ward / Unit</span>
-        <span>Date / Time</span>
+        <span>Date</span>
         <span>Items requested</span>
         <span>Status</span>
       </div>
@@ -3104,11 +3220,11 @@ async function loadStockDashboard(options = {}) {
       return;
     }
 
-    renderStockDashboardStats(statsPayload.stats || {});
-    renderStockDashboardRequests(requests);
-    stockDashboardPrepareDatasets(requests, recentReceipts);
-    stockDashboardRefreshDataSectionStatus();
     stockDashboardRenderInventory(Array.isArray(inventoryPayload?.summary) ? inventoryPayload.summary : []);
+    renderStockDashboardStats(statsPayload.stats || {});
+    stockDashboardPrepareDatasets(requests, recentReceipts);
+    renderStockDashboardRequests(requests);
+    stockDashboardRefreshDataSectionStatus();
     stockDashboardProcessNotifications(requests, { fromPoll });
     if (!silent) {
       stockDashboardStatus.textContent = `Updated ${stockDashboardFormatDateTime(new Date().toISOString())}`;
@@ -3321,14 +3437,14 @@ async function logoutStockDashboard() {
 }
 
 async function clearStockDashboardData() {
-  if (!stockDashboardIsAdminSession() || !clearStockDataBtn) return;
+  if (!stockDashboardIsAdminSession()) return;
 
-  const confirmed = window.confirm("Clear all saved stock request history? This cannot be undone.");
+  const confirmed = window.confirm("Reset current stock balances to zero and clear received stock/lot records? Request history, archived orders, users, and ordering options will be preserved.");
   if (!confirmed) return;
 
   stockDashboardSetBusy(true);
   if (stockDashboardStatus) {
-    stockDashboardStatus.textContent = "Clearing saved request history...";
+    stockDashboardStatus.textContent = "Resetting current stock balances...";
   }
 
   try {
@@ -3344,16 +3460,16 @@ async function clearStockDashboardData() {
     }
 
     if (!response.ok) {
-      throw new Error("Could not clear saved request history");
+      throw new Error("Could not reset current stock balances");
     }
 
     await loadStockDashboard();
     if (stockDashboardStatus) {
-      stockDashboardStatus.textContent = "Saved request history cleared.";
+      stockDashboardStatus.textContent = "Current stock balances reset. Request history and archived orders were preserved.";
     }
   } catch {
     if (stockDashboardStatus) {
-      stockDashboardStatus.textContent = "Could not clear saved request history.";
+      stockDashboardStatus.textContent = "Could not reset current stock balances.";
     }
   } finally {
     stockDashboardSetBusy(false);
@@ -3428,10 +3544,7 @@ stockDashboardExportDataBtn?.addEventListener("click", () => {
 });
 
 stockDashboardClearOldDataBtn?.addEventListener("click", () => {
-  if (!stockDashboardIsAdminSession()) return;
-  if (stockDashboardDataStatus) {
-    stockDashboardDataStatus.textContent = "Clear old data is reserved for admin cleanup workflow and will be wired in a later step.";
-  }
+  clearStockDashboardData();
 });
 
 stockDashboardReceiptToggleBtn?.addEventListener("click", () => {
@@ -3449,6 +3562,7 @@ stockDashboardUserList?.addEventListener("click", (event) => {
 });
 
 stockDashboardRequestList?.addEventListener("click", (event) => {
+  handleStockRequestDetailsClick(event);
   const button = event.target.closest("[data-request-id][data-request-status]");
   if (!(button instanceof HTMLButtonElement)) return;
 

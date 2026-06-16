@@ -40,7 +40,7 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260612a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260617a" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -201,6 +201,24 @@
             <span class="stock-order-summary-value" id="stockOrderSummaryItems">No items selected</span>
           </div>
         </div>
+        <div class="stock-order-repeat-warning" id="stockOrderRepeatWarning" hidden>
+          <div>
+            <span class="stock-order-repeat-badge" id="stockOrderRepeatBadge">Repeat request</span>
+            <p id="stockOrderRepeatMessage">Please check Track Orders before requesting more stock.</p>
+          </div>
+          <label class="stock-order-repeat-reason" id="stockOrderRepeatReasonWrap" hidden>
+            <span>Reason required</span>
+            <select id="stockOrderRepeatReasonSelect">
+              <option value="">Select a reason</option>
+              <option value="Stock finished">Stock finished</option>
+              <option value="High patient load">High patient load</option>
+              <option value="Stock damaged">Stock damaged</option>
+              <option value="Incorrect quantity received">Incorrect quantity received</option>
+              <option value="Other reason">Other reason</option>
+            </select>
+          </label>
+          <a class="quick-tool-clear-btn stock-order-repeat-link" id="stockOrderRepeatTrackLink" href="./track-orders.html" hidden>View active order</a>
+        </div>
         <textarea
           id="stockOrderRequestPreview"
           class="stock-order-request-preview"
@@ -292,7 +310,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
-  <script src="assets/js/script.js?v=20260612a"></script>
+  <script src="assets/js/script.js?v=20260617a"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -412,35 +430,35 @@
         style.textContent = `
           .stock-order-track-table {
             display: grid;
-            gap: 8px;
+            gap: 12px;
           }
-          .stock-order-track-header,
           .stock-order-track-row {
             display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr) auto;
             gap: 10px;
-            align-items: center;
-          }
-          .stock-order-track-header {
-            padding: 0 10px;
-            color: #5a6d79;
-            font-size: 0.7rem;
-            font-weight: 650;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-          }
-          .stock-order-track-row {
-            padding: 10px;
+            padding: 12px;
             border-radius: 12px;
             border: 1px solid rgba(15, 118, 110, 0.14);
             background: rgba(255, 255, 255, 0.72);
           }
-          .stock-order-track-cell {
-            min-width: 0;
+          .stock-order-track-primary {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+          }
+          .stock-order-track-primary h4 {
+            margin: 0;
             color: #17343a;
-            font-size: 0.84rem;
-            line-height: 1.35;
+            font-size: 0.96rem;
+            line-height: 1.25;
             overflow-wrap: anywhere;
+          }
+          .stock-order-track-primary p,
+          .stock-order-track-date {
+            margin: 0;
+            color: #52636d;
+            font-size: 0.82rem;
+            line-height: 1.35;
           }
           .stock-order-track-status-badge {
             display: inline-flex;
@@ -477,24 +495,9 @@
             color: #991b1b;
           }
           @media (max-width: 760px) {
-            .stock-order-track-header {
-              display: none;
-            }
-            .stock-order-track-row {
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-              gap: 8px 12px;
-            }
-            .stock-order-track-cell {
-              display: grid;
-              gap: 2px;
-            }
-            .stock-order-track-cell::before {
-              content: attr(data-label);
-              font-size: 0.64rem;
-              font-weight: 650;
-              letter-spacing: 0.08em;
-              text-transform: uppercase;
-              color: #5a6d79;
+            .stock-order-track-primary {
+              flex-direction: column;
+              gap: 8px;
             }
           }
         `;
@@ -548,37 +551,48 @@
             return;
           }
 
-          const headerMarkup = `
-            <div class="stock-order-track-header" role="row">
-              <span>Requested by</span>
-              <span>Ward / Unit</span>
-              <span>Date</span>
-              <span>Status</span>
-            </div>
-          `;
-
           const rowsMarkup = rows.map((request) => {
-            const requestedBy = escapeTrackingValue(request?.requestedBy || "Unknown requester");
+            const detailKey = typeof registerStockRequestForDetails === "function"
+              ? registerStockRequestForDetails(request)
+              : String(request?.id || "");
+            const displayRequesterName = typeof formatRequesterName === "function"
+              ? formatRequesterName(request?.requestedBy)
+              : String(request?.requestedBy || "").trim();
+            const requestedBy = escapeTrackingValue(displayRequesterName || "Unknown requester");
             const wardUnit = escapeTrackingValue(request?.wardUnit || "Ward not set");
-            const dateValue = typeof formatStockRequestDateTime === "function"
-              ? formatStockRequestDateTime(request?.createdAt)
+            const dateValue = typeof formatStockRequestDateOnly === "function"
+              ? formatStockRequestDateOnly(request?.createdAt || request?.submittedAt)
+              : typeof formatStockRequestDateTime === "function"
+              ? formatStockRequestDateTime(request?.createdAt || request?.submittedAt)
               : String(request?.createdAt || "Unknown time");
             const date = escapeTrackingValue(dateValue);
             const statusMeta = getTrackingStatusMeta(request?.status);
+            const itemSummary = typeof getStockRequestCompactItemsMarkup === "function"
+              ? getStockRequestCompactItemsMarkup(request, 3)
+              : '<p class="stock-request-compact-empty">Items ordered available in Track Orders.</p>';
+            const repeatBadge = typeof requestHasRepeatOverride === "function" && requestHasRepeatOverride(request)
+              ? '<span class="stock-order-repeat-mini-badge">48h override</span>'
+              : "";
 
             return `
-              <div class="stock-order-track-row" role="row">
-                <span class="stock-order-track-cell" data-label="Requested by">${requestedBy}</span>
-                <span class="stock-order-track-cell" data-label="Ward / Unit">${wardUnit}</span>
-                <span class="stock-order-track-cell" data-label="Date">${date}</span>
-                <span class="stock-order-track-cell" data-label="Status">
+              <article class="stock-order-track-row stock-request-compact-card" role="listitem">
+                <div class="stock-request-compact-head">
+                  <h4>${requestedBy}</h4>
+                  ${repeatBadge}
+                </div>
+                <div class="stock-request-compact-meta">
+                  <span>${wardUnit} · ${date}</span>
                   <span class="stock-order-track-status-badge" data-stage="${escapeTrackingValue(statusMeta.stage)}">${escapeTrackingValue(statusMeta.label)}</span>
-                </span>
-              </div>
+                </div>
+                ${itemSummary}
+                <div class="stock-request-compact-actions">
+                  <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${escapeTrackingValue(detailKey)}">View order</button>
+                </div>
+              </article>
             `;
           }).join("");
 
-          trackingList.innerHTML = `<div class="stock-order-track-table" role="table" aria-label="Recent stock orders">${headerMarkup}${rowsMarkup}</div>`;
+          trackingList.innerHTML = `<div class="stock-order-track-table stock-request-compact-list" role="list" aria-label="Recent stock orders">${rowsMarkup}</div>`;
         };
 
         window.renderStockTrackingList = patchedRenderer;
@@ -771,7 +785,9 @@
               : Math.max(0, requested);
           }
 
-          return originalSetStockItemQuantity(safeItemId, requested);
+          const result = originalSetStockItemQuantity(safeItemId, requested);
+          window.setTimeout(syncUnifiedTubeInputs, 0);
+          return result;
         };
 
         patchedSetStockItemQuantity.__quantizedFivePatched = true;
@@ -886,12 +902,27 @@
 
           const eachMax = Math.max(1, Number(eachItem.maxQuantity) || 99);
           const trayMax = Math.max(1, Number(config.trayMax) || 1);
+          const trayStockStatus = typeof getStockStatusForItem === "function"
+            ? getStockStatusForItem(trayItem)
+            : { status: "no-stock", label: "No Stock", tone: "danger", onHand: 0 };
+          const trayStatusBadge = typeof getStockStatusBadgeMarkup === "function"
+            ? getStockStatusBadgeMarkup(trayStockStatus)
+            : '<span class="stock-status-badge" data-stock-status="no-stock" data-stock-tone="danger">No Stock</span>';
+          const trayStatusLine = typeof getStockStatusLineMarkup === "function"
+            ? getStockStatusLineMarkup(trayItem, trayStockStatus)
+            : '<div class="stock-status-line" data-stock-status="no-stock"><span>Request only - no stock available</span></div>';
 
           card.innerHTML = `
             <div class="stock-order-item-head">
+              <div class="stock-order-item-meta">
+                <span class="stock-order-item-kicker">Tube stock</span>
+                ${trayStatusBadge}
+              </div>
               <h3>${buildTubeTitleMarkup(trayItem.label, config.key)}</h3>
               <p class="stock-order-item-copy">${config.helper}</p>
             </div>
+            ${trayStatusLine}
+            ${trayStockStatus.status === "no-stock" ? '<p class="stock-order-no-stock-warning">Request only - no stock available.</p>' : ""}
             <div class="group-chips stock-tube-mode-toggle" role="group" aria-label="${trayItem.label} mode">
               <button type="button" class="group-chip active" data-stock-mode="tray" aria-pressed="true">Tray (100)</button>
               <button type="button" class="group-chip" data-stock-mode="each" aria-pressed="false">Each</button>
@@ -1125,6 +1156,9 @@
         }
       }
 
+      window.applyUnifiedTubeUi = applyUnifiedTubeUi;
+      window.syncUnifiedTubeInputs = syncUnifiedTubeInputs;
+
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", bootUnifiedTubeUi, { once: true });
       } else {
@@ -1134,7 +1168,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-06-03.2";
+      const APP_VERSION = "2026-06-17.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1155,7 +1189,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260612a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260617a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
