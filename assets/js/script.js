@@ -1163,7 +1163,7 @@ function formatStockRequestDateOnly(value) {
 // Normalizes legacy stock request statuses to the current UI model.
 function normalizeStockRequestStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
-  if (safeStatus === "sent" || safeStatus === "completed" || safeStatus === "collected") return "completed";
+  if (safeStatus === "sent") return "completed";
   if (safeStatus === "received" || safeStatus === "submitted") return "pending";
   if (safeStatus === "processing" || safeStatus === "in-progress") return "packed";
   if (safeStatus === "no_stock" || safeStatus === "no stock" || safeStatus === "out-of-stock" || safeStatus === "out of stock") return "no-stock";
@@ -1173,8 +1173,9 @@ function normalizeStockRequestStatus(status) {
 function formatStockRequestStatusLabel(status) {
   const normalizedStatus = normalizeStockRequestStatus(status);
   if (normalizedStatus === "pending") return "Pending";
-  if (normalizedStatus === "packed") return "Processing";
-  if (normalizedStatus === "ready") return "Ready for Collection";
+  if (normalizedStatus === "packed") return "Packed";
+  if (normalizedStatus === "ready") return "Ready";
+  if (normalizedStatus === "collected") return "Collected";
   if (normalizedStatus === "completed") return "Completed";
   if (normalizedStatus === "no-stock") return "No Stock";
   if (normalizedStatus === "cancelled") return "Cancelled";
@@ -1491,8 +1492,9 @@ const stockRequestDetailsByKey = new Map();
 function getStockRequestStatusLabel(status) {
   const normalizedStatus = normalizeStockRequestStatus(status);
   if (normalizedStatus === "pending") return "Pending";
-  if (normalizedStatus === "packed") return "Processing";
-  if (normalizedStatus === "ready") return "Ready for Collection";
+  if (normalizedStatus === "packed") return "Packed";
+  if (normalizedStatus === "ready") return "Ready";
+  if (normalizedStatus === "collected") return "Collected";
   if (normalizedStatus === "completed") return "Completed";
   if (normalizedStatus === "no-stock") return "No Stock";
   if (normalizedStatus === "cancelled") return "Cancelled";
@@ -1580,8 +1582,7 @@ function analyzeStockRepeatRequest(payload, requests = stockOrderRecentRequestsF
     if (!request || String(request.wardUnit || "").trim().toLowerCase() !== ward) return;
     if (!isStockRequestWithinHours(request, 48)) return;
 
-    const rawStatus = String(request.status || "").trim().toLowerCase();
-    const status = rawStatus === "received" ? "received" : normalizeStockRequestStatus(request.status);
+    const status = normalizeStockRequestStatus(request.status);
     const requestItems = Array.isArray(request.items) ? request.items : [];
     requestItems.forEach((requestItem) => {
       const key = getStockDuplicateItemKey(requestItem);
@@ -1598,7 +1599,7 @@ function analyzeStockRepeatRequest(payload, requests = stockOrderRecentRequestsF
         return;
       }
 
-      if ((fulfilledStatuses.has(status) || status === "received") && !warnedKeys.has(key) && isStockHighVolumeItem(requestItem)) {
+      if (fulfilledStatuses.has(status) && !warnedKeys.has(key) && isStockHighVolumeItem(requestItem)) {
         warnedKeys.add(key);
         recentWarnings.push({
           type: "recent-high-volume",
@@ -1791,7 +1792,7 @@ function renderStockTrackingList(requests) {
   const activeRequests = Array.isArray(requests)
     ? requests.filter((request) => {
       const normalized = normalizeStockRequestStatus(request?.status);
-      return normalized !== "completed" && normalized !== "cancelled" && normalized !== "no-stock";
+      return normalized !== "collected" && normalized !== "completed" && normalized !== "cancelled" && normalized !== "no-stock";
     })
     : [];
 
@@ -1983,8 +1984,9 @@ function getStockOrderStatusLabel() {
   if (stockOrderStatusMode === "submitted") {
     const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
     if (submittedStatus === "pending") return "Pending";
-    if (submittedStatus === "packed") return "Processing";
-    if (submittedStatus === "ready") return "Ready for Collection";
+    if (submittedStatus === "packed") return "Packed";
+    if (submittedStatus === "ready") return "Ready";
+    if (submittedStatus === "collected") return "Collected";
     if (submittedStatus === "completed") return "Completed";
     if (submittedStatus === "no-stock") return "No Stock";
     if (submittedStatus === "cancelled") return "Cancelled";
@@ -6818,22 +6820,24 @@ async function loadHomeDashboardStockSnapshot() {
     const requests = Array.isArray(payload?.requests) ? payload.requests : [];
     const activeRequests = requests.filter((request) => {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
-      return normalizedStatus !== "completed" && normalizedStatus !== "cancelled" && normalizedStatus !== "no-stock";
+      return normalizedStatus !== "collected" && normalizedStatus !== "completed" && normalizedStatus !== "cancelled" && normalizedStatus !== "no-stock";
     });
     const pendingOrders = activeRequests.map((request) => {
       const normalizedStatus = normalizeStockRequestStatus(request?.status);
       const statusLabel = normalizedStatus === "pending"
         ? "Pending"
         : normalizedStatus === "processing" || normalizedStatus === "in-progress"
-          ? "Preparing"
+          ? "Packed"
           : normalizedStatus === "packed"
-          ? "Processing"
+          ? "Packed"
           : normalizedStatus === "ready"
-          ? "Ready for collection"
-          : normalizedStatus === "completed"
+          ? "Ready"
+          : normalizedStatus === "collected"
           ? "Collected"
+          : normalizedStatus === "completed"
+          ? "Completed"
           : normalizedStatus === "no-stock"
-          ? "No stock"
+          ? "No Stock"
           : normalizedStatus.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
       return {
         requestedBy: request?.requestedBy || "",

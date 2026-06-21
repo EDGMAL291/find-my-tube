@@ -28,7 +28,7 @@ const MAX_BODY_BYTES = 1024 * 1024;
 const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const CANCELLED_ARCHIVE_WINDOW_MS = 5 * 60 * 60 * 1000;
 const AUTH_COOKIE_NAME = "fmt_lab_session";
-const VALID_REQUEST_STATUSES = new Set(["pending", "submitted", "received", "packed", "ready", "collected", "completed", "cancelled", "no-stock"]);
+const VALID_REQUEST_STATUSES = new Set(["pending", "packed", "ready", "collected", "completed", "cancelled", "no-stock"]);
 
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
@@ -260,9 +260,10 @@ function slugifyStatus(status) {
 function formatStatusLabel(status) {
   const safeStatus = slugifyStatus(status);
   if (safeStatus === "pending") return "Pending";
-  if (safeStatus === "packed") return "Processing";
-  if (safeStatus === "ready") return "Ready for Collection";
-  if (safeStatus === "collected" || safeStatus === "completed") return "Completed";
+  if (safeStatus === "packed") return "Packed";
+  if (safeStatus === "ready") return "Ready";
+  if (safeStatus === "collected") return "Collected";
+  if (safeStatus === "completed") return "Completed";
   if (safeStatus === "no-stock") return "No Stock";
   if (safeStatus === "cancelled") return "Cancelled";
   return safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
@@ -542,8 +543,8 @@ function buildRepeatCheckPayload(payload, requests = []) {
   const selectedKeys = new Map(selectedItems
     .map((item) => [getDuplicateStockItemKey(item), item])
     .filter(([key]) => key));
-  const activeStatuses = new Set(["pending", "submitted", "packed", "ready"]);
-  const fulfilledStatuses = new Set(["completed", "collected", "received"]);
+  const activeStatuses = new Set(["pending", "packed", "ready"]);
+  const fulfilledStatuses = new Set(["completed", "collected"]);
   const recentWarnings = [];
   const warnedKeys = new Set();
   let activeBlock = null;
@@ -554,8 +555,7 @@ function buildRepeatCheckPayload(payload, requests = []) {
     if (!request || sanitizeString(request.wardUnit, 120).toLowerCase() !== ward) return;
     if (!isStockRequestWithinHours(request, 48)) return;
 
-    const rawStatus = sanitizeString(request.originalStatus || request.status, 40).toLowerCase();
-    const status = rawStatus === "received" ? "received" : slugifyStatus(request.status);
+    const status = slugifyStatus(request.status);
     const items = Array.isArray(request.items) ? request.items : [];
     items.forEach((item) => {
       const key = getDuplicateStockItemKey(item);
@@ -757,6 +757,17 @@ function resolveCancelledAt(request) {
   return resolveCancelledAtFromHistory(request?.statusHistory);
 }
 
+function normalizeStatusHistory(statusHistory = []) {
+  if (!Array.isArray(statusHistory)) return [];
+  return statusHistory.map((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return entry;
+    return {
+      ...entry,
+      status: slugifyStatus(entry.status)
+    };
+  });
+}
+
 function isArchivedCancelledRequest(request, nowMs = Date.now()) {
   if (slugifyStatus(request?.status) !== "cancelled") return false;
   const cancelledAt = resolveCancelledAt(request);
@@ -853,7 +864,7 @@ function mapRequestItemFromDb(item) {
 
 function mapRequestFromDb(row) {
   const items = Array.isArray(row?.stock_request_items) ? row.stock_request_items.map(mapRequestItemFromDb) : [];
-  const statusHistory = Array.isArray(row?.status_history) ? row.status_history : [];
+  const statusHistory = normalizeStatusHistory(row?.status_history);
   const cancelledAt = sanitizeString(row?.cancelled_at, 40) || resolveCancelledAtFromHistory(statusHistory);
   return {
     id: sanitizeString(row?.id, 80),
@@ -867,7 +878,7 @@ function mapRequestFromDb(row) {
     totalRequestedQuantity: Math.max(0, Number(row?.total_requested_quantity) || 0),
     createdAt: sanitizeString(row?.created_at, 40),
     updatedAt: sanitizeString(row?.updated_at, 40),
-    originalStatus: sanitizeString(row?.status, 40),
+    originalStatus: slugifyStatus(row?.status),
     status: slugifyStatus(row?.status),
     statusUpdatedAt: sanitizeString(row?.updated_at, 40),
     statusUpdatedBy: "",
@@ -1791,7 +1802,8 @@ async function mirrorStockRequestToGoogleSheets(record) {
         source: sanitizeString(record?.source || "find-my-tube", 60),
         submittedAt: sanitizeString(record?.submittedAt, 40),
         createdAt: sanitizeString(record?.createdAt, 40),
-        status: sanitizeString(record?.status || "submitted", 40),
+        status: slugifyStatus(record?.status),
+        statusLabel: formatStatusLabel(record?.status),
         requestedBy: sanitizeString(record?.requestedBy, 120),
         wardUnit: sanitizeString(record?.wardUnit, 120),
         notes: sanitizeMultilineString(record?.notes, 500),
