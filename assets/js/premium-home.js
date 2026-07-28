@@ -62,10 +62,15 @@
     if (!guideButton || !guidePanel) return;
     guidePanel.hidden = !isOpen;
     guideButton.setAttribute("aria-expanded", String(isOpen));
+    guideButton.setAttribute("aria-label", isOpen ? "Close collection guide" : "Open collection guide");
+    document.body.classList.toggle("is-collection-guide-open", isOpen);
     if (isOpen) guideClose?.focus();
     else guideButton.focus();
   };
 
   guideButton?.addEventListener("click", () => setGuideOpen(guidePanel?.hidden));
   guideClose?.addEventListener("click", () => setGuideOpen(false));
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !guidePanel?.hidden) setGuideOpen(false);
+  });
 })();
