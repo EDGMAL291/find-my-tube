@@ -296,9 +296,99 @@ textarea:focus-visible {
 
 /* Home stays visual, but uses the same palette and typography as every workspace. */
 body[data-app-page="home"] .home-hero-slide {
-  background-color: #1a2c32;
+  --hero-scene-position: 50% 50%;
+  --hero-scene-origin: 50% 50%;
+  --hero-scene-scale: 1;
+  isolation: isolate;
+  overflow: hidden;
+  background: #1a2c32;
   will-change: opacity, transform;
   transition: opacity 560ms ease, transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body[data-app-page="home"] .home-hero-slide::before,
+body[data-app-page="home"] .home-hero-slide::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+body[data-app-page="home"] .home-hero-slide::before {
+  z-index: 0;
+  background-image: var(--hero-image);
+  background-position: var(--hero-scene-position);
+  background-repeat: no-repeat;
+  background-size: cover;
+  transform: scale(var(--hero-scene-scale));
+  transform-origin: var(--hero-scene-origin);
+}
+
+body[data-app-page="home"] .home-hero-slide::after {
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgba(2, 15, 34, 0.94) 0%,
+    rgba(2, 15, 34, 0.77) 38%,
+    rgba(2, 15, 34, 0.26) 68%,
+    rgba(2, 15, 34, 0.12) 100%
+  );
+}
+
+body[data-app-page="home"] .home-hero-slide > .home-hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+body[data-app-page="home"] .home-hero-slide-clipboard {
+  --hero-scene-position: 0% 70%;
+  --hero-scene-origin: 0% 70%;
+  --hero-scene-scale: 1.34;
+}
+
+body[data-app-page="home"] .home-hero-slide-rack {
+  --hero-scene-position: 51% 62%;
+  --hero-scene-origin: 51% 62%;
+  --hero-scene-scale: 1.2;
+}
+
+body[data-app-page="home"] .home-hero-slide-stock {
+  --hero-scene-position: 100% 50%;
+  --hero-scene-origin: 100% 50%;
+  --hero-scene-scale: 1.3;
+}
+
+@media (max-width: 620px) {
+  body[data-app-page="home"] .home-hero-slide {
+    --hero-scene-scale: 1;
+  }
+
+  body[data-app-page="home"] .home-hero-slide::after {
+    background: linear-gradient(
+      180deg,
+      rgba(2, 15, 34, 0.2) 0%,
+      rgba(2, 15, 34, 0.78) 47%,
+      rgba(2, 15, 34, 0.96) 100%
+    );
+  }
+}
+
+@media (min-width: 621px) and (max-height: 760px) {
+  body[data-app-page="home"] .home-hero-slide {
+    padding-top: 88px;
+    padding-bottom: 54px;
+  }
+
+  body[data-app-page="home"] .home-hero-slide-overview .home-hero-content {
+    width: min(100%, 540px);
+    gap: 14px;
+    margin-top: 12px;
+  }
+
+  body[data-app-page="home"] .home-hero-slide-overview .home-hero-content h2 {
+    max-width: none;
+    font-size: clamp(3.2rem, 5vw, 4rem);
+  }
 }
 
 body[data-app-page="home"] .home-hero-slide .home-hero-content {
@@ -331,6 +421,7 @@ body[data-app-page="home"] .home-hero-eyebrow { color: #d6e9df; }
 body[data-app-page="home"] .home-hero-content h2 { color: #fffdf8; }
 body[data-app-page="home"] .home-hero-copy { color: rgba(255, 253, 248, 0.9); }
 body[data-app-page="home"] .home-hero-primary {
+  justify-self: end;
   border: 1px solid var(--hero-accent);
   background: transparent;
   color: #fffdf8;
@@ -3276,4 +3367,503 @@ body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action:focus
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* Find My Test: homepage-aligned photographic workspace. */
+body.find-my-test-page {
+  --test-night: #061a2e;
+  --test-night-deep: #03111f;
+  --test-cream: #fffdf8;
+  --test-cream-muted: rgba(255, 253, 248, 0.76);
+  --test-gold: #e6cf8c;
+  --test-gold-line: rgba(230, 207, 140, 0.48);
+  --test-surface: rgba(3, 17, 31, 0.5);
+  --test-field: rgba(4, 23, 41, 0.72);
+  color: var(--test-cream);
+  color-scheme: dark;
+  background-color: var(--test-night);
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(3, 17, 31, 0.94) 0%,
+      rgba(3, 17, 31, 0.82) 54%,
+      rgba(3, 17, 31, 0.48) 100%
+    ),
+    url("../images/hero-lab-analyser.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+body.find-my-test-page .container {
+  width: min(100% - 40px, 1180px);
+  min-height: 100svh;
+  padding: 0 0 22px;
+}
+
+body.find-my-test-page .header {
+  min-height: 62px;
+  margin: 0;
+  padding: 12px 0 8px;
+  border: 0;
+  background: transparent;
+}
+
+body.find-my-test-page .header::after,
+body.find-my-test-page .header h1::after {
+  display: none;
+  content: none;
+}
+
+body.find-my-test-page .header .brand-title {
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--test-cream);
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  font-weight: 500;
+  letter-spacing: 0.055em;
+  text-shadow: 0 2px 16px rgba(1, 10, 20, 0.52);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.find-my-test-page .header .brand-title:hover,
+body.find-my-test-page .header .brand-title:focus-visible {
+  border: 0;
+  background: transparent;
+  color: var(--test-gold);
+}
+
+body.find-my-test-page .clinical-workspace-intro {
+  display: grid;
+  width: min(100%, 780px);
+  gap: 10px;
+  margin: 2px 0 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--test-cream);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.find-my-test-page .clinical-workspace-intro h2 {
+  max-width: 15ch;
+  margin: 0;
+  color: var(--test-cream);
+  font-size: clamp(2.65rem, 5vw, 4rem);
+  font-weight: 500;
+  line-height: 0.98;
+  text-shadow: 0 2px 20px rgba(1, 10, 20, 0.58);
+}
+
+body.find-my-test-page .clinical-workspace-kicker {
+  margin: 0 0 3px;
+  color: var(--test-gold);
+}
+
+body.find-my-test-page .clinical-workspace-intro p:not(.clinical-workspace-kicker) {
+  max-width: 64ch;
+  margin: 0;
+  color: var(--test-cream-muted);
+  font-size: 0.92rem;
+  line-height: 1.48;
+  text-shadow: 0 2px 12px rgba(1, 10, 20, 0.54);
+}
+
+body.find-my-test-page .clinical-workspace-steps {
+  gap: 18px;
+  margin: 2px 0 0;
+  color: var(--test-cream-muted);
+}
+
+body.find-my-test-page .clinical-workspace-steps li,
+body.find-my-test-page .clinical-workspace-steps li + li {
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--test-cream-muted);
+  font-size: 0.72rem;
+}
+
+body.find-my-test-page .clinical-workspace-steps span {
+  color: var(--test-gold);
+}
+
+body.find-my-test-page .clinical-workup-panel {
+  max-width: none;
+  margin: 0 0 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--test-gold-line);
+  border-radius: 6px;
+  background: var(--test-surface);
+  color: var(--test-cream);
+  box-shadow: 0 18px 46px rgba(1, 10, 20, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-panel {
+  border-color: var(--test-gold-line);
+  background: var(--test-surface);
+}
+
+html body.find-my-test-page .clinical-workup-shell,
+html body.find-my-test-page .clinical-workup-form {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--test-cream);
+  box-shadow: none;
+}
+
+html body.find-my-test-page .clinical-workup-form {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px 18px;
+}
+
+body.find-my-test-page .clinical-workup-form-grid {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(0, 1.55fr);
+  gap: 20px;
+}
+
+body.find-my-test-page .clinical-workup-group,
+body.find-my-test-page .clinical-workup-group + .clinical-workup-group {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+body.find-my-test-page .clinical-workup-group legend {
+  padding: 0 0 10px;
+  color: var(--test-cream);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+body.find-my-test-page .clinical-workup-group-patient {
+  grid-template-columns: minmax(136px, 1.05fr) minmax(110px, 0.75fr) minmax(154px, 1.2fr);
+  gap: 10px;
+}
+
+body.find-my-test-page .clinical-workup-group-patient legend {
+  grid-column: 1 / -1;
+}
+
+body.find-my-test-page .clinical-workup-context-pregnancy {
+  grid-column: auto;
+}
+
+body.find-my-test-page .clinical-workup-group-picture {
+  gap: 10px;
+}
+
+body.find-my-test-page .clinical-workup-field {
+  gap: 5px;
+}
+
+body.find-my-test-page .clinical-workup-field span,
+body.find-my-test-page .clinical-workup-field-label {
+  color: var(--test-cream-muted);
+  font-size: 0.63rem;
+}
+
+body.find-my-test-page .clinical-workup-dob-control #clinicalDobInput,
+body.find-my-test-page .clinical-workup-input-wrap input,
+body.find-my-test-page .clinical-workup-input-wrap select {
+  padding-right: 11px;
+}
+
+body.find-my-test-page .clinical-workup-field input,
+body.find-my-test-page .clinical-workup-field select,
+body.find-my-test-page .clinical-workup-field textarea {
+  min-height: 42px;
+  border: 1px solid rgba(255, 253, 248, 0.28);
+  border-radius: 4px;
+  background: var(--test-field);
+  color: var(--test-cream);
+  caret-color: var(--test-gold);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-field input::placeholder,
+body.find-my-test-page .clinical-workup-field textarea::placeholder {
+  color: rgba(255, 253, 248, 0.48);
+}
+
+body.find-my-test-page .clinical-workup-field select option {
+  background: var(--test-night-deep);
+  color: var(--test-cream);
+}
+
+body.find-my-test-page .clinical-workup-field textarea {
+  min-height: 66px;
+  height: 66px;
+  padding-block: 10px;
+}
+
+body.find-my-test-page .clinical-workup-field input:focus,
+body.find-my-test-page .clinical-workup-field select:focus,
+body.find-my-test-page .clinical-workup-field textarea:focus {
+  border-color: var(--test-gold);
+  background: rgba(4, 23, 41, 0.88);
+  box-shadow: 0 0 0 2px rgba(230, 207, 140, 0.14);
+}
+
+body.find-my-test-page .clinical-workup-field-glyph,
+body.find-my-test-page .collection-guide-fab-icon {
+  display: none;
+}
+
+body.find-my-test-page .clinical-workup-dob-assist {
+  min-height: 0;
+  color: var(--test-cream-muted);
+  font-size: 0.66rem;
+}
+
+body.find-my-test-page .clinical-workup-dob-assist:empty {
+  display: none;
+}
+
+body.find-my-test-page .clinical-workup-actions {
+  gap: 9px;
+}
+
+body.find-my-test-page .clinical-workup-submit-btn,
+body.find-my-test-page .clinical-workup-reset-btn,
+body.find-my-test-page .clinical-workup-results-add-all-btn,
+body.find-my-test-page .clinical-workup-results-clear-btn {
+  min-height: 40px;
+  border: 1px solid var(--test-gold-line);
+  border-radius: 4px;
+  padding: 9px 13px;
+  background: transparent;
+  color: var(--test-cream);
+}
+
+body.find-my-test-page .clinical-workup-submit-btn:hover,
+body.find-my-test-page .clinical-workup-submit-btn:focus-visible,
+body.find-my-test-page .clinical-workup-reset-btn:hover,
+body.find-my-test-page .clinical-workup-reset-btn:focus-visible,
+body.find-my-test-page .clinical-workup-results-add-all-btn:hover,
+body.find-my-test-page .clinical-workup-results-add-all-btn:focus-visible,
+body.find-my-test-page .clinical-workup-results-clear-btn:hover,
+body.find-my-test-page .clinical-workup-results-clear-btn:focus-visible {
+  border-color: var(--test-gold);
+  background: rgba(230, 207, 140, 0.1);
+  color: var(--test-gold);
+}
+
+body.find-my-test-page .clinical-workup-note {
+  align-self: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: rgba(255, 253, 248, 0.58);
+  font-size: 0.67rem;
+  line-height: 1.4;
+}
+
+body.find-my-test-page .clinical-workup-status {
+  grid-column: 1 / -1;
+  color: var(--test-gold);
+}
+
+body.find-my-test-page .clinical-workup-results,
+body.find-my-test-page .clinical-workup-rule-card,
+body.find-my-test-page .clinical-workup-empty-state,
+body.find-my-test-page .clinical-workup-test-card,
+body.find-my-test-page .clinical-workup-test-option,
+body.find-my-test-page .stock-order-request-card {
+  border-color: var(--test-gold-line);
+  background: rgba(3, 17, 31, 0.58);
+  color: var(--test-cream);
+  box-shadow: none;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-results,
+html[data-theme] body.find-my-test-page .clinical-workup-rule-card,
+html[data-theme] body.find-my-test-page .clinical-workup-empty-state,
+html[data-theme] body.find-my-test-page .clinical-workup-test-card,
+html[data-theme] body.find-my-test-page .clinical-workup-test-option {
+  border-color: var(--test-gold-line);
+  background: rgba(3, 17, 31, 0.58);
+  color: var(--test-cream);
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-results {
+  max-width: none;
+  margin: 0 0 18px;
+  padding: 20px;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+body.find-my-test-page .clinical-workup-results h3,
+body.find-my-test-page .clinical-workup-results h4,
+body.find-my-test-page .clinical-workup-test-name,
+body.find-my-test-page .clinical-workup-rule-test {
+  color: var(--test-cream);
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-kicker,
+html[data-theme] body.find-my-test-page .clinical-workup-test-state,
+html[data-theme] body.find-my-test-page .clinical-workup-rule-label,
+html[data-theme] body.find-my-test-page .clinical-workup-result-tags {
+  color: var(--test-gold);
+}
+
+body.find-my-test-page .clinical-workup-results-copy,
+body.find-my-test-page .clinical-workup-rule-card p,
+body.find-my-test-page .clinical-workup-empty-state p,
+body.find-my-test-page .clinical-workup-test-summary {
+  color: var(--test-cream-muted);
+}
+
+body.find-my-test-page .clinical-workup-autocomplete {
+  border-color: var(--test-gold-line);
+  background: rgba(3, 17, 31, 0.98);
+  color: var(--test-cream);
+}
+
+body.find-my-test-page .clinical-workup-autocomplete-item {
+  border-color: rgba(255, 253, 248, 0.12);
+  background: transparent;
+  color: var(--test-cream);
+}
+
+body.find-my-test-page .clinical-workup-autocomplete-item:hover,
+body.find-my-test-page .clinical-workup-autocomplete-item.is-highlighted {
+  background: rgba(230, 207, 140, 0.12);
+}
+
+body.find-my-test-page .clinical-workup-autocomplete-meta,
+body.find-my-test-page .clinical-workup-autocomplete-match {
+  color: var(--test-cream-muted);
+}
+
+body.find-my-test-page .collection-guide-fab {
+  gap: 0;
+  border-color: var(--test-gold-line);
+  background: rgba(3, 17, 31, 0.42);
+  color: var(--test-cream);
+}
+
+body.find-my-test-page .collection-guide-fab-label {
+  display: inline;
+}
+
+body.find-my-test-page .collection-guide-panel {
+  border-color: var(--test-gold-line);
+  background: rgba(3, 17, 31, 0.94);
+  color: var(--test-cream);
+}
+
+@media (max-width: 860px) {
+  body.find-my-test-page {
+    background-image:
+      linear-gradient(180deg, rgba(3, 17, 31, 0.72) 0%, rgba(3, 17, 31, 0.92) 58%, rgba(3, 17, 31, 0.98) 100%),
+      url("../images/hero-lab-analyser.jpg");
+    background-position: center top;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  body.find-my-test-page .clinical-workup-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.find-my-test-page .clinical-workup-group + .clinical-workup-group {
+    padding: 0;
+    border: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  body.find-my-test-page .container {
+    width: min(100% - 24px, 1180px);
+  }
+
+  body.find-my-test-page .header {
+    min-height: 54px;
+    padding: 8px 0 4px;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro {
+    margin-bottom: 12px;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro h2 {
+    font-size: clamp(2.25rem, 11vw, 3rem);
+  }
+
+  body.find-my-test-page .clinical-workspace-intro p:not(.clinical-workspace-kicker) {
+    font-size: 0.84rem;
+  }
+
+  body.find-my-test-page .clinical-workspace-steps {
+    display: none;
+  }
+
+  body.find-my-test-page .clinical-workup-panel {
+    padding: 16px 14px;
+  }
+
+  body.find-my-test-page .clinical-workup-form {
+    grid-template-columns: 1fr;
+  }
+
+  body.find-my-test-page .clinical-workup-group-patient {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+
+  body.find-my-test-page .clinical-workup-context-pregnancy {
+    grid-column: 1 / -1;
+  }
+
+  body.find-my-test-page .clinical-workup-group-picture {
+    grid-template-columns: 1fr;
+  }
+
+  body.find-my-test-page .clinical-workup-group-picture legend,
+  body.find-my-test-page .clinical-workup-group-picture .clinical-workup-field-wide {
+    grid-column: auto;
+  }
+
+  body.find-my-test-page .clinical-workup-field textarea {
+    min-height: 52px;
+    height: 52px;
+  }
+
+  body.find-my-test-page .clinical-workup-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  body.find-my-test-page .clinical-workup-actions button {
+    width: 100%;
+    padding-inline: 8px;
+    font-size: 0.72rem;
+  }
+
+  body.find-my-test-page .clinical-workup-note,
+  body.find-my-test-page .clinical-workup-status {
+    grid-column: 1;
+  }
+
+  body.find-my-test-page .collection-guide-fab {
+    display: none;
+  }
 }

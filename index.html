@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260728h" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20260728m" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20260728o" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -317,22 +317,7 @@
                       placeholder="DD / MM / YYYY"
                       aria-describedby="clinicalDobAssist"
                     />
-                    <label
-                      class="clinical-workup-field-glyph clinical-workup-field-glyph-button clinical-workup-dob-picker-label"
-                      for="clinicalDobPickerInput"
-                      aria-label="Pick date of birth from calendar"
-                    >
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6H8v1a1 1 0 1 1-2 0V6H5Zm3 7a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v.01a1 1 0 0 1-2 0V14a1 1 0 0 1 1-1Z"></path>
-                      </svg>
-                      <input
-                        type="date"
-                        id="clinicalDobPickerInput"
-                        class="clinical-workup-dob-picker-native"
-                        tabindex="-1"
-                        aria-hidden="true"
-                      />
-                    </label>
+                    <input type="date" id="clinicalDobPickerInput" hidden aria-hidden="true" tabindex="-1" />
                   </div>
                   <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
                 </div>
@@ -348,7 +333,6 @@
                       <option value="male">Male</option>
                       <option value="other">Other</option>
                     </select>
-                    <span class="clinical-workup-field-glyph clinical-workup-select-icon clinical-workup-sex-icon" id="clinicalSexIcon" aria-hidden="true">⚥</span>
                   </div>
                 </label>
 
