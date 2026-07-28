@@ -5743,6 +5743,10 @@ body[data-app-page="find-my-tube"] {
 html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro {
   width: min(100%, 560px);
   margin-bottom: 12px;
+  padding: 0 0 12px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--tool-accent-line);
+  border-left: 1px solid var(--tool-accent-line);
 }
 
 html[data-theme] body[data-app-page="find-my-tube"] .search-box {
@@ -5793,8 +5797,10 @@ body[data-app-page="find-my-tube"] .pre-search-primary {
 
 html[data-theme] body[data-app-page="find-my-tube"] .group-hints {
   width: 100%;
-  padding: 0 0 0 14px;
+  padding: 0 0 10px 14px;
   border: 0;
+  border-bottom: 1px solid var(--tool-accent-line);
+  border-left: 1px solid var(--tool-accent-line);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
