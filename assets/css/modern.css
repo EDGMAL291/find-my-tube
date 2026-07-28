@@ -5353,3 +5353,72 @@ body[data-app-page="stock-dashboard"] .stock-control-intro h2.sr-only {
     margin-bottom: 22px;
   }
 }
+
+/* Calmer display scale across home, tools, and supporting pages. */
+body[data-app-page="home"] .header h1 {
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+}
+
+body[data-app-page="home"] .home-hero-content h2,
+body[data-app-page="home"] .home-hero-slide-overview .home-hero-content h2 {
+  max-width: 16ch;
+  font-size: clamp(2.3rem, 4vw, 3rem);
+  line-height: 1.08;
+}
+
+body[data-app-page="home"] .home-hero-slide:not(.home-hero-slide-overview) .home-hero-content h2 {
+  font-size: clamp(2rem, 3.2vw, 2.7rem);
+}
+
+.collection-guide-head h2 {
+  font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+}
+
+body.find-my-test-page .header .brand-title,
+html[data-theme] body[data-app-page="find-my-tube"] .header .brand-title,
+html[data-theme] body[data-app-page="stock-order"] .header .brand-title,
+body[data-app-page="track-orders"] .header .brand-title,
+body[data-app-page="stock-dashboard"] .header .brand-title {
+  font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .header h1 {
+  font-size: clamp(2rem, 4.3vw, 3.6rem);
+  line-height: 1.04;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-head h2,
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card h2 {
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+}
+
+@media (max-width: 620px) {
+  body[data-app-page="home"] .header h1 {
+    font-size: clamp(1.3rem, 6vw, 1.65rem);
+  }
+
+  body[data-app-page="home"] .home-hero-content h2,
+  body[data-app-page="home"] .home-hero-slide-overview .home-hero-content h2 {
+    font-size: clamp(2rem, 8vw, 2.5rem);
+  }
+
+  body[data-app-page="home"] .home-hero-slide:not(.home-hero-slide-overview) .home-hero-content h2 {
+    font-size: clamp(1.8rem, 7vw, 2.2rem);
+  }
+
+  .collection-guide-head h2 {
+    font-size: clamp(1.35rem, 6vw, 1.65rem);
+  }
+
+  body.find-my-test-page .header .brand-title,
+  html[data-theme] body[data-app-page="find-my-tube"] .header .brand-title,
+  html[data-theme] body[data-app-page="stock-order"] .header .brand-title,
+  body[data-app-page="track-orders"] .header .brand-title,
+  body[data-app-page="stock-dashboard"] .header .brand-title {
+    font-size: 1.1rem;
+  }
+
+  body[data-app-page$="-page"]:not(.find-my-test-page) .header h1 {
+    font-size: clamp(1.9rem, 10vw, 2.7rem);
+  }
+}
