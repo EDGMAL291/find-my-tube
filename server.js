@@ -138,12 +138,20 @@ function sendText(req, res, statusCode, message) {
 }
 
 function getErrorMessage(error) {
-  return error instanceof Error ? error.message : String(error || "Unknown error");
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && typeof error.message === "string") {
+    return error.message;
+  }
+  return String(error || "Unknown error");
 }
 
 function isStockRequestStatusConstraintError(error) {
   const message = getErrorMessage(error).toLowerCase();
-  return message.includes("stock_requests_status_check");
+  return (
+    message.includes("stock_requests_status_check")
+    || (message.includes("stock_requests") && message.includes("status") && message.includes("check constraint"))
+    || (message.includes("violates check constraint") && message.includes("status"))
+  );
 }
 
 function isMissingOptionalStockItemColumnsError(error, tableName) {
