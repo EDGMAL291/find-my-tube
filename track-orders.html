@@ -40,7 +40,8 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260612a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260728d" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -64,11 +65,7 @@
     <header class="header">
       <h1>
         <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>tube</span>
+          Find My Tube
         </button>
       </h1>
       <p id="headerIntroText">Track stock request status by ward, status, and requester.</p>
@@ -115,6 +112,12 @@
     </header>
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
+
+    <nav class="stock-control-nav" aria-label="Stock control">
+      <a href="./order-stock.html">Request stock</a>
+      <a class="is-active" href="./track-orders.html" aria-current="page">Track orders</a>
+      <a href="./stock-dashboard.html">Lab dashboard</a>
+    </nav>
 
     <section class="stock-order-panel" aria-labelledby="trackOrdersTitle">
       <div class="stock-order-head">
@@ -196,7 +199,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420d"></script>
-  <script src="assets/js/script.js?v=20260617a"></script>
+  <script src="assets/js/script.js?v=20260728i"></script>
   <script src="assets/js/track-orders.js?v=20260617a"></script>
 </body>
 </html>

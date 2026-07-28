@@ -40,7 +40,8 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260612a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260728g" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260728d" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -64,18 +65,10 @@
     <header class="header">
       <h1>
         <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>tube</span>
+          Find My Tube
         </button>
         <button type="button" class="brand-title find-my-test-header-title find-my-test-header-btn" id="findMyTestHeaderTitle" aria-label="Clear Suggest Tests">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>test</span>
+          Suggest Tests
         </button>
       </h1>
       <p id="headerIntroText">
@@ -126,6 +119,12 @@
     </header>
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
+
+    <section class="tube-workspace-intro" aria-labelledby="tubeWorkspaceTitle">
+      <p class="tube-workspace-kicker">Specimen collection</p>
+      <h2 id="tubeWorkspaceTitle">Find the right tube, before collection.</h2>
+      <p>Search a test, profile, or clinical service to get the specimen and collection guidance you need.</p>
+    </section>
 
     <section class="search-box" id="tubeLookupPanel">
       <div class="search-input-wrap">
@@ -292,7 +291,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260612a"></script>
+  <script src="assets/js/script.js?v=20260728i"></script>
   <script src="assets/js/find-my-test.js?v=20260603b"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {

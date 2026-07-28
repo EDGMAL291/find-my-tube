@@ -40,7 +40,8 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260612a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260728h" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260728d" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -101,11 +102,7 @@
     <header class="header">
       <h1>
         <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>tube</span>
+          Find My Tube
         </button>
       </h1>
       <p id="headerIntroText">
@@ -157,14 +154,83 @@
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
+    <button
+      type="button"
+      class="collection-guide-fab"
+      id="collectionGuideButton"
+      aria-controls="collectionGuidePanel"
+      aria-expanded="false"
+    >
+      <span class="collection-guide-fab-icon" aria-hidden="true">i</span>
+      <span class="collection-guide-fab-label">Collection guide</span>
+    </button>
+
+    <aside class="collection-guide-panel" id="collectionGuidePanel" aria-labelledby="collectionGuideTitle" hidden>
+      <div class="collection-guide-head">
+        <div>
+          <p>At the collection point</p>
+          <h2 id="collectionGuideTitle">Label and collect with confidence</h2>
+        </div>
+        <button type="button" class="collection-guide-close" id="collectionGuideClose" aria-label="Close collection guide">×</button>
+      </div>
+      <ol class="collection-guide-list">
+        <li><strong>Confirm identity.</strong> Check the patient against your local identification process before collection.</li>
+        <li><strong>Label at the patient.</strong> Apply labels immediately after collection, never in advance.</li>
+        <li><strong>Use the right tube.</strong> Check the test requirement, fill line, and additive before drawing.</li>
+        <li><strong>Handle to protocol.</strong> Mix, transport, and prioritise samples according to your local laboratory SOP.</li>
+      </ol>
+      <p class="collection-guide-note">Reference guidance only. Follow your laboratory’s current collection and safety procedures.</p>
+    </aside>
+
     <section class="home-hub home-dashboard" id="homeHub">
-      <section class="home-dashboard-actions" aria-label="Primary actions">
+      <section class="home-hero-carousel" id="homeHeroCarousel" aria-roledescription="carousel" aria-label="Find My Tube services" data-hero-tone="overview" tabindex="0">
+        <article class="home-hero-slide home-hero-slide-overview is-active" data-hero-slide data-hero-tone="overview" aria-hidden="false">
+          <div class="home-hero-content">
+            <p class="home-hero-eyebrow">Clinical laboratory support</p>
+            <h2>Every specimen decision, clearer.</h2>
+            <p class="home-hero-copy">Find My Tube helps clinical teams choose the right tests and specimen tubes, and request essential laboratory consumables with less uncertainty.</p>
+            <button type="button" class="home-hero-primary" data-hero-next>Explore the lab <span aria-hidden="true">→</span></button>
+          </div>
+        </article>
+        <article class="home-hero-slide home-hero-slide-clipboard" data-hero-slide data-hero-tone="gold" aria-hidden="true">
+          <div class="home-hero-content">
+            <p class="home-hero-eyebrow">Clinical decision support</p>
+            <h2>Suggest Tests</h2>
+            <p class="home-hero-copy">Start with the clinical picture and build a practical test plan in seconds.</p>
+            <a class="home-hero-primary" href="./index.html?tool=find-my-test" data-menu-action="find-my-test">Suggest Tests <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+        <article class="home-hero-slide home-hero-slide-rack" data-hero-slide data-hero-tone="lavender" aria-hidden="true">
+          <div class="home-hero-content">
+            <p class="home-hero-eyebrow">Specimen collection</p>
+            <h2>Find My Tube</h2>
+            <p class="home-hero-copy">Identify the correct specimen tube quickly and accurately, before collection.</p>
+            <a class="home-hero-primary" href="./find-my-tube.html" data-menu-action="tube">Find My Tube <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+        <article class="home-hero-slide home-hero-slide-stock" data-hero-slide data-hero-tone="serum" aria-hidden="true">
+          <div class="home-hero-content">
+            <p class="home-hero-eyebrow">Laboratory operations</p>
+            <h2>Order laboratory stock</h2>
+            <p class="home-hero-copy">Request blood tubes, consumables, and laboratory supplies with a clear, modern workflow.</p>
+            <a class="home-hero-primary" href="./order-stock.html" data-menu-action="stock">Order Stock <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+        <div class="home-hero-controls" aria-label="Choose a hero slide">
+          <button type="button" class="home-hero-dot is-active" data-hero-dot aria-label="Show laboratory overview" aria-current="true"></button>
+          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Suggest Tests" aria-current="false"></button>
+          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Tube" aria-current="false"></button>
+          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Order Stock" aria-current="false"></button>
+        </div>
+      </section>
+
+      <section class="home-dashboard-actions" aria-label="Primary actions" hidden>
         <div class="home-quick-actions-grid">
           <a href="./find-my-tube.html" class="home-action-tile home-action-tile-tube" data-menu-action="tube" aria-label="Open Find a Tube">
             <span class="home-action-label">Find a Tube</span>
             <span class="home-action-copy">Find the right collection tube</span>
           </a>
-          <a href="./find-my-test.html" class="home-action-tile home-action-tile-test" data-menu-action="find-my-test" aria-label="Open Suggest Tests">
+          <a href="./index.html?tool=find-my-test" class="home-action-tile home-action-tile-test" data-menu-action="find-my-test" aria-label="Open Suggest Tests">
             <span class="home-action-label">Suggest Tests</span>
             <span class="home-action-copy">Search by symptoms, signs, or clinical concern</span>
           </a>
@@ -175,7 +241,7 @@
         </div>
       </section>
 
-      <section class="home-dashboard-section home-order-status-card" aria-labelledby="homeStatusTitle">
+      <section class="home-dashboard-section home-order-status-card" aria-labelledby="homeStatusTitle" hidden>
         <div class="home-dashboard-head">
           <div class="home-dashboard-head-row">
             <h2 id="homeStatusTitle">Recent Stock Requests</h2>
@@ -185,11 +251,11 @@
         <div class="home-status-list" id="homeStatusList"></div>
       </section>
 
-      <section class="home-dashboard-section home-reference-card" aria-label="Reference use only">
+      <section class="home-dashboard-section home-reference-card" aria-label="Reference use only" hidden>
         <p>Reference use only. Confirm urgent, paediatric, transfusion, and site-specific requirements with local protocol or senior review.</p>
       </section>
 
-      <section class="home-dashboard-section home-tip-card" aria-labelledby="homeTipTitle">
+      <section class="home-dashboard-section home-tip-card" aria-labelledby="homeTipTitle" hidden>
         <div class="home-tip-head">
           <span class="home-tip-icon" aria-hidden="true">
             <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
@@ -205,7 +271,7 @@
         <p class="home-tip-text" id="homeTipText">Fill citrate tubes to the line to prevent clotting errors.</p>
       </section>
 
-      <section class="home-dashboard-section home-help-card" aria-labelledby="homeHelpTitle">
+      <section class="home-dashboard-section home-help-card" aria-labelledby="homeHelpTitle" hidden>
         <div class="home-dashboard-head">
           <h2 id="homeHelpTitle">Contact the lab</h2>
         </div>
@@ -215,6 +281,19 @@
         </div>
       </section>
 
+    </section>
+
+    <section class="clinical-workspace-intro" aria-labelledby="clinicalWorkspaceTitle">
+      <div>
+        <p class="clinical-workspace-kicker">Clinical decision support</p>
+        <h2 id="clinicalWorkspaceTitle">Build a focused test plan</h2>
+        <p>Capture the clinical picture, then receive practical laboratory test suggestions. Do not enter patient identifiers.</p>
+      </div>
+      <ol class="clinical-workspace-steps" aria-label="Suggest Tests process">
+        <li><span>01</span> Add context</li>
+        <li><span>02</span> Review suggestions</li>
+        <li><span>03</span> Build a tube plan</li>
+      </ol>
     </section>
 
     <section class="clinical-workup-panel" id="clinicalWorkupPanel" aria-labelledby="clinicalWorkupTitle">
@@ -461,8 +540,9 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260612a"></script>
+  <script src="assets/js/script.js?v=20260728i"></script>
   <script src="assets/js/find-my-test.js?v=20260603b"></script>
+  <script src="assets/js/premium-home.js?v=20260728d"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
       const APP_VERSION = "2026-06-03.2";

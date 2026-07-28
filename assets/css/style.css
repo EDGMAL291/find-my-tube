@@ -1296,6 +1296,497 @@ body.find-my-test-page .about-panel {
   gap: 14px;
 }
 
+/* Home: an editorial clinical welcome that keeps the operational tools one tap away. */
+body[data-app-page="home"] .container {
+  max-width: 1180px;
+}
+
+.home-hero {
+  min-height: 430px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  align-items: center;
+  border: 1px solid rgba(36, 76, 96, 0.16);
+  border-radius: 8px;
+  padding: clamp(28px, 5.5vw, 68px);
+  background:
+    linear-gradient(90deg, rgba(247, 251, 253, 0.99) 0%, rgba(247, 251, 253, 0.95) 38%, rgba(247, 251, 253, 0.22) 67%, rgba(247, 251, 253, 0) 100%),
+    url("../images/hero-lab-tubes.jpg") center / cover no-repeat;
+  box-shadow: 0 18px 38px rgba(24, 61, 80, 0.12);
+}
+
+.home-hero-content {
+  width: min(100%, 530px);
+  display: grid;
+  gap: 19px;
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero-eyebrow {
+  color: #17687c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.home-hero h2 {
+  max-width: 11ch;
+  color: #163342;
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(2.25rem, 5vw, 4.35rem);
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.03;
+}
+
+.home-hero-copy {
+  max-width: 49ch;
+  color: #3b5662;
+  font-size: clamp(0.94rem, 1.6vw, 1.05rem);
+  line-height: 1.65;
+}
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.home-hero-actions a {
+  min-height: 45px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 5px;
+  padding: 10px 17px;
+  font-size: 0.87rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.home-hero-primary {
+  background: #156a7e;
+  color: #ffffff;
+  box-shadow: 0 8px 16px rgba(21, 106, 126, 0.2);
+}
+
+.home-hero-primary:hover,
+.home-hero-primary:focus-visible {
+  background: #0d5365;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.home-hero-secondary {
+  border: 1px solid rgba(22, 72, 89, 0.28);
+  background: rgba(255, 255, 255, 0.72);
+  color: #234753;
+}
+
+.home-hero-secondary:hover,
+.home-hero-secondary:focus-visible {
+  background: #ffffff;
+  color: #163342;
+  transform: translateY(-1px);
+}
+
+.home-hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: #45606b;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.home-hero-trust span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-hero-trust span::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #2a9a86;
+}
+
+@media (min-width: 720px) {
+  .home-quick-actions-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .home-action-tile {
+    min-height: 146px;
+  }
+
+  .home-dashboard-section {
+    border-radius: 8px;
+    padding: 18px;
+  }
+}
+
+@media (max-width: 620px) {
+  .home-hero {
+    min-height: 520px;
+    align-items: end;
+    border-radius: 8px;
+    padding: 25px 20px;
+    background:
+      linear-gradient(180deg, rgba(247, 251, 253, 0.14) 0%, rgba(247, 251, 253, 0.82) 43%, rgba(247, 251, 253, 0.99) 67%),
+      url("../images/hero-lab-tubes.jpg") 64% top / auto 100% no-repeat;
+  }
+
+  .home-hero-content {
+    gap: 14px;
+  }
+
+  .home-hero h2 {
+    font-size: clamp(2.2rem, 11vw, 3.2rem);
+  }
+
+  .home-hero-actions a {
+    flex: 1 1 160px;
+  }
+}
+
+body[data-app-page="home"] {
+  background:
+    linear-gradient(180deg, #f7fafc 0%, #f4f8fa 52%, #edf4f6 100%);
+}
+
+.home-hero-carousel {
+  min-height: min(660px, calc(100vh - 88px));
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #061a30;
+  box-shadow: 0 22px 50px rgba(6, 26, 48, 0.22);
+}
+
+.home-hero-slide {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  align-items: center;
+  padding: clamp(30px, 6vw, 78px);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.025);
+  transition: opacity 700ms ease, transform 6.5s ease;
+  background:
+    linear-gradient(90deg, rgba(2, 15, 34, 0.94) 0%, rgba(2, 15, 34, 0.77) 38%, rgba(2, 15, 34, 0.26) 68%, rgba(2, 15, 34, 0.12) 100%),
+    var(--hero-image) center / cover no-repeat;
+}
+
+.home-hero-slide:nth-of-type(1) { --hero-image: url("../images/hero-lab-tubes.jpg"); }
+.home-hero-slide:nth-of-type(2) { --hero-image: url("../images/hero-lab-analyser.jpg"); }
+.home-hero-slide:nth-of-type(3) { --hero-image: url("../images/hero-lab-collection.jpg"); }
+.home-hero-slide:nth-of-type(4) { --hero-image: url("../images/hero-lab-logistics.jpg"); }
+
+.home-hero-slide.is-active {
+  z-index: 1;
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.home-hero-slide .home-hero-content {
+  width: min(100%, 590px);
+  display: grid;
+  gap: 20px;
+}
+
+.home-hero-slide .home-hero-eyebrow { color: #9ed6e7; }
+
+.home-hero-slide .home-hero-content h2 {
+  max-width: 10ch;
+  color: #ffffff;
+  font-size: clamp(2.5rem, 5.4vw, 5rem);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.28);
+}
+
+.home-hero-slide .home-hero-copy {
+  max-width: 48ch;
+  color: rgba(235, 247, 252, 0.9);
+  font-size: clamp(1rem, 1.8vw, 1.12rem);
+}
+
+.home-hero-slide .home-hero-primary {
+  justify-self: start;
+  min-height: 48px;
+  border-radius: 6px;
+  padding: 12px 19px;
+  background: #1a94b6;
+  color: #ffffff;
+}
+
+.home-hero-slide .home-hero-primary:hover,
+.home-hero-slide .home-hero-primary:focus-visible {
+  background: #39aac9;
+  color: #ffffff;
+}
+
+.home-hero-controls {
+  position: absolute;
+  z-index: 3;
+  left: clamp(30px, 6vw, 78px);
+  bottom: clamp(24px, 4vw, 48px);
+  display: flex;
+  gap: 9px;
+}
+
+.home-hero-dot {
+  width: 28px;
+  height: 4px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
+  transition: width 0.24s ease, background-color 0.24s ease;
+}
+
+.home-hero-dot.is-active {
+  width: 48px;
+  background: #ffffff;
+}
+
+/* The task pages open directly into their existing tools, with a compact laboratory banner. */
+body[data-app-page="find-my-tube"] .header,
+body[data-app-page="stock-order"] .header,
+body[data-app-page="find-my-test-page"] .header,
+body[data-app-page="track-orders"] .header {
+  min-height: 190px;
+  align-content: center;
+  padding: 28px clamp(22px, 5vw, 54px);
+  overflow: hidden;
+  border: 1px solid rgba(150, 206, 224, 0.24);
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(2, 15, 34, 0.94) 0%, rgba(2, 15, 34, 0.78) 47%, rgba(2, 15, 34, 0.26) 100%),
+    url("../images/hero-lab-analyser.jpg") center / cover no-repeat;
+  box-shadow: 0 18px 38px rgba(6, 26, 48, 0.16);
+}
+
+body[data-app-page="stock-order"] .header { background-image: linear-gradient(90deg, rgba(2, 15, 34, 0.94) 0%, rgba(2, 15, 34, 0.78) 47%, rgba(2, 15, 34, 0.26) 100%), url("../images/hero-lab-collection.jpg"); }
+body[data-app-page="find-my-test-page"] .header { background-image: linear-gradient(90deg, rgba(2, 15, 34, 0.94) 0%, rgba(2, 15, 34, 0.78) 47%, rgba(2, 15, 34, 0.26) 100%), url("../images/hero-lab-tubes.jpg"); }
+body[data-app-page="track-orders"] .header { background-image: linear-gradient(90deg, rgba(2, 15, 34, 0.94) 0%, rgba(2, 15, 34, 0.78) 47%, rgba(2, 15, 34, 0.26) 100%), url("../images/hero-lab-logistics.jpg"); }
+
+body[data-app-page="find-my-tube"] .header h1,
+body[data-app-page="stock-order"] .header h1,
+body[data-app-page="find-my-test-page"] .header h1,
+body[data-app-page="track-orders"] .header h1,
+body[data-app-page="find-my-tube"] .header > p,
+body[data-app-page="stock-order"] .header > p,
+body[data-app-page="find-my-test-page"] .header > p,
+body[data-app-page="track-orders"] .header > p {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+}
+
+body[data-app-page="find-my-tube"] .header > p,
+body[data-app-page="stock-order"] .header > p,
+body[data-app-page="track-orders"] .header > p { color: rgba(235, 247, 252, 0.88); }
+
+body[data-app-page="find-my-tube"] .header .brand-i-tube,
+body[data-app-page="stock-order"] .header .brand-i-tube,
+body[data-app-page="track-orders"] .header .brand-i-tube { --cap: #ffffff; --glass: rgba(255, 255, 255, 0.14); --fill: #ffffff; border-color: rgba(255, 255, 255, 0.76); }
+
+body[data-app-page="find-my-tube"] .header .brand-i-tube::before,
+body[data-app-page="stock-order"] .header .brand-i-tube::before,
+body[data-app-page="track-orders"] .header .brand-i-tube::before { border-color: rgba(255, 255, 255, 0.76); }
+
+body[data-app-page="find-my-tube"] .search-box,
+body[data-app-page="stock-order"] .stock-order-panel,
+body[data-app-page="find-my-test-page"] .stock-order-request-card,
+body[data-app-page="track-orders"] .stock-order-panel {
+  border-radius: 10px;
+  box-shadow: 0 14px 30px rgba(23, 67, 84, 0.08);
+}
+
+body[data-app-page="stock-order"] .stock-order-request-card,
+body[data-app-page="track-orders"] .stock-order-request-card {
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(23, 67, 84, 0.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-slide,
+  .home-hero-dot {
+    transition: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .home-hero-carousel {
+    min-height: 560px;
+    border-radius: 8px;
+  }
+
+  .home-hero-slide {
+    align-items: end;
+    padding: 28px 22px 78px;
+    background:
+      linear-gradient(180deg, rgba(2, 15, 34, 0.2) 0%, rgba(2, 15, 34, 0.78) 47%, rgba(2, 15, 34, 0.96) 100%),
+      var(--hero-image) 67% center / cover no-repeat;
+  }
+
+  .home-hero-slide .home-hero-content { gap: 14px; }
+  .home-hero-slide .home-hero-content h2 { font-size: clamp(2.5rem, 12vw, 3.6rem); }
+  .home-hero-controls { left: 22px; bottom: 30px; }
+}
+
+body[data-app-page="home"] .header {
+  margin-bottom: 20px;
+}
+
+body[data-app-page="home"] .header > p {
+  color: #5d727b;
+}
+
+/* Single real laboratory scene: each carousel view pans and zooms to a work area. */
+body[data-app-page="home"] .header > p {
+  display: none;
+}
+
+body[data-app-page="home"] .header {
+  margin-bottom: 12px;
+}
+
+.home-hero-carousel .home-hero-slide {
+  --hero-image: url("../images/find-my-tube-lab-overview.jpg");
+  background-size: auto, 158% auto;
+  background-position: 0 0, center center;
+}
+
+.home-hero-carousel .home-hero-slide-clipboard {
+  background-position: 0 0, 0% 50%;
+}
+
+.home-hero-carousel .home-hero-slide-rack {
+  background-size: auto, 145% auto;
+  background-position: 0 0, 50% 50%;
+}
+
+.home-hero-carousel .home-hero-slide-stock {
+  background-position: 0 0, 100% 50%;
+}
+
+.home-hero-carousel .home-hero-content {
+  width: min(100%, 480px);
+  padding: 24px;
+  border: 1px solid rgba(196, 230, 240, 0.24);
+  border-radius: 8px;
+  background: rgba(2, 18, 35, 0.56);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.home-hero-slide-clipboard .home-hero-content {
+  justify-self: end;
+}
+
+.home-hero-slide-rack .home-hero-content,
+.home-hero-slide-stock .home-hero-content {
+  justify-self: start;
+}
+
+@media (max-width: 620px) {
+  .home-hero-carousel .home-hero-slide {
+    background-size: auto, 250% auto;
+  }
+
+  .home-hero-carousel .home-hero-slide-rack {
+    background-size: auto, 225% auto;
+  }
+
+  .home-hero-carousel .home-hero-content {
+    width: 100%;
+    padding: 19px;
+    background: rgba(2, 18, 35, 0.68);
+  }
+
+  .home-hero-slide-clipboard .home-hero-content,
+  .home-hero-slide-rack .home-hero-content,
+  .home-hero-slide-stock .home-hero-content {
+    justify-self: stretch;
+  }
+}
+
+.home-dashboard {
+  gap: 20px;
+}
+
+.home-dashboard-section {
+  border-color: #dce8ec;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(30, 73, 91, 0.06);
+}
+
+.home-action-tile,
+.home-action-tile-tube,
+.home-action-tile-test,
+.home-action-tile-order {
+  --quick-action-accent: #1c7385;
+  --quick-action-soft-bg: #eef7f8;
+  --quick-action-border: #d4e4e8;
+  --quick-action-glow: rgba(28, 115, 133, 0.08);
+  --quick-action-text: #183b47;
+  --quick-action-muted: #60747d;
+  min-height: 128px;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.home-action-tile::before {
+  background-image: none;
+}
+
+.home-action-tile::after {
+  display: none;
+}
+
+.home-action-tile:hover,
+.home-action-tile:focus-visible {
+  border-color: #8ab9c4;
+  background: #f7fcfc;
+  box-shadow: 0 12px 22px rgba(30, 93, 108, 0.1);
+}
+
+.home-action-label {
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+}
+
+.home-order-status-card,
+.home-tip-card,
+.home-reference-card,
+.home-help-card {
+  border-color: #dce8ec;
+  background: #ffffff;
+}
+
+.home-order-status-card::before,
+.home-tip-card::before {
+  opacity: 0.08;
+}
+
 .home-dashboard-actions {
   display: grid;
   gap: 12px;
@@ -10641,5 +11132,432 @@ body.has-mobile-bottom-nav .selection-cart-bar {
 
   .home-status-item-line {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Full-viewport home scene with the Find My Tube mark over the photography. */
+body[data-app-page="home"] {
+  min-height: 100svh;
+  padding: 0;
+  background: #07182b;
+}
+
+body[data-app-page="home"] .container {
+  width: 100%;
+  max-width: none;
+  min-height: 100svh;
+  padding: 0;
+}
+
+body[data-app-page="home"] .header {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  right: 0;
+  min-height: 82px;
+  margin: 0;
+  padding: 20px clamp(22px, 5vw, 70px);
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "title settings";
+}
+
+body[data-app-page="home"] .header h1 {
+  grid-column: auto;
+  justify-self: start;
+  color: #ffffff;
+  font-size: clamp(1.55rem, 2.7vw, 2.2rem);
+  text-align: left;
+}
+
+body[data-app-page="home"] .brand-home-btn,
+body[data-app-page="home"] .brand-title,
+body[data-app-page="home"] .header h1 *,
+body[data-app-page="home"] a,
+body[data-app-page="home"] h1,
+body[data-app-page="home"] h2,
+body[data-app-page="home"] h3 {
+  text-decoration: none !important;
+  border-bottom: 0;
+}
+
+body[data-app-page="home"] .brand-i-tube {
+  --cap: #ffffff;
+  --glass: rgba(255, 255, 255, 0.14);
+  --fill: #ffffff;
+  border-color: rgba(255, 255, 255, 0.78);
+}
+
+body[data-app-page="home"] .brand-i-tube::before { border-color: rgba(255, 255, 255, 0.78); }
+
+body[data-app-page="home"] .header-settings { align-self: center; }
+
+body[data-app-page="home"] .header-settings-btn {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(4, 20, 37, 0.42);
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body[data-app-page="home"] .home-hub,
+body[data-app-page="home"] .home-hero-carousel {
+  min-height: 100svh;
+  margin: 0;
+}
+
+body[data-app-page="home"] .home-hub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100svh;
+  gap: 0;
+}
+
+body[data-app-page="home"] .home-hero-carousel {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 100svh;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-app-page="home"] footer,
+body[data-app-page="home"] .site-footer {
+  display: none;
+}
+
+body[data-app-page="home"] .home-hero-slide {
+  padding: clamp(100px, 13vw, 160px) clamp(24px, 8vw, 110px) clamp(54px, 8vw, 92px);
+}
+
+body[data-app-page="home"] .home-hero-controls {
+  left: clamp(24px, 8vw, 110px);
+}
+
+@media (max-width: 620px) {
+  body[data-app-page="home"] .header {
+    min-height: 70px;
+    padding: 17px 20px;
+  }
+
+  body[data-app-page="home"] .header h1 { font-size: 1.45rem; }
+  body[data-app-page="home"] .home-hero-slide { padding: 104px 20px 76px; }
+  body[data-app-page="home"] .home-hero-controls { left: 20px; }
+}
+
+/* Overview first, then move through the same physical laboratory scene. */
+body[data-app-page="home"] .header-settings {
+  display: none;
+}
+
+.home-hero-carousel .home-hero-slide {
+  --hero-image: url("../images/find-my-tube-lab-overview.jpg");
+  background-size: auto, 156% auto;
+  background-position: 0 0, 50% 54%;
+  transform: scale(0.965);
+}
+
+.home-hero-carousel .home-hero-slide.is-active {
+  transform: scale(1);
+}
+
+.home-hero-carousel .home-hero-slide-overview {
+  background-size: auto, cover;
+  background-position: 0 0, center center;
+}
+
+body[data-app-page="home"] .home-hero-content {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body[data-app-page="home"] .home-hero-content h2,
+body[data-app-page="home"] .home-hero-content p {
+  text-shadow: 0 2px 18px rgba(1, 13, 24, 0.62);
+}
+
+.home-hero-carousel .home-hero-slide-clipboard {
+  background-size: auto, 176% auto;
+  background-position: 0 0, 0% 72%;
+}
+
+.home-hero-carousel .home-hero-slide-rack {
+  background-size: auto, 154% auto;
+  background-position: 0 0, 50% 62%;
+}
+
+.home-hero-carousel .home-hero-slide-stock {
+  background-size: auto, 172% auto;
+  background-position: 0 0, 100% 50%;
+}
+
+.home-hero-slide-overview .home-hero-content {
+  align-self: start;
+  justify-self: start;
+  margin-top: clamp(40px, 7vh, 88px);
+}
+
+.home-hero-slide-overview .home-hero-content h2 {
+  max-width: 13ch;
+}
+
+.home-hero-slide-overview .home-hero-primary {
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 620px) {
+  .home-hero-carousel .home-hero-slide-overview {
+    background-size: auto, cover;
+    background-position: 0 0, 51% center;
+  }
+
+  .home-hero-carousel .home-hero-slide-clipboard {
+    background-size: auto, 290% auto;
+    background-position: 0 0, 0% 70%;
+  }
+
+  .home-hero-carousel .home-hero-slide-rack {
+    background-size: auto, 252% auto;
+    background-position: 0 0, 51% 62%;
+  }
+
+  .home-hero-carousel .home-hero-slide-stock {
+    background-size: auto, 280% auto;
+    background-position: 0 0, 100% 50%;
+  }
+}
+
+/* Focus workspaces opened from the laboratory scene. */
+.clinical-workspace-intro,
+.tube-workspace-intro {
+  display: none;
+}
+
+body.find-my-test-page {
+  background: #f5f3ee;
+}
+
+body.find-my-test-page .container {
+  width: min(100%, 1120px);
+}
+
+body.find-my-test-page .header {
+  margin: 0 0 24px;
+  padding: 18px 0 0;
+}
+
+body.find-my-test-page .header h1 {
+  font-size: 1.65rem;
+}
+
+body.find-my-test-page .header > p {
+  display: none;
+}
+
+body.find-my-test-page .clinical-workspace-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  margin: 0 auto 18px;
+  padding: 30px 32px;
+  border: 1px solid #d9e1df;
+  border-radius: 10px;
+  background:
+    linear-gradient(110deg, rgba(12, 42, 56, 0.98), rgba(20, 67, 79, 0.94)),
+    url("../images/find-my-tube-lab-overview.jpg") right 45% / cover no-repeat;
+  box-shadow: 0 16px 34px rgba(23, 49, 60, 0.12);
+}
+
+.clinical-workspace-intro > div { max-width: 570px; }
+
+.clinical-workspace-kicker,
+.tube-workspace-kicker {
+  margin: 0 0 8px;
+  color: #9ed8d4;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.clinical-workspace-intro h2,
+.tube-workspace-intro h2 {
+  margin: 0;
+  color: #ffffff;
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(1.65rem, 3.4vw, 2.5rem);
+  line-height: 1.08;
+}
+
+.clinical-workspace-intro > div > p:last-child,
+.tube-workspace-intro > p:last-child {
+  margin: 12px 0 0;
+  color: rgba(235, 246, 247, 0.84);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.clinical-workspace-steps {
+  display: grid;
+  gap: 8px;
+  min-width: 214px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: rgba(235, 246, 247, 0.88);
+  font-size: 0.77rem;
+  font-weight: 650;
+}
+
+.clinical-workspace-steps li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.clinical-workspace-steps span {
+  width: 25px;
+  color: #9ed8d4;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+
+body.find-my-test-page .clinical-workup-panel {
+  max-width: none;
+  margin: 0 auto 32px;
+}
+
+body.find-my-test-page .clinical-workup-shell,
+body.find-my-test-page .clinical-workup-form {
+  max-width: none;
+}
+
+body.find-my-test-page .clinical-workup-form {
+  padding: clamp(20px, 3vw, 34px);
+  border: 1px solid #d9e1df;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 14px 30px rgba(23, 49, 60, 0.08);
+}
+
+body.find-my-test-page .clinical-workup-group {
+  border-color: #d9e1df;
+  border-radius: 8px;
+  background: #f8faf9;
+}
+
+body.find-my-test-page .clinical-workup-group legend {
+  color: #315f65;
+}
+
+body.find-my-test-page .clinical-workup-field input,
+body.find-my-test-page .clinical-workup-field select,
+body.find-my-test-page .clinical-workup-field textarea {
+  border-color: #ccd9d8;
+  background: #ffffff;
+}
+
+body.find-my-test-page .clinical-workup-field input:focus,
+body.find-my-test-page .clinical-workup-field select:focus,
+body.find-my-test-page .clinical-workup-field textarea:focus {
+  border-color: #317c86;
+  box-shadow: 0 0 0 3px rgba(49, 124, 134, 0.14);
+}
+
+body.find-my-tube-page {
+  background: #f5f3ee;
+}
+
+body.find-my-tube-page .container {
+  width: min(100%, 1120px);
+}
+
+body.find-my-tube-page .tube-workspace-intro {
+  display: block;
+  margin: 0 auto;
+  padding: 32px clamp(24px, 4vw, 48px) 72px;
+  border-radius: 10px 10px 0 0;
+  background:
+    linear-gradient(100deg, rgba(4, 28, 45, 0.95), rgba(10, 52, 63, 0.76)),
+    url("../images/find-my-tube-lab-overview.jpg") center 54% / cover no-repeat;
+}
+
+body.find-my-tube-page .tube-workspace-intro h2 {
+  max-width: 17ch;
+}
+
+body.find-my-tube-page .search-box {
+  position: relative;
+  z-index: 2;
+  width: min(calc(100% - 48px), 940px);
+  margin: -40px auto 20px;
+  padding: 10px;
+  border: 1px solid #d3dedd;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 16px 32px rgba(23, 49, 60, 0.14);
+}
+
+body.find-my-tube-page .search-input-wrap {
+  min-height: 58px;
+}
+
+body.find-my-tube-page #searchInput {
+  font-size: 1rem;
+}
+
+body.find-my-tube-page #searchInput:focus {
+  box-shadow: 0 0 0 3px rgba(49, 124, 134, 0.14);
+}
+
+body.find-my-tube-page .pre-search {
+  width: min(calc(100% - 48px), 940px);
+  margin: 0 auto 30px;
+}
+
+body.find-my-tube-page .group-hints,
+body.find-my-tube-page .quick-tools-panel {
+  border-color: #d9e1df;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(23, 49, 60, 0.06);
+}
+
+@media (max-width: 720px) {
+  body.find-my-test-page .clinical-workspace-intro {
+    display: grid;
+    padding: 25px 22px;
+  }
+
+  .clinical-workspace-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  .clinical-workspace-steps li {
+    align-items: start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  body.find-my-tube-page .tube-workspace-intro {
+    padding: 26px 22px 64px;
+  }
+
+  body.find-my-tube-page .search-box,
+  body.find-my-tube-page .pre-search {
+    width: calc(100% - 32px);
   }
 }

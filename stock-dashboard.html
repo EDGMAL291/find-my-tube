@@ -37,18 +37,15 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260617a" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260728d" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
     <header class="header">
       <h1>
         <button type="button" class="brand-title brand-home-btn" id="brandHomeBtn" aria-label="Go to home">
-          <span>F</span><span class="brand-i-tube" aria-hidden="true"></span><span>nd</span>
-          <span class="brand-gap"></span>
-          <span>my</span>
-          <span class="brand-gap"></span>
-          <span>tube</span>
+          Find My Tube
         </button>
       </h1>
       <p id="headerIntroText">Local request dashboard, status tracking, and quick stats.</p>
@@ -98,8 +95,18 @@
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
+    <nav class="stock-control-nav" aria-label="Stock control">
+      <a href="./order-stock.html">Request stock</a>
+      <a href="./track-orders.html">Track orders</a>
+      <a class="is-active" href="./stock-dashboard.html" aria-current="page">Lab dashboard</a>
+    </nav>
+
     <main class="stock-dashboard-panel" aria-labelledby="stockDashboardMainTitle">
-      <h2 id="stockDashboardMainTitle" class="sr-only">Stock Dashboard</h2>
+      <section class="stock-control-intro" aria-labelledby="stockDashboardMainTitle">
+        <p class="stock-order-kicker">Laboratory operations</p>
+        <h2 id="stockDashboardMainTitle">Stock control</h2>
+        <p>Manage the request queue, received stock, and current laboratory inventory in one place.</p>
+      </section>
       <section class="profile-modal stock-dashboard-login-modal" id="stockDashboardAccessCard" hidden aria-labelledby="labAccessTitle">
         <div class="profile-modal-card stock-dashboard-login-modal-card stock-order-request-card" role="dialog" aria-modal="true" aria-labelledby="labAccessTitle" aria-describedby="stockDashboardAuthStatus">
           <div class="profile-modal-head stock-dashboard-login-modal-head">
@@ -399,7 +406,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
-  <script src="assets/js/script.js?v=20260617a"></script>
+  <script src="assets/js/script.js?v=20260728i"></script>
   <script src="assets/js/stock-dashboard.js?v=20260617a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {

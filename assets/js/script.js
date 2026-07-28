@@ -6177,7 +6177,7 @@ function updateDrawPlannerToggleState() {
 }
 
 function shouldShowMobileBottomNav() {
-  return MOBILE_BOTTOM_NAV_PAGES.has(currentAppPage);
+  return false;
 }
 
 function isMobileBottomNavViewport() {

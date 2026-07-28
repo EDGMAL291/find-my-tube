@@ -1,0 +1,734 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
+
+:root {
+  --fmt-ink: #19313b;
+  --fmt-teal: #2f6f70;
+  --fmt-teal-deep: #1d5156;
+  --fmt-plum: #70566d;
+  --fmt-ochre: #a87a3f;
+  --fmt-canvas: #f6f4ef;
+  --fmt-paper: #ffffff;
+  --fmt-mist: #eef2f0;
+  --fmt-line: #dbe2de;
+  --fmt-muted: #63757a;
+  --fmt-shadow: 0 14px 34px rgba(31, 55, 57, 0.09);
+  --fmt-radius: 10px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100svh;
+  padding: 0;
+  color: var(--fmt-ink);
+  background: var(--fmt-canvas);
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+body[data-app-page="home"] .home-hero-content h2,
+body.find-my-test-page .clinical-workspace-intro h2,
+body.find-my-tube-page .tube-workspace-intro h2,
+.home-action-label {
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+body:not([data-app-page="home"]) .container {
+  width: min(100% - 40px, 1160px);
+  margin: 0 auto;
+}
+
+body:not([data-app-page="home"]) .header {
+  min-height: auto;
+  margin: 0 -20px 28px;
+  padding: 20px max(20px, calc((100vw - 1120px) / 2));
+  border: 0;
+  border-bottom: 1px solid var(--fmt-line);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: none;
+}
+
+body:not([data-app-page="home"]) .header h1,
+body:not([data-app-page="home"]) .header > p {
+  color: var(--fmt-ink);
+}
+
+.header h1,
+.home-hero-content h2,
+.clinical-workspace-intro h2,
+.tube-workspace-intro h2,
+.stock-order-head h2,
+.about-panel h2 {
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.brand-title {
+  font-family: "DM Sans", Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.045em;
+}
+
+.header > p { color: var(--fmt-muted); }
+
+.header-settings-btn {
+  border-color: var(--fmt-line);
+  border-radius: 8px;
+  background: var(--fmt-paper);
+  color: var(--fmt-ink);
+  box-shadow: none;
+}
+
+.header-menu-icon .icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.site-menu-panel,
+.theme-switcher-panel {
+  border-color: var(--fmt-line);
+  border-radius: var(--fmt-radius);
+  background: var(--fmt-paper);
+  box-shadow: var(--fmt-shadow);
+}
+
+.site-menu-link { border-radius: 7px; }
+.site-menu-link:hover,
+.site-menu-link:focus-visible { background: var(--fmt-mist); color: var(--fmt-teal-deep); }
+
+.site-menu-list .site-menu-link[data-menu-action="stock"] {
+  position: relative;
+  margin-top: 22px;
+}
+
+.site-menu-list .site-menu-link[data-menu-action="stock"]::before {
+  content: "Stock control";
+  position: absolute;
+  top: -18px;
+  left: 0;
+  color: var(--fmt-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+a { color: var(--fmt-teal-deep); }
+a:hover { color: var(--fmt-plum); }
+
+button,
+input,
+select,
+textarea { font: inherit; }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(47, 111, 112, 0.25);
+  outline-offset: 2px;
+}
+
+.card,
+.stock-order-panel,
+.stock-order-request-card,
+.about-panel,
+.lookup-shell,
+.group-hints,
+.quick-tools-panel,
+.clinical-workup-form,
+.stock-dashboard-panel,
+.stock-dashboard-card,
+.track-orders-table {
+  border: 1px solid var(--fmt-line);
+  border-radius: var(--fmt-radius);
+  background: var(--fmt-paper);
+  box-shadow: var(--fmt-shadow);
+}
+
+.card,
+.stock-order-request-card,
+.group-hints,
+.quick-tools-panel { padding: 20px; }
+
+.stock-order-panel,
+.lookup-shell { padding: clamp(20px, 4vw, 38px); }
+
+.stock-order-panel::before,
+.stock-order-panel::after,
+.search-box::before,
+.home-action-tile::before,
+.home-action-tile::after { display: none; }
+
+.search-box {
+  border: 1px solid var(--fmt-line);
+  border-radius: var(--fmt-radius);
+  background: var(--fmt-paper);
+  box-shadow: var(--fmt-shadow);
+}
+
+.search-box input,
+.clinical-workup-field input,
+.clinical-workup-field textarea,
+.clinical-workup-field select,
+.stock-order-field input,
+.stock-order-field textarea,
+.stock-order-field select,
+.track-orders-filter-input {
+  border-color: var(--fmt-line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--fmt-ink);
+}
+
+.search-box input:focus,
+.clinical-workup-field input:focus,
+.clinical-workup-field textarea:focus,
+.clinical-workup-field select:focus,
+.stock-order-field input:focus,
+.stock-order-field textarea:focus,
+.stock-order-field select:focus,
+.track-orders-filter-input:focus {
+  border-color: var(--fmt-teal);
+  box-shadow: 0 0 0 3px rgba(47, 111, 112, 0.12);
+}
+
+.quick-tool-launch-btn,
+.stock-order-submit-btn,
+.home-hero-primary,
+.clinical-workup-submit-btn,
+.stock-dashboard-primary-btn {
+  border: 0;
+  border-radius: 7px;
+  background: var(--fmt-teal-deep);
+  color: #fff;
+  box-shadow: none;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.quick-tool-launch-btn:hover,
+.stock-order-submit-btn:hover,
+.home-hero-primary:hover,
+.clinical-workup-submit-btn:hover,
+.stock-dashboard-primary-btn:hover {
+  background: var(--fmt-teal);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.quick-tool-clear-btn,
+.stock-order-reset-btn,
+.clinical-workup-clear-btn,
+.stock-dashboard-secondary-btn {
+  border-color: var(--fmt-line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--fmt-ink);
+}
+
+.group-chip {
+  border-color: var(--fmt-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--fmt-ink);
+}
+
+.group-chip.active,
+.group-chip:hover,
+.group-chip:focus-visible {
+  border-color: rgba(47, 111, 112, 0.45);
+  background: #eaf3f1;
+  color: var(--fmt-teal-deep);
+}
+
+.stock-order-item,
+.stock-order-track-row,
+.stock-request-compact-card,
+.track-orders-row,
+.stock-dashboard-queue-row {
+  border-color: var(--fmt-line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.stock-order-item:hover,
+.stock-order-track-row:hover,
+.stock-request-compact-card:hover,
+.track-orders-row:hover {
+  border-color: rgba(47, 111, 112, 0.42);
+  box-shadow: 0 10px 22px rgba(31, 66, 68, 0.08);
+}
+
+.stock-order-kicker,
+.stock-order-field-label,
+.stock-dashboard-eyebrow,
+.clinical-workspace-kicker,
+.tube-workspace-kicker {
+  color: var(--fmt-teal-deep);
+  font-weight: 700;
+}
+
+.stock-order-head h2,
+.stock-dashboard-panel h2,
+.track-orders-table h2 { color: var(--fmt-ink); }
+
+.stock-status-badge,
+.stock-order-track-status-badge,
+.home-status-chip { border-radius: 999px; }
+
+.site-footer {
+  margin-top: 42px;
+  border-top: 1px solid var(--fmt-line);
+  background: #eef1ee;
+  box-shadow: none;
+}
+
+.footer-card { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+
+/* Home stays visual, but uses the same palette and typography as every workspace. */
+body[data-app-page="home"] .home-hero-slide {
+  background-color: #1a2c32;
+}
+
+body[data-app-page="home"] .home-hero-carousel {
+  --hero-accent: #a4c8cf;
+  touch-action: pan-y;
+}
+
+body[data-app-page="home"] .home-hero-carousel[data-hero-tone="gold"] { --hero-accent: #d2b36b; }
+body[data-app-page="home"] .home-hero-carousel[data-hero-tone="lavender"] { --hero-accent: #b59ec0; }
+body[data-app-page="home"] .home-hero-carousel[data-hero-tone="serum"] { --hero-accent: #d9c16f; }
+
+body[data-app-page="home"] .home-hero-content {
+  border-left: 2px solid var(--hero-accent);
+  padding-left: 16px;
+}
+
+body[data-app-page="home"] .home-hero-eyebrow { color: #d6e9df; }
+body[data-app-page="home"] .home-hero-content h2 { color: #fffdf8; }
+body[data-app-page="home"] .home-hero-copy { color: rgba(255, 253, 248, 0.9); }
+body[data-app-page="home"] .home-hero-primary {
+  border: 1px solid var(--hero-accent);
+  background: transparent;
+  color: #fffdf8;
+  box-shadow: none;
+}
+
+body[data-app-page="home"] .home-hero-primary:hover,
+body[data-app-page="home"] .home-hero-primary:focus-visible {
+  border-color: var(--hero-accent);
+  background: rgba(15, 59, 73, 0.18);
+  color: #fffdf8;
+}
+body[data-app-page="home"] .home-hero-dot.is-active { background: var(--hero-accent); }
+
+/* Deliberately light, editorial brand treatment for the image-led home screen. */
+body[data-app-page="home"] .header {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: "title";
+  justify-items: center;
+}
+
+body[data-app-page="home"] .header h1 {
+  justify-self: center;
+  color: #fffdf8;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(1.65rem, 3.1vw, 2.35rem);
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(3, 17, 24, 0.32);
+}
+
+body[data-app-page="home"] .brand-title {
+  font-weight: 500;
+  letter-spacing: 0.055em;
+}
+
+body[data-app-page="home"] .brand-gap { width: 0.32ch; }
+
+.collection-guide-fab {
+  position: fixed;
+  z-index: 20;
+  right: clamp(18px, 3vw, 40px);
+  bottom: clamp(20px, 4vw, 44px);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  border: 1px solid rgba(255, 253, 248, 0.46);
+  border-radius: 999px;
+  padding: 8px 15px 8px 9px;
+  background: rgba(14, 37, 43, 0.76);
+  color: #fffdf8;
+  box-shadow: 0 12px 26px rgba(1, 13, 20, 0.22);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.collection-guide-fab:hover,
+.collection-guide-fab:focus-visible { background: rgba(28, 81, 82, 0.92); }
+
+.collection-guide-fab-icon {
+  display: inline-grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e7e1d5;
+  color: #26454a;
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.collection-guide-fab-label { font-size: 0.78rem; font-weight: 700; }
+
+.collection-guide-panel {
+  position: fixed;
+  z-index: 30;
+  right: clamp(18px, 3vw, 40px);
+  bottom: clamp(76px, 9vw, 108px);
+  width: min(390px, calc(100vw - 36px));
+  padding: 22px;
+  border: 1px solid rgba(219, 226, 222, 0.92);
+  border-radius: 10px;
+  background: #fffdf8;
+  color: var(--fmt-ink);
+  box-shadow: 0 22px 48px rgba(2, 20, 29, 0.24);
+}
+
+.collection-guide-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.collection-guide-head p {
+  margin: 0 0 5px;
+  color: var(--fmt-teal-deep);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.collection-guide-head h2 {
+  margin: 0;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.08;
+}
+
+.collection-guide-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--fmt-line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--fmt-ink);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.collection-guide-list {
+  display: grid;
+  gap: 11px;
+  margin: 20px 0 14px;
+  padding: 0;
+  list-style: none;
+  color: var(--fmt-muted);
+  font-size: 0.84rem;
+  line-height: 1.48;
+}
+
+.collection-guide-list li { padding-left: 19px; position: relative; }
+.collection-guide-list li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 7px; height: 7px; border-radius: 50%; background: var(--fmt-teal); }
+.collection-guide-list strong { color: var(--fmt-ink); }
+.collection-guide-note { margin: 0; padding-top: 13px; border-top: 1px solid var(--fmt-line); color: var(--fmt-muted); font-size: 0.72rem; line-height: 1.45; }
+
+@media (max-width: 620px) {
+  .collection-guide-fab { padding-right: 10px; }
+  .collection-guide-fab-label { display: none; }
+}
+
+/* Suggest Tests and Tube Finder are quiet, form-first workspaces. */
+body.find-my-test-page .clinical-workspace-intro,
+body.find-my-tube-page .tube-workspace-intro {
+  border: 0;
+  border-radius: var(--fmt-radius);
+  box-shadow: var(--fmt-shadow);
+}
+
+body.find-my-test-page .clinical-workup-form {
+  border-color: var(--fmt-line);
+  border-radius: var(--fmt-radius);
+  box-shadow: var(--fmt-shadow);
+}
+
+body.find-my-test-page .clinical-workup-group {
+  border-color: var(--fmt-line);
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+body.find-my-tube-page .search-box { border-radius: var(--fmt-radius); }
+
+/* Win over legacy page-specific surface rules. */
+body[data-app-page="stock-order"] .stock-order-panel,
+body[data-app-page="track-orders"] .stock-order-panel,
+body[data-app-page="stock-dashboard"] .stock-dashboard-panel,
+body[data-app-page="stock-dashboard"] .stock-dashboard-card,
+body.find-my-test-page .clinical-workup-form,
+body.find-my-tube-page .search-box,
+body.find-my-tube-page .group-hints,
+body.find-my-tube-page .quick-tools-panel {
+  border: 1px solid var(--fmt-line);
+  border-radius: var(--fmt-radius);
+  background: var(--fmt-paper);
+  box-shadow: var(--fmt-shadow);
+}
+
+body[data-app-page="stock-order"] .stock-order-request-card,
+body[data-app-page="track-orders"] .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-dashboard-stat,
+body[data-app-page="stock-dashboard"] .stock-dashboard-queue {
+  border-color: var(--fmt-line);
+  border-radius: 8px;
+  background: var(--fmt-paper);
+  box-shadow: 0 8px 20px rgba(31, 55, 57, 0.05);
+}
+
+body[data-app-page="stock-order"] .stock-order-panel,
+body[data-app-page="track-orders"] .stock-order-panel {
+  background-image: none;
+}
+
+/* Related stock tasks stay discoverable without a fixed navigation bar. */
+.stock-control-nav {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.stock-control-nav::-webkit-scrollbar { display: none; }
+
+.stock-control-nav a {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  border: 1px solid var(--fmt-line);
+  border-radius: 999px;
+  padding: 8px 13px;
+  background: var(--fmt-paper);
+  color: var(--fmt-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.stock-control-nav a:hover,
+.stock-control-nav a:focus-visible,
+.stock-control-nav a.is-active {
+  border-color: rgba(47, 111, 112, 0.5);
+  background: #eaf3f1;
+  color: var(--fmt-teal-deep);
+}
+
+.stock-control-intro {
+  padding: 4px 0 2px;
+}
+
+.stock-control-intro h2 {
+  margin: 0;
+  color: var(--fmt-ink);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.stock-control-intro > p:last-child {
+  max-width: 60ch;
+  margin: 8px 0 0;
+  color: var(--fmt-muted);
+  line-height: 1.55;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-panel > .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-dashboard-session-card {
+  border: 1px solid var(--fmt-line);
+  border-radius: var(--fmt-radius);
+  background: var(--fmt-paper);
+  box-shadow: var(--fmt-shadow);
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-session-card {
+  border-left: 3px solid #8eb6b6;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card {
+  border: 1px solid var(--fmt-line);
+  border-left: 3px solid #b8a0c4;
+  border-radius: 8px;
+  background: #fbfcfa;
+  box-shadow: none;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card:nth-child(2) {
+  border-left-color: #d0b76d;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card:nth-child(3) {
+  border-left-color: #8eb6b6;
+}
+
+@media (max-width: 720px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden; }
+
+  body:not([data-app-page="home"]) .container { width: min(100% - 28px, 1160px); }
+  body:not([data-app-page="home"]) .header {
+    margin-left: -14px;
+    margin-right: -14px;
+    padding: 14px;
+  }
+
+  body:not([data-app-page="home"]) .header h1 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+  }
+
+  body.find-my-tube-page .tube-workspace-intro,
+  body.find-my-test-page .clinical-workspace-intro {
+    margin-bottom: 14px;
+    padding: 22px 18px 24px;
+  }
+
+  body[data-app-page="stock-order"] .stock-order-panel,
+  body[data-app-page="track-orders"] .stock-order-panel,
+  body[data-app-page="stock-dashboard"] .stock-dashboard-panel {
+    padding: 0;
+  }
+
+  body[data-app-page="stock-order"] .stock-order-request-card,
+  body[data-app-page="track-orders"] .stock-order-request-card,
+  body[data-app-page="stock-dashboard"] .stock-dashboard-card,
+  body[data-app-page="stock-dashboard"] .stock-dashboard-stat,
+  body.find-my-test-page .clinical-workup-form,
+  body.find-my-tube-page .group-hints,
+  body.find-my-tube-page .quick-tools-panel {
+    padding: 16px;
+  }
+
+  .quick-tool-launch-btn,
+  .quick-tool-clear-btn,
+  .stock-order-submit-btn,
+  .stock-order-reset-btn,
+  .clinical-workup-submit-btn,
+  .clinical-workup-clear-btn,
+  .stock-order-field input,
+  .stock-order-field select,
+  .stock-order-field textarea,
+  .clinical-workup-field input,
+  .clinical-workup-field select,
+  .clinical-workup-field textarea,
+  .search-box input {
+    min-height: 44px;
+  }
+
+  .quick-tools-actions,
+  .clinical-workup-actions,
+  .stock-order-request-actions,
+  .stock-order-tracking-actions {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .quick-tools-actions > *,
+  .clinical-workup-actions > *,
+  .stock-order-request-actions > * {
+    min-height: 44px;
+  }
+
+  .stock-order-request-head,
+  .stock-order-tracking-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stock-order-tracking-actions {
+    width: 100%;
+  }
+
+  .stock-order-track-orders-link,
+  .stock-order-tracking-actions .quick-tool-launch-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .stock-control-nav {
+    margin-bottom: 14px;
+    padding-bottom: 2px;
+  }
+
+  .stock-control-nav a {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .stock-order-panel,
+  .lookup-shell,
+  .card,
+  .stock-order-request-card,
+  .group-hints,
+  .quick-tools-panel { border-radius: 8px; }
+}
+
+@media (max-width: 860px) {
+  body.has-mobile-bottom-nav .collection-guide-fab {
+    bottom: calc(env(safe-area-inset-bottom) + 92px);
+  }
+
+  body.has-mobile-bottom-nav .collection-guide-panel {
+    bottom: calc(env(safe-area-inset-bottom) + 148px);
+  }
+
+  body[data-app-page="home"].has-mobile-bottom-nav .home-hero-controls {
+    bottom: calc(env(safe-area-inset-bottom) + 94px);
+  }
+}
+
+@media (max-width: 380px) {
+  body[data-app-page="home"] .home-hero-content h2 { font-size: clamp(2rem, 10vw, 2.4rem); }
+  body[data-app-page="home"] .home-hero-copy { max-width: 31ch; }
+  .collection-guide-panel { right: 12px; left: 12px; width: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
