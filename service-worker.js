@@ -1,4 +1,8 @@
-const CACHE_NAME = "find-my-tube-v204";
+const CACHE_NAME = "find-my-tube-v205";
+const isLocalPreview = () => (
+  self.location.hostname === "127.0.0.1"
+  || self.location.hostname === "localhost"
+);
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -12,8 +16,9 @@ const CORE_ASSETS = [
   "./robots.txt",
   "./sitemap.xml",
   "./manifest.webmanifest?v=20260316b",
-  "./assets/css/style.css?v=20260617a",
-  "./assets/js/script.js?v=20260617a",
+  "./assets/css/style.css?v=20260728h",
+  "./assets/css/modern.css?v=20260728m",
+  "./assets/js/script.js?v=20260728i",
   "./assets/js/find-my-test.js?v=20260603b",
   "./assets/data/data.js?v=20260505a",
   "./assets/data/find-my-test-map.json?v=20260603b",
@@ -22,6 +27,11 @@ const CORE_ASSETS = [
   "./favicon-16.png",
   "./favicon-32.png",
   "./assets/images/lab-bg.svg",
+  "./assets/images/find-my-tube-lab-overview.jpg",
+  "./assets/images/hero-lab-analyser.jpg",
+  "./assets/images/hero-lab-collection.jpg",
+  "./assets/images/hero-lab-logistics.jpg",
+  "./assets/images/hero-lab-tubes.jpg",
   "./assets/icons/favicon-16.png",
   "./assets/icons/favicon-32.png",
   "./assets/icons/icon-192.png?v=20260316b",
@@ -43,12 +53,11 @@ self.addEventListener("message", (event) => {
 
 // Clears old caches and takes control of open clients after activation.
 self.addEventListener("activate", (event) => {
-  const isLocalPreview = self.location.port === "3000";
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => isLocalPreview || key !== CACHE_NAME)
+          .filter((key) => isLocalPreview() || key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
     ).then(() => self.clients.claim())
@@ -62,7 +71,7 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
 
-  if (requestUrl.port === "3000") {
+  if (isLocalPreview()) {
     event.respondWith(fetch(event.request));
     return;
   }

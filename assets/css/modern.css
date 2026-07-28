@@ -1,18 +1,18 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
 
 :root {
-  --fmt-ink: #19313b;
-  --fmt-teal: #2f6f70;
-  --fmt-teal-deep: #1d5156;
+  --fmt-ink: #1e352d;
+  --fmt-teal: #4e7569;
+  --fmt-teal-deep: #294b40;
   --fmt-plum: #70566d;
   --fmt-ochre: #a87a3f;
-  --fmt-canvas: #f6f4ef;
-  --fmt-paper: #ffffff;
-  --fmt-mist: #eef2f0;
-  --fmt-line: #dbe2de;
-  --fmt-muted: #63757a;
-  --fmt-shadow: 0 14px 34px rgba(31, 55, 57, 0.09);
-  --fmt-radius: 10px;
+  --fmt-canvas: #f5f4ef;
+  --fmt-paper: #fffefa;
+  --fmt-mist: #edf1ed;
+  --fmt-line: #d9ddd7;
+  --fmt-muted: #65736d;
+  --fmt-shadow: 0 16px 38px rgba(33, 52, 44, 0.08);
+  --fmt-radius: 8px;
 }
 
 html { scroll-behavior: smooth; }
@@ -1373,7 +1373,9 @@ body[data-app-page="stock-dashboard"] .stock-control-nav a.is-active {
   }
 }
 
-/* Image-backed application states use the same visual depth as the homepage. */
+/* Retained only as a migration reference. The navy workspace experiment caused
+   contrast failures and no longer participates in the active design cascade. */
+@media (max-width: 0px) {
 body.find-my-test-page,
 body[data-app-page="find-my-test-page"] {
   background:
@@ -1915,6 +1917,1360 @@ body[data-app-page="stock-dashboard"] .quick-tool-clear-btn:focus-visible {
   body.find-my-tube-page .pre-search,
   body[data-app-page="find-my-tube"] .pre-search {
     grid-template-columns: 1fr;
+  }
+}
+}
+
+/* Unified interior system.
+   Photography carries context; warm paper surfaces carry the work. */
+body.find-my-test-page,
+body[data-app-page="find-my-tube"],
+body[data-app-page="stock-order"],
+body[data-app-page="track-orders"],
+body[data-app-page="stock-dashboard"] {
+  --workspace-accent: #b99d3d;
+  --workspace-accent-strong: #725f22;
+  --workspace-accent-soft: rgba(185, 157, 61, 0.11);
+  --workspace-image: url("../images/find-my-tube-lab-overview.jpg");
+  min-height: 100svh;
+  overflow-x: hidden;
+  color: var(--fmt-ink);
+  background-color: var(--fmt-canvas);
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(245, 244, 239, 0.995) 0%,
+      rgba(245, 244, 239, 0.98) 54%,
+      rgba(245, 244, 239, 0.84) 76%,
+      rgba(245, 244, 239, 0.52) 100%
+    ),
+    var(--workspace-image);
+  background-position: center, center;
+  background-size: cover, cover;
+  background-attachment: fixed, fixed;
+}
+
+body.find-my-test-page {
+  --workspace-accent: #bea44a;
+  --workspace-accent-strong: #776226;
+  --workspace-accent-soft: rgba(190, 164, 74, 0.12);
+  --workspace-image: url("../images/hero-lab-analyser.jpg");
+}
+
+body[data-app-page="find-my-tube"] {
+  --workspace-accent: #a98eb4;
+  --workspace-accent-strong: #6d526f;
+  --workspace-accent-soft: rgba(169, 142, 180, 0.12);
+  --workspace-image: url("../images/hero-lab-tubes.jpg");
+}
+
+body[data-app-page="stock-order"],
+body[data-app-page="track-orders"],
+body[data-app-page="stock-dashboard"] {
+  --workspace-accent: #c3aa4e;
+  --workspace-accent-strong: #756322;
+  --workspace-accent-soft: rgba(195, 170, 78, 0.13);
+  --workspace-image: url("../images/hero-lab-logistics.jpg");
+}
+
+body.find-my-test-page::before,
+body.find-my-test-page::after,
+body[data-app-page="find-my-tube"]::before,
+body[data-app-page="find-my-tube"]::after,
+body[data-app-page="stock-order"]::before,
+body[data-app-page="stock-order"]::after,
+body[data-app-page="track-orders"]::before,
+body[data-app-page="track-orders"]::after,
+body[data-app-page="stock-dashboard"]::before,
+body[data-app-page="stock-dashboard"]::after {
+  display: none;
+}
+
+body.find-my-test-page .container,
+body[data-app-page="find-my-tube"] .container,
+body[data-app-page="stock-order"] .container,
+body[data-app-page="track-orders"] .container,
+body[data-app-page="stock-dashboard"] .container {
+  position: relative;
+  z-index: 1;
+  width: min(100% - 48px, 1180px);
+  max-width: none;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 0 0 44px;
+}
+
+body.find-my-test-page .header,
+body[data-app-page="find-my-tube"] .header,
+body[data-app-page="stock-order"] .header,
+body[data-app-page="track-orders"] .header,
+body[data-app-page="stock-dashboard"] .header {
+  display: flex;
+  min-height: 86px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 18px 0 16px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-test-page .header h1,
+body[data-app-page="find-my-tube"] .header h1,
+body[data-app-page="stock-order"] .header h1,
+body[data-app-page="track-orders"] .header h1,
+body[data-app-page="stock-dashboard"] .header h1 {
+  margin: 0;
+  color: var(--fmt-ink);
+  font-size: 1rem;
+  line-height: 1;
+  text-align: center;
+  text-shadow: none;
+}
+
+body.find-my-test-page .header h1::after,
+body[data-app-page="find-my-tube"] .header h1::after,
+body[data-app-page="stock-order"] .header h1::after,
+body[data-app-page="track-orders"] .header h1::after,
+body[data-app-page="stock-dashboard"] .header h1::after {
+  display: none;
+}
+
+body.find-my-test-page .header .brand-title,
+body[data-app-page="find-my-tube"] .header .brand-title,
+body[data-app-page="stock-order"] .header .brand-title,
+body[data-app-page="track-orders"] .header .brand-title,
+body[data-app-page="stock-dashboard"] .header .brand-title {
+  min-height: 48px;
+  padding: 0 19px;
+  border: 1px solid rgba(30, 53, 45, 0.46);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.78);
+  color: var(--fmt-ink);
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+body.find-my-test-page .header .brand-title:hover,
+body.find-my-test-page .header .brand-title:focus-visible,
+body[data-app-page="find-my-tube"] .header .brand-title:hover,
+body[data-app-page="find-my-tube"] .header .brand-title:focus-visible,
+body[data-app-page="stock-order"] .header .brand-title:hover,
+body[data-app-page="stock-order"] .header .brand-title:focus-visible,
+body[data-app-page="track-orders"] .header .brand-title:hover,
+body[data-app-page="track-orders"] .header .brand-title:focus-visible,
+body[data-app-page="stock-dashboard"] .header .brand-title:hover,
+body[data-app-page="stock-dashboard"] .header .brand-title:focus-visible {
+  border-color: var(--workspace-accent-strong);
+  background: var(--fmt-paper);
+  color: var(--workspace-accent-strong);
+}
+
+body.find-my-test-page .header > p,
+body.find-my-test-page .header-settings,
+body[data-app-page="find-my-tube"] .header > p,
+body[data-app-page="find-my-tube"] .header-settings,
+body[data-app-page="stock-order"] .header > p,
+body[data-app-page="stock-order"] .header-settings,
+body[data-app-page="track-orders"] .header > p,
+body[data-app-page="track-orders"] .header-settings,
+body[data-app-page="stock-dashboard"] .header > p,
+body[data-app-page="stock-dashboard"] .header-settings {
+  display: none;
+}
+
+body.find-my-test-page .clinical-workspace-intro,
+body[data-app-page="find-my-tube"] .tube-workspace-intro,
+body[data-app-page="stock-dashboard"] .stock-control-intro,
+body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head {
+  width: min(100%, 780px);
+  margin: 8px 0 24px;
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid rgba(30, 53, 45, 0.14);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.9);
+  box-shadow: var(--fmt-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.find-my-test-page .clinical-workspace-intro {
+  display: grid;
+  gap: 22px;
+}
+
+body.find-my-test-page .clinical-workspace-intro h2,
+body[data-app-page="find-my-tube"] .tube-workspace-intro h2,
+body[data-app-page="stock-dashboard"] .stock-control-intro h2,
+body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head h2 {
+  max-width: 15ch;
+  margin: 0;
+  color: var(--fmt-ink);
+  font-size: clamp(2.35rem, 5vw, 4.45rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.98;
+  text-shadow: none;
+  text-wrap: balance;
+}
+
+body.find-my-test-page .clinical-workspace-intro p:not(.clinical-workspace-kicker),
+body[data-app-page="find-my-tube"] .tube-workspace-intro p:not(.tube-workspace-kicker),
+body[data-app-page="stock-dashboard"] .stock-control-intro > p:last-child {
+  max-width: 58ch;
+  margin: 14px 0 0;
+  color: var(--fmt-muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+body.find-my-test-page .clinical-workspace-kicker,
+body[data-app-page="find-my-tube"] .tube-workspace-kicker,
+body[data-app-page="stock-dashboard"] .stock-order-kicker,
+body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head .stock-order-kicker,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head .stock-order-kicker {
+  margin: 0 0 10px;
+  color: var(--workspace-accent-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+body.find-my-test-page .clinical-workspace-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--fmt-muted);
+  list-style: none;
+}
+
+body.find-my-test-page .clinical-workspace-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 15px 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+body.find-my-test-page .clinical-workspace-steps li + li {
+  margin-left: 15px;
+  padding-left: 15px;
+  border-left: 1px solid var(--fmt-line);
+}
+
+body.find-my-test-page .clinical-workspace-steps span {
+  width: auto;
+  color: var(--workspace-accent-strong);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+
+/* Suggest Tests */
+body.find-my-test-page .clinical-workup-panel {
+  max-width: none;
+  margin: 0 0 32px;
+  padding: clamp(22px, 3vw, 34px);
+  overflow: visible;
+  border: 1px solid rgba(30, 53, 45, 0.16);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.94);
+  color: var(--fmt-ink);
+  box-shadow: var(--fmt-shadow);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+body.find-my-test-page .clinical-workup-form {
+  gap: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-form-grid {
+  grid-template-columns: minmax(280px, 0.86fr) minmax(0, 1.5fr);
+  gap: 26px;
+}
+
+body.find-my-test-page .clinical-workup-group {
+  min-width: 0;
+  grid-column: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+body.find-my-test-page .clinical-workup-group + .clinical-workup-group {
+  padding-left: 26px;
+  border-left: 1px solid var(--fmt-line);
+}
+
+body.find-my-test-page .clinical-workup-group legend {
+  padding: 0 0 14px;
+  color: var(--fmt-ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+body.find-my-test-page .clinical-workup-group-patient {
+  display: grid;
+  grid-template-columns: minmax(148px, 1.1fr) minmax(122px, 0.9fr);
+  gap: 13px;
+  align-content: start;
+}
+
+body.find-my-test-page .clinical-workup-group-patient legend,
+body.find-my-test-page .clinical-workup-context-pregnancy {
+  grid-column: 1 / -1;
+}
+
+body.find-my-test-page .clinical-workup-context-dob {
+  grid-column: auto;
+}
+
+body.find-my-test-page .clinical-workup-context-pair {
+  display: contents;
+}
+
+body.find-my-test-page .clinical-workup-group-picture {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  align-content: start;
+}
+
+body.find-my-test-page .clinical-workup-group-picture legend {
+  grid-column: 1 / -1;
+}
+
+body.find-my-test-page .clinical-workup-group-picture .clinical-workup-field-wide {
+  grid-column: auto;
+}
+
+body.find-my-test-page .clinical-workup-field {
+  gap: 6px;
+}
+
+body.find-my-test-page .clinical-workup-field span,
+body.find-my-test-page .clinical-workup-field-label {
+  color: var(--fmt-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+
+body.find-my-test-page .clinical-workup-field input,
+body.find-my-test-page .clinical-workup-field select,
+body.find-my-test-page .clinical-workup-field textarea {
+  min-height: 46px;
+  border: 1px solid var(--fmt-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--fmt-ink);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-field textarea {
+  min-height: 82px;
+  height: 82px;
+  resize: vertical;
+}
+
+body.find-my-test-page .clinical-workup-field input:focus,
+body.find-my-test-page .clinical-workup-field select:focus,
+body.find-my-test-page .clinical-workup-field textarea:focus {
+  border-color: var(--workspace-accent);
+  box-shadow: 0 0 0 3px var(--workspace-accent-soft);
+}
+
+body.find-my-test-page .clinical-workup-field-glyph {
+  border-color: var(--fmt-line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-concern-field {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-note {
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid var(--fmt-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--fmt-muted);
+}
+
+body.find-my-test-page .clinical-workup-submit-btn,
+body.find-my-test-page .clinical-workup-reset-btn,
+body.find-my-test-page .clinical-workup-results-add-all-btn,
+body.find-my-test-page .clinical-workup-results-clear-btn {
+  min-height: 44px;
+  border: 1px solid var(--workspace-accent-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-submit-btn:hover,
+body.find-my-test-page .clinical-workup-submit-btn:focus-visible,
+body.find-my-test-page .clinical-workup-reset-btn:hover,
+body.find-my-test-page .clinical-workup-reset-btn:focus-visible,
+body.find-my-test-page .clinical-workup-results-add-all-btn:hover,
+body.find-my-test-page .clinical-workup-results-add-all-btn:focus-visible,
+body.find-my-test-page .clinical-workup-results-clear-btn:hover,
+body.find-my-test-page .clinical-workup-results-clear-btn:focus-visible {
+  border-color: var(--fmt-ink);
+  background: var(--workspace-accent-soft);
+  color: var(--fmt-ink);
+  transform: none;
+}
+
+body.find-my-test-page .clinical-workup-results,
+body.find-my-test-page .stock-order-request-card {
+  border: 1px solid rgba(30, 53, 45, 0.16);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.96);
+  color: var(--fmt-ink);
+  box-shadow: var(--fmt-shadow);
+}
+
+body.find-my-test-page .clinical-workup-results {
+  max-width: none;
+  margin: 0 0 32px;
+  padding: clamp(22px, 3vw, 34px);
+}
+
+body.find-my-test-page .clinical-workup-rule-card,
+body.find-my-test-page .clinical-workup-empty-state,
+body.find-my-test-page .clinical-workup-test-card {
+  border: 1px solid var(--fmt-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+body.find-my-test-page .collection-guide-fab {
+  border-color: var(--workspace-accent-strong);
+  background: rgba(255, 254, 250, 0.88);
+  color: var(--fmt-ink);
+  text-shadow: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.find-my-test-page .collection-guide-panel {
+  border-color: var(--workspace-accent);
+  background: rgba(30, 53, 45, 0.96);
+  color: #fffefa;
+  text-shadow: none;
+  box-shadow: 0 20px 48px rgba(25, 45, 38, 0.22);
+}
+
+body.find-my-test-page.is-collection-guide-open .container {
+  filter: blur(6px) brightness(0.75);
+}
+
+/* Find My Tube */
+body[data-app-page="find-my-tube"] .tube-workspace-intro {
+  display: block;
+}
+
+body[data-app-page="find-my-tube"] .search-box {
+  width: min(100%, 900px);
+  margin: -1px 0 18px;
+  padding: 8px 18px;
+  border: 1px solid rgba(30, 53, 45, 0.17);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.94);
+  box-shadow: var(--fmt-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body[data-app-page="find-my-tube"] .search-box input {
+  min-height: 54px;
+  padding: 0 38px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fmt-ink);
+  box-shadow: none;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+}
+
+body[data-app-page="find-my-tube"] .search-box input::placeholder {
+  color: #7a847f;
+}
+
+body[data-app-page="find-my-tube"] .search-box input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .pre-search {
+  width: min(100%, 1040px);
+  grid-template-columns: minmax(0, 1.38fr) minmax(260px, 0.62fr);
+  align-items: start;
+  gap: 18px;
+  margin: 0 0 32px;
+}
+
+body[data-app-page="find-my-tube"] .pre-search .group-hints {
+  order: 0;
+}
+
+body[data-app-page="find-my-tube"] .pre-search .pre-search-primary {
+  order: 1;
+}
+
+body[data-app-page="find-my-tube"] .group-hints,
+body[data-app-page="find-my-tube"] .quick-tools-panel {
+  padding: 22px;
+  border: 1px solid rgba(30, 53, 45, 0.15);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.93);
+  box-shadow: var(--fmt-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body[data-app-page="find-my-tube"] .group-hints h3,
+body[data-app-page="find-my-tube"] .quick-tools-panel h3 {
+  margin: 0;
+  color: var(--fmt-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+body[data-app-page="find-my-tube"] .quick-tools-panel p {
+  color: var(--fmt-muted);
+}
+
+body[data-app-page="find-my-tube"] .group-chips {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body[data-app-page="find-my-tube"] .group-chip-stack {
+  gap: 7px;
+}
+
+body[data-app-page="find-my-tube"] .group-chip {
+  position: relative;
+  min-height: 112px;
+  padding: 12px;
+  overflow: hidden;
+  display: block;
+  border: 1px solid var(--fmt-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.64);
+  color: var(--fmt-ink);
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .group-chip:hover,
+body[data-app-page="find-my-tube"] .group-chip:focus-visible,
+body[data-app-page="find-my-tube"] .group-chip.active {
+  border-color: var(--workspace-accent);
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+  transform: none;
+}
+
+body[data-app-page="find-my-tube"] .group-chip-label {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  color: currentColor;
+  font-size: 0.82rem;
+  text-align: center;
+  text-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .group-chip-icon,
+body[data-app-page="find-my-tube"] .group-chip.active .group-chip-icon {
+  position: absolute;
+  inset: 12px 10px 34px;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--workspace-accent-strong) 46%, transparent);
+}
+
+body[data-app-page="find-my-tube"] .group-chip-icon svg {
+  width: min(100%, 55px);
+  height: min(100%, 55px);
+  stroke-width: 1.45;
+}
+
+body[data-app-page="find-my-tube"] .quick-tool-launch-btn,
+body[data-app-page="find-my-tube"] .quick-tool-clear-btn {
+  min-height: 42px;
+  border: 1px solid var(--workspace-accent-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .quick-tool-launch-btn:hover,
+body[data-app-page="find-my-tube"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="find-my-tube"] .quick-tool-clear-btn:hover,
+body[data-app-page="find-my-tube"] .quick-tool-clear-btn:focus-visible {
+  border-color: var(--fmt-ink);
+  background: var(--workspace-accent-soft);
+  color: var(--fmt-ink);
+  transform: none;
+}
+
+body[data-app-page="find-my-tube"] .cards .card {
+  border: 1px solid rgba(30, 53, 45, 0.16);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 4px;
+  background: rgba(255, 254, 250, 0.96);
+  color: var(--fmt-ink);
+  box-shadow: var(--fmt-shadow);
+}
+
+body[data-app-page="find-my-tube"] .card-summary-field {
+  border-color: var(--fmt-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .card-toggle-btn {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Stock request, tracking, and dashboard */
+body[data-app-page="stock-order"] .stock-control-nav,
+body[data-app-page="track-orders"] .stock-control-nav,
+body[data-app-page="stock-dashboard"] .stock-control-nav {
+  width: fit-content;
+  max-width: 100%;
+  margin: 4px 0 18px;
+  padding: 4px;
+  border: 1px solid rgba(30, 53, 45, 0.14);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.84);
+  box-shadow: 0 8px 24px rgba(33, 52, 44, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body[data-app-page="stock-order"] .stock-control-nav a,
+body[data-app-page="track-orders"] .stock-control-nav a,
+body[data-app-page="stock-dashboard"] .stock-control-nav a {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fmt-muted);
+}
+
+body[data-app-page="stock-order"] .stock-control-nav a:hover,
+body[data-app-page="stock-order"] .stock-control-nav a:focus-visible,
+body[data-app-page="stock-order"] .stock-control-nav a.is-active,
+body[data-app-page="track-orders"] .stock-control-nav a:hover,
+body[data-app-page="track-orders"] .stock-control-nav a:focus-visible,
+body[data-app-page="track-orders"] .stock-control-nav a.is-active,
+body[data-app-page="stock-dashboard"] .stock-control-nav a:hover,
+body[data-app-page="stock-dashboard"] .stock-control-nav a:focus-visible,
+body[data-app-page="stock-dashboard"] .stock-control-nav a.is-active {
+  border-color: var(--workspace-accent);
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent-strong);
+}
+
+body[data-app-page="stock-order"] .stock-order-panel,
+body[data-app-page="track-orders"] .stock-order-panel,
+body[data-app-page="stock-dashboard"] .stock-dashboard-panel {
+  gap: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fmt-ink);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head {
+  display: block;
+}
+
+body[data-app-page="stock-order"] .stock-order-form,
+body[data-app-page="track-orders"] .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-dashboard-card,
+body[data-app-page="stock-dashboard"] .stock-dashboard-stat,
+body[data-app-page="stock-dashboard"] .stock-dashboard-queue {
+  border: 1px solid rgba(30, 53, 45, 0.15);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.94);
+  color: var(--fmt-ink);
+  box-shadow: var(--fmt-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body[data-app-page="stock-order"] .stock-order-form {
+  padding: 22px;
+}
+
+body[data-app-page="stock-order"] .stock-order-item-card {
+  border: 1px solid rgba(30, 53, 45, 0.15);
+  border-top: 2px solid var(--stock-item-glyph-color, var(--workspace-accent));
+  border-radius: 4px;
+  background: rgba(255, 254, 250, 0.95);
+  color: var(--fmt-ink);
+  box-shadow: 0 10px 26px rgba(33, 52, 44, 0.06);
+}
+
+body[data-app-page="stock-order"] .stock-order-item-card:hover {
+  border-color: color-mix(in srgb, var(--stock-item-glyph-color, var(--workspace-accent)) 52%, var(--fmt-line));
+  box-shadow: 0 14px 30px rgba(33, 52, 44, 0.09);
+}
+
+body[data-app-page="stock-order"] .stock-order-request-card {
+  border: 1px solid rgba(30, 53, 45, 0.15);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.95);
+  color: var(--fmt-ink);
+  box-shadow: var(--fmt-shadow);
+}
+
+body[data-app-page="stock-order"] .stock-order-request-head h3,
+body[data-app-page="track-orders"] .stock-order-request-head h3,
+body[data-app-page="stock-dashboard"] .stock-order-request-head h3,
+body[data-app-page="stock-dashboard"] .stock-dashboard-session-card h3,
+body[data-app-page="stock-dashboard"] .stock-order-summary-value {
+  color: var(--fmt-ink);
+}
+
+body[data-app-page="stock-order"] .stock-order-kicker,
+body[data-app-page="track-orders"] .stock-order-kicker,
+body[data-app-page="stock-dashboard"] .stock-order-kicker {
+  color: var(--workspace-accent-strong);
+}
+
+body[data-app-page="stock-order"] .stock-order-field-label,
+body[data-app-page="track-orders"] .stock-order-field-label,
+body[data-app-page="stock-dashboard"] .stock-order-field-label {
+  color: var(--fmt-muted);
+}
+
+body[data-app-page="stock-order"] .stock-order-field input,
+body[data-app-page="stock-order"] .stock-order-field select,
+body[data-app-page="stock-order"] .stock-order-field textarea,
+body[data-app-page="track-orders"] .stock-order-field input,
+body[data-app-page="track-orders"] .stock-order-field select,
+body[data-app-page="track-orders"] .stock-order-field textarea,
+body[data-app-page="stock-dashboard"] .stock-order-field input,
+body[data-app-page="stock-dashboard"] .stock-order-field select,
+body[data-app-page="stock-dashboard"] .stock-order-field textarea {
+  border: 1px solid var(--fmt-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--fmt-ink);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-field input:focus,
+body[data-app-page="stock-order"] .stock-order-field select:focus,
+body[data-app-page="stock-order"] .stock-order-field textarea:focus,
+body[data-app-page="track-orders"] .stock-order-field input:focus,
+body[data-app-page="track-orders"] .stock-order-field select:focus,
+body[data-app-page="track-orders"] .stock-order-field textarea:focus,
+body[data-app-page="stock-dashboard"] .stock-order-field input:focus,
+body[data-app-page="stock-dashboard"] .stock-order-field select:focus,
+body[data-app-page="stock-dashboard"] .stock-order-field textarea:focus {
+  border-color: var(--workspace-accent);
+  box-shadow: 0 0 0 3px var(--workspace-accent-soft);
+}
+
+body[data-app-page="stock-order"] .quick-tool-launch-btn,
+body[data-app-page="stock-order"] .quick-tool-clear-btn,
+body[data-app-page="track-orders"] .quick-tool-launch-btn,
+body[data-app-page="track-orders"] .quick-tool-clear-btn,
+body[data-app-page="stock-dashboard"] .quick-tool-launch-btn,
+body[data-app-page="stock-dashboard"] .quick-tool-clear-btn,
+body[data-app-page="stock-dashboard"] .stock-dashboard-primary-btn,
+body[data-app-page="stock-dashboard"] .stock-dashboard-secondary-btn {
+  min-height: 42px;
+  border: 1px solid var(--workspace-accent-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .quick-tool-launch-btn:hover,
+body[data-app-page="stock-order"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="stock-order"] .quick-tool-clear-btn:hover,
+body[data-app-page="stock-order"] .quick-tool-clear-btn:focus-visible,
+body[data-app-page="track-orders"] .quick-tool-launch-btn:hover,
+body[data-app-page="track-orders"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="track-orders"] .quick-tool-clear-btn:hover,
+body[data-app-page="track-orders"] .quick-tool-clear-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .quick-tool-launch-btn:hover,
+body[data-app-page="stock-dashboard"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .quick-tool-clear-btn:hover,
+body[data-app-page="stock-dashboard"] .quick-tool-clear-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .stock-dashboard-primary-btn:hover,
+body[data-app-page="stock-dashboard"] .stock-dashboard-primary-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .stock-dashboard-secondary-btn:hover,
+body[data-app-page="stock-dashboard"] .stock-dashboard-secondary-btn:focus-visible {
+  border-color: var(--fmt-ink);
+  background: var(--workspace-accent-soft);
+  color: var(--fmt-ink);
+  transform: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-qty-btn {
+  border-color: var(--fmt-line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-summary-item,
+body[data-app-page="stock-dashboard"] .stock-order-summary-item {
+  border-color: var(--fmt-line);
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-request-meta,
+body[data-app-page="track-orders"] .stock-order-request-meta,
+body[data-app-page="stock-dashboard"] .stock-dashboard-status,
+body[data-app-page="stock-dashboard"] .stock-control-intro > p:last-child {
+  color: var(--fmt-muted);
+}
+
+body[data-app-page="stock-dashboard"] .stock-control-intro {
+  display: block;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-session-card {
+  border: 1px solid rgba(30, 53, 45, 0.15);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: rgba(255, 254, 250, 0.95);
+  color: var(--fmt-ink);
+  box-shadow: var(--fmt-shadow);
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card:nth-child(2) {
+  border-left-color: #a98eb4;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card:nth-child(3) {
+  border-left-color: #6e978a;
+}
+
+body[data-app-page="track-orders"] .track-orders-table {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="track-orders"] #trackOrdersFiltersForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-app-page="track-orders"] #trackOrdersFiltersForm > .stock-order-field-wide {
+  grid-column: auto;
+}
+
+body[data-app-page="track-orders"] #trackOrdersFiltersForm > .track-orders-filter-actions {
+  grid-column: 1 / -1;
+  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+body[data-app-page="track-orders"] #trackOrdersFiltersForm .track-orders-filter-actions > * {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+body[data-app-page="track-orders"] #trackOrdersFiltersForm .track-orders-filter-actions .quick-tool-clear-btn {
+  justify-self: auto;
+}
+
+body[data-app-page="track-orders"] .track-orders-row {
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+body.find-my-test-page .site-footer,
+body[data-app-page="find-my-tube"] .site-footer,
+body[data-app-page="stock-order"] .site-footer,
+body[data-app-page="track-orders"] .site-footer,
+body[data-app-page="stock-dashboard"] .site-footer {
+  margin-top: 34px;
+  border-top-color: rgba(30, 53, 45, 0.14);
+  background: rgba(255, 254, 250, 0.78);
+  color: var(--fmt-muted);
+}
+
+/* Editorial supporting pages */
+body[data-app-page$="-page"]:not(.find-my-test-page) {
+  --support-image: url("../images/find-my-tube-lab-overview.jpg");
+  min-height: 100svh;
+  color: var(--fmt-ink);
+  background: var(--fmt-canvas);
+}
+
+body[data-app-page="find-my-test-page"]:not(.find-my-test-page) {
+  --support-image: url("../images/hero-lab-analyser.jpg");
+}
+
+body[data-app-page="tube-plan-page"] {
+  --support-image: url("../images/hero-lab-tubes.jpg");
+}
+
+body[data-app-page="contact-feedback-page"] {
+  --support-image: url("../images/hero-lab-collection.jpg");
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page)::before,
+body[data-app-page$="-page"]:not(.find-my-test-page)::after {
+  display: none;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .header {
+  min-height: clamp(260px, 38vw, 390px);
+  margin: 0 0 42px;
+  padding: clamp(88px, 12vw, 138px) max(24px, calc((100vw - 1000px) / 2)) 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  border: 0;
+  border-radius: 0;
+  background-image:
+    linear-gradient(90deg, rgba(18, 37, 31, 0.9), rgba(18, 37, 31, 0.34)),
+    var(--support-image);
+  background-position: center;
+  background-size: cover;
+  color: #fffefa;
+  box-shadow: none;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .header h1 {
+  max-width: 16ch;
+  margin: 0;
+  color: #fffefa;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.98;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.28);
+  text-wrap: balance;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .header h1::after {
+  display: none;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .header > p {
+  max-width: 54ch;
+  margin: 14px 0 0;
+  color: rgba(255, 254, 250, 0.86);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.support-home-link {
+  position: absolute;
+  top: 26px;
+  left: max(24px, calc((100vw - 1000px) / 2));
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 254, 250, 0.72);
+  color: #fffefa;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.support-home-link:hover,
+.support-home-link:focus-visible {
+  border-color: #fffefa;
+  color: #fffefa;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) > .container > .stock-order-request-card {
+  width: min(100% - 40px, 1000px);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 44px);
+  border: 1px solid rgba(30, 53, 45, 0.15);
+  border-left: 2px solid #9d87a6;
+  border-radius: 0;
+  background: var(--fmt-paper);
+  color: var(--fmt-ink);
+  box-shadow: var(--fmt-shadow);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-head h2,
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card h2 {
+  margin: 0;
+  color: var(--fmt-ink);
+  font-size: clamp(1.45rem, 3vw, 2.2rem);
+  font-weight: 600;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card p {
+  max-width: 78ch;
+  color: #53635c;
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card a:not(.contact-sheet-action) {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--fmt-teal-deep);
+  color: var(--fmt-teal-deep);
+  text-decoration: none;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card a:not(.contact-sheet-action):hover,
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card a:not(.contact-sheet-action):focus-visible {
+  background: var(--fmt-mist);
+  color: var(--fmt-ink);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .site-footer {
+  width: min(100% - 40px, 1000px);
+  margin: 42px auto 0;
+  border-top: 1px solid var(--fmt-line);
+  background: transparent;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action:hover,
+body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action:focus-visible {
+  border-color: var(--fmt-teal-deep);
+  background: var(--fmt-mist);
+  transform: none;
+}
+
+@media (max-width: 860px) {
+  body.find-my-test-page,
+  body[data-app-page="find-my-tube"],
+  body[data-app-page="stock-order"],
+  body[data-app-page="track-orders"],
+  body[data-app-page="stock-dashboard"] {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(245, 244, 239, 0.72) 0,
+        rgba(245, 244, 239, 0.93) 250px,
+        rgba(245, 244, 239, 1) 430px
+      ),
+      var(--workspace-image);
+    background-position: center top, center top;
+    background-size: auto, auto 430px;
+    background-repeat: no-repeat;
+    background-attachment: scroll, scroll;
+  }
+
+  body.find-my-test-page .container,
+  body[data-app-page="find-my-tube"] .container,
+  body[data-app-page="stock-order"] .container,
+  body[data-app-page="track-orders"] .container,
+  body[data-app-page="stock-dashboard"] .container {
+    width: min(100% - 28px, 1180px);
+  }
+
+  body.find-my-test-page .header,
+  body[data-app-page="find-my-tube"] .header,
+  body[data-app-page="stock-order"] .header,
+  body[data-app-page="track-orders"] .header,
+  body[data-app-page="stock-dashboard"] .header {
+    min-height: 76px;
+    padding: 14px 0;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro,
+  body[data-app-page="find-my-tube"] .tube-workspace-intro,
+  body[data-app-page="stock-dashboard"] .stock-control-intro,
+  body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head,
+  body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro h2,
+  body[data-app-page="find-my-tube"] .tube-workspace-intro h2,
+  body[data-app-page="stock-dashboard"] .stock-control-intro h2,
+  body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2,
+  body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head h2 {
+    font-size: clamp(2.1rem, 9vw, 3.45rem);
+  }
+
+  body.find-my-test-page .clinical-workup-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.find-my-test-page .clinical-workup-group + .clinical-workup-group {
+    padding: 22px 0 0;
+    border-top: 1px solid var(--fmt-line);
+    border-left: 0;
+  }
+
+  body[data-app-page="find-my-tube"] .pre-search {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-app-page="find-my-tube"] .pre-search-primary {
+    order: -1;
+  }
+
+  body[data-app-page="stock-order"] .stock-order-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  body.find-my-test-page .header {
+    position: relative;
+    inset: auto;
+    transform: none;
+  }
+
+  body.find-my-test-page .header .brand-title,
+  body[data-app-page="find-my-tube"] .header .brand-title,
+  body[data-app-page="stock-order"] .header .brand-title,
+  body[data-app-page="track-orders"] .header .brand-title,
+  body[data-app-page="stock-dashboard"] .header .brand-title {
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 0.98rem;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro,
+  body[data-app-page="find-my-tube"] .tube-workspace-intro,
+  body[data-app-page="stock-dashboard"] .stock-control-intro,
+  body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head,
+  body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head,
+  body.find-my-test-page .clinical-workup-panel {
+    padding: 22px 18px;
+  }
+
+  body.find-my-test-page .clinical-workspace-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  body.find-my-test-page .clinical-workspace-steps li,
+  body.find-my-test-page .clinical-workspace-steps li + li {
+    display: grid;
+    gap: 3px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    line-height: 1.3;
+  }
+
+  body.find-my-test-page .clinical-workup-form-grid,
+  body.find-my-test-page .clinical-workup-group-picture {
+    grid-template-columns: 1fr;
+  }
+
+  body.find-my-test-page .clinical-workup-group-picture legend,
+  body.find-my-test-page .clinical-workup-group-picture .clinical-workup-field-wide {
+    grid-column: auto;
+  }
+
+  body.find-my-test-page .clinical-workup-group-patient {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.find-my-test-page .clinical-workup-context-sex {
+    grid-column: auto;
+  }
+
+  body.find-my-test-page .clinical-workup-context-dob input,
+  body.find-my-test-page .clinical-workup-context-sex select {
+    font-size: 0.88rem;
+  }
+
+  body[data-app-page="find-my-tube"] .search-box {
+    padding-inline: 14px;
+  }
+
+  body[data-app-page="find-my-tube"] .group-hints,
+  body[data-app-page="find-my-tube"] .quick-tools-panel {
+    padding: 18px;
+  }
+
+  body[data-app-page="find-my-tube"] .group-chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body[data-app-page="find-my-tube"] .group-chip {
+    min-height: 105px;
+  }
+
+  body[data-app-page="stock-order"] .stock-control-nav,
+  body[data-app-page="track-orders"] .stock-control-nav,
+  body[data-app-page="stock-dashboard"] .stock-control-nav {
+    width: 100%;
+  }
+
+  body[data-app-page="stock-order"] .stock-control-nav a,
+  body[data-app-page="track-orders"] .stock-control-nav a,
+  body[data-app-page="stock-dashboard"] .stock-control-nav a {
+    flex: 1 0 auto;
+    justify-content: center;
+  }
+
+  body[data-app-page="stock-order"] .stock-order-form,
+  body[data-app-page="track-orders"] .stock-order-form {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  body[data-app-page="track-orders"] #trackOrdersFiltersForm {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-app-page="track-orders"] #trackOrdersFiltersForm > .stock-order-field-wide,
+  body[data-app-page="track-orders"] #trackOrdersFiltersForm > .track-orders-filter-actions {
+    grid-column: 1 / -1;
+  }
+
+  body[data-app-page="track-orders"] #trackOrdersFiltersForm > .track-orders-filter-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  body[data-app-page="stock-order"] .stock-order-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-app-page="stock-order"] .stock-order-request-card,
+  body[data-app-page="track-orders"] .stock-order-request-card,
+  body[data-app-page="stock-dashboard"] .stock-order-request-card,
+  body[data-app-page="stock-dashboard"] .stock-dashboard-session-card {
+    padding: 18px;
+  }
+
+  body[data-app-page="stock-dashboard"] .stock-dashboard-session-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body[data-app-page="stock-dashboard"] .stock-dashboard-session-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  body[data-app-page$="-page"]:not(.find-my-test-page) .header {
+    min-height: 310px;
+    margin-bottom: 26px;
+    padding: 94px 20px 32px;
+    background-position: 58% center;
+  }
+
+  body[data-app-page$="-page"]:not(.find-my-test-page) .header h1 {
+    font-size: clamp(2.35rem, 13vw, 3.75rem);
+  }
+
+  .support-home-link {
+    top: 20px;
+    left: 20px;
+  }
+
+  body[data-app-page$="-page"]:not(.find-my-test-page) > .container > .stock-order-request-card,
+  body[data-app-page$="-page"]:not(.find-my-test-page) .site-footer {
+    width: calc(100% - 28px);
+  }
+
+  body[data-app-page$="-page"]:not(.find-my-test-page) > .container > .stock-order-request-card {
+    padding: 22px 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  body.find-my-test-page .clinical-workup-group-patient {
+    grid-template-columns: 1fr;
+  }
+
+  body.find-my-test-page .clinical-workup-group-patient legend,
+  body.find-my-test-page .clinical-workup-context-pregnancy {
+    grid-column: auto;
   }
 }
 
