@@ -347,12 +347,6 @@ body[data-app-page="home"] .home-hero-primary:focus-visible {
 .home-hero-arrow {
   display: inline-block;
   margin-left: 0.18em;
-  animation: home-hero-arrow-nudge 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes home-hero-arrow-nudge {
-  0%, 100% { transform: translateX(0); }
-  48% { transform: translateX(4px); }
 }
 body[data-app-page="home"] .home-hero-dot.is-active { background: var(--hero-accent); }
 
