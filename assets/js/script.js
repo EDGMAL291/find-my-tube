@@ -5987,7 +5987,7 @@ function updateSelectionCartBar() {
     selectionCartCount.textContent = "0";
     const emptyPlanLabel = "Tube Plan: 0";
     const emptyCartLabel = selectionCartBar.querySelector(".selection-cart-label");
-    if (emptyCartLabel) emptyCartLabel.textContent = emptyPlanLabel;
+    if (emptyCartLabel) emptyCartLabel.textContent = "Tube Plan";
     selectionCartBar.setAttribute("aria-label", emptyPlanLabel);
     selectionCartBar.title = emptyPlanLabel;
     selectionCartBar.hidden = true;
@@ -6007,7 +6007,7 @@ function updateSelectionCartBar() {
   selectionCartBar.hidden = false;
   selectionCartCount.textContent = badgeCount;
   const selectionCartLabel = selectionCartBar.querySelector(".selection-cart-label");
-  if (selectionCartLabel) selectionCartLabel.textContent = `Tube Plan: ${badgeCount}`;
+  if (selectionCartLabel) selectionCartLabel.textContent = "Tube Plan";
   selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
