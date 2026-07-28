@@ -5254,3 +5254,84 @@ html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-item .s
     box-shadow: none;
   }
 }
+
+/* Quiet interior page openings: the header carries the page identity. */
+body.find-my-test-page .clinical-workspace-intro {
+  gap: 8px;
+  margin: 84px 0 50px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro {
+  margin: 84px 0 30px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav,
+body[data-app-page="track-orders"] .stock-control-nav,
+body[data-app-page="stock-dashboard"] .stock-control-nav {
+  margin-top: 78px;
+  margin-bottom: 22px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head {
+  min-height: 16px;
+  margin: 6px 0 20px;
+}
+
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head,
+body[data-app-page="stock-dashboard"] .stock-control-intro {
+  margin-top: 8px;
+  margin-bottom: 28px;
+}
+
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workspace-intro h2.sr-only,
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro h2.sr-only,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2.sr-only,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head h2.sr-only,
+body[data-app-page="stock-dashboard"] .stock-control-intro h2.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 620px) {
+  body.find-my-test-page .clinical-workspace-intro,
+  html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro {
+    margin: 68px 0 24px;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro {
+    margin-bottom: 34px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-control-nav,
+  body[data-app-page="track-orders"] .stock-control-nav,
+  body[data-app-page="stock-dashboard"] .stock-control-nav {
+    margin-top: 64px;
+    margin-bottom: 18px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head {
+    min-height: 10px;
+    margin: 4px 0 16px;
+  }
+
+  body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head,
+  body[data-app-page="stock-dashboard"] .stock-control-intro {
+    margin-top: 6px;
+    margin-bottom: 22px;
+  }
+}
