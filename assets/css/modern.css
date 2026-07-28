@@ -4403,6 +4403,469 @@ html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-title 
   color: var(--tool-cream);
 }
 
+/* Compact stock ordering workspace */
+html[data-theme] body[data-app-page="stock-order"] .site-footer {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav {
+  margin-bottom: 10px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a {
+  min-height: 34px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 2.15fr) minmax(290px, 0.85fr);
+  grid-template-areas:
+    "head head"
+    "form preview"
+    "catalog preview"
+    "catalog recent";
+  gap: 10px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head {
+  grid-area: head;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.55rem);
+  line-height: 1;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-form {
+  grid-area: form;
+  grid-template-columns: 1fr 1fr minmax(150px, 0.72fr);
+  gap: 8px;
+  padding: 10px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field-wide {
+  grid-column: auto;
+  gap: 0;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field input,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field select,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field textarea {
+  min-height: 40px;
+  height: 40px;
+  padding: 8px 10px;
+  resize: none;
+  font-size: 0.84rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-grid {
+  grid-area: catalog;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, calc((100% - 20px) / 3));
+  grid-template-columns: none;
+  grid-template-rows: repeat(2, 138px);
+  gap: 8px;
+  max-height: 304px;
+  padding: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-inline: contain;
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 6px;
+  background: rgba(3, 17, 31, 0.42);
+  scrollbar-color: var(--tool-accent-line) transparent;
+  scrollbar-width: thin;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--tool-accent-line);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card {
+  min-width: 0;
+  min-height: 0;
+  height: 138px;
+  align-content: start;
+  gap: 6px;
+  padding: 9px;
+  scroll-snap-align: start;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-meta,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-copy,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-no-stock-warning {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-head,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-head h3 {
+  margin: 0;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-head h3 {
+  min-height: 32px;
+  font-size: 0.81rem;
+  line-height: 1.2;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-status-line {
+  min-height: 22px;
+  gap: 6px;
+  font-size: 0.7rem;
+  line-height: 1.15;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-status-line .stock-status-badge {
+  padding: 4px 7px;
+  font-size: 0.62rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card[data-stock-status="no-stock"] .stock-status-line > span:not(.stock-status-badge) {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-tube-mode-toggle {
+  gap: 5px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-tube-mode-toggle .group-chip {
+  min-height: 27px;
+  padding: 3px 7px;
+  font-size: 0.7rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-row {
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  gap: 5px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-btn,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-input {
+  min-height: 32px;
+  height: 32px;
+  padding: 3px;
+  font-size: 0.82rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-preview-card {
+  grid-area: preview;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-card {
+  grid-area: recent;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-preview-card,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-card {
+  min-width: 0;
+  gap: 9px;
+  padding: 12px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-head,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-head {
+  align-items: flex-start;
+  gap: 8px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-preview-card .stock-order-request-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-status-wrap {
+  display: contents;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-preview-card .stock-order-status-badge {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-preview-card .stock-order-request-meta {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  max-width: none;
+  text-align: left;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-meta {
+  max-width: 220px;
+  font-size: 0.69rem;
+  line-height: 1.25;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-summary-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-summary-item,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-summary-item-wide {
+  grid-column: auto;
+  gap: 5px;
+  padding: 6px 8px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-list {
+  display: grid;
+  gap: 5px;
+  max-height: 116px;
+  overflow-y: auto;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid var(--tool-line);
+  border-radius: 4px;
+  background: rgba(3, 17, 31, 0.4);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.7rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-name {
+  min-width: 0;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-quantity {
+  flex: 0 0 auto;
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-remove {
+  min-height: 26px;
+  padding: 3px 7px;
+  border: 1px solid var(--tool-line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tool-muted);
+  font: inherit;
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-remove:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-selected-remove:focus-visible {
+  border-color: var(--tool-accent);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-actions {
+  gap: 6px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-actions .quick-tool-launch-btn,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-actions .quick-tool-clear-btn,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-actions .quick-tool-launch-btn,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-actions .quick-tool-clear-btn {
+  min-height: 32px;
+  padding: 5px 9px;
+  font-size: 0.7rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-head {
+  align-items: center;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-meta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-track-orders-link {
+  width: auto;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-track-orders-subtitle {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-track-table,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-list {
+  display: grid;
+  gap: 6px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-recent-trigger {
+  width: 100%;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--tool-line);
+  border-radius: 4px;
+  background: rgba(3, 17, 31, 0.54);
+  color: var(--tool-cream);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-recent-trigger:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-recent-trigger:focus-visible {
+  border-color: var(--tool-accent);
+  background: rgba(11, 45, 67, 0.78);
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-identity {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-identity strong {
+  overflow: hidden;
+  color: var(--tool-cream);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-identity > span {
+  overflow: hidden;
+  color: var(--tool-muted);
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-state {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-track-status-badge,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-status-badge {
+  padding: 5px 8px;
+  font-size: 0.62rem;
+}
+
+body.stock-request-detail-open {
+  overflow: hidden;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-modal {
+  place-items: center;
+  padding: 18px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-backdrop {
+  background: rgba(3, 17, 31, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-card {
+  width: min(620px, 100%);
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 6px;
+  background:
+    linear-gradient(145deg, rgba(3, 17, 31, 0.88), rgba(3, 17, 31, 0.98)),
+    url("../images/hero-lab-logistics.jpg") center / cover;
+  color: var(--tool-cream);
+  box-shadow: 0 26px 80px rgba(1, 8, 15, 0.52);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-head h3,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-items h4,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-grid strong,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-item strong {
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-grid > div,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-notes,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-item {
+  padding: 9px;
+  border: 1px solid var(--tool-line);
+  border-radius: 4px;
+  background: rgba(3, 17, 31, 0.58);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-grid span,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-notes span,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-notes p,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-admin,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-item span {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-card .profile-modal-close-btn {
+  border-color: var(--tool-accent-line);
+  background: rgba(3, 17, 31, 0.5);
+  color: var(--tool-cream);
+  box-shadow: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-card .profile-modal-close-btn:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-card .profile-modal-close-btn:focus-visible {
+  border-color: var(--tool-accent);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-item .stock-status-badge[data-stock-tone="success"] {
+  color: #14532d;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-item .stock-status-badge[data-stock-tone="warning"] {
+  color: #713f12;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-item .stock-status-badge[data-stock-tone="danger"] {
+  color: #7f1d1d;
+}
+
 @media (max-width: 860px) {
   body[data-app-page="find-my-tube"],
   body[data-app-page="stock-order"] {
@@ -4422,6 +4885,20 @@ html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-title 
     background-image:
       linear-gradient(180deg, rgba(3, 17, 31, 0.72) 0%, rgba(3, 17, 31, 0.94) 48%, rgba(3, 17, 31, 0.99) 100%),
       url("../images/hero-lab-logistics.jpg");
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "head"
+      "form"
+      "catalog"
+      "preview"
+      "recent";
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-grid {
+    grid-auto-columns: minmax(235px, 44%);
   }
 }
 
@@ -4448,6 +4925,52 @@ html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-title 
 
   html[data-theme] body[data-app-page="find-my-tube"] .group-chip {
     min-height: 108px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2 {
+    font-size: 1.9rem;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-form {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-grid {
+    grid-auto-columns: minmax(82%, 1fr);
+    grid-template-rows: 138px;
+    max-height: 152px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-request-head,
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-head {
+    align-items: flex-start;
+    flex-direction: row;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-actions {
+    width: auto;
+    margin-left: auto;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-request-meta {
+    max-width: 160px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-preview-card,
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-card {
+    padding: 10px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-modal {
+    place-items: end center;
+    padding: 8px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-request-detail-card {
+    max-height: 88svh;
+    padding: 14px;
   }
 
   html[data-theme] body[data-app-page="find-my-tube"] .search-box:focus-within {

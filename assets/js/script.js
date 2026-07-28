@@ -74,8 +74,6 @@ const stockOrderNoteInput = document.getElementById("stockOrderNoteInput");
 const stockOrderGrid = document.getElementById("stockOrderGrid");
 const stockOrderStatusBadge = document.getElementById("stockOrderStatusBadge");
 const stockOrderRequestMeta = document.getElementById("stockOrderRequestMeta");
-const stockOrderSummaryName = document.getElementById("stockOrderSummaryName");
-const stockOrderSummaryWard = document.getElementById("stockOrderSummaryWard");
 const stockOrderSummaryItems = document.getElementById("stockOrderSummaryItems");
 const stockOrderRepeatWarning = document.getElementById("stockOrderRepeatWarning");
 const stockOrderRepeatBadge = document.getElementById("stockOrderRepeatBadge");
@@ -351,7 +349,7 @@ function buildStockApiUrl(path) {
 const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
   ? String(STOCK_API_CONFIGURED_SUBMIT_URL || buildStockApiUrl("/api/stock-requests")).trim()
   : "";
-const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=12");
+const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=2");
 const STOCK_ORDER_DUPLICATE_CHECK_URL = buildStockApiUrl("/api/stock-requests?limit=100&includeArchived=true&includeCancelled=true");
 const STOCK_ORDER_INVENTORY_URL = buildStockApiUrl("/api/stock-inventory");
 const STOCK_LOW_STOCK_DEFAULT_THRESHOLD = 5;
@@ -1687,6 +1685,11 @@ function ensureStockRequestDetailsModal() {
     modal.hidden = true;
     document.body.classList.remove("stock-request-detail-open");
   });
+  modal.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    modal.hidden = true;
+    document.body.classList.remove("stock-request-detail-open");
+  });
   document.body.appendChild(modal);
   return modal;
 }
@@ -1739,7 +1742,7 @@ function showStockRequestDetails(requestOrKey) {
 
   modal.hidden = false;
   document.body.classList.add("stock-request-detail-open");
-  modal.querySelector("[data-stock-request-close]")?.focus?.({ preventScroll: true });
+  modal.querySelector("button[data-stock-request-close]")?.focus?.({ preventScroll: true });
 }
 
 function handleStockRequestDetailsClick(event) {
@@ -1789,21 +1792,16 @@ async function loadStockOrderInventory() {
 function renderStockTrackingList(requests) {
   if (!stockOrderTrackingList) return;
 
-  const activeRequests = Array.isArray(requests)
-    ? requests.filter((request) => {
-      const normalized = normalizeStockRequestStatus(request?.status);
-      return normalized !== "collected" && normalized !== "completed" && normalized !== "cancelled" && normalized !== "no-stock";
-    })
-    : [];
+  const visibleRequests = Array.isArray(requests) ? requests.slice(0, 2) : [];
 
-  if (!activeRequests.length) {
+  if (!visibleRequests.length) {
     stockOrderTrackingList.innerHTML = `
       <p class="stock-dashboard-empty">No requests yet. Once you submit an order, it will appear here.</p>
     `;
     return;
   }
 
-  stockOrderTrackingList.innerHTML = activeRequests.map((request) => {
+  stockOrderTrackingList.innerHTML = visibleRequests.map((request) => {
     const normalizedStatus = normalizeStockRequestStatus(request?.status);
     const detailKey = registerStockRequestForDetails(request);
     const statusLabel = getStockRequestStatusLabel(normalizedStatus);
@@ -1812,20 +1810,21 @@ function renderStockTrackingList(requests) {
       : "";
 
     return `
-      <article class="stock-dashboard-request-card stock-request-compact-card">
-        <div class="stock-request-compact-head">
-          <h4>${escapeHtml(formatRequesterName(request.requestedBy) || "Unknown requester")}</h4>
-          ${repeatBadge}
-        </div>
-        <div class="stock-request-compact-meta">
+      <button
+        type="button"
+        class="stock-dashboard-request-card stock-request-compact-card stock-order-recent-trigger"
+        data-stock-request-view="${escapeHtml(detailKey)}"
+        aria-label="View order from ${escapeHtml(formatRequesterName(request.requestedBy) || "Unknown requester")}, ${escapeHtml(request.wardUnit || "ward not set")}, ${escapeHtml(formatStockRequestDateOnly(request.createdAt || request.submittedAt))}"
+      >
+        <span class="stock-request-compact-identity">
+          <strong>${escapeHtml(formatRequesterName(request.requestedBy) || "Unknown requester")}</strong>
           <span>${escapeHtml(request.wardUnit || "Ward not set")} · ${escapeHtml(formatStockRequestDateOnly(request.createdAt || request.submittedAt))}</span>
+        </span>
+        <span class="stock-request-compact-state">
+          ${repeatBadge}
           <span class="stock-order-status-badge" data-status="${escapeHtml(normalizedStatus)}">${escapeHtml(statusLabel)}</span>
-        </div>
-        ${getStockRequestCompactItemsMarkup(request, 3)}
-        <div class="stock-request-compact-actions">
-          <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${escapeHtml(detailKey)}">View order</button>
-        </div>
-      </article>
+        </span>
+      </button>
     `;
   }).join("");
 }
@@ -1847,8 +1846,9 @@ async function loadStockTrackingList() {
     const requests = Array.isArray(payload?.requests) ? payload.requests : [];
     syncTrackedStockRequestStatuses(requests);
     renderStockTrackingList(requests);
-    stockOrderTrackingMeta.textContent = requests.length
-      ? `${requests.length} recent request${requests.length === 1 ? "" : "s"} shown.`
+    const visibleCount = Math.min(requests.length, 2);
+    stockOrderTrackingMeta.textContent = visibleCount
+      ? `${visibleCount} recent order${visibleCount === 1 ? "" : "s"}.`
       : "No requests yet.";
   } catch (error) {
     console.error("Stock tracking load failed", error);
@@ -2022,10 +2022,9 @@ function getStockOrderSelectedItemsMarkup(selectedItems = getSelectedStockConsum
   return `
     <div class="stock-order-selected-list" aria-label="Selected consumables">
       ${selectedItems.map((item) => {
-        const status = getStockStatusForItem(item);
         const label = getStockDisplayLabel(item);
         return `
-          <article class="stock-order-selected-card" data-stock-status="${escapeHtml(status.status)}">
+          <article class="stock-order-selected-card">
             <div class="stock-order-selected-main">
               <span class="stock-order-selected-name">${getStockDisplayLabelMarkup(item, label, {
                 wrapperClassName: "stock-item-title-row-compact",
@@ -2033,14 +2032,7 @@ function getStockOrderSelectedItemsMarkup(selectedItems = getSelectedStockConsum
               })}</span>
               <span class="stock-order-selected-quantity">${escapeHtml(formatStockQuantity(item))}</span>
             </div>
-            ${getStockStatusLineMarkup(item, status)}
-            ${status.status === "no-stock" ? '<p class="stock-order-no-stock-warning">Request only - no stock available.</p>' : ""}
-            <div class="stock-order-selected-actions">
-              <button type="button" class="stock-order-qty-btn stock-order-selected-step" data-stock-summary-step="${escapeHtml(item.id)}" data-stock-summary-direction="-1" aria-label="Reduce ${escapeHtml(label)}">−</button>
-              <input class="stock-order-qty-input stock-order-selected-input" type="number" min="0" step="1" value="${Number(item.quantity || 0)}" inputmode="numeric" pattern="[0-9]*" data-stock-summary-input="${escapeHtml(item.id)}" aria-label="${escapeHtml(label)} selected quantity" />
-              <button type="button" class="stock-order-qty-btn stock-order-selected-step" data-stock-summary-step="${escapeHtml(item.id)}" data-stock-summary-direction="1" aria-label="Increase ${escapeHtml(label)}">+</button>
-              <button type="button" class="quick-tool-clear-btn stock-order-selected-remove" data-stock-summary-remove="${escapeHtml(item.id)}">Remove</button>
-            </div>
+            <button type="button" class="stock-order-selected-remove" data-stock-summary-remove="${escapeHtml(item.id)}" aria-label="Remove ${escapeHtml(label)}">Remove</button>
           </article>
         `;
       }).join("")}
@@ -2157,12 +2149,6 @@ function updateStockOrderPreview() {
   if (stockOrderStatusBadge) {
     stockOrderStatusBadge.textContent = statusLabel;
     stockOrderStatusBadge.dataset.status = statusLabel.toLowerCase();
-  }
-  if (stockOrderSummaryName) {
-    stockOrderSummaryName.textContent = requesterName || "Not added";
-  }
-  if (stockOrderSummaryWard) {
-    stockOrderSummaryWard.textContent = requesterWard || "Not selected";
   }
   if (stockOrderSummaryItems) {
     stockOrderSummaryItems.innerHTML = getStockOrderSelectedItemsMarkup(selectedItems);

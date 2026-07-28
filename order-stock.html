@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260728r" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260728t" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -140,64 +140,49 @@
 
     <section class="stock-order-panel" id="stockOrderPanel" aria-labelledby="stockOrderTitle">
       <div class="stock-order-head">
-        <div>
-          <p class="stock-order-kicker">Order Stock</p>
-          <h2 id="stockOrderTitle">Request laboratory stock</h2>
-        </div>
+        <h2 id="stockOrderTitle">Order stock</h2>
       </div>
 
       <form class="stock-order-form" id="stockOrderForm">
         <label class="stock-order-field">
-          <span class="stock-order-field-label">Requested by</span>
           <input
             type="text"
             id="stockOrderRequesterNameInput"
             placeholder="Rank initial and surname"
+            aria-label="Requested by"
             autocomplete="name"
           />
         </label>
 
         <label class="stock-order-field">
-          <span class="stock-order-field-label">Ward / unit</span>
           <select id="stockOrderRequesterSelect">
             <option value="">Select clinic, sickbay, or ward</option>
           </select>
         </label>
 
         <label class="stock-order-field stock-order-field-wide">
-          <span class="stock-order-field-label">Notes</span>
           <textarea
             id="stockOrderNoteInput"
-            rows="2"
-            placeholder="Optional note, e.g. urgent top-up for weekend cover"
+            rows="1"
+            placeholder="Optional note"
+            aria-label="Optional request note"
           ></textarea>
         </label>
       </form>
 
       <div class="stock-order-grid" id="stockOrderGrid" aria-label="Consumables available to order"></div>
 
-      <section class="stock-order-request-card" aria-labelledby="stockOrderRequestTitle">
+      <section class="stock-order-request-card stock-order-preview-card" aria-labelledby="stockOrderRequestTitle">
         <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Request Preview</p>
-            <h3 id="stockOrderRequestTitle">Ready to send</h3>
-          </div>
+          <h3 id="stockOrderRequestTitle">Your request</h3>
           <div class="stock-order-request-status-wrap">
             <span class="stock-order-status-badge" id="stockOrderStatusBadge">Draft</span>
             <p class="stock-order-request-meta" id="stockOrderRequestMeta">No items selected yet.</p>
           </div>
         </div>
         <div class="stock-order-summary-grid" id="stockOrderSummaryGrid">
-          <div class="stock-order-summary-item">
-            <span class="stock-order-summary-label">Name</span>
-            <span class="stock-order-summary-value" id="stockOrderSummaryName">Not added</span>
-          </div>
-          <div class="stock-order-summary-item">
-            <span class="stock-order-summary-label">Ward / Unit</span>
-            <span class="stock-order-summary-value" id="stockOrderSummaryWard">Not selected</span>
-          </div>
           <div class="stock-order-summary-item stock-order-summary-item-wide">
-            <span class="stock-order-summary-label">Items ordered</span>
+            <span class="stock-order-summary-label">Selected stock</span>
             <span class="stock-order-summary-value" id="stockOrderSummaryItems">No items selected</span>
           </div>
         </div>
@@ -248,17 +233,13 @@
         </div>
       </section>
 
-      <section class="stock-order-request-card" aria-labelledby="stockOrderTrackingTitle">
+      <section class="stock-order-request-card stock-order-tracking-card" aria-labelledby="stockOrderTrackingTitle">
         <div class="stock-order-request-head stock-order-tracking-head">
-          <div>
-            <p class="stock-order-kicker">Track your orders</p>
-            <h3 id="stockOrderTrackingTitle">Recent requests</h3>
-          </div>
+          <h3 id="stockOrderTrackingTitle">Recent orders</h3>
           <div class="stock-order-tracking-actions">
-            <p class="stock-order-request-meta" id="stockOrderTrackingMeta">Your recent stock requests will appear here.</p>
+            <p class="stock-order-request-meta stock-order-tracking-meta" id="stockOrderTrackingMeta" aria-live="polite">Loading orders...</p>
             <a class="quick-tool-clear-btn stock-order-track-orders-link" href="./track-orders.html" aria-label="Track Orders. View status of your submitted requests.">
-              <span class="stock-order-track-orders-label">Track Orders</span>
-              <span class="stock-order-track-orders-subtitle">View status of your submitted requests</span>
+              <span class="stock-order-track-orders-label">All orders</span>
             </a>
             <button type="button" class="quick-tool-launch-btn" id="refreshStockTrackingBtn">Refresh</button>
           </div>
@@ -310,7 +291,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
-  <script src="assets/js/script.js?v=20260728i"></script>
+  <script src="assets/js/script.js?v=20260728k"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -547,7 +528,7 @@
           const trackingList = document.getElementById("stockOrderTrackingList");
           if (!trackingList) return;
 
-          const rows = Array.isArray(requests) ? requests : [];
+          const rows = Array.isArray(requests) ? requests.slice(0, 2) : [];
           if (!rows.length) {
             trackingList.innerHTML = '<p class="stock-dashboard-empty">No requests yet. Once you submit an order, it will appear here.</p>';
             return;
@@ -569,28 +550,27 @@
               : String(request?.createdAt || "Unknown time");
             const date = escapeTrackingValue(dateValue);
             const statusMeta = getTrackingStatusMeta(request?.status);
-            const itemSummary = typeof getStockRequestCompactItemsMarkup === "function"
-              ? getStockRequestCompactItemsMarkup(request, 3)
-              : '<p class="stock-request-compact-empty">Items ordered available in Track Orders.</p>';
             const repeatBadge = typeof requestHasRepeatOverride === "function" && requestHasRepeatOverride(request)
               ? '<span class="stock-order-repeat-mini-badge">48h override</span>'
               : "";
 
             return `
-              <article class="stock-order-track-row stock-request-compact-card" role="listitem">
-                <div class="stock-request-compact-head">
-                  <h4>${requestedBy}</h4>
-                  ${repeatBadge}
-                </div>
-                <div class="stock-request-compact-meta">
+              <button
+                type="button"
+                class="stock-order-track-row stock-request-compact-card stock-order-recent-trigger"
+                role="listitem"
+                data-stock-request-view="${escapeTrackingValue(detailKey)}"
+                aria-label="View order from ${requestedBy}, ${wardUnit}, ${date}"
+              >
+                <span class="stock-request-compact-identity">
+                  <strong>${requestedBy}</strong>
                   <span>${wardUnit} · ${date}</span>
+                </span>
+                <span class="stock-request-compact-state">
+                  ${repeatBadge}
                   <span class="stock-order-track-status-badge" data-stage="${escapeTrackingValue(statusMeta.stage)}">${escapeTrackingValue(statusMeta.label)}</span>
-                </div>
-                ${itemSummary}
-                <div class="stock-request-compact-actions">
-                  <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${escapeTrackingValue(detailKey)}">View order</button>
-                </div>
-              </article>
+                </span>
+              </button>
             `;
           }).join("");
 
@@ -907,6 +887,7 @@
           const trayStockStatus = typeof getStockStatusForItem === "function"
             ? getStockStatusForItem(trayItem)
             : { status: "no-stock", label: "No Stock", tone: "danger", onHand: 0 };
+          card.dataset.stockStatus = String(trayStockStatus.status || "");
           const trayStatusBadge = typeof getStockStatusBadgeMarkup === "function"
             ? getStockStatusBadgeMarkup(trayStockStatus)
             : '<span class="stock-status-badge" data-stock-status="no-stock" data-stock-tone="danger">No Stock</span>';
@@ -1170,7 +1151,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-06-17.1";
+      const APP_VERSION = "2026-07-28.2";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
