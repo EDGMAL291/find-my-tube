@@ -3455,7 +3455,7 @@ body.find-my-test-page .clinical-workspace-intro h2 {
   max-width: 15ch;
   margin: 0;
   color: var(--test-cream);
-  font-size: clamp(2.65rem, 5vw, 4rem);
+  font-size: clamp(2.2rem, 4vw, 3.25rem);
   font-weight: 500;
   line-height: 0.98;
   text-shadow: 0 2px 20px rgba(1, 10, 20, 0.58);
@@ -3785,7 +3785,7 @@ body.find-my-test-page .collection-guide-panel {
   }
 
   body.find-my-test-page .clinical-workspace-intro h2 {
-    font-size: clamp(2.25rem, 11vw, 3rem);
+    font-size: clamp(2rem, 9.5vw, 2.55rem);
   }
 
   body.find-my-test-page .clinical-workspace-intro p:not(.clinical-workspace-kicker) {
