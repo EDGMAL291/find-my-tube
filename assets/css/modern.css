@@ -5643,3 +5643,84 @@ html[data-theme] body[data-app-page="stock-order"] #stockOrderSubmissionCard {
     height: 146px;
   }
 }
+
+/* Homepage CTA path: the content rule turns into the page link arrow. */
+body[data-app-page="home"] .home-hero-content {
+  position: relative;
+  padding-left: 18px;
+  border-left: 0;
+}
+
+body[data-app-page="home"] .home-hero-content::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 24px;
+  left: 0;
+  width: 1.5px;
+  background: var(--hero-accent);
+  pointer-events: none;
+}
+
+body[data-app-page="home"] .home-hero-primary {
+  position: relative;
+  z-index: 1;
+  width: calc(100% + 18px);
+  min-height: 48px;
+  margin-left: -18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-self: stretch;
+  gap: 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: right;
+}
+
+body[data-app-page="home"] .home-hero-primary::before {
+  content: "";
+  min-width: 28px;
+  height: 1.5px;
+  flex: 1 1 auto;
+  background: var(--hero-accent);
+}
+
+body[data-app-page="home"] .home-hero-primary:hover,
+body[data-app-page="home"] .home-hero-primary:focus-visible {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="home"] .home-hero-primary:focus-visible {
+  outline: 1px solid var(--hero-accent);
+  outline-offset: 5px;
+}
+
+body[data-app-page="home"] .home-hero-arrow {
+  margin: 0;
+  color: var(--hero-accent);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+body[data-app-page="home"] .home-hero-label {
+  flex: 0 0 auto;
+  color: #fffdf8;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  body[data-app-page="home"] .home-hero-content {
+    padding-left: 14px;
+  }
+
+  body[data-app-page="home"] .home-hero-primary {
+    width: calc(100% + 14px);
+    margin-left: -14px;
+  }
+}
