@@ -773,6 +773,606 @@ body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-reque
   .collection-guide-panel { right: 12px; left: 12px; width: auto; }
 }
 
+/* Shared interior workspaces follow the homepage's restrained clinical language. */
+body.find-my-test-page,
+body[data-app-page="find-my-test-page"] {
+  --workspace-accent: #c9a64a;
+  --workspace-accent-strong: #866d2e;
+  --workspace-soft: rgba(201, 166, 74, 0.1);
+}
+
+body.find-my-tube-page,
+body[data-app-page="find-my-tube"] {
+  --workspace-accent: #aa91b6;
+  --workspace-accent-strong: #70566d;
+  --workspace-soft: rgba(170, 145, 182, 0.1);
+}
+
+body[data-app-page="stock-order"],
+body[data-app-page="track-orders"],
+body[data-app-page="stock-dashboard"] {
+  --workspace-accent: #c9b55c;
+  --workspace-accent-strong: #806d27;
+  --workspace-soft: rgba(201, 181, 92, 0.12);
+}
+
+body.find-my-test-page .clinical-workspace-intro,
+body[data-app-page="find-my-test-page"] .clinical-workspace-intro,
+body.find-my-tube-page .tube-workspace-intro,
+body[data-app-page="find-my-tube"] .tube-workspace-intro,
+body[data-app-page="stock-dashboard"] .stock-control-intro,
+body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head {
+  margin: 0 0 26px;
+  padding: 0 0 0 16px;
+  border: 0;
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workspace-intro h2,
+body[data-app-page="find-my-test-page"] .clinical-workspace-intro h2,
+body.find-my-tube-page .tube-workspace-intro h2,
+body[data-app-page="find-my-tube"] .tube-workspace-intro h2,
+body[data-app-page="stock-dashboard"] .stock-control-intro h2,
+body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head h2 {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--fmt-ink);
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.06;
+}
+
+body.find-my-test-page .clinical-workspace-intro p:not(.clinical-workspace-kicker),
+body[data-app-page="find-my-test-page"] .clinical-workspace-intro p:not(.clinical-workspace-kicker),
+body.find-my-tube-page .tube-workspace-intro p:not(.tube-workspace-kicker),
+body[data-app-page="find-my-tube"] .tube-workspace-intro p:not(.tube-workspace-kicker),
+body[data-app-page="stock-dashboard"] .stock-control-intro > p:last-child {
+  max-width: 62ch;
+  margin: 10px 0 0;
+  color: var(--fmt-muted);
+  font-size: 1rem;
+  line-height: 1.58;
+}
+
+body.find-my-test-page .clinical-workspace-kicker,
+body[data-app-page="find-my-test-page"] .clinical-workspace-kicker,
+body.find-my-tube-page .tube-workspace-kicker,
+body[data-app-page="find-my-tube"] .tube-workspace-kicker,
+body[data-app-page="stock-dashboard"] .stock-control-intro .stock-order-kicker,
+body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head .stock-order-kicker,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head .stock-order-kicker {
+  margin: 0 0 8px;
+  color: var(--workspace-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+body.find-my-test-page .clinical-workspace-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.find-my-test-page .clinical-workspace-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 0;
+  color: var(--fmt-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+body.find-my-test-page .clinical-workspace-steps li + li {
+  padding-left: 14px;
+  border-left: 1px solid var(--fmt-line);
+}
+
+body.find-my-test-page .clinical-workspace-steps span {
+  color: var(--workspace-accent-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+body.find-my-test-page .clinical-workup-panel,
+body[data-app-page="find-my-test-page"] .clinical-workup-panel {
+  max-width: 980px;
+  margin: 0 auto 28px;
+  padding: clamp(20px, 3.5vw, 34px);
+  overflow: visible;
+  border: 1px solid var(--fmt-line);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 8px;
+  background: var(--fmt-paper);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-form,
+body[data-app-page="find-my-test-page"] .clinical-workup-form {
+  gap: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-form-grid,
+body[data-app-page="find-my-test-page"] .clinical-workup-form-grid {
+  gap: 22px;
+}
+
+body.find-my-test-page .clinical-workup-group,
+body[data-app-page="find-my-test-page"] .clinical-workup-group {
+  min-width: 0;
+  padding: 0 0 0 15px;
+  border: 0;
+  border-left: 1px solid var(--fmt-line);
+  border-radius: 0;
+  background: transparent;
+}
+
+body.find-my-test-page .clinical-workup-group legend,
+body[data-app-page="find-my-test-page"] .clinical-workup-group legend {
+  padding: 0 0 12px;
+  color: var(--fmt-ink);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+body.find-my-test-page .clinical-workup-field span,
+body.find-my-test-page .clinical-workup-field-label,
+body[data-app-page="find-my-test-page"] .clinical-workup-field span,
+body[data-app-page="find-my-test-page"] .clinical-workup-field-label,
+body[data-app-page="stock-order"] .stock-order-field-label,
+body[data-app-page="track-orders"] .stock-order-field-label,
+body[data-app-page="stock-dashboard"] .stock-order-field-label {
+  color: var(--fmt-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+body.find-my-test-page .clinical-workup-field input,
+body.find-my-test-page .clinical-workup-field select,
+body.find-my-test-page .clinical-workup-field textarea,
+body[data-app-page="find-my-test-page"] .clinical-workup-field input,
+body[data-app-page="find-my-test-page"] .clinical-workup-field select,
+body[data-app-page="find-my-test-page"] .clinical-workup-field textarea,
+body[data-app-page="stock-order"] .stock-order-field input,
+body[data-app-page="stock-order"] .stock-order-field select,
+body[data-app-page="stock-order"] .stock-order-field textarea,
+body[data-app-page="track-orders"] .stock-order-field input,
+body[data-app-page="track-orders"] .stock-order-field select,
+body[data-app-page="track-orders"] .stock-order-field textarea,
+body[data-app-page="stock-dashboard"] .stock-order-field input,
+body[data-app-page="stock-dashboard"] .stock-order-field select,
+body[data-app-page="stock-dashboard"] .stock-order-field textarea {
+  border: 1px solid var(--fmt-line);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-field input:focus,
+body.find-my-test-page .clinical-workup-field select:focus,
+body.find-my-test-page .clinical-workup-field textarea:focus,
+body[data-app-page="find-my-test-page"] .clinical-workup-field input:focus,
+body[data-app-page="find-my-test-page"] .clinical-workup-field select:focus,
+body[data-app-page="find-my-test-page"] .clinical-workup-field textarea:focus,
+body[data-app-page="stock-order"] .stock-order-field input:focus,
+body[data-app-page="stock-order"] .stock-order-field select:focus,
+body[data-app-page="stock-order"] .stock-order-field textarea:focus,
+body[data-app-page="track-orders"] .stock-order-field input:focus,
+body[data-app-page="track-orders"] .stock-order-field select:focus,
+body[data-app-page="track-orders"] .stock-order-field textarea:focus,
+body[data-app-page="stock-dashboard"] .stock-order-field input:focus,
+body[data-app-page="stock-dashboard"] .stock-order-field select:focus,
+body[data-app-page="stock-dashboard"] .stock-order-field textarea:focus {
+  border-color: var(--workspace-accent);
+  box-shadow: 0 0 0 3px var(--workspace-soft);
+}
+
+body.find-my-test-page .clinical-workup-field-glyph,
+body[data-app-page="find-my-test-page"] .clinical-workup-field-glyph {
+  border-color: var(--fmt-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-submit-btn,
+body.find-my-test-page .clinical-workup-reset-btn,
+body.find-my-test-page .clinical-workup-results-add-all-btn,
+body.find-my-test-page .clinical-workup-results-clear-btn,
+body[data-app-page="find-my-test-page"] .clinical-workup-submit-btn,
+body[data-app-page="find-my-test-page"] .clinical-workup-reset-btn,
+body[data-app-page="find-my-test-page"] .clinical-workup-results-add-all-btn,
+body[data-app-page="find-my-test-page"] .clinical-workup-results-clear-btn {
+  border: 1px solid var(--workspace-accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-submit-btn:hover,
+body.find-my-test-page .clinical-workup-submit-btn:focus-visible,
+body.find-my-test-page .clinical-workup-reset-btn:hover,
+body.find-my-test-page .clinical-workup-reset-btn:focus-visible,
+body.find-my-test-page .clinical-workup-results-add-all-btn:hover,
+body.find-my-test-page .clinical-workup-results-add-all-btn:focus-visible,
+body.find-my-test-page .clinical-workup-results-clear-btn:hover,
+body.find-my-test-page .clinical-workup-results-clear-btn:focus-visible,
+body[data-app-page="find-my-test-page"] .clinical-workup-submit-btn:hover,
+body[data-app-page="find-my-test-page"] .clinical-workup-submit-btn:focus-visible,
+body[data-app-page="find-my-test-page"] .clinical-workup-reset-btn:hover,
+body[data-app-page="find-my-test-page"] .clinical-workup-reset-btn:focus-visible,
+body[data-app-page="find-my-test-page"] .clinical-workup-results-add-all-btn:hover,
+body[data-app-page="find-my-test-page"] .clinical-workup-results-add-all-btn:focus-visible,
+body[data-app-page="find-my-test-page"] .clinical-workup-results-clear-btn:hover,
+body[data-app-page="find-my-test-page"] .clinical-workup-results-clear-btn:focus-visible {
+  border-color: var(--workspace-accent-strong);
+  background: var(--workspace-soft);
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-results,
+body[data-app-page="find-my-test-page"] .clinical-workup-results {
+  max-width: 980px;
+  margin: 0 auto 28px;
+  padding: clamp(20px, 3.5vw, 34px);
+  border: 1px solid var(--fmt-line);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 8px;
+  background: var(--fmt-paper);
+  box-shadow: none;
+}
+
+body.find-my-test-page .clinical-workup-rule-card,
+body.find-my-test-page .clinical-workup-empty-state,
+body.find-my-test-page .clinical-workup-test-card,
+body[data-app-page="find-my-test-page"] .clinical-workup-rule-card,
+body[data-app-page="find-my-test-page"] .clinical-workup-empty-state,
+body[data-app-page="find-my-test-page"] .clinical-workup-test-card {
+  border-color: var(--fmt-line);
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-test-page"] .stock-order-request-card {
+  border: 1px solid var(--fmt-line);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 8px;
+  background: var(--fmt-paper);
+  box-shadow: none;
+}
+
+body.find-my-tube-page .search-box,
+body[data-app-page="find-my-tube"] .search-box {
+  margin-bottom: 22px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--fmt-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-tube-page .search-box input,
+body[data-app-page="find-my-tube"] .search-box input {
+  min-height: 56px;
+  padding: 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--fmt-ink);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+}
+
+body.find-my-tube-page .search-box input:focus,
+body[data-app-page="find-my-tube"] .search-box input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+body.find-my-tube-page .group-hints,
+body.find-my-tube-page .quick-tools-panel,
+body[data-app-page="find-my-tube"] .group-hints,
+body[data-app-page="find-my-tube"] .quick-tools-panel {
+  padding: 0 0 0 15px;
+  border: 0;
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.find-my-tube-page .group-hints h3,
+body.find-my-tube-page .quick-tools-panel h3,
+body[data-app-page="find-my-tube"] .group-hints h3,
+body[data-app-page="find-my-tube"] .quick-tools-panel h3 {
+  color: var(--fmt-ink);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+body.find-my-tube-page .group-chip,
+body[data-app-page="find-my-tube"] .group-chip {
+  border-color: var(--fmt-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fmt-ink);
+  box-shadow: none;
+}
+
+body.find-my-tube-page .group-chip.active,
+body.find-my-tube-page .group-chip:hover,
+body.find-my-tube-page .group-chip:focus-visible,
+body[data-app-page="find-my-tube"] .group-chip.active,
+body[data-app-page="find-my-tube"] .group-chip:hover,
+body[data-app-page="find-my-tube"] .group-chip:focus-visible {
+  border-color: var(--workspace-accent);
+  background: var(--workspace-soft);
+  color: var(--workspace-accent-strong);
+}
+
+body.find-my-tube-page .quick-tool-launch-btn,
+body.find-my-tube-page .quick-tool-clear-btn,
+body[data-app-page="find-my-tube"] .quick-tool-launch-btn,
+body[data-app-page="find-my-tube"] .quick-tool-clear-btn,
+body[data-app-page="stock-order"] .quick-tool-launch-btn,
+body[data-app-page="stock-order"] .quick-tool-clear-btn,
+body[data-app-page="track-orders"] .quick-tool-launch-btn,
+body[data-app-page="track-orders"] .quick-tool-clear-btn,
+body[data-app-page="stock-dashboard"] .quick-tool-launch-btn,
+body[data-app-page="stock-dashboard"] .quick-tool-clear-btn {
+  border: 1px solid var(--workspace-accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-submit-btn,
+body[data-app-page="stock-order"] .stock-order-reset-btn,
+body[data-app-page="stock-dashboard"] .stock-dashboard-primary-btn,
+body[data-app-page="stock-dashboard"] .stock-dashboard-secondary-btn {
+  border: 1px solid var(--workspace-accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-submit-btn:hover,
+body[data-app-page="stock-order"] .stock-order-submit-btn:focus-visible,
+body[data-app-page="stock-order"] .stock-order-reset-btn:hover,
+body[data-app-page="stock-order"] .stock-order-reset-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .stock-dashboard-primary-btn:hover,
+body[data-app-page="stock-dashboard"] .stock-dashboard-primary-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .stock-dashboard-secondary-btn:hover,
+body[data-app-page="stock-dashboard"] .stock-dashboard-secondary-btn:focus-visible {
+  border-color: var(--workspace-accent-strong);
+  background: var(--workspace-soft);
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body.find-my-tube-page .quick-tool-launch-btn:hover,
+body.find-my-tube-page .quick-tool-launch-btn:focus-visible,
+body.find-my-tube-page .quick-tool-clear-btn:hover,
+body.find-my-tube-page .quick-tool-clear-btn:focus-visible,
+body[data-app-page="find-my-tube"] .quick-tool-launch-btn:hover,
+body[data-app-page="find-my-tube"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="find-my-tube"] .quick-tool-clear-btn:hover,
+body[data-app-page="find-my-tube"] .quick-tool-clear-btn:focus-visible,
+body[data-app-page="stock-order"] .quick-tool-launch-btn:hover,
+body[data-app-page="stock-order"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="stock-order"] .quick-tool-clear-btn:hover,
+body[data-app-page="stock-order"] .quick-tool-clear-btn:focus-visible,
+body[data-app-page="track-orders"] .quick-tool-launch-btn:hover,
+body[data-app-page="track-orders"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="track-orders"] .quick-tool-clear-btn:hover,
+body[data-app-page="track-orders"] .quick-tool-clear-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .quick-tool-launch-btn:hover,
+body[data-app-page="stock-dashboard"] .quick-tool-launch-btn:focus-visible,
+body[data-app-page="stock-dashboard"] .quick-tool-clear-btn:hover,
+body[data-app-page="stock-dashboard"] .quick-tool-clear-btn:focus-visible {
+  border-color: var(--workspace-accent-strong);
+  background: var(--workspace-soft);
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body.find-my-tube-page .card,
+body[data-app-page="find-my-tube"] .card {
+  border: 1px solid var(--fmt-line);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 8px;
+  background: var(--fmt-paper);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-panel,
+body[data-app-page="track-orders"] .stock-order-panel {
+  gap: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-request-card,
+body[data-app-page="track-orders"] .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-dashboard-card,
+body[data-app-page="stock-dashboard"] .stock-dashboard-stat,
+body[data-app-page="stock-dashboard"] .stock-dashboard-queue,
+body[data-app-page="stock-order"] .stock-order-item-card {
+  border: 1px solid var(--fmt-line);
+  border-left: 2px solid var(--workspace-accent);
+  border-radius: 8px;
+  background: var(--fmt-paper);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-request-card,
+body[data-app-page="track-orders"] .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-order-request-card {
+  padding: clamp(18px, 2.5vw, 26px);
+}
+
+body[data-app-page="stock-order"] .stock-order-item-card:hover,
+body[data-app-page="track-orders"] .stock-order-request-card:hover,
+body[data-app-page="stock-dashboard"] .stock-order-request-card:hover {
+  border-color: var(--workspace-accent);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-qty-btn {
+  border-color: var(--fmt-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--workspace-accent-strong);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-qty-btn:hover,
+body[data-app-page="stock-order"] .stock-order-qty-btn:focus-visible {
+  border-color: var(--workspace-accent);
+  background: var(--workspace-soft);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-summary-item,
+body[data-app-page="stock-dashboard"] .stock-order-summary-item {
+  border-color: var(--fmt-line);
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-request-head h3,
+body[data-app-page="track-orders"] .stock-order-request-head h3,
+body[data-app-page="stock-dashboard"] .stock-order-request-head h3 {
+  color: var(--fmt-ink);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+body[data-app-page="stock-order"] .stock-order-kicker,
+body[data-app-page="track-orders"] .stock-order-kicker,
+body[data-app-page="stock-dashboard"] .stock-order-kicker {
+  color: var(--workspace-accent-strong);
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-panel {
+  gap: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card {
+  border-left-color: var(--workspace-accent);
+  background: var(--fmt-paper);
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card:nth-child(2) {
+  border-left-color: #aa91b6;
+}
+
+body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-request-card:nth-child(3) {
+  border-left-color: #8eb6b6;
+}
+
+body[data-app-page="stock-order"] .stock-control-nav a,
+body[data-app-page="track-orders"] .stock-control-nav a,
+body[data-app-page="stock-dashboard"] .stock-control-nav a {
+  border-color: var(--fmt-line);
+  background: transparent;
+  color: var(--fmt-muted);
+}
+
+body[data-app-page="stock-order"] .stock-control-nav a:hover,
+body[data-app-page="stock-order"] .stock-control-nav a:focus-visible,
+body[data-app-page="stock-order"] .stock-control-nav a.is-active,
+body[data-app-page="track-orders"] .stock-control-nav a:hover,
+body[data-app-page="track-orders"] .stock-control-nav a:focus-visible,
+body[data-app-page="track-orders"] .stock-control-nav a.is-active,
+body[data-app-page="stock-dashboard"] .stock-control-nav a:hover,
+body[data-app-page="stock-dashboard"] .stock-control-nav a:focus-visible,
+body[data-app-page="stock-dashboard"] .stock-control-nav a.is-active {
+  border-color: var(--workspace-accent);
+  background: var(--workspace-soft);
+  color: var(--workspace-accent-strong);
+}
+
+@media (max-width: 720px) {
+  body.find-my-test-page .clinical-workspace-intro,
+  body[data-app-page="find-my-test-page"] .clinical-workspace-intro,
+  body.find-my-tube-page .tube-workspace-intro,
+  body[data-app-page="find-my-tube"] .tube-workspace-intro,
+  body[data-app-page="stock-dashboard"] .stock-control-intro,
+  body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head,
+  body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head {
+    margin-bottom: 20px;
+    padding-left: 13px;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro h2,
+  body[data-app-page="find-my-test-page"] .clinical-workspace-intro h2,
+  body.find-my-tube-page .tube-workspace-intro h2,
+  body[data-app-page="find-my-tube"] .tube-workspace-intro h2,
+  body[data-app-page="stock-dashboard"] .stock-control-intro h2,
+  body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2,
+  body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head h2 {
+    font-size: clamp(1.8rem, 9vw, 2.35rem);
+  }
+
+  body.find-my-test-page .clinical-workspace-steps li + li {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  body.find-my-test-page .clinical-workup-panel,
+  body[data-app-page="find-my-test-page"] .clinical-workup-panel,
+  body.find-my-test-page .clinical-workup-results,
+  body[data-app-page="find-my-test-page"] .clinical-workup-results {
+    padding: 18px;
+  }
+
+  body.find-my-test-page .clinical-workup-form-grid,
+  body[data-app-page="find-my-test-page"] .clinical-workup-form-grid,
+  body[data-app-page="stock-order"] .stock-order-form,
+  body[data-app-page="track-orders"] .stock-order-form {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-app-page="stock-order"] .stock-order-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
