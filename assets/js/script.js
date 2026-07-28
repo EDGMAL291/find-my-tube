@@ -2249,6 +2249,50 @@ function bindPressAction(target, handler) {
   });
 }
 
+function getStockOrderCardSelectionLabel(item, quantity) {
+  const safeQuantity = Math.max(0, Number(quantity) || 0);
+  if (!safeQuantity) return "";
+  if (item?.unitType === "tray") return `${safeQuantity} tray${safeQuantity === 1 ? "" : "s"}`;
+  if (item?.unitType === "packet") return `${safeQuantity} packet${safeQuantity === 1 ? "" : "s"}`;
+  return `${safeQuantity} each`;
+}
+
+function setStockOrderCardExpanded(card, expanded) {
+  if (!(card instanceof HTMLElement)) return;
+
+  if (expanded) {
+    stockOrderGrid?.querySelectorAll(".stock-order-item-card.is-expanded").forEach((otherCard) => {
+      if (otherCard === card) return;
+      setStockOrderCardExpanded(otherCard, false);
+    });
+  }
+
+  const trigger = card.querySelector("[data-stock-card-toggle]");
+  const controls = card.querySelector(".stock-order-item-controls");
+  card.classList.toggle("is-expanded", expanded);
+  card.dataset.stockExpanded = expanded ? "true" : "false";
+  trigger?.setAttribute("aria-expanded", expanded ? "true" : "false");
+  if (controls instanceof HTMLElement) controls.hidden = !expanded;
+}
+
+function syncStockOrderCardSelection(itemId) {
+  const card = stockOrderGrid?.querySelector(`[data-stock-item="${itemId}"]`);
+  if (!(card instanceof HTMLElement)) return;
+
+  const item = stockConsumableItems.find((candidate) => candidate.id === itemId);
+  const quantity = Math.max(0, Number(stockOrderState[itemId] || 0));
+  const selection = card.querySelector("[data-stock-card-selection]");
+  const prompt = card.querySelector("[data-stock-card-prompt]");
+  if (selection instanceof HTMLElement) {
+    selection.textContent = getStockOrderCardSelectionLabel(item, quantity);
+    selection.hidden = quantity <= 0;
+  }
+  if (prompt instanceof HTMLElement) {
+    prompt.hidden = quantity > 0;
+  }
+  card.classList.toggle("has-selection", quantity > 0);
+}
+
 // Syncs disabled and visual max state for a stock item card.
 function syncStockOrderItemState(itemId) {
   if (!stockOrderGrid) return;
@@ -2270,6 +2314,8 @@ function syncStockOrderItemState(itemId) {
   if (quantityInput instanceof HTMLInputElement && Number.isFinite(maxQuantity)) {
     quantityInput.max = String(maxQuantity);
   }
+
+  syncStockOrderCardSelection(itemId);
 }
 
 // Renders consumables cards.
@@ -2280,7 +2326,6 @@ function renderStockOrderItems() {
     .map((item) => {
       const cardLabel = getStockDisplayLabel(item);
       const cardLabelMarkup = getStockDisplayLabelMarkup(item, cardLabel);
-      const stockStatus = getStockStatusForItem(item);
       const cardKicker = item.variantLabel
         ? item.unitType === "tray"
           ? `${item.variantLabel} · Tray of ${item.traySize}`
@@ -2294,49 +2339,59 @@ function renderStockOrderItems() {
         : "Each";
 
       return `
-      <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}" data-stock-status="${escapeHtml(stockStatus.status)}">
-        <div class="stock-order-item-head">
-          <div class="stock-order-item-meta">
+      <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}" data-stock-expanded="false">
+        <button
+          type="button"
+          class="stock-order-item-trigger"
+          data-stock-card-toggle
+          aria-expanded="false"
+          aria-controls="stock-order-controls-${escapeHtml(item.id)}"
+        >
+          <span class="stock-order-card-copy">
             <span class="stock-order-item-kicker">${cardKicker}</span>
-            ${getStockStatusBadgeMarkup(stockStatus)}
+            <span class="stock-order-card-title">${cardLabelMarkup}</span>
+          </span>
+          <span class="stock-order-card-action">
+            <span class="stock-order-card-selection" data-stock-card-selection hidden></span>
+            <span data-stock-card-prompt>Set amount</span>
+            <span class="stock-order-card-plus" aria-hidden="true">+</span>
+          </span>
+        </button>
+        <div class="stock-order-item-controls" id="stock-order-controls-${escapeHtml(item.id)}" hidden>
+          <div class="stock-order-qty-row">
+            <button
+              type="button"
+              class="stock-order-qty-btn"
+              data-stock-qty-step="${item.id}"
+              data-stock-qty-direction="-1"
+              aria-label="Reduce ${escapeHtml(cardLabel)}"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value="0"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              class="stock-order-qty-input"
+              data-stock-qty-input="${item.id}"
+              ${item.maxQuantity ? `max="${item.maxQuantity}"` : ""}
+              aria-label="${cardLabel} quantity"
+            />
+            <button
+              type="button"
+              class="stock-order-qty-btn"
+              data-stock-qty-step="${item.id}"
+              data-stock-qty-direction="1"
+              aria-label="Increase ${escapeHtml(cardLabel)}"
+            >
+              +
+            </button>
           </div>
-          <h3>${cardLabelMarkup}</h3>
+          ${item.note ? `<p class="stock-order-item-copy">${item.note}</p>` : ""}
         </div>
-        ${getStockStatusLineMarkup(item, stockStatus)}
-        ${stockStatus.status === "no-stock" ? '<p class="stock-order-no-stock-warning">Request only - no stock available.</p>' : ""}
-        <div class="stock-order-qty-row">
-          <button
-            type="button"
-            class="stock-order-qty-btn"
-            data-stock-qty-step="${item.id}"
-            data-stock-qty-direction="-1"
-            aria-label="Reduce ${escapeHtml(cardLabel)}"
-          >
-            −
-          </button>
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value="0"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            class="stock-order-qty-input"
-            data-stock-qty-input="${item.id}"
-            ${item.maxQuantity ? `max="${item.maxQuantity}"` : ""}
-            aria-label="${cardLabel} quantity"
-          />
-          <button
-            type="button"
-            class="stock-order-qty-btn"
-            data-stock-qty-step="${item.id}"
-            data-stock-qty-direction="1"
-            aria-label="Increase ${escapeHtml(cardLabel)}"
-          >
-            +
-          </button>
-        </div>
-        ${item.note ? `<p class="stock-order-item-copy">${item.note}</p>` : ""}
       </article>
     `;
     })
@@ -2358,14 +2413,11 @@ function renderStockOrderItems() {
     });
   });
 
-  stockOrderGrid.querySelectorAll("[data-stock-item]").forEach((card) => {
-    bindPressAction(card, (event) => {
-      const target = event.target instanceof Element ? event.target : null;
-      if (!target || target.closest("[data-stock-qty-step], [data-stock-qty-input]")) return;
-
-      const itemId = card.getAttribute("data-stock-item") || "";
-      const currentValue = Number(stockOrderState[itemId] || 0);
-      setStockItemQuantity(itemId, currentValue + 1);
+  stockOrderGrid.querySelectorAll("[data-stock-card-toggle]").forEach((trigger) => {
+    trigger.addEventListener("click", () => {
+      const card = trigger.closest(".stock-order-item-card");
+      if (!(card instanceof HTMLElement)) return;
+      setStockOrderCardExpanded(card, !card.classList.contains("is-expanded"));
     });
   });
 
@@ -2467,10 +2519,7 @@ function initStockOrderPanel() {
   populateStockRequesterOptions();
   renderStockOrderItems();
   updateStockOrderPreview();
-  loadStockTrackingList();
   loadStockDuplicateCheckRequests();
-  loadStockOrderInventory();
-  stockOrderTrackingList?.addEventListener("click", handleStockRequestDetailsClick);
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
     hideStockOrderSubmissionConfirmation();
@@ -2569,7 +2618,6 @@ function initStockOrderPanel() {
         : `Consumables request submitted.${sheetSyncWarning}`);
       resetStockOrderForm();
       showStockOrderSubmissionConfirmation(submittedRecord, payload);
-      loadStockTrackingList();
       loadStockDuplicateCheckRequests();
     } catch (error) {
       submittedStockOrderRecord = null;
@@ -2621,9 +2669,6 @@ function initStockOrderPanel() {
     hideStockOrderSubmissionConfirmation();
   });
 
-  bindPressAction(refreshStockTrackingBtn, () => {
-    loadStockTrackingList();
-  });
 }
 
 // Opens about section.

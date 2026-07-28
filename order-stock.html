@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260728z" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260728aa" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -233,20 +233,6 @@
         </div>
       </section>
 
-      <section class="stock-order-request-card stock-order-tracking-card" aria-labelledby="stockOrderTrackingTitle">
-        <div class="stock-order-request-head stock-order-tracking-head">
-          <h3 id="stockOrderTrackingTitle">Recent orders</h3>
-          <div class="stock-order-tracking-actions">
-            <p class="stock-order-request-meta stock-order-tracking-meta" id="stockOrderTrackingMeta" aria-live="polite">Loading orders...</p>
-            <a class="quick-tool-clear-btn stock-order-track-orders-link" href="./track-orders.html" aria-label="Track Orders. View status of your submitted requests.">
-              <span class="stock-order-track-orders-label">All orders</span>
-            </a>
-            <button type="button" class="quick-tool-launch-btn" id="refreshStockTrackingBtn">Refresh</button>
-          </div>
-        </div>
-        <div class="stock-order-tracking-list" id="stockOrderTrackingList" aria-live="polite"></div>
-      </section>
-
       <section class="stock-order-request-card" id="stockOrderSubmissionCard" hidden aria-labelledby="stockOrderSubmissionTitle">
         <div class="stock-order-request-head">
           <div>
@@ -291,7 +277,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
-  <script src="assets/js/script.js?v=20260728k"></script>
+  <script src="assets/js/script.js?v=20260728m"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -339,33 +325,35 @@
           .stock-tube-mini-icon {
             --tube-cap: #94a3b8;
             position: relative;
-            width: 10px;
-            height: 20px;
-            flex: 0 0 10px;
-            border-radius: 4px 4px 6px 6px;
+            width: 16px;
+            height: 31px;
+            flex: 0 0 16px;
+            border-radius: 5px 5px 8px 8px;
             border: 1px solid rgba(76, 102, 118, 0.32);
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(229, 240, 246, 0.9));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+            box-shadow:
+              inset 0 1px 0 rgba(255, 255, 255, 0.75),
+              0 6px 14px rgba(1, 10, 20, 0.22);
           }
           .stock-tube-mini-icon::before {
             content: "";
             position: absolute;
             left: 50%;
             top: -4px;
-            width: 12px;
-            height: 6px;
+            width: 20px;
+            height: 8px;
             transform: translateX(-50%);
-            border-radius: 4px 4px 2px 2px;
+            border-radius: 5px 5px 3px 3px;
             background: var(--tube-cap);
             box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
           }
           .stock-tube-mini-icon::after {
             content: "";
             position: absolute;
-            left: 2px;
-            top: 5px;
-            width: 2px;
-            height: 10px;
+            left: 3px;
+            top: 7px;
+            width: 3px;
+            height: 16px;
             border-radius: 2px;
             background: rgba(255, 255, 255, 0.6);
           }
@@ -877,73 +865,77 @@
           eachCard.style.display = "none";
 
           const card = document.createElement("article");
-          card.className = "stock-order-card stock-order-item-card";
+          card.className = "stock-order-card stock-order-item-card stock-order-tube-card";
           card.setAttribute("data-stock-unified-tube", config.key);
           card.dataset.mode = "tray";
+          card.dataset.stockExpanded = "false";
           applyTubeAccent(card, config.key);
 
           const eachMax = Math.max(1, Number(eachItem.maxQuantity) || 99);
           const trayMax = Math.max(1, Number(config.trayMax) || 1);
-          const trayStockStatus = typeof getStockStatusForItem === "function"
-            ? getStockStatusForItem(trayItem)
-            : { status: "no-stock", label: "No Stock", tone: "danger", onHand: 0 };
-          card.dataset.stockStatus = String(trayStockStatus.status || "");
-          const trayStatusBadge = typeof getStockStatusBadgeMarkup === "function"
-            ? getStockStatusBadgeMarkup(trayStockStatus)
-            : '<span class="stock-status-badge" data-stock-status="no-stock" data-stock-tone="danger">No Stock</span>';
-          const trayStatusLine = typeof getStockStatusLineMarkup === "function"
-            ? getStockStatusLineMarkup(trayItem, trayStockStatus)
-            : '<div class="stock-status-line" data-stock-status="no-stock"><span>Request only - no stock available</span></div>';
+          const controlsId = `stock-order-controls-${config.key}-tubes`;
 
           card.innerHTML = `
-            <div class="stock-order-item-head">
-              <div class="stock-order-item-meta">
-                <span class="stock-order-item-kicker">Tube stock</span>
-                ${trayStatusBadge}
+            <button
+              type="button"
+              class="stock-order-item-trigger"
+              data-stock-card-toggle
+              aria-expanded="false"
+              aria-controls="${controlsId}"
+            >
+              <span class="stock-order-card-copy">
+                <span class="stock-order-item-kicker">${config.helper}</span>
+                <span class="stock-order-card-title">${buildTubeTitleMarkup(trayItem.label, config.key)}</span>
+              </span>
+              <span class="stock-order-card-action">
+                <span class="stock-order-card-selection" data-stock-card-selection hidden></span>
+                <span data-stock-card-prompt>Set amount</span>
+                <span class="stock-order-card-plus" aria-hidden="true">+</span>
+              </span>
+            </button>
+            <div class="stock-order-item-controls" id="${controlsId}" hidden>
+              <div class="group-chips stock-tube-mode-toggle" role="group" aria-label="${trayItem.label} mode">
+                <button type="button" class="group-chip active" data-stock-mode="tray" aria-pressed="true">Tray (100)</button>
+                <button type="button" class="group-chip" data-stock-mode="each" aria-pressed="false">Each</button>
               </div>
-              <h3>${buildTubeTitleMarkup(trayItem.label, config.key)}</h3>
-              <p class="stock-order-item-copy">${config.helper}</p>
-            </div>
-            ${trayStatusLine}
-            ${trayStockStatus.status === "no-stock" ? '<p class="stock-order-no-stock-warning">Request only - no stock available.</p>' : ""}
-            <div class="group-chips stock-tube-mode-toggle" role="group" aria-label="${trayItem.label} mode">
-              <button type="button" class="group-chip active" data-stock-mode="tray" aria-pressed="true">Tray (100)</button>
-              <button type="button" class="group-chip" data-stock-mode="each" aria-pressed="false">Each</button>
-            </div>
-            <div class="stock-order-qty-row">
-              <button
-                type="button"
-                class="stock-order-qty-btn"
-                data-stock-unified-step="-1"
-                aria-label="Reduce ${trayItem.label}"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value="0"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                class="stock-order-qty-input"
-                data-stock-unified-input="true"
-                aria-label="${trayItem.label} quantity"
-              />
-              <button
-                type="button"
-                class="stock-order-qty-btn"
-                data-stock-unified-step="1"
-                aria-label="Increase ${trayItem.label}"
-              >
-                +
-              </button>
+              <div class="stock-order-qty-row">
+                <button
+                  type="button"
+                  class="stock-order-qty-btn"
+                  data-stock-unified-step="-1"
+                  aria-label="Reduce ${trayItem.label}"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value="0"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  class="stock-order-qty-input"
+                  data-stock-unified-input="true"
+                  aria-label="${trayItem.label} quantity"
+                />
+                <button
+                  type="button"
+                  class="stock-order-qty-btn"
+                  data-stock-unified-step="1"
+                  aria-label="Increase ${trayItem.label}"
+                >
+                  +
+                </button>
+              </div>
             </div>
           `;
 
+          const cardToggle = card.querySelector("[data-stock-card-toggle]");
           const trayToggleBtn = card.querySelector('[data-stock-mode="tray"]');
           const eachToggleBtn = card.querySelector('[data-stock-mode="each"]');
           const quantityInput = card.querySelector('[data-stock-unified-input="true"]');
+          const selectionLabel = card.querySelector("[data-stock-card-selection]");
+          const selectionPrompt = card.querySelector("[data-stock-card-prompt]");
 
           function getActiveItemId() {
             return card.dataset.mode === "each" ? eachId : trayId;
@@ -996,6 +988,18 @@
             quantityInput.step = card.dataset.mode === "each" ? "5" : "1";
             quantityInput.inputMode = "numeric";
             quantityInput.pattern = "[0-9]*";
+            if (selectionLabel instanceof HTMLElement) {
+              selectionLabel.textContent = currentQuantity
+                ? card.dataset.mode === "each"
+                  ? `${currentQuantity} each`
+                  : `${currentQuantity} tray${currentQuantity === 1 ? "" : "s"}`
+                : "";
+              selectionLabel.hidden = currentQuantity <= 0;
+            }
+            if (selectionPrompt instanceof HTMLElement) {
+              selectionPrompt.hidden = currentQuantity > 0;
+            }
+            card.classList.toggle("has-selection", currentQuantity > 0);
           }
 
           function setMode(nextMode) {
@@ -1020,6 +1024,18 @@
 
           trayToggleBtn?.addEventListener("click", () => setMode("tray"));
           eachToggleBtn?.addEventListener("click", () => setMode("each"));
+          cardToggle?.addEventListener("click", () => {
+            const expanded = !card.classList.contains("is-expanded");
+            if (typeof setStockOrderCardExpanded === "function") {
+              setStockOrderCardExpanded(card, expanded);
+              return;
+            }
+            card.classList.toggle("is-expanded", expanded);
+            card.dataset.stockExpanded = expanded ? "true" : "false";
+            cardToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+            const controls = card.querySelector(".stock-order-item-controls");
+            if (controls instanceof HTMLElement) controls.hidden = !expanded;
+          });
 
           card.querySelectorAll("[data-stock-unified-step]").forEach((button) => {
             button.addEventListener("click", () => {
@@ -1043,9 +1059,13 @@
         if (pinkSingleItem) {
           pinkSingleItem.variantLabel = "Each";
           const pinkCard = grid.querySelector('[data-stock-item="pink-tubes-single"]');
-          const pinkHeading = pinkCard?.querySelector(".stock-order-item-head h3");
+          const pinkHeading = pinkCard?.querySelector(".stock-order-card-title");
+          const pinkKicker = pinkCard?.querySelector(".stock-order-item-kicker");
+          pinkCard?.classList.add("stock-order-tube-card");
+          applyTubeAccent(pinkCard, "pink");
+          if (pinkKicker instanceof HTMLElement) pinkKicker.textContent = "Each";
           if (pinkHeading && !pinkHeading.dataset.tubeIconApplied) {
-            const label = String(pinkHeading.textContent || pinkSingleItem.label || "Pink (Blood Bank) tubes").trim();
+            const label = String(pinkSingleItem.label || "Pink (Blood Bank) tubes").trim();
             pinkHeading.innerHTML = buildTubeTitleMarkup(label, "pink");
             pinkHeading.dataset.tubeIconApplied = "1";
           }
@@ -1060,9 +1080,24 @@
           const tubeKey = card.getAttribute("data-stock-unified-tube") || "";
           const itemId = `${tubeKey}-tubes-${mode === "each" ? "single" : "tray"}`;
           const input = card.querySelector('[data-stock-unified-input="true"]');
+          const quantity = getQuantityFromState(itemId);
           if (input instanceof HTMLInputElement) {
-            input.value = String(getQuantityFromState(itemId));
+            input.value = String(quantity);
           }
+          const selection = card.querySelector("[data-stock-card-selection]");
+          const prompt = card.querySelector("[data-stock-card-prompt]");
+          if (selection instanceof HTMLElement) {
+            selection.textContent = quantity
+              ? mode === "each"
+                ? `${quantity} each`
+                : `${quantity} tray${quantity === 1 ? "" : "s"}`
+              : "";
+            selection.hidden = quantity <= 0;
+          }
+          if (prompt instanceof HTMLElement) {
+            prompt.hidden = quantity > 0;
+          }
+          card.classList.toggle("has-selection", quantity > 0);
         });
       }
 
@@ -1101,14 +1136,15 @@
             setStockItemQuantity(trayId, 0);
             setStockItemQuantity(eachId, 0);
           }
+          if (typeof setStockOrderCardExpanded === "function") {
+            setStockOrderCardExpanded(card, false);
+          }
         });
       }
 
       function bootUnifiedTubeUi() {
         try {
           ensureTubeIconStyles();
-          ensureTrackingListStyles();
-          patchTrackingListRenderer();
           patchQuantizedFiveStepCounts();
           patchPreviewQuantityWording();
           renameSinglesToEach();
@@ -1151,7 +1187,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-07-28.2";
+      const APP_VERSION = "2026-07-28.3";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
