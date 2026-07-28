@@ -5642,9 +5642,18 @@ html[data-theme] body[data-app-page="stock-order"] #stockOrderSubmissionCard {
 /* Homepage CTA path: the content rule turns into the page link arrow. */
 body[data-app-page="home"] .home-hero-content {
   position: relative;
-  top: 22px;
+  top: 0;
+  align-self: end;
+  margin-top: 0;
+  margin-bottom: clamp(18px, 2.4vh, 24px);
   padding-left: 18px;
   border-left: 0;
+}
+
+@media (min-width: 621px) and (max-height: 760px) {
+  body[data-app-page="home"] .home-hero-content {
+    margin-bottom: 50px;
+  }
 }
 
 body[data-app-page="home"] .home-hero-content::before {
@@ -5712,7 +5721,9 @@ body[data-app-page="home"] .home-hero-label {
 
 @media (max-width: 620px) {
   body[data-app-page="home"] .home-hero-content {
-    top: 14px;
+    top: 0;
+    margin-top: 0;
+    margin-bottom: 16px;
     padding-left: 14px;
   }
 
