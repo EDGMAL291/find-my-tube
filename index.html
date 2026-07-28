@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260728h" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20260728o" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20260728p" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -287,14 +287,9 @@
     <section class="clinical-workspace-intro" aria-labelledby="clinicalWorkspaceTitle">
       <div>
         <p class="clinical-workspace-kicker">Clinical decision support</p>
-        <h2 id="clinicalWorkspaceTitle">Build a focused test plan</h2>
-        <p>Capture the clinical picture, then receive practical laboratory test suggestions. Do not enter patient identifiers.</p>
+        <h2 id="clinicalWorkspaceTitle">Suggest tests</h2>
+        <p>Enter the clinical picture to build a focused Tube Plan.</p>
       </div>
-      <ol class="clinical-workspace-steps" aria-label="Suggest Tests process">
-        <li><span>01</span> Add context</li>
-        <li><span>02</span> Review suggestions</li>
-        <li><span>03</span> Build a tube plan</li>
-      </ol>
     </section>
 
     <section class="clinical-workup-panel" id="clinicalWorkupPanel" aria-labelledby="clinicalWorkupTitle">
@@ -305,7 +300,7 @@
             <fieldset class="clinical-workup-group clinical-workup-group-patient">
               <legend>Patient details</legend>
               <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
-                <span id="clinicalDobLabel">Date of birth</span>
+                <span id="clinicalDobLabel" class="sr-only">Date of birth</span>
                 <div class="clinical-workup-dob-control" id="clinicalDobControl">
                   <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
                     <input
@@ -314,7 +309,7 @@
                       inputmode="numeric"
                       autocomplete="bday"
                       maxlength="14"
-                      placeholder="DD / MM / YYYY"
+                      placeholder="DOB (DD/MM/YYYY)"
                       aria-describedby="clinicalDobAssist"
                     />
                     <input type="date" id="clinicalDobPickerInput" hidden aria-hidden="true" tabindex="-1" />
@@ -325,10 +320,10 @@
 
               <div class="clinical-workup-context-pair">
                 <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
-                  <span>Sex</span>
+                  <span class="sr-only">Sex</span>
                   <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
                     <select id="clinicalSexSelect">
-                      <option value="unspecified">Not specified</option>
+                      <option value="unspecified">Sex</option>
                       <option value="female">Female</option>
                       <option value="male">Male</option>
                       <option value="other">Other</option>
@@ -337,9 +332,9 @@
                 </label>
 
                 <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
-                  <span>Pregnancy status</span>
+                  <span class="sr-only">Pregnancy status</span>
                   <select id="clinicalPregnancySelect">
-                    <option value="unknown">Unknown / not applicable</option>
+                    <option value="unknown">Pregnancy status</option>
                     <option value="pregnant">Pregnant / possible pregnancy</option>
                     <option value="not-pregnant">Not pregnant</option>
                   </select>
@@ -350,29 +345,29 @@
             <fieldset class="clinical-workup-group clinical-workup-group-picture">
               <legend>Clinical picture</legend>
               <div class="clinical-workup-field clinical-workup-field-wide">
-                <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
+                <label class="clinical-workup-field-label sr-only" for="clinicalSymptomsInput">Symptoms</label>
                 <textarea
                   id="clinicalSymptomsInput"
                   rows="3"
-                  placeholder="fever, vomiting, chest pain"
+                  placeholder="Symptoms"
                 ></textarea>
               </div>
 
               <div class="clinical-workup-field clinical-workup-field-wide">
-                <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
+                <label class="clinical-workup-field-label sr-only" for="clinicalSignsInput">Signs</label>
                 <textarea
                   id="clinicalSignsInput"
                   rows="3"
-                  placeholder="jaundice, pallor, dehydration"
+                  placeholder="Signs"
                 ></textarea>
               </div>
 
               <div class="clinical-workup-field clinical-workup-field-wide clinical-workup-concern-field">
-                <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
+                <label class="clinical-workup-field-label sr-only" for="clinicalConcernInput">Clinical concern</label>
                 <textarea
                   id="clinicalConcernInput"
                   rows="4"
-                  placeholder="sepsis, DKA, anaemia, renal failure"
+                  placeholder="Clinical concern"
                 ></textarea>
               </div>
             </fieldset>
@@ -381,11 +376,11 @@
 
           <div class="clinical-workup-actions">
             <button type="submit" class="clinical-workup-submit-btn" id="clinicalWorkupSubmitBtn">Suggest Tests</button>
-            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">Clear patient details</button>
+            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">Clear</button>
           </div>
 
           <p class="clinical-workup-note">
-            Reference use only. Confirm urgent, paediatric, transfusion, and site-specific requirements with local protocol or senior review.
+            Reference only. Confirm urgent or site-specific requirements locally.
           </p>
           <p class="clinical-workup-status" id="clinicalWorkupStatus" role="status" aria-live="polite"></p>
         </form>
@@ -399,7 +394,7 @@
           <h3 id="clinicalWorkupResultsTitle">Suggested tests</h3>
         </div>
         <div class="clinical-workup-results-actions">
-          <button type="button" class="clinical-workup-results-add-all-btn" id="addAllClinicalWorkupResultsBtn">Add suggested tests to Tube Plan</button>
+          <button type="button" class="clinical-workup-results-add-all-btn" id="addAllClinicalWorkupResultsBtn">Add all to Tube Plan</button>
           <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear results</button>
         </div>
       </div>
