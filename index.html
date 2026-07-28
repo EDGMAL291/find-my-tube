@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260728h" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20260728x" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20260728y" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -299,22 +299,22 @@
           <div class="clinical-workup-form-grid">
             <fieldset class="clinical-workup-group clinical-workup-group-patient">
               <legend>Patient details</legend>
-              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-dob">
-                <span id="clinicalDobLabel" class="sr-only">Date of birth</span>
-                <div class="clinical-workup-dob-control" id="clinicalDobControl">
-                  <div class="clinical-workup-input-wrap clinical-workup-dob-input-wrap">
+              <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-age">
+                <span class="sr-only">Age in years</span>
+                <div class="clinical-workup-age-control">
+                  <div class="clinical-workup-input-wrap">
                     <input
-                      type="text"
-                      id="clinicalDobInput"
-                      inputmode="numeric"
-                      autocomplete="bday"
-                      maxlength="14"
-                      placeholder="DOB (DD/MM/YYYY)"
-                      aria-describedby="clinicalDobAssist"
+                      type="number"
+                      id="clinicalAgeInput"
+                      inputmode="decimal"
+                      min="0"
+                      max="120"
+                      step="0.1"
+                      placeholder="Age (years)"
+                      aria-describedby="clinicalAgeAssist"
                     />
-                    <input type="date" id="clinicalDobPickerInput" hidden aria-hidden="true" tabindex="-1" />
                   </div>
-                  <p class="clinical-workup-dob-assist" id="clinicalDobAssist"></p>
+                  <p class="clinical-workup-age-assist" id="clinicalAgeAssist"></p>
                 </div>
               </label>
 
@@ -521,7 +521,7 @@
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/script.js?v=20260728i"></script>
-  <script src="assets/js/find-my-test.js?v=20260603b"></script>
+  <script src="assets/js/find-my-test.js?v=20260728a"></script>
   <script src="assets/js/premium-home.js?v=20260728d"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {

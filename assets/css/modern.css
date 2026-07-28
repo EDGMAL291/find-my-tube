@@ -2334,7 +2334,7 @@ body.find-my-test-page .clinical-workup-context-pregnancy {
   grid-column: 1 / -1;
 }
 
-body.find-my-test-page .clinical-workup-context-dob {
+body.find-my-test-page .clinical-workup-context-age {
   grid-column: auto;
 }
 
@@ -3250,7 +3250,7 @@ body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action:focus
     grid-column: auto;
   }
 
-  body.find-my-test-page .clinical-workup-context-dob input,
+  body.find-my-test-page .clinical-workup-context-age input,
   body.find-my-test-page .clinical-workup-context-sex select {
     font-size: 0.88rem;
   }
@@ -3558,10 +3558,27 @@ body.find-my-test-page .clinical-workup-field-label {
   font-size: 0.63rem;
 }
 
-body.find-my-test-page .clinical-workup-dob-control #clinicalDobInput,
+body.find-my-test-page .clinical-workup-age-control {
+  display: grid;
+  gap: 4px;
+}
+
+body.find-my-test-page .clinical-workup-age-control #clinicalAgeInput,
 body.find-my-test-page .clinical-workup-input-wrap input,
 body.find-my-test-page .clinical-workup-input-wrap select {
   padding-right: 11px;
+}
+
+body.find-my-test-page #clinicalAgeInput {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+body.find-my-test-page #clinicalAgeInput::-webkit-inner-spin-button,
+body.find-my-test-page #clinicalAgeInput::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 body.find-my-test-page .clinical-workup-field input,
@@ -3605,13 +3622,14 @@ body.find-my-test-page .collection-guide-fab-icon {
   display: none;
 }
 
-body.find-my-test-page .clinical-workup-dob-assist {
+body.find-my-test-page .clinical-workup-age-assist {
   min-height: 0;
+  margin: 0;
   color: var(--test-cream-muted);
   font-size: 0.66rem;
 }
 
-body.find-my-test-page .clinical-workup-dob-assist:empty {
+body.find-my-test-page .clinical-workup-age-assist:empty {
   display: none;
 }
 

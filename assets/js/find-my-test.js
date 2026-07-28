@@ -10,11 +10,8 @@
     symptomsChipList: document.getElementById("clinicalSymptomsChipList"),
     signsChipList: document.getElementById("clinicalSignsChipList"),
     concernChipList: document.getElementById("clinicalConcernChipList"),
-    dobControl: document.getElementById("clinicalDobControl"),
-    dobLabel: document.getElementById("clinicalDobLabel"),
-    dobInput: document.getElementById("clinicalDobInput"),
-    dobPickerInput: document.getElementById("clinicalDobPickerInput"),
-    dobAssist: document.getElementById("clinicalDobAssist"),
+    ageInput: document.getElementById("clinicalAgeInput"),
+    ageAssist: document.getElementById("clinicalAgeAssist"),
     sexSelect: document.getElementById("clinicalSexSelect"),
     sexIcon: document.getElementById("clinicalSexIcon"),
     pregnancySelect: document.getElementById("clinicalPregnancySelect"),
@@ -459,134 +456,70 @@
     return "symptoms";
   }
 
-  // DOB helpers power the age summary and the pregnancy field locking rules.
-  function parseDateInput(value) {
+  // Age is optional, but when supplied it powers paediatric rules and pregnancy locking.
+  function getAgeDetails(value) {
     const raw = String(value || "").trim();
-    if (!raw) return null;
-
-    let year;
-    let month;
-    let day;
-    const isoMatch = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-    const localMatch = raw.match(/^(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{4})$/);
-
-    if (isoMatch) {
-      year = Number.parseInt(isoMatch[1], 10);
-      month = Number.parseInt(isoMatch[2], 10);
-      day = Number.parseInt(isoMatch[3], 10);
-    } else if (localMatch) {
-      day = Number.parseInt(localMatch[1], 10);
-      month = Number.parseInt(localMatch[2], 10);
-      year = Number.parseInt(localMatch[3], 10);
-    } else {
-      return null;
+    if (!raw) {
+      return {
+        value: "",
+        isInvalid: false,
+        ageDays: null,
+        ageMonths: null,
+        ageYears: null,
+        ageDisplay: "",
+        summaryLabel: ""
+      };
     }
 
-    if (![year, month, day].every((part) => Number.isFinite(part))) return null;
-    const parsed = new Date(year, month - 1, day);
-    if (
-      parsed.getFullYear() !== year
-      || parsed.getMonth() !== month - 1
-      || parsed.getDate() !== day
-    ) {
-      return null;
+    const ageYears = Number(raw.replace(",", "."));
+    if (!Number.isFinite(ageYears) || ageYears < 0 || ageYears > 120) {
+      return {
+        value: raw,
+        isInvalid: true,
+        ageDays: null,
+        ageMonths: null,
+        ageYears: null,
+        ageDisplay: "",
+        summaryLabel: ""
+      };
     }
 
-    parsed.setHours(0, 0, 0, 0);
-    return parsed;
+    const ageMonths = Math.max(0, Math.round(ageYears * 12));
+    const ageDays = Math.max(0, Math.round(ageYears * 365.2425));
+    const roundedYears = Math.round(ageYears * 10) / 10;
+    const ageDisplay = ageYears < 2
+      ? formatCount(ageMonths, "month")
+      : `${roundedYears} ${roundedYears === 1 ? "year" : "years"}`;
+
+    return {
+      value: raw,
+      isInvalid: false,
+      ageDays,
+      ageMonths,
+      ageYears,
+      ageDisplay,
+      summaryLabel: ageDisplay ? `${ageDisplay} old` : ""
+    };
   }
 
-  // Formats date for summary.
-  function formatDateForSummary(date) {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-    });
-  }
+  function renderAgeField() {
+    if (!refs.ageInput) return;
 
-  // Formats date for input.
-  function formatDateForInput(date) {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = String(date.getFullYear());
-    return `${day} / ${month} / ${year}`;
-  }
-
-  // Formats date for picker.
-  function formatDateForPicker(date) {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = String(date.getFullYear());
-    return `${year}-${month}-${day}`;
-  }
-
-  // Auto-inserts DOB separators so mobile users can type digits only.
-  function formatDobDraft(value) {
-    const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
-    if (!digits) return "";
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 4) return `${digits.slice(0, 2)} / ${digits.slice(2)}`;
-    return `${digits.slice(0, 2)} / ${digits.slice(2, 4)} / ${digits.slice(4)}`;
-  }
-
-  // Formats age display.
-  function formatAgeDisplay(ageDays, ageMonths) {
-    if (!Number.isFinite(ageDays) || ageDays < 0) return "";
-    if (ageDays <= 28) return formatCount(ageDays, "day");
-    if (!Number.isFinite(ageMonths) || ageMonths < 1) return formatCount(ageDays, "day");
-    if (Number.isFinite(ageMonths) && ageMonths < 24) return formatCount(ageMonths, "month");
-
-    return formatCount(Math.floor(ageMonths / 12), "year");
-  }
-
-  // Renders DOB field.
-  function renderDobField() {
-    if (!refs.dobControl || !refs.dobInput) return;
-
-    const dobDetails = getDobDetails(refs.dobInput.value || "");
-    const hasRawValue = Boolean(String(refs.dobInput.value || "").trim());
-    const hasUsableDob = Boolean(dobDetails.value) && !dobDetails.isFuture && Boolean(dobDetails.date);
-    if (refs.dobPickerInput) refs.dobPickerInput.max = formatDateForPicker(new Date());
-
-    refs.dobControl.classList.toggle("has-value", hasUsableDob);
-    refs.dobControl.classList.toggle("is-empty", !hasUsableDob);
-    refs.dobControl.classList.toggle("is-invalid", hasRawValue && !hasUsableDob);
-    refs.dobInput.setAttribute("aria-invalid", hasRawValue && !hasUsableDob ? "true" : "false");
-
-    if (!hasUsableDob) {
-      if (refs.dobLabel) refs.dobLabel.textContent = "Date of birth";
-      if (refs.dobPickerInput) refs.dobPickerInput.value = "";
-      if (refs.dobAssist) {
-        refs.dobAssist.textContent = dobDetails.isFuture
-          ? "Date of birth cannot be in the future."
-          : hasRawValue
-            ? "Use DD / MM / YYYY."
-            : "";
-      }
-      return;
-    }
-
-    if (refs.dobLabel) refs.dobLabel.textContent = "Date of birth";
-    if (refs.dobPickerInput && dobDetails.date) {
-      refs.dobPickerInput.value = formatDateForPicker(dobDetails.date);
-    }
-    if (refs.dobAssist) {
-      refs.dobAssist.textContent = dobDetails.ageDisplay
-        ? `${dobDetails.ageDisplay} old`
-        : "Age unavailable";
+    const ageDetails = getAgeDetails(refs.ageInput.value || "");
+    const hasRawValue = Boolean(String(refs.ageInput.value || "").trim());
+    const isInvalid = hasRawValue && ageDetails.isInvalid;
+    refs.ageInput.setAttribute("aria-invalid", isInvalid ? "true" : "false");
+    if (refs.ageAssist) {
+      refs.ageAssist.textContent = isInvalid
+        ? "Enter an age from 0 to 120 years."
+        : "";
     }
   }
 
   // Checks whether pregnancy locked by demographics.
-  function isPregnancyLockedByDemographics(dobDetails, sexValue) {
+  function isPregnancyLockedByDemographics(ageDetails, sexValue) {
     if (sexValue === "male") return true;
-    return Number.isFinite(dobDetails?.ageYears) && dobDetails.ageYears < MIN_PREGNANCY_AGE_YEARS;
+    return Number.isFinite(ageDetails?.ageYears) && ageDetails.ageYears < MIN_PREGNANCY_AGE_YEARS;
   }
 
   // Synchronizes default select styling.
@@ -599,9 +532,9 @@
   function syncPregnancyField() {
     if (!refs.pregnancySelect) return;
 
-    const dobDetails = getDobDetails(refs.dobInput?.value || "");
+    const ageDetails = getAgeDetails(refs.ageInput?.value || "");
     const sexValue = refs.sexSelect?.value || "unspecified";
-    const shouldLock = isPregnancyLockedByDemographics(dobDetails, sexValue);
+    const shouldLock = isPregnancyLockedByDemographics(ageDetails, sexValue);
 
     if (shouldLock) {
       if (!state.pregnancyWasAutoLocked) {
@@ -627,60 +560,6 @@
 
     state.pregnancyWasAutoLocked = false;
     syncContextSelectStates();
-  }
-
-  // Gets DOB details.
-  function getDobDetails(value) {
-    const dob = parseDateInput(value);
-    if (!dob) {
-      return {
-        value: "",
-        date: null,
-        isFuture: false,
-        ageDays: null,
-        ageMonths: null,
-        ageYears: null,
-        ageDisplay: "",
-        summaryLabel: ""
-      };
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (dob > today) {
-      return {
-        value: String(value || "").trim(),
-        date: dob,
-        isFuture: true,
-        ageDays: null,
-        ageMonths: null,
-        ageYears: null,
-        ageDisplay: "",
-        summaryLabel: ""
-      };
-    }
-
-    const ageDays = Math.floor((today.getTime() - dob.getTime()) / 86400000);
-    let ageMonths = (today.getFullYear() - dob.getFullYear()) * 12 + (today.getMonth() - dob.getMonth());
-    if (today.getDate() < dob.getDate()) ageMonths -= 1;
-    ageMonths = Math.max(ageMonths, 0);
-
-    const ageYears = ageDays / 365.2425;
-    const ageDisplay = formatAgeDisplay(ageDays, ageMonths);
-    const formattedDate = formatDateForSummary(dob);
-
-    return {
-      value: String(value || "").trim(),
-      date: dob,
-      isFuture: false,
-      ageDays,
-      ageMonths,
-      ageYears,
-      ageDisplay,
-      summaryLabel: formattedDate
-        ? `DOB ${formattedDate}${ageDisplay ? ` (${ageDisplay} old)` : ""}`
-        : ""
-    };
   }
 
   // Quick picks write into the free-text fields so clinicians can mix guided chips with their own wording.
@@ -1092,15 +971,14 @@
     state.expandedQuickPickFields.clear();
     state.pregnancyWasAutoLocked = false;
     state.lastUnlockedPregnancyValue = "unknown";
-    if (refs.dobInput) refs.dobInput.value = "";
+    if (refs.ageInput) refs.ageInput.value = "";
     if (refs.sexSelect) refs.sexSelect.value = "unspecified";
     if (refs.pregnancySelect) refs.pregnancySelect.value = "unknown";
     if (refs.symptomsInput) refs.symptomsInput.value = "";
     if (refs.signsInput) refs.signsInput.value = "";
     if (refs.concernInput) refs.concernInput.value = "";
-    if (refs.dobPickerInput) refs.dobPickerInput.value = "";
     closeAllAutocomplete();
-    renderDobField();
+    renderAgeField();
     syncPregnancyField();
     syncContextSelectStates();
     renderQuickPicks();
@@ -1115,7 +993,7 @@
 
   // Build one normalized input object so the matcher can stay focused on rules instead of DOM access.
   function getInput() {
-    const dobDetails = getDobDetails(refs.dobInput?.value || "");
+    const ageDetails = getAgeDetails(refs.ageInput?.value || "");
     const symptoms = String(refs.symptomsInput?.value || "").trim();
     const signs = String(refs.signsInput?.value || "").trim();
     const concern = String(refs.concernInput?.value || "").trim();
@@ -1132,14 +1010,13 @@
     ].join(" "));
 
     return {
-      dob: dobDetails.value,
-      dobDate: dobDetails.date,
-      dobSummaryLabel: dobDetails.summaryLabel,
-      ageDays: dobDetails.ageDays,
-      ageMonths: dobDetails.ageMonths,
-      ageYears: dobDetails.ageYears,
-      ageDisplay: dobDetails.ageDisplay,
-      hasFutureDob: dobDetails.isFuture,
+      age: ageDetails.value,
+      ageSummaryLabel: ageDetails.summaryLabel,
+      ageDays: ageDetails.ageDays,
+      ageMonths: ageDetails.ageMonths,
+      ageYears: ageDetails.ageYears,
+      ageDisplay: ageDetails.ageDisplay,
+      hasInvalidAge: ageDetails.isInvalid,
       sex: refs.sexSelect?.value || "unspecified",
       pregnancy,
       symptoms,
@@ -1307,7 +1184,7 @@
 
     const summaryParts = [];
 
-    if (input.dobSummaryLabel) summaryParts.push(input.dobSummaryLabel);
+    if (input.ageSummaryLabel) summaryParts.push(input.ageSummaryLabel);
     if (formatSexLabel(input.sex)) summaryParts.push(formatSexLabel(input.sex).toLowerCase());
     if (input.pregnancy === "pregnant") summaryParts.push("pregnancy context");
     if (input.symptoms) summaryParts.push(`symptoms "${truncateText(input.symptoms)}"`);
@@ -1524,9 +1401,9 @@
     }
 
     const input = getInput();
-    if (input.hasFutureDob) {
-      setStatus("Date of birth cannot be in the future.");
-      refs.dobInput?.focus();
+    if (input.hasInvalidAge) {
+      setStatus("Enter an age from 0 to 120 years.");
+      refs.ageInput?.focus();
       return;
     }
 
@@ -1800,7 +1677,7 @@
     });
 
     [
-      refs.dobInput,
+      refs.ageInput,
       refs.sexSelect,
       refs.pregnancySelect,
       refs.symptomsInput,
@@ -1812,11 +1689,10 @@
           ? autoSelectTypedQuickPicks("concern")
           : [];
 
-        if (field === refs.dobInput) {
-          refs.dobInput.value = formatDobDraft(refs.dobInput.value || "");
-          renderDobField();
+        if (field === refs.ageInput) {
+          renderAgeField();
         }
-        if (field === refs.dobInput || field === refs.sexSelect) {
+        if (field === refs.ageInput || field === refs.sexSelect) {
           syncPregnancyField();
         }
         syncQuickPickSelectionFromInputs();
@@ -1828,18 +1704,10 @@
       });
     });
 
-    refs.dobInput?.addEventListener("change", () => {
-      renderDobField();
+    refs.ageInput?.addEventListener("change", () => {
+      renderAgeField();
       syncPregnancyField();
       setStatus("");
-    });
-
-    refs.dobInput?.addEventListener("blur", () => {
-      const dobDetails = getDobDetails(refs.dobInput?.value || "");
-      if (dobDetails.date && !dobDetails.isFuture) {
-        refs.dobInput.value = formatDateForInput(dobDetails.date);
-      }
-      renderDobField();
     });
 
     [
@@ -1887,14 +1755,6 @@
         applyAutocompleteSelection(field, index);
       });
     });
-    refs.dobPickerInput?.addEventListener("change", () => {
-      const selectedDate = parseDateInput(refs.dobPickerInput?.value || "");
-      refs.dobInput.value = selectedDate ? formatDateForInput(selectedDate) : "";
-      renderDobField();
-      syncPregnancyField();
-      setStatus("");
-    });
-
     refs.sexSelect?.addEventListener("change", () => {
       syncPregnancyField();
       syncSexIcon();
@@ -1968,7 +1828,7 @@
         concern: state.dictionary.entriesByType?.concern || []
       };
 
-      renderDobField();
+      renderAgeField();
       syncSexIcon();
       syncPregnancyField();
       syncContextSelectStates();
