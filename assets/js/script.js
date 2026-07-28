@@ -120,8 +120,8 @@ const closeLegalModalBtn = document.getElementById("closeLegalModalBtn");
 const contactFeedbackModal = document.getElementById("contactFeedbackModal");
 const closeContactFeedbackBtn = document.getElementById("closeContactFeedbackBtn");
 const legalDocButtons = document.querySelectorAll("[data-legal-doc]");
-const SEARCH_PLACEHOLDER_BASE = "Search by test or profile";
-const SEARCH_PLACEHOLDER_HINT = `${SEARCH_PLACEHOLDER_BASE} (e.g. CRP or Liver function tests)`;
+const SEARCH_PLACEHOLDER_BASE = "Search test";
+const SEARCH_PLACEHOLDER_HINT = SEARCH_PLACEHOLDER_BASE;
 const GOLD_VOLUME_PROFILE_NAMES = new Set([
   "U&E", // 1
   "Liver Function Tests (LFT)", // 2

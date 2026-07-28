@@ -5726,3 +5726,197 @@ body[data-app-page="home"] .home-hero-label {
     margin-left: -14px;
   }
 }
+
+/* Find My Tube landing directory: quiet names on the left, open photography on the right. */
+body[data-app-page="find-my-tube"] {
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(3, 17, 31, 0.97) 0%,
+      rgba(3, 17, 31, 0.9) 38%,
+      rgba(3, 17, 31, 0.46) 62%,
+      rgba(3, 17, 31, 0.12) 100%
+    ),
+    url("../images/hero-lab-tubes.jpg");
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro {
+  width: min(100%, 560px);
+  margin-bottom: 12px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .search-box {
+  width: min(100%, 560px);
+  margin: 0 0 18px;
+  padding: 0 12px 2px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--tool-accent-line);
+  border-left: 1px solid var(--tool-accent-line);
+  border-radius: 0;
+  background: rgba(3, 17, 31, 0.24);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .search-box input {
+  min-height: 42px;
+  height: 42px;
+  padding: 0 34px 0 0;
+  font-size: 0.88rem;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .search-input-wrap {
+  min-height: 42px;
+  height: 42px;
+}
+
+body[data-app-page="find-my-tube"] .search-box input::placeholder {
+  color: rgba(255, 253, 248, 0.56);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .search-box:focus-within {
+  border-color: var(--tool-accent);
+  background: rgba(3, 17, 31, 0.32);
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .pre-search {
+  width: min(100%, 560px);
+  display: block;
+  margin-bottom: 0;
+}
+
+body[data-app-page="find-my-tube"] .pre-search-primary {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-hints {
+  width: 100%;
+  padding: 0 0 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-hints h3 {
+  margin: 0 0 9px;
+  color: var(--tool-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chips {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack {
+  display: block;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip {
+  width: 100%;
+  min-height: 42px;
+  padding: 7px 0;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  isolation: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--tool-cream);
+  box-shadow: none;
+  text-align: left;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::before,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::after {
+  display: none;
+  content: none;
+  background: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-label {
+  position: static;
+  min-width: 0;
+  color: currentColor;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: left;
+  text-shadow: 0 2px 12px rgba(1, 10, 20, 0.48);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active .group-chip-icon {
+  position: static;
+  inset: auto;
+  width: auto;
+  height: auto;
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--tool-accent);
+  font-size: 1rem;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon svg {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon::before {
+  content: "→";
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:focus-visible,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active {
+  border: 0;
+  background: transparent;
+  color: var(--tool-accent);
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:focus-visible {
+  outline: 1px solid var(--tool-accent-line);
+  outline-offset: 3px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .site-footer {
+  display: none;
+}
+
+@media (max-width: 620px) {
+  body[data-app-page="find-my-tube"] {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(3, 17, 31, 0.55) 0%,
+        rgba(3, 17, 31, 0.9) 40%,
+        rgba(3, 17, 31, 0.98) 100%
+      ),
+      url("../images/hero-lab-tubes.jpg");
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .search-box {
+    width: 100%;
+    padding-inline: 12px;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .group-hints {
+    padding-left: 12px;
+  }
+}
