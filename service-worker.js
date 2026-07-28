@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v225";
+const CACHE_NAME = "find-my-tube-v226";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -12,12 +12,13 @@ const CORE_ASSETS = [
   "./disclaimer.html",
   "./contact-feedback.html",
   "./find-my-test.html",
+  "./order-stock.html",
   "./tube-plan.html",
   "./robots.txt",
   "./sitemap.xml",
   "./manifest.webmanifest?v=20260316b",
   "./assets/css/style.css?v=20260728h",
-  "./assets/css/modern.css?v=20260728af",
+  "./assets/css/modern.css?v=20260728ag",
   "./assets/js/script.js?v=20260728n",
   "./assets/js/find-my-test.js?v=20260728a",
   "./assets/data/data.js?v=20260505a",
@@ -33,6 +34,14 @@ const CORE_ASSETS = [
   "./assets/images/hero-lab-collection.jpg",
   "./assets/images/hero-lab-logistics.jpg",
   "./assets/images/hero-lab-tubes.jpg",
+  "./assets/images/stock-tubes/realistic-tube-yellow-v2.png",
+  "./assets/images/stock-tubes/realistic-tube-grey-v2.png",
+  "./assets/images/stock-tubes/realistic-tube-purple-v2.png",
+  "./assets/images/stock-tubes/realistic-tube-green-v2.png",
+  "./assets/images/stock-tubes/realistic-tube-blue-v2.png",
+  "./assets/images/stock-tubes/realistic-tube-pearl-v2.png",
+  "./assets/images/stock-tubes/realistic-tube-tan-v2.png",
+  "./assets/images/stock-tubes/realistic-tube-pink-v2.png",
   "./assets/icons/favicon-16.png",
   "./assets/icons/favicon-32.png",
   "./assets/icons/icon-192.png?v=20260316b",

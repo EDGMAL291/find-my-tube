@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260728aa" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260728ag" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -291,15 +291,15 @@
         { key: "pearl", helper: "Pearl/PPT tubes.", trayMax: 1 },
         { key: "tan", helper: "Tan tubes.", trayMax: 1 }
       ];
-      const tubeIconClassByKey = {
-        yellow: "stock-tube-mini-icon--yellow",
-        grey: "stock-tube-mini-icon--grey",
-        purple: "stock-tube-mini-icon--purple",
-        green: "stock-tube-mini-icon--green",
-        blue: "stock-tube-mini-icon--blue",
-        pearl: "stock-tube-mini-icon--pearl",
-        tan: "stock-tube-mini-icon--tan",
-        pink: "stock-tube-mini-icon--pink"
+      const tubeImageByKey = {
+        yellow: "assets/images/stock-tubes/realistic-tube-yellow-v2.png",
+        grey: "assets/images/stock-tubes/realistic-tube-grey-v2.png",
+        purple: "assets/images/stock-tubes/realistic-tube-purple-v2.png",
+        green: "assets/images/stock-tubes/realistic-tube-green-v2.png",
+        blue: "assets/images/stock-tubes/realistic-tube-blue-v2.png",
+        pearl: "assets/images/stock-tubes/realistic-tube-pearl-v2.png",
+        tan: "assets/images/stock-tubes/realistic-tube-tan-v2.png",
+        pink: "assets/images/stock-tubes/realistic-tube-pink-v2.png"
       };
       const tubeAccentByKey = {
         yellow: { bg: "rgba(250, 204, 21, 0.28)", border: "rgba(180, 120, 8, 0.42)" },
@@ -320,51 +320,15 @@
           .stock-tube-title-row {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
           }
-          .stock-tube-mini-icon {
-            --tube-cap: #94a3b8;
-            position: relative;
-            width: 16px;
-            height: 31px;
-            flex: 0 0 16px;
-            border-radius: 5px 5px 8px 8px;
-            border: 1px solid rgba(76, 102, 118, 0.32);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(229, 240, 246, 0.9));
-            box-shadow:
-              inset 0 1px 0 rgba(255, 255, 255, 0.75),
-              0 6px 14px rgba(1, 10, 20, 0.22);
+          .stock-tube-photo {
+            width: 24px;
+            height: 64px;
+            flex: 0 0 24px;
+            object-fit: contain;
+            filter: drop-shadow(0 7px 7px rgba(0, 0, 0, 0.32));
           }
-          .stock-tube-mini-icon::before {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: -4px;
-            width: 20px;
-            height: 8px;
-            transform: translateX(-50%);
-            border-radius: 5px 5px 3px 3px;
-            background: var(--tube-cap);
-            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-          }
-          .stock-tube-mini-icon::after {
-            content: "";
-            position: absolute;
-            left: 3px;
-            top: 7px;
-            width: 3px;
-            height: 16px;
-            border-radius: 2px;
-            background: rgba(255, 255, 255, 0.6);
-          }
-          .stock-tube-mini-icon--yellow { --tube-cap: #facc15; }
-          .stock-tube-mini-icon--grey { --tube-cap: #9ca3af; }
-          .stock-tube-mini-icon--purple { --tube-cap: #a855f7; }
-          .stock-tube-mini-icon--green { --tube-cap: #22c55e; }
-          .stock-tube-mini-icon--blue { --tube-cap: #93c5fd; }
-          .stock-tube-mini-icon--pearl { --tube-cap: #e5e7eb; }
-          .stock-tube-mini-icon--tan { --tube-cap: #d4a373; }
-          .stock-tube-mini-icon--pink { --tube-cap: #ec4899; }
           .stock-tube-mode-toggle {
             display: flex;
             flex-wrap: nowrap;
@@ -695,8 +659,8 @@
       }
 
       function buildTubeTitleMarkup(label, key) {
-        const iconClass = tubeIconClassByKey[key] || "";
-        return `<span class="stock-tube-title-row"><span class="stock-tube-mini-icon ${iconClass}" aria-hidden="true"></span><span>${label}</span></span>`;
+        const tubeImage = tubeImageByKey[key] || tubeImageByKey.yellow;
+        return `<span class="stock-tube-title-row"><img class="stock-tube-photo" src="${tubeImage}" alt="" width="160" height="560" decoding="async" aria-hidden="true"><span>${label}</span></span>`;
       }
 
       function applyTubeAccent(card, key) {
@@ -1187,7 +1151,7 @@
   </script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-07-28.3";
+      const APP_VERSION = "2026-07-28.4";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"

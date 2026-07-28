@@ -5588,15 +5588,10 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card.is-exp
   gap: 3px;
 }
 
-html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card.is-expanded .stock-tube-mini-icon {
-  width: 12px;
-  height: 24px;
-  flex-basis: 12px;
-}
-
-html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card.is-expanded .stock-tube-mini-icon::before {
-  width: 15px;
-  height: 6px;
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card.is-expanded .stock-tube-photo {
+  width: 18px;
+  height: 42px;
+  flex-basis: 18px;
 }
 
 html[data-theme] body[data-app-page="stock-order"] .stock-order-item-controls {
