@@ -3843,3 +3843,446 @@ body.find-my-test-page .collection-guide-panel {
     display: none;
   }
 }
+
+/* Find My Tube and Order Stock: dark photographic workspaces. */
+body[data-app-page="find-my-tube"],
+body[data-app-page="stock-order"] {
+  --tool-night: #061a2e;
+  --tool-night-deep: #03111f;
+  --tool-cream: #fffdf8;
+  --tool-muted: rgba(255, 253, 248, 0.72);
+  --tool-surface: rgba(3, 17, 31, 0.56);
+  --tool-field: rgba(4, 23, 41, 0.76);
+  --tool-line: rgba(255, 253, 248, 0.25);
+  min-height: 100svh;
+  color: var(--tool-cream);
+  color-scheme: dark;
+  background-color: var(--tool-night);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+body[data-app-page="find-my-tube"] {
+  --tool-accent: #d8c4df;
+  --tool-accent-line: rgba(216, 196, 223, 0.5);
+  --tool-accent-soft: rgba(216, 196, 223, 0.12);
+  background-image:
+    linear-gradient(90deg, rgba(3, 17, 31, 0.94) 0%, rgba(3, 17, 31, 0.8) 55%, rgba(3, 17, 31, 0.46) 100%),
+    url("../images/hero-lab-tubes.jpg");
+}
+
+body[data-app-page="stock-order"] {
+  --tool-accent: #e6cf8c;
+  --tool-accent-line: rgba(230, 207, 140, 0.5);
+  --tool-accent-soft: rgba(230, 207, 140, 0.11);
+  background-image:
+    linear-gradient(90deg, rgba(3, 17, 31, 0.95) 0%, rgba(3, 17, 31, 0.82) 54%, rgba(3, 17, 31, 0.5) 100%),
+    url("../images/hero-lab-logistics.jpg");
+}
+
+body[data-app-page="find-my-tube"] .container,
+body[data-app-page="stock-order"] .container {
+  width: min(100% - 40px, 1180px);
+  min-height: 100svh;
+  padding: 0 0 26px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .header,
+html[data-theme] body[data-app-page="stock-order"] .header {
+  min-height: 62px;
+  margin: 0;
+  padding: 12px 0 8px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .header::after,
+body[data-app-page="stock-order"] .header::after,
+body[data-app-page="find-my-tube"] .header h1::after,
+body[data-app-page="stock-order"] .header h1::after {
+  display: none;
+  content: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .header .brand-title,
+html[data-theme] body[data-app-page="stock-order"] .header .brand-title {
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tool-cream);
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  font-weight: 500;
+  letter-spacing: 0.055em;
+  text-shadow: 0 2px 16px rgba(1, 10, 20, 0.52);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .header .brand-title:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .header .brand-title:focus-visible,
+html[data-theme] body[data-app-page="stock-order"] .header .brand-title:hover,
+html[data-theme] body[data-app-page="stock-order"] .header .brand-title:focus-visible {
+  background: transparent;
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head {
+  width: min(100%, 780px);
+  margin: 2px 0 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tool-cream);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro h2,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2 {
+  max-width: 16ch;
+  margin: 0;
+  color: var(--tool-cream);
+  font-size: clamp(2.2rem, 4vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1;
+  text-shadow: 0 2px 20px rgba(1, 10, 20, 0.58);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-kicker,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-kicker {
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro p:not(.tube-workspace-kicker) {
+  max-width: 62ch;
+  margin: 8px 0 0;
+  color: var(--tool-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-shadow: 0 2px 12px rgba(1, 10, 20, 0.54);
+}
+
+/* Find My Tube surfaces */
+html[data-theme] body[data-app-page="find-my-tube"] .search-box {
+  width: min(100%, 900px);
+  margin: 0 0 14px;
+  padding: 5px 16px;
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 6px;
+  background: var(--tool-surface);
+  box-shadow: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .search-box input {
+  min-height: 50px;
+  border: 0;
+  background: transparent;
+  color: var(--tool-cream);
+  box-shadow: none;
+}
+
+body[data-app-page="find-my-tube"] .search-box input::placeholder {
+  color: rgba(255, 253, 248, 0.5);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-hints,
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tools-panel,
+html[data-theme] body[data-app-page="find-my-tube"] .cards .card {
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 6px;
+  background: var(--tool-surface);
+  color: var(--tool-cream);
+  box-shadow: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-hints h3,
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tools-panel h3,
+html[data-theme] body[data-app-page="find-my-tube"] .cards .card h2,
+html[data-theme] body[data-app-page="find-my-tube"] .card-title-select-copy {
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tools-panel p,
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-hint,
+html[data-theme] body[data-app-page="find-my-tube"] .card-meta-row,
+html[data-theme] body[data-app-page="find-my-tube"] .card-requested-specimen,
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-value,
+html[data-theme] body[data-app-page="find-my-tube"] .card-extra,
+html[data-theme] body[data-app-page="find-my-tube"] .critical-prep-field,
+html[data-theme] body[data-app-page="find-my-tube"] .results-info {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-field .label {
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip {
+  border-color: var(--tool-line);
+  background: rgba(3, 17, 31, 0.44);
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:focus-visible,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active {
+  border-color: var(--tool-accent);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active .group-chip-icon {
+  color: color-mix(in srgb, var(--tool-accent) 74%, transparent);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-launch-btn,
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-clear-btn,
+html[data-theme] body[data-app-page="find-my-tube"] .card-toggle-btn {
+  border-color: var(--tool-accent-line);
+  background: transparent;
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-launch-btn:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-launch-btn:focus-visible,
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-clear-btn:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-clear-btn:focus-visible,
+html[data-theme] body[data-app-page="find-my-tube"] .card-toggle-btn:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .card-toggle-btn:focus-visible {
+  border-color: var(--tool-accent);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-field,
+html[data-theme] body[data-app-page="find-my-tube"] .card-requested-specimen {
+  border-color: var(--tool-line);
+  background: rgba(3, 17, 31, 0.42);
+}
+
+/* Order Stock surfaces */
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav {
+  margin: 4px 0 16px;
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 6px;
+  background: rgba(3, 17, 31, 0.5);
+  box-shadow: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a:focus-visible,
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a.is-active {
+  border-color: var(--tool-accent-line);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel {
+  gap: 16px;
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-form,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-card {
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 6px;
+  background: var(--tool-surface);
+  color: var(--tool-cream);
+  box-shadow: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card {
+  border-top-color: var(--stock-item-glyph-color, var(--tool-accent));
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card:hover {
+  background: rgba(3, 17, 31, 0.7);
+  box-shadow: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field-label,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-kicker,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-summary-label {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field input,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field select,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field textarea,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-input,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-preview {
+  border-color: var(--tool-line);
+  background: var(--tool-field);
+  color: var(--tool-cream);
+  caret-color: var(--tool-accent);
+  box-shadow: none;
+}
+
+body[data-app-page="stock-order"] .stock-order-field input::placeholder,
+body[data-app-page="stock-order"] .stock-order-field textarea::placeholder {
+  color: rgba(255, 253, 248, 0.5);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field select option {
+  background: var(--tool-night-deep);
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field input:focus,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field select:focus,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field textarea:focus,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-input:focus {
+  border-color: var(--tool-accent);
+  background: rgba(4, 23, 41, 0.9);
+  box-shadow: 0 0 0 2px var(--tool-accent-soft);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-copy,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-hint,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-meta,
+html[data-theme] body[data-app-page="stock-order"] .stock-status-line {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-request-head h3,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-summary-value,
+html[data-theme] body[data-app-page="stock-order"] .stock-item-title-row,
+html[data-theme] body[data-app-page="stock-order"] .stock-tube-title-row {
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-tube-mode-toggle .group-chip {
+  border-color: var(--tool-line);
+  background: transparent;
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-tube-mode-toggle .group-chip:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-tube-mode-toggle .group-chip:focus-visible,
+html[data-theme] body[data-app-page="stock-order"] .stock-tube-mode-toggle .group-chip.active {
+  border-color: var(--tool-accent-line);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-btn,
+html[data-theme] body[data-app-page="stock-order"] .quick-tool-launch-btn,
+html[data-theme] body[data-app-page="stock-order"] .quick-tool-clear-btn {
+  border-color: var(--tool-accent-line);
+  background: transparent;
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-btn:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-btn:focus-visible,
+html[data-theme] body[data-app-page="stock-order"] .quick-tool-launch-btn:hover,
+html[data-theme] body[data-app-page="stock-order"] .quick-tool-launch-btn:focus-visible,
+html[data-theme] body[data-app-page="stock-order"] .quick-tool-clear-btn:hover,
+html[data-theme] body[data-app-page="stock-order"] .quick-tool-clear-btn:focus-visible {
+  border-color: var(--tool-accent);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-summary-item {
+  border-color: var(--tool-line);
+  background: rgba(3, 17, 31, 0.38);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-card {
+  border: 1px solid var(--tool-line);
+  background: rgba(3, 17, 31, 0.54);
+  color: var(--tool-cream);
+  box-shadow: none;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-meta,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-items,
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-more {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-title {
+  color: var(--tool-cream);
+}
+
+@media (max-width: 860px) {
+  body[data-app-page="find-my-tube"],
+  body[data-app-page="stock-order"] {
+    background-position: center top;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+  }
+
+  body[data-app-page="find-my-tube"] {
+    background-image:
+      linear-gradient(180deg, rgba(3, 17, 31, 0.7) 0%, rgba(3, 17, 31, 0.92) 54%, rgba(3, 17, 31, 0.98) 100%),
+      url("../images/hero-lab-tubes.jpg");
+  }
+
+  body[data-app-page="stock-order"] {
+    background-image:
+      linear-gradient(180deg, rgba(3, 17, 31, 0.72) 0%, rgba(3, 17, 31, 0.94) 48%, rgba(3, 17, 31, 0.99) 100%),
+      url("../images/hero-lab-logistics.jpg");
+  }
+}
+
+@media (max-width: 620px) {
+  body[data-app-page="find-my-tube"] .container,
+  body[data-app-page="stock-order"] .container {
+    width: min(100% - 24px, 1180px);
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .header,
+  html[data-theme] body[data-app-page="stock-order"] .header {
+    min-height: 54px;
+    padding: 8px 0 4px;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro h2,
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2 {
+    font-size: clamp(2rem, 9.5vw, 2.55rem);
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .search-box {
+    padding-inline: 12px;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .search-box:focus-within {
+    border-color: var(--tool-accent-line);
+    box-shadow: none;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .search-box input:focus,
+  html[data-theme] body[data-app-page="find-my-tube"] #searchInput:focus,
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-field input:focus,
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-field select:focus,
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-field textarea:focus,
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-qty-input:focus {
+    outline: none;
+    border-color: var(--tool-line);
+    background: var(--tool-field);
+    box-shadow: none;
+  }
+}
