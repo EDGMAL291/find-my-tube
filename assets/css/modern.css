@@ -4046,6 +4046,183 @@ html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active .group-ch
   color: color-mix(in srgb, var(--tool-accent) 74%, transparent);
 }
 
+/* Real laboratory photography replaces decorative department glyphs. */
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip {
+  min-height: 120px;
+  isolation: isolate;
+  background: rgba(3, 17, 31, 0.62);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::before,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::before {
+  z-index: -2;
+  background-image: url("../images/find-my-tube-departments-v1.jpg");
+  background-repeat: no-repeat;
+  background-size: 300% 200%;
+  filter: saturate(0.86) contrast(1.04) brightness(0.82);
+  transition: transform 220ms ease, filter 220ms ease;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::after {
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(3, 17, 31, 0.08) 12%,
+    rgba(3, 17, 31, 0.38) 55%,
+    rgba(3, 17, 31, 0.94) 100%
+  );
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(1) .group-chip::before {
+  background-position: 0% 0%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(2) .group-chip::before {
+  background-position: 50% 0%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(3) .group-chip::before {
+  background-position: 100% 0%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(4) .group-chip::before {
+  background-position: 0% 100%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(5) .group-chip::before {
+  background-position: 50% 100%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(6) .group-chip::before {
+  background-position: 100% 100%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-label {
+  z-index: 1;
+  color: var(--tool-cream);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  text-shadow: 0 1px 12px rgba(3, 17, 31, 0.8);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active .group-chip-icon {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:hover::before,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:focus-visible::before,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active::before {
+  filter: saturate(0.94) contrast(1.05) brightness(0.9);
+  transform: scale(1.025);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .site-footer {
+  border-top-color: var(--tool-line);
+  background: rgba(3, 17, 31, 0.5);
+  color: var(--tool-muted);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .site-footer-title {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal {
+  background: rgba(3, 17, 31, 0.74);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal-card {
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 6px;
+  background-color: var(--tool-night-deep);
+  background-image:
+    linear-gradient(145deg, rgba(3, 17, 31, 0.82), rgba(3, 17, 31, 0.96)),
+    url("../images/find-my-tube-departments-v1.jpg");
+  background-repeat: no-repeat;
+  background-size: auto, 300% 200%;
+  color: var(--tool-cream);
+  box-shadow: 0 24px 70px rgba(1, 8, 15, 0.42);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] #sectionBrowseModal[data-section="chemistry"] .section-browse-modal-card {
+  background-position: center, 0% 0%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] #sectionBrowseModal[data-section="haematology"] .section-browse-modal-card {
+  background-position: center, 50% 0%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] #sectionBrowseModal[data-section="immunology"] .section-browse-modal-card {
+  background-position: center, 0% 100%;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal-head h3 {
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal-copy {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal .profile-modal-close-btn {
+  border-color: var(--tool-accent-line);
+  background: rgba(3, 17, 31, 0.52);
+  color: var(--tool-cream);
+  box-shadow: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal .profile-modal-close-btn:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal .profile-modal-close-btn:focus-visible {
+  border-color: var(--tool-accent);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option {
+  min-height: 88px;
+  padding: 16px;
+  border: 1px solid var(--tool-line);
+  border-radius: 5px;
+  background: rgba(3, 17, 31, 0.68);
+  color: var(--tool-cream);
+  box-shadow: none;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option:hover,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option:focus-visible,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option.active {
+  border-color: var(--tool-accent);
+  background: rgba(11, 45, 67, 0.8);
+  color: var(--tool-accent);
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-icon {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-label {
+  margin-top: 0;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
 html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-launch-btn,
 html[data-theme] body[data-app-page="find-my-tube"] .quick-tool-clear-btn,
 html[data-theme] body[data-app-page="find-my-tube"] .card-toggle-btn {
@@ -4267,6 +4444,10 @@ html[data-theme] body[data-app-page="stock-order"] .stock-request-compact-title 
 
   html[data-theme] body[data-app-page="find-my-tube"] .search-box {
     padding-inline: 12px;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .group-chip {
+    min-height: 108px;
   }
 
   html[data-theme] body[data-app-page="find-my-tube"] .search-box:focus-within {

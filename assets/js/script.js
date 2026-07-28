@@ -3339,6 +3339,7 @@ function openSectionBrowseModal(sectionId, trigger = null) {
   const activeBrowseGroup = getActiveBrowseGroup(sectionId);
   activeSectionBrowseModalSectionId = sectionId;
   lastSectionBrowseModalTrigger = trigger || document.activeElement;
+  sectionBrowseModal.dataset.section = sectionId;
   sectionBrowseModalTitle.textContent = section.label;
   sectionBrowseModalCopy.textContent = `Choose a section to browse ${section.label.toLowerCase()} tests.`;
   sectionBrowseModalGrid.innerHTML = browseGroups.map((group) => `
@@ -3386,6 +3387,7 @@ function closeSectionBrowseModal({ restoreFocus = true } = {}) {
   if (!sectionBrowseModal) return;
 
   sectionBrowseModal.hidden = true;
+  delete sectionBrowseModal.dataset.section;
   activeSectionBrowseModalSectionId = "";
   syncModalOpenClass();
   updateGroupChipState();
