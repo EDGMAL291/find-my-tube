@@ -297,6 +297,20 @@ textarea:focus-visible {
 /* Home stays visual, but uses the same palette and typography as every workspace. */
 body[data-app-page="home"] .home-hero-slide {
   background-color: #1a2c32;
+  will-change: opacity, transform;
+  transition: opacity 560ms ease, transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body[data-app-page="home"] .home-hero-slide .home-hero-content {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 300ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body[data-app-page="home"] .home-hero-slide.is-active .home-hero-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 130ms;
 }
 
 body[data-app-page="home"] .home-hero-carousel {
