@@ -5647,6 +5647,7 @@ html[data-theme] body[data-app-page="stock-order"] #stockOrderSubmissionCard {
 /* Homepage CTA path: the content rule turns into the page link arrow. */
 body[data-app-page="home"] .home-hero-content {
   position: relative;
+  top: 22px;
   padding-left: 18px;
   border-left: 0;
 }
@@ -5716,6 +5717,7 @@ body[data-app-page="home"] .home-hero-label {
 
 @media (max-width: 620px) {
   body[data-app-page="home"] .home-hero-content {
+    top: 14px;
     padding-left: 14px;
   }
 
