@@ -525,6 +525,34 @@ body[data-app-page="home"] .home-hero-content {
 
 body[data-app-page="home"] .home-hero-eyebrow { color: #d6e9df; }
 body[data-app-page="home"] .home-hero-content h2 { color: #fffdf8; }
+
+body[data-app-page="home"] .home-hero-heading-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  text-shadow: inherit;
+  cursor: pointer;
+}
+
+body[data-app-page="home"] .home-hero-heading-link:hover,
+body[data-app-page="home"] .home-hero-heading-link:focus-visible {
+  color: var(--hero-accent);
+  outline: none;
+}
+
+body[data-app-page="home"] .home-hero-heading-link:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
 body[data-app-page="home"] .home-hero-copy { color: rgba(255, 253, 248, 0.9); }
 body[data-app-page="home"] .home-hero-primary {
   justify-self: end;
