@@ -8955,7 +8955,8 @@ function applyFilters() {
   const hasClinicalState = hasClinicalWorkupState();
   const hasResultsView = isResultsViewActive(activeSectionGroup, searchInput?.value || "");
   const keepPreSearchVisible = shouldKeepPreSearchPanelVisible(activeSectionGroup, searchInput?.value || "");
-  preSearchPanel.style.display = hasQuery || hasClinicalState || (hasSectionFilter && !keepPreSearchVisible) ? "none" : "grid";
+  const shouldHidePreSearch = hasQuery || hasClinicalState || (hasSectionFilter && !keepPreSearchVisible);
+  preSearchPanel.style.display = shouldHidePreSearch ? "none" : (isFindMyTubePage ? "block" : "grid");
   if (siteFooter) {
     siteFooter.hidden = hasResultsView;
   }
