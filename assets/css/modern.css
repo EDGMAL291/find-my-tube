@@ -5929,6 +5929,22 @@ html[data-theme] body[data-app-page="find-my-tube"] .group-hints h3 {
   text-transform: uppercase;
 }
 
+@media (min-width: 621px) {
+  html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro,
+  html[data-theme] body[data-app-page="find-my-tube"] .search-box {
+    margin-bottom: 24px;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .pre-search {
+    display: block;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .group-hints {
+    width: 100%;
+    min-height: calc(100svh - 370px);
+  }
+}
+
 html[data-theme] body[data-app-page="find-my-tube"] .group-chips {
   display: grid;
   grid-template-columns: 1fr;
@@ -6036,6 +6052,7 @@ html[data-theme] body[data-app-page="find-my-tube"] .site-footer {
 
   html[data-theme] body[data-app-page="find-my-tube"] .group-hints {
     padding-left: 12px;
+    min-height: 0;
   }
 }
 
