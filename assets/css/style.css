@@ -1698,7 +1698,7 @@ body[data-app-page="home"] .header {
 }
 
 .home-hero-slide-clipboard .home-hero-content {
-  justify-self: end;
+  justify-self: start;
 }
 
 .home-hero-slide-rack .home-hero-content,
