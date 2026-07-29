@@ -1,6 +1,6 @@
 {
   "version": "2026-03-23.1",
-  "sourceLabel": "Suggest Tests",
+  "sourceLabel": "Find My Test",
   "disclaimer": "Reference-only support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.",
   "quickPicks": [
     {

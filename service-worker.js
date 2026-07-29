@@ -18,7 +18,7 @@ const CORE_ASSETS = [
   "./sitemap.xml",
   "./manifest.webmanifest?v=20260316b",
   "./assets/css/style.css?v=20260728h",
-  "./assets/css/modern.css?v=20260728ah",
+  "./assets/css/modern.css?v=20260729a",
   "./assets/js/script.js?v=20260728o",
   "./assets/js/find-my-test.js?v=20260728b",
   "./assets/data/data.js?v=20260505a",

@@ -255,16 +255,16 @@ const MOBILE_BOTTOM_NAV_KEY_BY_MENU_ACTION = Object.freeze({
 const MOBILE_BOTTOM_MENU_CLOSE_DURATION_MS = 420;
 const HOME_STATUS_MAX_ITEMS = 3;
 const sharedPlanToken = currentPageParams.get("plan") || "";
-const APP_HOME_TITLE = "Find My Tube | Specimen Tubes, Suggested Tests, and Collection Guidance";
+const APP_HOME_TITLE = "Find My Tube | Specimen Tubes, Find My Test, and Collection Guidance";
 const FIND_MY_TUBE_PAGE_TITLE = "Find My Tube | Match Lab Tests to the Correct Collection Tube";
-const FIND_MY_TEST_PAGE_TITLE = "Suggest Tests | Suggested Tests from Symptoms, Signs, and Clinical Concerns";
-const STOCK_ORDER_PAGE_TITLE = "Order Lab Consumables | Find My Tube";
+const FIND_MY_TEST_PAGE_TITLE = "Find My Test | Suggested Tests from Symptoms, Signs, and Clinical Concerns";
+const STOCK_ORDER_PAGE_TITLE = "Order My Stock | Find My Tube";
 const STOCK_DASHBOARD_PAGE_TITLE = "Stock Dashboard | Find My Tube";
 const TRACK_ORDERS_PAGE_TITLE = "Track Lab Orders | Find My Tube";
 const APP_HOME_APP_TITLE = "Find My Tube";
 const FIND_MY_TUBE_APP_TITLE = "Find My Tube";
-const FIND_MY_TEST_APP_TITLE = "Suggest Tests";
-const STOCK_ORDER_APP_TITLE = "Order Stock";
+const FIND_MY_TEST_APP_TITLE = "Find My Test";
+const STOCK_ORDER_APP_TITLE = "Order My Stock";
 const STOCK_DASHBOARD_APP_TITLE = "Stock Dashboard";
 const TRACK_ORDERS_APP_TITLE = "Track Orders";
 const APP_HOME_HEADER_COPY = "The right tube. The right test. Right now.";
@@ -5822,15 +5822,15 @@ function getMatchedConditionShortcut(normalizedQuery) {
   return null;
 }
 
-// Builds the Suggest Tests handoff when a condition search lands in Find My Tube.
+// Builds the Find My Test handoff when a condition search lands in Find My Tube.
 function getFindMyTestHandoffMarkup(queryLabel = "") {
   const escapedQuery = escapeHtml(queryLabel || "this condition");
 
   return `
     <div class="no-results no-results-handoff-card">
       <p class="no-results-handoff">Find My Tube works best for test and profile names.</p>
-      <p>Use Suggest Tests for condition-based searches like <strong>${escapedQuery}</strong>.</p>
-      <a class="no-results-link-btn" href="./index.html?tool=find-my-test">Open Suggest Tests</a>
+      <p>Use Find My Test for condition-based searches like <strong>${escapedQuery}</strong>.</p>
+      <a class="no-results-link-btn" href="./index.html?tool=find-my-test">Open Find My Test</a>
     </div>
   `;
 }
@@ -6519,7 +6519,7 @@ function initMobileBottomNav() {
       <span class="mobile-bottom-nav-label">Menu</span>
     </button>
     <div class="mobile-bottom-nav-group" data-group="right">
-      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" data-bottom-nav="test" aria-label="Suggest Tests">
+      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" data-bottom-nav="test" aria-label="Find My Test">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>
         </span>
@@ -6564,9 +6564,9 @@ function initMobileBottomNav() {
         <p class="mobile-bottom-menu-group-title">Main navigation</p>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
-        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Suggest Tests</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Find My Test</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="start-draw">Tube Plan</button>
-        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock">Order Stock / Consumables</button>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock">Order My Stock</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock-dashboard">Stock Dashboard</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="track-orders">Track Orders</button>
       </section>
@@ -6703,9 +6703,9 @@ function recordHomeQuickActionActivity(action) {
   if (!safeAction) return;
   const actionByKey = {
     tube: { title: "Opened Tube lookup", detail: "Find My Tube", actionType: "menu", actionValue: "tube" },
-    "find-my-test": { title: "Opened Suggest Tests", detail: "Suggest Tests", actionType: "menu", actionValue: "find-my-test" },
+    "find-my-test": { title: "Opened Find My Test", detail: "Find My Test", actionType: "menu", actionValue: "find-my-test" },
     draw: { title: "Started Tube Plan", detail: "Start Tube Plan", actionType: "menu", actionValue: "draw" },
-    stock: { title: "Opened Order Stock", detail: "Order Stock", actionType: "menu", actionValue: "stock" }
+    stock: { title: "Opened Order My Stock", detail: "Order My Stock", actionType: "menu", actionValue: "stock" }
   };
   const activity = actionByKey[safeAction];
   if (!activity) return;
@@ -8615,7 +8615,7 @@ function renderCards(filteredTests) {
   const matchedConditionShortcut = getMatchedConditionShortcut(normalizedQuery);
   const isClinicalSuggestionsMode = !normalizedQuery && !activeSectionGroup && hasClinicalWorkupState();
   const shouldShowFindMyTestHandoff = !isClinicalSuggestionsMode && Boolean(matchedConditionShortcut);
-  const clinicalModeLabel = clinicalWorkupOutput?.modeLabel || "Suggest Tests";
+  const clinicalModeLabel = clinicalWorkupOutput?.modeLabel || "Find My Test";
   const resultsContextLabel = !normalizedQuery && activeSectionGroup
     ? getResultsContextLabel(activeSectionGroup)
     : "";
@@ -8626,7 +8626,7 @@ function renderCards(filteredTests) {
       isClinicalSuggestionsMode
         ? `${clinicalModeLabel}. 0 tests found. ${CLINICAL_WORKUP_DISCLAIMER}`
         : shouldShowFindMyTestHandoff
-        ? `${resultsPrefix}Find My Tube is test-first. Use Suggest Tests for condition-based suggestions.`
+        ? `${resultsPrefix}Find My Tube is test-first. Use Find My Test for condition-based suggestions.`
         : `${resultsPrefix}0 tests found`
     );
     cardsContainer.innerHTML = isClinicalSuggestionsMode
@@ -9236,11 +9236,11 @@ function bindEvents() {
   });
 }
 
-// Expose the small public API that the Suggest Tests module uses to share search and draw-plan state.
+// Expose the small public API that the Find My Test module uses to share search and draw-plan state.
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260612a",
+    assetVersion: "20260728p",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

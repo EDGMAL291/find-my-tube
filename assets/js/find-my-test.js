@@ -54,8 +54,8 @@
   const isFindMyTestPage = pageParams.get("tool") === "find-my-test";
   const MIN_PREGNANCY_AGE_YEARS = 12;
 
-  const datasetUrl = `assets/data/find-my-test-map.json?v=${app.assetVersion || "20260322b"}`;
-  const dictionaryUrl = `assets/data/find-my-test-dictionary.json?v=${app.assetVersion || "20260423a"}`;
+  const datasetUrl = `assets/data/find-my-test-map.json?v=${app.assetVersion || "20260728p"}`;
+  const dictionaryUrl = `assets/data/find-my-test-dictionary.json?v=${app.assetVersion || "20260728p"}`;
   const AUTOCOMPLETE_MAX_RESULTS = 8;
 
   // Shared text helpers keep dataset matching rules predictable.
@@ -1248,7 +1248,7 @@
       .filter(Boolean);
 
     return {
-      modeLabel: state.dataset?.sourceLabel || "Suggest Tests",
+      modeLabel: state.dataset?.sourceLabel || "Find My Test",
       resultsTitle: suggestedTests.length ? "Suggested tests" : "No strong match yet",
       emptyStateLabel: "Next Step",
       emptyStateTitle: "Refine the presentation",
@@ -1261,7 +1261,7 @@
       matchedRules: suggestedTests.length ? [] : matchedPresentations.map((presentation) => ({
         label: "Matched presentation",
         title: presentation.label,
-        rationale: presentation.summary || "Matched to the current Suggest Tests dataset.",
+        rationale: presentation.summary || "Matched to the current Find My Test dataset.",
         tests: (presentation.tests || []).map((test) => test.name).filter(Boolean),
         caution: presentation.caution || "",
         matchedSignals: presentation.matchedSignals || []
@@ -1396,7 +1396,7 @@
   // Runs find my test.
   function runFindMyTest() {
     if (!state.dataset) {
-      setStatus("Suggest Tests is still loading. Please try again in a moment.");
+      setStatus("Find My Test is still loading. Please try again in a moment.");
       return;
     }
 
@@ -1416,7 +1416,7 @@
           clearStatus: false
         });
       }
-      setStatus("Add at least one symptom, sign, or clinical concern to suggest tests.");
+      setStatus("Add at least one symptom, sign, or clinical concern to find tests.");
       refs.symptomsInput?.focus();
       return;
     }
@@ -1502,7 +1502,7 @@
 
     return {
       version: String(rawDataset?.version || "").trim(),
-      sourceLabel: String(rawDataset?.sourceLabel || "Suggest Tests").trim(),
+      sourceLabel: String(rawDataset?.sourceLabel || "Find My Test").trim(),
       disclaimer: String(rawDataset?.disclaimer || "").trim(),
       quickPicks,
       quickPickById: Object.fromEntries(quickPicks.map((quickPick) => [quickPick.id, quickPick])),
@@ -1803,7 +1803,7 @@
 
   // Boot the module by loading the latest datasets, then render the empty ready state.
   async function loadDataset() {
-    setStatus("Loading Suggest Tests...");
+    setStatus("Loading Find My Test...");
 
     try {
       const [mapResponse, dictionaryResponse] = await Promise.all([
@@ -1843,8 +1843,8 @@
         });
       }
     } catch (error) {
-      console.error("Suggest Tests dataset failed to load.", error);
-      setStatus("Suggest Tests could not load its dictionary or symptom-to-test map. Use the main search while we fix it.");
+      console.error("Find My Test dataset failed to load.", error);
+      setStatus("Find My Test could not load its dictionary or symptom-to-test map. Use the main search while we fix it.");
     }
   }
 

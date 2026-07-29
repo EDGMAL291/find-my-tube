@@ -2,7 +2,7 @@
   "version": "2026-04-25.v2",
   "schemaVersion": "1.0",
   "sourceModel": {
-    "description": "Starter clinical dictionary for Suggest Tests autocomplete and concern association support. Concern grouping follows ICD-11 symptom/sign clinical-finding structure, with plain-language wording informed by trusted public symptom indexes.",
+    "description": "Starter clinical dictionary for Find My Test autocomplete and concern association support. Concern grouping follows ICD-11 symptom/sign clinical-finding structure, with plain-language wording informed by trusted public symptom indexes.",
     "references": [
       {
         "label": "NHS Symptoms A to Z",
