@@ -1154,19 +1154,32 @@ async function dbInsertRequest(payload, sessionUser = null) {
   } catch (error) {
     if (!isStockRequestStatusConstraintError(error)) throw error;
 
-    // Backward compatibility for databases that still enforce legacy status values.
-    const fallbackRecord = {
-      ...record,
-      status: "submitted",
-      status_history: [{ status: "submitted", updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
-    };
-    console.warn("[stock-submit] status-constraint-fallback", {
-      requestId,
-      previousStatus: record.status,
-      fallbackStatus: fallbackRecord.status,
-      errorMessage: getErrorMessage(error)
-    });
-    await dbSingle(supabase.from("stock_requests").insert(fallbackRecord));
+    // Backward compatibility for databases that still enforce either legacy
+    // request status. Reads normalize both values back to the canonical
+    // "pending" status until the live schema migration has been applied.
+    let previousError = error;
+    for (const fallbackStatus of ["submitted", "received"]) {
+      const fallbackRecord = {
+        ...record,
+        status: fallbackStatus,
+        status_history: [{ status: fallbackStatus, updatedAt: nowIso, updatedBy: sanitizeUserNumber(sessionUser?.user_number || "") }]
+      };
+      console.warn("[stock-submit] status-constraint-fallback", {
+        requestId,
+        previousStatus: record.status,
+        fallbackStatus,
+        errorMessage: getErrorMessage(previousError)
+      });
+      try {
+        await dbSingle(supabase.from("stock_requests").insert(fallbackRecord));
+        previousError = null;
+        break;
+      } catch (fallbackError) {
+        if (!isStockRequestStatusConstraintError(fallbackError)) throw fallbackError;
+        previousError = fallbackError;
+      }
+    }
+    if (previousError) throw previousError;
   }
 
   if (payload.items.length) {
