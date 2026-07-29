@@ -6696,3 +6696,196 @@ body.find-my-test-page .clinical-workup-test-summary {
     line-height: 1.38;
   }
 }
+
+/* Find My Test form: stacked clinical workflow within the same L-shaped frame. */
+html[data-theme] body.find-my-test-page .clinical-workup-panel {
+  position: relative;
+  padding: 25px 24px 19px 20px;
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--test-line);
+  border-left: 1px solid var(--test-line);
+  border-radius: 0;
+  background:
+    linear-gradient(
+      110deg,
+      rgba(3, 17, 31, 0.68) 0%,
+      rgba(3, 17, 31, 0.48) 52%,
+      rgba(3, 17, 31, 0.16) 100%
+    );
+  box-shadow: none;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 54px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--test-line), transparent);
+}
+
+html body.find-my-test-page .clinical-workup-form {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px 22px;
+}
+
+body.find-my-test-page .clinical-workup-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 21px;
+}
+
+body.find-my-test-page .clinical-workup-group {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+}
+
+body.find-my-test-page .clinical-workup-group-patient {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.72fr) minmax(130px, 0.78fr) minmax(210px, 1.3fr);
+  gap: 12px;
+  padding: 0 0 21px;
+  border-bottom: 1px solid rgba(230, 207, 140, 0.2);
+}
+
+body.find-my-test-page .clinical-workup-context-pair {
+  display: contents;
+}
+
+body.find-my-test-page .clinical-workup-context-pregnancy {
+  grid-column: auto;
+}
+
+body.find-my-test-page .clinical-workup-group-picture {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.find-my-test-page .clinical-workup-group-patient legend,
+body.find-my-test-page .clinical-workup-group-picture legend {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 253, 248, 0.92);
+}
+
+body.find-my-test-page .clinical-workup-step {
+  flex: 0 0 auto;
+  color: var(--test-gold);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+body.find-my-test-page .clinical-workup-group-patient legend::after,
+body.find-my-test-page .clinical-workup-group-picture legend::after {
+  content: "";
+  height: 1px;
+  flex: 1 1 auto;
+  background: linear-gradient(90deg, var(--test-line-soft), transparent);
+}
+
+body.find-my-test-page .clinical-workup-group-picture .clinical-workup-field-wide,
+body.find-my-test-page .clinical-workup-group-picture .clinical-workup-concern-field {
+  grid-column: auto;
+}
+
+body.find-my-test-page .clinical-workup-group-picture textarea {
+  min-height: 72px;
+  height: 72px;
+}
+
+body.find-my-test-page .clinical-workup-actions {
+  padding-left: 0;
+}
+
+body.find-my-test-page .clinical-workup-status:not(:empty) {
+  padding-top: 2px;
+  color: var(--test-gold);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-results {
+  border: 0;
+  border-bottom: 1px solid var(--test-line);
+  border-left: 1px solid var(--test-line);
+  border-radius: 0;
+  background:
+    linear-gradient(
+      110deg,
+      rgba(3, 17, 31, 0.76) 0%,
+      rgba(3, 17, 31, 0.58) 62%,
+      rgba(3, 17, 31, 0.26) 100%
+    );
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  body.find-my-test-page .clinical-workup-group-patient {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.find-my-test-page .clinical-workup-context-pregnancy {
+    grid-column: 1 / -1;
+  }
+
+  body.find-my-test-page .clinical-workup-group-picture {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  html[data-theme] body.find-my-test-page .clinical-workup-panel {
+    padding: 20px 12px 16px 13px;
+    background:
+      linear-gradient(
+        110deg,
+        rgba(3, 17, 31, 0.8) 0%,
+        rgba(3, 17, 31, 0.58) 74%,
+        rgba(3, 17, 31, 0.28) 100%
+      );
+  }
+
+  body.find-my-test-page .clinical-workup-form-grid {
+    gap: 18px;
+  }
+
+  body.find-my-test-page .clinical-workup-group-patient {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    padding-bottom: 18px;
+  }
+
+  body.find-my-test-page .clinical-workup-context-pregnancy {
+    grid-column: auto;
+  }
+
+  body.find-my-test-page .clinical-workup-group-picture {
+    gap: 9px;
+  }
+
+  body.find-my-test-page .clinical-workup-group-patient legend,
+  body.find-my-test-page .clinical-workup-group-picture legend {
+    padding-bottom: 9px;
+  }
+
+  body.find-my-test-page .clinical-workup-group-picture textarea {
+    min-height: 60px;
+    height: 60px;
+  }
+
+  html[data-theme] body.find-my-test-page .clinical-workup-results {
+    padding: 18px 13px 15px;
+  }
+}
