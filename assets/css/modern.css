@@ -15,6 +15,83 @@
   --fmt-radius: 8px;
 }
 
+/* Keep tool navigation feeling like one continuous laboratory workspace. */
+@view-transition {
+  navigation: auto;
+}
+
+body > .container {
+  view-transition-name: workspace-content;
+}
+
+body > .container > .header {
+  view-transition-name: site-header;
+}
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(workspace-content),
+::view-transition-new(workspace-content),
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) { animation-name: fmt-background-out; }
+::view-transition-new(root) { animation-name: fmt-background-in; }
+::view-transition-old(workspace-content) { animation-name: fmt-workspace-out; }
+::view-transition-new(workspace-content) { animation-name: fmt-workspace-in; }
+::view-transition-old(site-header) { animation-name: fmt-header-out; }
+::view-transition-new(site-header) { animation-name: fmt-header-in; }
+
+@keyframes fmt-workspace-out {
+  to {
+    opacity: 0;
+    transform: translateX(-7vw);
+  }
+}
+
+@keyframes fmt-workspace-in {
+  from {
+    opacity: 0;
+    transform: translateX(10vw);
+  }
+}
+
+@keyframes fmt-background-out {
+  to {
+    opacity: 0.82;
+    transform: translateX(8px) scale(1.012);
+  }
+}
+
+@keyframes fmt-background-in {
+  from {
+    opacity: 0.82;
+    transform: translateX(-8px) scale(1.012);
+  }
+}
+
+@keyframes fmt-header-out {
+  to { opacity: 0.72; }
+}
+
+@keyframes fmt-header-in {
+  from { opacity: 0.72; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(workspace-content),
+  ::view-transition-new(workspace-content),
+  ::view-transition-old(site-header),
+  ::view-transition-new(site-header) {
+    animation-duration: 1ms;
+  }
+}
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -6249,5 +6326,344 @@ html[data-theme] body[data-app-page="find-my-tube"] .section-browse-modal .profi
     width: calc(100vw - 24px);
     max-height: calc(100svh - 24px);
     padding: 20px 18px 18px;
+  }
+}
+
+/* Find My Test: stronger desktop hierarchy with a compact mobile workspace. */
+body.find-my-test-page {
+  --test-title: #fffdf8;
+  --test-copy: rgba(255, 253, 248, 0.76);
+  --test-line: rgba(230, 207, 140, 0.46);
+  --test-line-soft: rgba(230, 207, 140, 0.24);
+  --test-panel: rgba(3, 17, 31, 0.58);
+  --test-input: rgba(3, 17, 31, 0.64);
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(3, 17, 31, 0.98) 0%,
+      rgba(3, 17, 31, 0.91) 43%,
+      rgba(3, 17, 31, 0.58) 69%,
+      rgba(3, 17, 31, 0.28) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(3, 17, 31, 0.12) 0%,
+      rgba(3, 17, 31, 0.12) 62%,
+      rgba(3, 17, 31, 0.56) 100%
+    ),
+    url("../images/hero-lab-analyser.jpg");
+}
+
+body.find-my-test-page .clinical-workspace-intro {
+  width: min(100%, 760px);
+  gap: 8px;
+  margin: clamp(30px, 6vh, 50px) 0 24px;
+  padding: 0 0 18px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--test-line);
+  border-left: 1px solid var(--test-line);
+}
+
+body.find-my-test-page .clinical-workspace-kicker {
+  margin: 0;
+  color: var(--test-gold);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+body.find-my-test-page .clinical-workspace-intro h2 {
+  max-width: none;
+  margin: 0;
+  color: var(--test-title);
+  font-size: clamp(3.5rem, 5.3vw, 4.8rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.94;
+  text-shadow: 0 3px 24px rgba(1, 10, 20, 0.62);
+}
+
+body.find-my-test-page .clinical-workspace-intro p:not(.clinical-workspace-kicker) {
+  max-width: 54ch;
+  margin: 2px 0 0;
+  color: var(--test-copy);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-panel {
+  width: 100%;
+  margin: 0 0 22px;
+  padding: 22px 24px 20px;
+  border: 1px solid var(--test-line);
+  border-radius: 4px;
+  background: var(--test-panel);
+  box-shadow: 0 22px 64px rgba(1, 9, 18, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html body.find-my-test-page .clinical-workup-form {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 15px 20px;
+}
+
+body.find-my-test-page .clinical-workup-form-grid {
+  grid-template-columns: minmax(360px, 0.95fr) minmax(0, 1.45fr);
+  gap: clamp(24px, 3.2vw, 42px);
+}
+
+body.find-my-test-page .clinical-workup-group {
+  align-content: start;
+}
+
+body.find-my-test-page .clinical-workup-group legend {
+  padding: 0 0 12px;
+  color: rgba(255, 253, 248, 0.88);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+body.find-my-test-page .clinical-workup-group-patient,
+body.find-my-test-page .clinical-workup-group-picture {
+  gap: 10px;
+}
+
+body.find-my-test-page .clinical-workup-field input,
+body.find-my-test-page .clinical-workup-field select,
+body.find-my-test-page .clinical-workup-field textarea {
+  min-height: 46px;
+  border: 1px solid rgba(255, 253, 248, 0.22);
+  border-radius: 3px;
+  background: var(--test-input);
+  color: var(--test-title);
+  font-size: 0.86rem;
+  box-shadow: none;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+body.find-my-test-page .clinical-workup-field textarea {
+  min-height: 76px;
+  height: 76px;
+  padding: 12px;
+  line-height: 1.42;
+  resize: none;
+}
+
+body.find-my-test-page .clinical-workup-field input:hover,
+body.find-my-test-page .clinical-workup-field select:hover,
+body.find-my-test-page .clinical-workup-field textarea:hover {
+  border-color: rgba(255, 253, 248, 0.38);
+}
+
+body.find-my-test-page .clinical-workup-field input:focus,
+body.find-my-test-page .clinical-workup-field select:focus,
+body.find-my-test-page .clinical-workup-field textarea:focus {
+  outline: 0;
+  border-color: rgba(230, 207, 140, 0.62);
+  background: rgba(3, 17, 31, 0.8);
+  box-shadow: inset 0 -1px 0 var(--test-gold);
+}
+
+body.find-my-test-page .clinical-workup-field input::placeholder,
+body.find-my-test-page .clinical-workup-field textarea::placeholder {
+  color: rgba(255, 253, 248, 0.5);
+}
+
+body.find-my-test-page .clinical-workup-actions {
+  align-self: center;
+  gap: 10px;
+}
+
+body.find-my-test-page .clinical-workup-submit-btn,
+body.find-my-test-page .clinical-workup-reset-btn {
+  min-height: 42px;
+  padding: 10px 16px;
+  border-color: var(--test-line);
+  border-radius: 3px;
+  background: rgba(3, 17, 31, 0.26);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+body.find-my-test-page .clinical-workup-submit-btn {
+  min-width: 132px;
+  color: var(--test-title);
+}
+
+body.find-my-test-page .clinical-workup-reset-btn {
+  color: var(--test-copy);
+}
+
+body.find-my-test-page .clinical-workup-note {
+  max-width: 48ch;
+  color: rgba(255, 253, 248, 0.58);
+  font-size: 0.68rem;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-results {
+  border-radius: 4px;
+  background: rgba(3, 17, 31, 0.72);
+  box-shadow: 0 22px 64px rgba(1, 9, 18, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.find-my-test-page .clinical-workup-results h3 {
+  font-size: clamp(1.65rem, 2.8vw, 2.2rem);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+body.find-my-test-page .clinical-workup-test-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-test-option {
+  min-height: 90px;
+  margin: 0;
+  padding: 14px 15px;
+  align-items: start;
+  border: 1px solid var(--test-line-soft);
+  border-radius: 4px;
+  background: rgba(3, 17, 31, 0.58);
+  box-shadow: none;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-test-option:hover,
+html[data-theme] body.find-my-test-page .clinical-workup-test-option:focus-visible,
+html[data-theme] body.find-my-test-page .clinical-workup-test-option.is-selected {
+  border-color: var(--test-line);
+  background: rgba(8, 32, 50, 0.76);
+  box-shadow: none;
+  transform: none;
+}
+
+body.find-my-test-page .clinical-workup-test-name {
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+body.find-my-test-page .clinical-workup-test-state {
+  font-size: 0.64rem;
+  letter-spacing: 0.02em;
+}
+
+body.find-my-test-page .clinical-workup-test-summary {
+  font-size: 0.77rem;
+  line-height: 1.42;
+}
+
+@media (max-width: 860px) {
+  body.find-my-test-page .clinical-workspace-intro {
+    width: min(100%, 650px);
+  }
+
+  body.find-my-test-page .clinical-workup-form-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  body.find-my-test-page .clinical-workup-test-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  body.find-my-test-page {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(3, 17, 31, 0.68) 0%,
+        rgba(3, 17, 31, 0.9) 42%,
+        rgba(3, 17, 31, 0.98) 100%
+      ),
+      url("../images/hero-lab-analyser.jpg");
+    background-position: 56% top;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro {
+    gap: 6px;
+    margin: 18px 0 18px;
+    padding: 0 0 13px 12px;
+  }
+
+  body.find-my-test-page .clinical-workspace-kicker {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro h2 {
+    font-size: clamp(2.2rem, 10.5vw, 2.85rem);
+    line-height: 0.98;
+  }
+
+  body.find-my-test-page .clinical-workspace-intro p:not(.clinical-workspace-kicker) {
+    max-width: 38ch;
+    font-size: 0.8rem;
+    line-height: 1.42;
+  }
+
+  html[data-theme] body.find-my-test-page .clinical-workup-panel {
+    padding: 17px 14px 15px;
+    background: rgba(3, 17, 31, 0.74);
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+  }
+
+  html body.find-my-test-page .clinical-workup-form {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  body.find-my-test-page .clinical-workup-form-grid {
+    gap: 18px;
+  }
+
+  body.find-my-test-page .clinical-workup-group legend {
+    padding-bottom: 10px;
+    font-size: 0.64rem;
+  }
+
+  body.find-my-test-page .clinical-workup-field input,
+  body.find-my-test-page .clinical-workup-field select {
+    min-height: 44px;
+    font-size: 0.84rem;
+  }
+
+  body.find-my-test-page .clinical-workup-field textarea {
+    min-height: 60px;
+    height: 60px;
+    font-size: 0.84rem;
+  }
+
+  body.find-my-test-page .clinical-workup-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  body.find-my-test-page .clinical-workup-submit-btn,
+  body.find-my-test-page .clinical-workup-reset-btn {
+    min-height: 44px;
+  }
+
+  body.find-my-test-page .clinical-workup-submit-btn {
+    width: 100%;
+  }
+
+  body.find-my-test-page .clinical-workup-note {
+    max-width: none;
+    font-size: 0.64rem;
+    line-height: 1.38;
   }
 }
