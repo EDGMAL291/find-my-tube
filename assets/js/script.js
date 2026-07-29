@@ -1,3 +1,80 @@
+// Provides the slide transition on browsers without native cross-document view transitions.
+const supportsNativeWorkspaceTransitions = typeof document.startViewTransition === "function";
+const workspaceNavigationTargets = {
+  home: "./index.html",
+  tube: "./find-my-tube.html",
+  "find-my-test": "./index.html?tool=find-my-test",
+  stock: "./order-stock.html",
+  "stock-dashboard": "./stock-dashboard.html",
+  "track-orders": "./track-orders.html"
+};
+let workspaceNavigationPending = false;
+
+function navigateWithWorkspaceMotion(targetUrl) {
+  if (!targetUrl || workspaceNavigationPending) return;
+
+  const destination = new URL(targetUrl, window.location.href);
+  if (destination.origin !== window.location.origin) {
+    window.location.assign(destination.href);
+    return;
+  }
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (supportsNativeWorkspaceTransitions || prefersReducedMotion) {
+    window.location.assign(destination.href);
+    return;
+  }
+
+  workspaceNavigationPending = true;
+  try {
+    window.sessionStorage.setItem("fmt-workspace-arriving", "1");
+  } catch {
+    // Navigation remains functional when storage is unavailable.
+  }
+  document.documentElement.classList.add("fmt-workspace-leaving");
+  window.setTimeout(() => window.location.assign(destination.href), 300);
+}
+
+if (!supportsNativeWorkspaceTransitions) {
+  try {
+    if (window.sessionStorage.getItem("fmt-workspace-arriving") === "1") {
+      window.sessionStorage.removeItem("fmt-workspace-arriving");
+      document.documentElement.classList.add("fmt-workspace-arriving");
+      window.setTimeout(() => document.documentElement.classList.remove("fmt-workspace-arriving"), 500);
+    }
+  } catch {
+    // The page can enter normally when storage is unavailable.
+  }
+
+  document.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const link = target.closest("a[href]");
+    if (link && !link.hasAttribute("download") && (!link.target || link.target === "_self")) {
+      const destination = new URL(link.href, window.location.href);
+      if (
+        destination.origin === window.location.origin
+        && `${destination.pathname}${destination.search}` !== `${window.location.pathname}${window.location.search}`
+      ) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        navigateWithWorkspaceMotion(destination.href);
+      }
+      return;
+    }
+
+    const menuButton = target.closest("button[data-menu-action]");
+    const menuAction = String(menuButton?.getAttribute("data-menu-action") || "").trim();
+    const menuDestination = workspaceNavigationTargets[menuAction];
+    if (!menuDestination) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    navigateWithWorkspaceMotion(menuDestination);
+  }, true);
+}
+
 // Cache shared DOM nodes once so the rest of the app can treat the page as one UI surface.
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
