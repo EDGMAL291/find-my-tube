@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 
 :root {
   --fmt-ink: #1e352d;
@@ -13,6 +13,573 @@
   --fmt-muted: #65736d;
   --fmt-shadow: 0 16px 38px rgba(33, 52, 44, 0.08);
   --fmt-radius: 8px;
+}
+
+/* Restored utility layer: keep the cinematic home while returning daily lab tools. */
+body[data-app-page="home"].is-home-lab-desk-open {
+  overflow: hidden;
+}
+
+body[data-app-page="home"] .lab-desk-icon-library {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel svg,
+body[data-app-page="home"] .home-lab-desk-fab svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+body[data-app-page="home"] .home-lab-desk-fab {
+  position: fixed;
+  z-index: 92;
+  right: clamp(24px, 3vw, 34px);
+  bottom: 88px;
+  min-height: 42px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(230, 207, 140, 0.62);
+  border-radius: 999px;
+  background: rgba(3, 17, 31, 0.54);
+  color: #fffdf8;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+}
+
+body[data-app-page="home"] .home-lab-desk-fab:hover,
+body[data-app-page="home"] .home-lab-desk-fab:focus-visible {
+  border-color: #e6cf8c;
+  background: rgba(3, 17, 31, 0.78);
+  outline: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-fab-glyph {
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(230, 207, 140, 0.42);
+  border-radius: 50%;
+  background: rgba(230, 207, 140, 0.09);
+  color: #e6cf8c;
+  box-shadow: 0 0 0 4px rgba(230, 207, 140, 0.06);
+}
+
+body[data-app-page="home"] .home-lab-desk-fab-glyph svg {
+  width: 15px;
+  height: 15px;
+}
+
+body[data-app-page="home"] .home-lab-desk-backdrop {
+  position: fixed;
+  z-index: 108;
+  inset: 0;
+  background: rgba(1, 10, 20, 0.48);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+body[data-app-page="home"] .home-lab-desk-backdrop[hidden],
+body[data-app-page="home"] .home-lab-desk-panel[hidden] {
+  display: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel {
+  position: fixed;
+  z-index: 110;
+  top: 0;
+  right: 0;
+  width: min(440px, 100vw);
+  height: 100svh;
+  padding: clamp(24px, 4vw, 38px);
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  border: 0;
+  border-left: 1px solid rgba(230, 207, 140, 0.3);
+  background:
+    linear-gradient(180deg, rgba(3, 17, 31, 0.96), rgba(5, 24, 40, 0.98)),
+    url("../images/hero-lab-tubes.jpg") center / cover;
+  color: #fffdf8;
+  box-shadow: -28px 0 60px rgba(0, 0, 0, 0.28);
+  animation: home-lab-desk-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes home-lab-desk-in {
+  from {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+}
+
+body[data-app-page="home"] .home-lab-desk-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(230, 207, 140, 0.32);
+}
+
+body[data-app-page="home"] .home-lab-desk-head p,
+body[data-app-page="home"] .home-lab-desk-head h2,
+body[data-app-page="home"] .home-lab-desk-intro {
+  margin: 0;
+}
+
+body[data-app-page="home"] .home-lab-desk-head p {
+  color: #e6cf8c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+body[data-app-page="home"] .home-lab-desk-head h2 {
+  margin-top: 4px;
+  color: #fffdf8;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 500;
+}
+
+body[data-app-page="home"] .home-lab-desk-close {
+  min-height: 36px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 253, 248, 0.28);
+  background: transparent;
+  color: #fffdf8;
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+body[data-app-page="home"] .home-lab-desk-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+body[data-app-page="home"] .home-lab-desk-close:hover,
+body[data-app-page="home"] .home-lab-desk-close:focus-visible {
+  border-color: #e6cf8c;
+  color: #e6cf8c;
+  outline: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-intro {
+  color: rgba(255, 253, 248, 0.7);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-actions {
+  display: block;
+  padding: 0;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-quick-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile {
+  min-height: 78px;
+  padding: 12px 13px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 253, 248, 0.16);
+  border-left: 2px solid #e6cf8c;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fffdf8;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-glyph,
+body[data-app-page="home"] .lab-desk-heading-glyph,
+body[data-app-page="home"] .lab-desk-reference-glyph {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(230, 207, 140, 0.3);
+  background: linear-gradient(145deg, rgba(255, 253, 248, 0.09), rgba(3, 17, 31, 0.32));
+  color: #e6cf8c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-glyph {
+  width: 42px;
+  height: 42px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-glyph svg {
+  width: 21px;
+  height: 21px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-text {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-arrow {
+  color: rgba(255, 253, 248, 0.45);
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile-tube .home-action-glyph {
+  border-color: rgba(172, 216, 223, 0.4);
+  color: #acd8df;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile-test .home-action-glyph {
+  border-color: rgba(223, 185, 205, 0.4);
+  color: #dfb9cd;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile-order .home-action-glyph {
+  border-color: rgba(234, 215, 151, 0.42);
+  color: #ead797;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:hover,
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:focus-visible {
+  border-color: rgba(230, 207, 140, 0.68);
+  background: rgba(230, 207, 140, 0.09);
+  outline: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:hover .home-action-arrow,
+body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:focus-visible .home-action-arrow {
+  color: #e6cf8c;
+  transform: translateX(3px);
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-label {
+  color: #fffdf8;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-action-copy {
+  display: block;
+  color: rgba(255, 253, 248, 0.62);
+  font-size: 0.75rem;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(255, 253, 248, 0.14);
+  border-left: 2px solid rgba(230, 207, 140, 0.72);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fffdf8;
+  box-shadow: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section::before,
+body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section::after {
+  display: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-head h2,
+body[data-app-page="home"] .home-lab-desk-panel .home-tip-card h2 {
+  color: #fffdf8;
+  font-size: 0.95rem;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .lab-desk-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+body[data-app-page="home"] .lab-desk-heading-glyph,
+body[data-app-page="home"] .lab-desk-reference-glyph {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+}
+
+body[data-app-page="home"] .lab-desk-heading-glyph svg,
+body[data-app-page="home"] .lab-desk-reference-glyph svg {
+  width: 16px;
+  height: 16px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn,
+body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a {
+  color: #e6cf8c;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-status-chip,
+body[data-app-page="home"] .home-lab-desk-panel .home-status-item {
+  border-color: rgba(255, 253, 248, 0.13);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 253, 248, 0.78);
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-reference-card p,
+body[data-app-page="home"] .home-lab-desk-panel .home-tip-text {
+  color: rgba(255, 253, 248, 0.7);
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-reference-card {
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-tip-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(185, 215, 193, 0.42);
+  border-radius: 0;
+  background: linear-gradient(145deg, rgba(185, 215, 193, 0.12), rgba(3, 17, 31, 0.32));
+  color: #b9d7c1;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-tip-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-help-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a {
+  padding: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(230, 207, 140, 0.34);
+  text-align: center;
+  text-decoration: none;
+}
+
+body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+/* Search guidance restored without crowding the new L-shaped directory. */
+body[data-app-page="find-my-tube"] .search-shortcut-hint {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  top: 50%;
+  min-width: 22px;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 253, 248, 0.2);
+  border-radius: 4px;
+  color: rgba(255, 253, 248, 0.56);
+  font: inherit;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  text-align: center;
+  transform: translateY(-50%);
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+
+body[data-app-page="find-my-tube"] .search-input-wrap:focus-within .search-shortcut-hint,
+body[data-app-page="find-my-tube"] .search-clear-btn:not([hidden]) ~ .search-shortcut-hint {
+  opacity: 0;
+}
+
+/* Order form labels, stock availability, and horizontal browsing affordance. */
+html[data-theme] body[data-app-page="stock-order"] .stock-order-form {
+  align-items: end;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-field-label {
+  display: block;
+  margin: 0 0 6px;
+  color: rgba(255, 253, 248, 0.58);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-card-copy {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-card-availability {
+  color: rgba(255, 253, 248, 0.62);
+  font-size: 0.64rem;
+  font-weight: 600;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-card-availability[data-stock-status="low-stock"] {
+  color: #e6cf8c;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-card-availability[data-stock-status="no-stock"] {
+  color: #f0a29b;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-controls .stock-status-line {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 253, 248, 0.12);
+  color: rgba(255, 253, 248, 0.7);
+  font-size: 0.68rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-scroll-hint {
+  margin: -4px 0 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  color: rgba(255, 253, 248, 0.58);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-scroll-hint span {
+  color: #e6cf8c;
+}
+
+/* Explain the operational status language at the point users filter requests. */
+.track-orders-status-path {
+  margin: 16px 0 6px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid rgba(120, 104, 48, 0.22);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.track-orders-status-path span[data-stage] {
+  padding: 5px 9px;
+  border: 1px solid rgba(120, 104, 48, 0.24);
+  color: #2f352f;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.track-orders-status-path span[aria-hidden="true"] {
+  color: #8a742a;
+}
+
+.track-orders-status-help {
+  margin: 0 0 18px;
+  color: #66706a;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 620px) {
+  body[data-app-page="home"] .home-lab-desk-fab {
+    right: 20px;
+    bottom: 76px;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  body[data-app-page="home"] .home-lab-desk-fab > span:last-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  body[data-app-page="home"] .home-lab-desk-panel {
+    width: 100vw;
+    padding: 22px 18px 32px;
+  }
+
+  body[data-app-page="home"] .home-lab-desk-panel .home-action-tile {
+    min-height: 74px;
+  }
+
+  body[data-app-page="find-my-tube"] .search-shortcut-hint {
+    display: none;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-form {
+    gap: 10px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-field-label {
+    margin-bottom: 5px;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-scroll-hint {
+    justify-content: flex-start;
+  }
+
+  .track-orders-status-path {
+    gap: 6px;
+  }
+
+  .track-orders-status-path span[data-stage] {
+    padding: 4px 7px;
+    font-size: 0.64rem;
+  }
+}
+
+@media (max-width: 420px) {
+  body[data-app-page="home"] .home-lab-desk-panel .home-help-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Keep tool navigation feeling like one continuous laboratory workspace. */
@@ -128,18 +695,18 @@ body {
   padding: 0;
   color: var(--fmt-ink);
   background: var(--fmt-canvas);
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
 h1, h2, h3, h4 {
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
 body[data-app-page="home"] .home-hero-content h2,
 body.find-my-test-page .clinical-workspace-intro h2,
 body.find-my-tube-page .tube-workspace-intro h2,
 .home-action-label {
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
 body:not([data-app-page="home"]) .container {
@@ -169,13 +736,13 @@ body:not([data-app-page="home"]) .header > p {
 .tube-workspace-intro h2,
 .stock-order-head h2,
 .about-panel h2 {
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   font-weight: 500;
   letter-spacing: 0.01em;
 }
 
 .brand-title {
-  font-family: "DM Sans", Arial, sans-serif;
+  font-family: "IBM Plex Sans", Arial, sans-serif;
   font-weight: 500;
   letter-spacing: 0.045em;
 }
@@ -586,7 +1153,7 @@ body[data-app-page="home"] .header {
 body[data-app-page="home"] .header h1 {
   justify-self: center;
   color: #fffdf8;
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(1.65rem, 3.1vw, 2.35rem);
   font-weight: 500;
   letter-spacing: 0.015em;
@@ -638,7 +1205,7 @@ body[data-app-page="home"] .brand-gap { width: 0.32ch; }
   border: 1px solid currentColor;
   border-radius: 50%;
   color: inherit;
-  font-family: "DM Sans", Arial, sans-serif;
+  font-family: "IBM Plex Sans", Arial, sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -687,7 +1254,7 @@ body[data-app-page="home"].is-collection-guide-open .home-hero-carousel {
 
 .collection-guide-head h2 {
   margin: 0;
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(1.9rem, 3vw, 2.45rem);
   font-weight: 500;
   line-height: 1.12;
@@ -2279,6 +2846,42 @@ body[data-app-page="stock-dashboard"] .header .brand-title {
   text-shadow: none;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-control-intro,
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-order-request-card,
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-session-card {
+  border-color: var(--tool-accent-line);
+  background: var(--tool-surface);
+  color: var(--tool-cream);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-control-intro {
+  width: min(100%, 720px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-control-intro > p,
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-session-card :is(h3, p),
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-order-request-card :is(h3, p) {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-session-card h3,
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-order-request-card h3 {
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="stock-dashboard"] .site-footer {
+  display: none;
 }
 
 body.find-my-test-page .header .brand-title:hover,
@@ -5735,6 +6338,7 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-item-controls {
 }
 
 html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card.is-expanded .stock-order-item-kicker,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card.is-expanded .stock-order-card-availability,
 html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card.is-expanded .stock-order-card-action > span:not(.stock-order-card-plus) {
   display: none;
 }
@@ -6190,7 +6794,7 @@ body[data-app-page="stock-dashboard"] .header .brand-title {
   background: transparent;
   color: #fffdf8;
   box-shadow: none;
-  font-family: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(1.4rem, 2.4vw, 1.9rem);
   font-weight: 500;
   letter-spacing: 0.055em;
@@ -6981,5 +7585,748 @@ html[data-theme] body[data-app-page="find-my-tube"] .group-chip {
 
   html[data-theme] body[data-app-page="find-my-tube"] .group-chip {
     padding-block: 8px;
+  }
+}
+
+/* Find My Tube Browse: replace text glyphs with clinical department icons. */
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(230, 207, 140, 0.3);
+  border-radius: 4px;
+  background:
+    linear-gradient(145deg, rgba(255, 253, 248, 0.13), rgba(3, 17, 31, 0.3));
+  color: #e6cf8c;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 5px 14px rgba(1, 9, 18, 0.18);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon::before,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option::after {
+  display: none;
+  content: none;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon svg,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-icon svg {
+  width: 19px;
+  height: 19px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(1) .group-chip-icon {
+  border-color: rgba(230, 207, 140, 0.38);
+  color: #ead797;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(2) .group-chip-icon {
+  border-color: rgba(214, 177, 198, 0.38);
+  color: #dfb9cd;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(3) .group-chip-icon {
+  border-color: rgba(158, 208, 216, 0.38);
+  color: #acd8df;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(4) .group-chip-icon {
+  border-color: rgba(175, 207, 184, 0.38);
+  color: #b9d7c1;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(5) .group-chip-icon {
+  border-color: rgba(194, 177, 214, 0.4);
+  color: #cbb8dc;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-stack:nth-child(6) .group-chip-icon {
+  border-color: rgba(222, 192, 183, 0.4);
+  color: #e1c3ba;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:hover .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip:focus-visible .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active .group-chip-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option:hover .section-browse-option-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option:focus-visible .section-browse-option-icon,
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option.active .section-browse-option-icon {
+  border-color: currentColor;
+  background:
+    linear-gradient(145deg, rgba(255, 253, 248, 0.18), rgba(3, 17, 31, 0.22));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 6px 16px rgba(1, 9, 18, 0.22);
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option {
+  justify-content: flex-start;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-label {
+  order: 1;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-icon {
+  order: 2;
+  margin-left: auto;
+}
+
+@media (max-width: 620px) {
+  html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon,
+  html[data-theme] body[data-app-page="find-my-tube"] .group-chip.active .group-chip-icon,
+  html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+
+  html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon svg,
+  html[data-theme] body[data-app-page="find-my-tube"] .section-browse-option-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Final cascade for restored utilities that sit inside legacy dashboard components. */
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-actions,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-order-status-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-card {
+  background: rgba(255, 255, 255, 0.035);
+  color: #fffdf8;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-list {
+  max-height: none;
+  overflow: visible;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-chip,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item *,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-text,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card p {
+  color: rgba(255, 253, 248, 0.78);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a {
+  border: 1px solid rgba(230, 207, 140, 0.38);
+  background: rgba(3, 17, 31, 0.38);
+  color: #e6cf8c;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:focus-visible,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:focus-visible {
+  border-color: #e6cf8c;
+  background: rgba(230, 207, 140, 0.1);
+  color: #fffdf8;
+  outline: none;
+}
+
+body[data-app-page="find-my-tube"] .search-input-wrap:has(.search-clear-btn:not([hidden])) .search-shortcut-hint {
+  opacity: 0;
+}
+
+/* Let the Lab Desk grow past the viewport and scroll without compressing cards. */
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel > * {
+  flex: 0 0 auto;
+}
+
+/* 2026-08-03 consistency pass: typography, navigation, spacing and stock workflow. */
+:root {
+  --fmt-font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --fmt-space-1: 4px;
+  --fmt-space-2: 8px;
+  --fmt-space-3: 12px;
+  --fmt-space-4: 16px;
+  --fmt-space-5: 24px;
+  --fmt-space-6: 32px;
+  --fmt-page-gutter: clamp(16px, 4vw, 48px);
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea,
+.brand-title,
+.support-home-link {
+  font-family: var(--fmt-font-sans);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid #f2d77e;
+  outline-offset: 3px;
+}
+
+/* Keep the same, discoverable menu in the same position on every app workspace. */
+body[data-app-page="home"] .header-settings,
+body.find-my-test-page .header-settings,
+html[data-theme] body[data-app-page="find-my-tube"] .header-settings,
+html[data-theme] body[data-app-page="stock-order"] .header-settings,
+body[data-app-page="track-orders"] .header-settings,
+body[data-app-page="stock-dashboard"] .header-settings {
+  position: absolute;
+  top: 18px;
+  right: var(--fmt-page-gutter);
+  z-index: 4;
+  display: block;
+  pointer-events: auto;
+}
+
+body[data-app-page="home"] .header,
+body.find-my-test-page .header,
+html[data-theme] body[data-app-page="find-my-tube"] .header,
+html[data-theme] body[data-app-page="stock-order"] .header,
+body[data-app-page="track-orders"] .header,
+body[data-app-page="stock-dashboard"] .header {
+  pointer-events: none;
+}
+
+body[data-app-page="home"] .header h1,
+body.find-my-test-page .header h1,
+html[data-theme] body[data-app-page="find-my-tube"] .header h1,
+html[data-theme] body[data-app-page="stock-order"] .header h1,
+body[data-app-page="track-orders"] .header h1,
+body[data-app-page="stock-dashboard"] .header h1,
+body[data-app-page="home"] .header .brand-title,
+body.find-my-test-page .header .brand-title,
+html[data-theme] body[data-app-page="find-my-tube"] .header .brand-title,
+html[data-theme] body[data-app-page="stock-order"] .header .brand-title,
+body[data-app-page="track-orders"] .header .brand-title,
+body[data-app-page="stock-dashboard"] .header .brand-title {
+  pointer-events: auto;
+}
+
+body[data-app-page="home"] .header-menu-btn,
+body.find-my-test-page .header-menu-btn,
+html[data-theme] body[data-app-page="find-my-tube"] .header-menu-btn,
+html[data-theme] body[data-app-page="stock-order"] .header-menu-btn,
+body[data-app-page="track-orders"] .header-menu-btn,
+body[data-app-page="stock-dashboard"] .header-menu-btn {
+  min-height: 42px;
+  padding: 9px 13px;
+  border: 1px solid rgba(230, 207, 140, 0.42);
+  border-radius: 999px;
+  background: rgba(3, 17, 31, 0.64);
+  color: #fffdf8;
+  box-shadow: 0 10px 28px rgba(1, 10, 20, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body[data-app-page="home"] .site-menu-panel,
+body.find-my-test-page .site-menu-panel,
+html[data-theme] body[data-app-page="find-my-tube"] .site-menu-panel,
+html[data-theme] body[data-app-page="stock-order"] .site-menu-panel,
+body[data-app-page="track-orders"] .site-menu-panel,
+body[data-app-page="stock-dashboard"] .site-menu-panel {
+  right: 0;
+  left: auto;
+  width: min(290px, calc(100vw - 32px));
+  border-color: rgba(230, 207, 140, 0.42);
+  background: rgba(3, 17, 31, 0.96);
+  color: #fffdf8;
+  box-shadow: 0 20px 54px rgba(1, 10, 20, 0.42);
+}
+
+/* Consistent navigation for standalone information pages. */
+.support-nav {
+  width: min(calc(100% - 40px), 1000px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fmt-space-2);
+  margin: var(--fmt-space-5) auto;
+  padding: var(--fmt-space-2);
+  border: 1px solid var(--fmt-line);
+  border-radius: 8px;
+  background: rgba(255, 254, 250, 0.76);
+}
+
+.support-nav a {
+  min-height: 40px;
+  padding: 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  color: var(--fmt-ink);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.support-nav a:hover,
+.support-nav a:focus-visible,
+.support-nav a[aria-current="page"] {
+  background: var(--fmt-mist);
+  color: var(--fmt-teal-deep);
+}
+
+/* Shared dark stock-control shell across request, tracking and lab views. */
+body[data-app-page="track-orders"],
+body[data-app-page="stock-dashboard"] {
+  --tool-night: #061a2e;
+  --tool-night-deep: #03111f;
+  --tool-cream: #fffdf8;
+  --tool-muted: rgba(255, 253, 248, 0.72);
+  --tool-surface: rgba(3, 17, 31, 0.68);
+  --tool-field: rgba(4, 23, 41, 0.82);
+  --tool-line: rgba(255, 253, 248, 0.24);
+  --tool-accent: #e6cf8c;
+  --tool-accent-line: rgba(230, 207, 140, 0.48);
+  --tool-accent-soft: rgba(230, 207, 140, 0.11);
+  min-height: 100svh;
+  color: var(--tool-cream);
+  color-scheme: dark;
+  background-color: var(--tool-night);
+  background-image:
+    linear-gradient(90deg, rgba(3, 17, 31, 0.97), rgba(3, 17, 31, 0.86) 58%, rgba(3, 17, 31, 0.58)),
+    url("../images/hero-lab-logistics.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+body[data-app-page="track-orders"] .container,
+body[data-app-page="stock-dashboard"] .container {
+  width: min(100% - 40px, 1180px);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav,
+body[data-app-page="track-orders"] .stock-control-nav,
+body[data-app-page="stock-dashboard"] .stock-control-nav {
+  gap: var(--fmt-space-1);
+  margin-bottom: var(--fmt-space-5);
+  padding: var(--fmt-space-1);
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 8px;
+  background: rgba(3, 17, 31, 0.62);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a,
+body[data-app-page="track-orders"] .stock-control-nav a,
+body[data-app-page="stock-dashboard"] .stock-control-nav a {
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 5px;
+  color: var(--tool-muted);
+  font-size: 0.82rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a:focus-visible,
+html[data-theme] body[data-app-page="stock-order"] .stock-control-nav a.is-active,
+body[data-app-page="track-orders"] .stock-control-nav a:hover,
+body[data-app-page="track-orders"] .stock-control-nav a:focus-visible,
+body[data-app-page="track-orders"] .stock-control-nav a.is-active,
+body[data-app-page="stock-dashboard"] .stock-control-nav a:hover,
+body[data-app-page="stock-dashboard"] .stock-control-nav a:focus-visible,
+body[data-app-page="stock-dashboard"] .stock-control-nav a.is-active {
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+body[data-app-page="track-orders"] .stock-order-panel,
+body[data-app-page="stock-dashboard"] .stock-dashboard-panel,
+body[data-app-page="track-orders"] .stock-control-intro,
+body[data-app-page="stock-dashboard"] .stock-control-intro {
+  color: var(--tool-cream);
+}
+
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head,
+body[data-app-page="stock-dashboard"] .stock-control-intro,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--fmt-space-2);
+  margin: 0 0 var(--fmt-space-5);
+}
+
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head > *,
+body[data-app-page="stock-dashboard"] .stock-control-intro > *,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head > * {
+  grid-column: 1;
+}
+
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head h2,
+body[data-app-page="stock-dashboard"] .stock-control-intro h2,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2 {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--tool-cream);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  line-height: 1.02;
+  text-shadow: 0 2px 20px rgba(1, 10, 20, 0.58);
+}
+
+.stock-order-head-copy {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--tool-muted, var(--fmt-muted));
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+body[data-app-page="track-orders"] .stock-order-request-card,
+body[data-app-page="stock-dashboard"] .stock-order-request-card,
+body[data-app-page="track-orders"] .stock-order-form,
+body[data-app-page="stock-dashboard"] .stock-order-form {
+  border-color: var(--tool-accent-line);
+  background: var(--tool-surface);
+  color: var(--tool-cream);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+body[data-app-page="track-orders"] :is(h2, h3),
+body[data-app-page="stock-dashboard"] :is(h2, h3),
+body[data-app-page="track-orders"] .stock-order-summary-value,
+body[data-app-page="stock-dashboard"] .stock-order-summary-value,
+body[data-app-page="track-orders"] .track-orders-cell,
+body[data-app-page="stock-dashboard"] .stock-dashboard-session-card {
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="track-orders"] .stock-order-request-card h3,
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-order-request-card h3,
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-control-intro h2 {
+  color: var(--tool-cream);
+}
+
+body[data-app-page="track-orders"] :is(.stock-order-request-meta, .track-orders-status-help, .stock-order-field-label, .stock-dashboard-empty),
+body[data-app-page="stock-dashboard"] :is(.stock-dashboard-status, .stock-order-request-meta, .stock-order-field-label, .stock-order-summary-label, .stock-dashboard-empty) {
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="track-orders"] .stock-order-field :is(input, select, textarea),
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-order-field :is(input, select, textarea) {
+  border-color: var(--tool-line);
+  background: var(--tool-field);
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="track-orders"] .stock-order-field input::placeholder,
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-order-field input::placeholder {
+  color: rgba(255, 253, 248, 0.5);
+}
+
+html[data-theme] body[data-app-page="track-orders"] .track-orders-status-path {
+  border: 1px solid var(--tool-line);
+  background: rgba(3, 17, 31, 0.44);
+  color: var(--tool-muted);
+}
+
+html[data-theme] body[data-app-page="track-orders"] .track-orders-status-path span {
+  border-color: var(--tool-line);
+  background: rgba(255, 253, 248, 0.05);
+  color: var(--tool-cream);
+}
+
+html[data-theme] body[data-app-page="track-orders"] :is(.quick-tool-launch-btn, .quick-tool-clear-btn),
+html[data-theme] body[data-app-page="stock-dashboard"] :is(.quick-tool-launch-btn, .quick-tool-clear-btn) {
+  border-color: var(--tool-accent-line);
+  background: rgba(3, 17, 31, 0.44);
+  color: var(--tool-accent);
+}
+
+body[data-app-page="track-orders"] .track-orders-header,
+body[data-app-page="track-orders"] .track-orders-row,
+body[data-app-page="stock-dashboard"] .stock-order-summary-item,
+body[data-app-page="stock-dashboard"] .stock-dashboard-list > * {
+  border-color: var(--tool-line);
+  background: rgba(3, 17, 31, 0.42);
+}
+
+/* Stock catalogue search and filters. */
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel {
+  grid-template-areas:
+    "head head"
+    "form preview"
+    "toolbar preview"
+    "catalog preview";
+  gap: var(--fmt-space-4);
+}
+
+.stock-catalog-toolbar {
+  grid-area: toolbar;
+  display: grid;
+  grid-template-columns: minmax(150px, auto) minmax(220px, 1fr);
+  align-items: end;
+  gap: var(--fmt-space-3) var(--fmt-space-4);
+  padding: var(--fmt-space-4);
+  border: 1px solid var(--tool-accent-line);
+  border-radius: 8px;
+  background: rgba(3, 17, 31, 0.64);
+  color: var(--tool-cream);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.stock-catalog-heading {
+  display: grid;
+  gap: 2px;
+}
+
+.stock-catalog-heading h3,
+.stock-catalog-heading p,
+.stock-catalog-status {
+  margin: 0;
+}
+
+.stock-catalog-heading h3 {
+  color: var(--tool-cream);
+  font-size: 1.05rem;
+}
+
+.stock-catalog-search {
+  min-height: 42px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--fmt-space-2);
+  border: 1px solid var(--tool-line);
+  border-radius: 6px;
+  background: var(--tool-field);
+}
+
+.stock-catalog-search .icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: var(--tool-accent);
+  stroke-width: 1.7;
+}
+
+.stock-catalog-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tool-cream);
+  box-shadow: none;
+}
+
+.stock-catalog-search input::placeholder {
+  color: rgba(255, 253, 248, 0.52);
+}
+
+.stock-catalog-filters {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fmt-space-2);
+}
+
+.stock-catalog-filter {
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--tool-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tool-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stock-catalog-filter:hover,
+.stock-catalog-filter:focus-visible,
+.stock-catalog-filter.is-active {
+  border-color: var(--tool-accent-line);
+  background: var(--tool-accent-soft);
+  color: var(--tool-accent);
+}
+
+.stock-catalog-status {
+  grid-column: 1 / -1;
+  min-height: 1.2em;
+  color: var(--tool-muted);
+  font-size: 0.74rem;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-grid {
+  padding: var(--fmt-space-3);
+  gap: var(--fmt-space-3);
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card[hidden] {
+  display: none !important;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-form,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-preview-card,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-card {
+  padding: var(--fmt-space-4);
+}
+
+.stock-loading-skeleton {
+  display: grid;
+  gap: var(--fmt-space-3);
+  padding: var(--fmt-space-3) 0;
+}
+
+.stock-loading-skeleton span {
+  height: 54px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255, 253, 248, 0.06), rgba(255, 253, 248, 0.15), rgba(255, 253, 248, 0.06));
+  background-size: 200% 100%;
+  animation: fmt-stock-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes fmt-stock-shimmer {
+  from { background-position: 180% 0; }
+  to { background-position: -20% 0; }
+}
+
+@media (max-width: 860px) {
+  body[data-app-page="track-orders"],
+  body[data-app-page="stock-dashboard"] {
+    background-attachment: scroll;
+    background-image:
+      linear-gradient(180deg, rgba(3, 17, 31, 0.8), rgba(3, 17, 31, 0.97) 42%, #03111f),
+      url("../images/hero-lab-logistics.jpg");
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-panel {
+    grid-template-areas:
+      "head"
+      "form"
+      "toolbar"
+      "catalog"
+      "preview";
+  }
+}
+
+@media (max-width: 620px) {
+  :root {
+    --fmt-page-gutter: 14px;
+  }
+
+  body[data-app-page="home"] .header-settings,
+  body.find-my-test-page .header-settings,
+  html[data-theme] body[data-app-page="find-my-tube"] .header-settings,
+  html[data-theme] body[data-app-page="stock-order"] .header-settings,
+  body[data-app-page="track-orders"] .header-settings,
+  body[data-app-page="stock-dashboard"] .header-settings {
+    top: 12px;
+  }
+
+  body[data-app-page="home"] .header-menu-btn,
+  body.find-my-test-page .header-menu-btn,
+  html[data-theme] body[data-app-page="find-my-tube"] .header-menu-btn,
+  html[data-theme] body[data-app-page="stock-order"] .header-menu-btn,
+  body[data-app-page="track-orders"] .header-menu-btn,
+  body[data-app-page="stock-dashboard"] .header-menu-btn {
+    width: 42px;
+    min-width: 42px;
+    padding: 9px;
+  }
+
+  body[data-app-page="home"] .header-menu-label,
+  body.find-my-test-page .header-menu-label,
+  html[data-theme] body[data-app-page="find-my-tube"] .header-menu-label,
+  html[data-theme] body[data-app-page="stock-order"] .header-menu-label,
+  body[data-app-page="track-orders"] .header-menu-label,
+  body[data-app-page="stock-dashboard"] .header-menu-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  body[data-app-page="track-orders"] .container,
+  body[data-app-page="stock-dashboard"] .container {
+    width: min(100% - 24px, 1180px);
+  }
+
+  .stock-catalog-toolbar {
+    grid-template-columns: 1fr;
+    padding: var(--fmt-space-3);
+  }
+
+  .stock-catalog-search,
+  .stock-catalog-filters,
+  .stock-catalog-status {
+    grid-column: 1;
+  }
+
+  .stock-catalog-filters {
+    flex-wrap: nowrap;
+    padding-bottom: var(--fmt-space-1);
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .stock-catalog-filter {
+    flex: 0 0 auto;
+  }
+
+  html[data-theme] body[data-app-page="stock-order"] .stock-order-grid {
+    padding: var(--fmt-space-2);
+    gap: var(--fmt-space-2);
+  }
+
+  .support-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .support-nav a {
+    flex: 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stock-loading-skeleton span {
+    animation: none;
   }
 }

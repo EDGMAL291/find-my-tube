@@ -197,8 +197,8 @@ const closeLegalModalBtn = document.getElementById("closeLegalModalBtn");
 const contactFeedbackModal = document.getElementById("contactFeedbackModal");
 const closeContactFeedbackBtn = document.getElementById("closeContactFeedbackBtn");
 const legalDocButtons = document.querySelectorAll("[data-legal-doc]");
-const SEARCH_PLACEHOLDER_BASE = "Search test";
-const SEARCH_PLACEHOLDER_HINT = SEARCH_PLACEHOLDER_BASE;
+const SEARCH_PLACEHOLDER_BASE = "Search test or profile";
+const SEARCH_PLACEHOLDER_HINT = `${SEARCH_PLACEHOLDER_BASE} (e.g. CRP or LFT)`;
 const GOLD_VOLUME_PROFILE_NAMES = new Set([
   "U&E", // 1
   "Liver Function Tests (LFT)", // 2
@@ -2244,7 +2244,9 @@ function updateStockOrderPreview() {
     submitStockOrderBtn.disabled = !hasRequest || isSubmittingStockOrder || Boolean(blockedReason);
     submitStockOrderBtn.textContent = isSubmittingStockOrder ? "Submitting..." : "Submit Request";
     submitStockOrderBtn.setAttribute("aria-disabled", submitStockOrderBtn.disabled ? "true" : "false");
+    submitStockOrderBtn.setAttribute("aria-busy", isSubmittingStockOrder ? "true" : "false");
   }
+  stockOrderPanel?.setAttribute("aria-busy", isSubmittingStockOrder ? "true" : "false");
   if (copyStockOrderBtn) {
     copyStockOrderBtn.disabled = !hasRequest;
   }
@@ -2257,6 +2259,9 @@ function updateStockOrderPreview() {
     shareStockOrderWhatsappBtn.tabIndex = hasRequest ? 0 : -1;
   }
   bindStockOrderSummaryControls();
+  if (typeof window.refreshStockCatalogFilters === "function") {
+    window.refreshStockCatalogFilters();
+  }
 }
 
 // Sets a consumables quantity.
@@ -2403,6 +2408,10 @@ function renderStockOrderItems() {
     .map((item) => {
       const cardLabel = getStockDisplayLabel(item);
       const cardLabelMarkup = getStockDisplayLabelMarkup(item, cardLabel);
+      const stockStatus = getStockStatusForItem(item);
+      const availabilityMarkup = stockStatus.isKnown
+        ? `<span class="stock-order-card-availability" data-stock-status="${escapeHtml(stockStatus.status)}">${escapeHtml(stockStatus.label)} · ${stockStatus.onHand} available</span>`
+        : "";
       const cardKicker = item.variantLabel
         ? item.unitType === "tray"
           ? `${item.variantLabel} · Tray of ${item.traySize}`
@@ -2427,6 +2436,7 @@ function renderStockOrderItems() {
           <span class="stock-order-card-copy">
             <span class="stock-order-item-kicker">${cardKicker}</span>
             <span class="stock-order-card-title">${cardLabelMarkup}</span>
+            ${availabilityMarkup}
           </span>
           <span class="stock-order-card-action">
             <span class="stock-order-card-selection" data-stock-card-selection hidden></span>
@@ -2596,6 +2606,7 @@ function initStockOrderPanel() {
   populateStockRequesterOptions();
   renderStockOrderItems();
   updateStockOrderPreview();
+  loadStockOrderInventory();
   loadStockDuplicateCheckRequests();
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
@@ -8991,6 +9002,14 @@ function bindEvents() {
       if (!searchInput.value.trim()) {
         refreshSearchPlaceholder();
       }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      event.preventDefault();
+      searchInput.focus({ preventScroll: false });
     });
 
     searchInput.addEventListener("input", () => {

@@ -37,8 +37,8 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260729g" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260803a" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -104,7 +104,7 @@
     <main class="stock-dashboard-panel" aria-labelledby="stockDashboardMainTitle">
       <section class="stock-control-intro" aria-labelledby="stockDashboardMainTitle">
         <p class="stock-order-kicker">Laboratory operations</p>
-        <h2 id="stockDashboardMainTitle" class="sr-only">Stock control</h2>
+        <h2 id="stockDashboardMainTitle">Stock Dashboard</h2>
         <p>Manage the request queue, received stock, and current laboratory inventory in one place.</p>
       </section>
       <section class="profile-modal stock-dashboard-login-modal" id="stockDashboardAccessCard" hidden aria-labelledby="labAccessTitle">
@@ -116,7 +116,7 @@
             </div>
             <button type="button" class="profile-modal-close-btn" id="stockDashboardAccessCloseBtn">Back</button>
           </div>
-          <p class="stock-dashboard-status stock-dashboard-login-status" id="stockDashboardAuthStatus">Sign in to view dashboard data and update request status.</p>
+          <p class="stock-dashboard-status stock-dashboard-login-status" id="stockDashboardAuthStatus" role="status" aria-live="polite">Sign in to view dashboard data and update request status.</p>
           <p class="stock-dashboard-status">For shared computers, do not save login details in the browser.</p>
 
           <div class="stock-dashboard-auth-shell" id="stockDashboardAuthShell">
@@ -143,7 +143,7 @@
         <div>
           <p class="stock-order-kicker" id="stockDashboardSessionKicker">Status</p>
           <h3 id="stockDashboardSessionUser">Not signed in</h3>
-          <p class="stock-dashboard-status" id="stockDashboardSessionMessage">Sign in to view dashboard data and manage stock requests.</p>
+          <p class="stock-dashboard-status" id="stockDashboardSessionMessage" role="status" aria-live="polite">Sign in to view dashboard data and manage stock requests.</p>
         </div>
         <div class="stock-dashboard-session-actions">
           <button type="button" class="quick-tool-launch-btn" id="stockDashboardSessionLoginBtn">Log in</button>
@@ -186,7 +186,7 @@
             <h3 id="stockDashboardStatsTitle">Request summary</h3>
           </div>
           <div class="stock-dashboard-hero-actions">
-            <p class="stock-dashboard-status" id="stockDashboardStatus">Loading requests...</p>
+            <p class="stock-dashboard-status" id="stockDashboardStatus" role="status" aria-live="polite">Loading requests...</p>
             <button type="button" class="quick-tool-launch-btn" id="stockDashboardRefreshBtn">Refresh</button>
           </div>
         </div>
@@ -406,11 +406,11 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
-  <script src="assets/js/script.js?v=20260729q"></script>
+  <script src="assets/js/script.js?v=20260803a"></script>
   <script src="assets/js/stock-dashboard.js?v=20260617a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-06-17.1";
+      const APP_VERSION = "2026-08-03.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -442,7 +442,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260617a", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260803a", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

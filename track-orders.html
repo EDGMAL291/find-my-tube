@@ -40,8 +40,8 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260729g" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260803a" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -123,7 +123,8 @@
       <div class="stock-order-head">
         <div>
           <p class="stock-order-kicker">Track Orders</p>
-          <h2 id="trackOrdersTitle" class="sr-only">Stock request tracking</h2>
+          <h2 id="trackOrdersTitle">Track Orders</h2>
+          <p class="stock-order-head-copy">Follow active requests from submission to collection.</p>
         </div>
       </div>
 
@@ -133,8 +134,19 @@
             <p class="stock-order-kicker">Filters</p>
             <h3 id="trackOrdersFiltersTitle">Search by ward or name</h3>
           </div>
-          <p class="stock-order-request-meta" id="trackOrdersMeta">Loading requests...</p>
+          <p class="stock-order-request-meta" id="trackOrdersMeta" role="status" aria-live="polite">Loading requests...</p>
         </div>
+
+        <div class="track-orders-status-path" aria-label="Order status path">
+          <span data-stage="pending">Pending</span>
+          <span aria-hidden="true">→</span>
+          <span data-stage="packed">Packed</span>
+          <span aria-hidden="true">→</span>
+          <span data-stage="ready">Ready</span>
+          <span aria-hidden="true">→</span>
+          <span data-stage="collected">Collected</span>
+        </div>
+        <p class="track-orders-status-help">Ready means your order can be collected. Completed and cancelled requests move to Archives.</p>
 
         <form class="stock-order-form" id="trackOrdersFiltersForm" autocomplete="off">
           <label class="stock-order-field stock-order-field-wide">
@@ -162,7 +174,7 @@
           </div>
           <p class="stock-order-request-meta" id="trackOrdersCount">0 requests</p>
         </div>
-        <div class="track-orders-table" id="trackOrdersTable" role="table" aria-label="Tracked stock requests"></div>
+        <div class="track-orders-table" id="trackOrdersTable" role="table" aria-label="Tracked stock requests" aria-busy="true"></div>
       </section>
 
       <section class="stock-order-request-card track-orders-archive-card" aria-labelledby="trackOrdersArchiveTitle">
@@ -173,7 +185,7 @@
           </div>
           <p class="stock-order-request-meta" id="trackOrdersArchiveCount">0 archived</p>
         </div>
-        <div class="track-orders-table" id="trackOrdersArchiveTable" role="table" aria-label="Archived completed stock requests"></div>
+        <div class="track-orders-table" id="trackOrdersArchiveTable" role="table" aria-label="Archived completed stock requests" aria-busy="true"></div>
       </section>
     </section>
 
@@ -199,7 +211,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420d"></script>
-  <script src="assets/js/script.js?v=20260729q"></script>
-  <script src="assets/js/track-orders.js?v=20260617a"></script>
+  <script src="assets/js/script.js?v=20260803a"></script>
+  <script src="assets/js/track-orders.js?v=20260803a"></script>
 </body>
 </html>

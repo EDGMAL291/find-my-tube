@@ -40,8 +40,8 @@
       document.documentElement.dataset.theme = initialTheme;
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260728b" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260729g" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260803a" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -140,27 +140,34 @@
 
     <section class="stock-order-panel" id="stockOrderPanel" aria-labelledby="stockOrderTitle">
       <div class="stock-order-head">
-        <h2 id="stockOrderTitle" class="sr-only">Order My Stock</h2>
+        <p class="stock-order-kicker">Laboratory supplies</p>
+        <h2 id="stockOrderTitle">Order My Stock</h2>
+        <p class="stock-order-head-copy" id="stockOrderFormHelp">Choose what your ward needs, review the request, then submit it once.</p>
       </div>
 
-      <form class="stock-order-form" id="stockOrderForm">
+      <form class="stock-order-form" id="stockOrderForm" aria-describedby="stockOrderFormHelp">
         <label class="stock-order-field">
+          <span class="stock-order-field-label">Requested by</span>
           <input
             type="text"
             id="stockOrderRequesterNameInput"
             placeholder="Rank initial and surname"
             aria-label="Requested by"
+            aria-required="true"
             autocomplete="name"
+            required
           />
         </label>
 
         <label class="stock-order-field">
-          <select id="stockOrderRequesterSelect">
+          <span class="stock-order-field-label">Ward / unit</span>
+          <select id="stockOrderRequesterSelect" aria-required="true" required>
             <option value="">Select clinic, sickbay, or ward</option>
           </select>
         </label>
 
         <label class="stock-order-field stock-order-field-wide">
+          <span class="stock-order-field-label">Optional note</span>
           <textarea
             id="stockOrderNoteInput"
             rows="1"
@@ -170,14 +177,39 @@
         </label>
       </form>
 
+      <section class="stock-catalog-toolbar" aria-labelledby="stockCatalogTitle">
+        <div class="stock-catalog-heading">
+          <p class="stock-order-kicker">Catalogue</p>
+          <h3 id="stockCatalogTitle">Find stock quickly</h3>
+        </div>
+        <label class="stock-catalog-search" for="stockCatalogSearch">
+          <span class="sr-only">Search stock catalogue</span>
+          <svg class="icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5"></circle>
+            <path d="m16 16 4 4"></path>
+          </svg>
+          <input id="stockCatalogSearch" type="search" placeholder="Search tubes, bottles or supplies" autocomplete="off" />
+        </label>
+        <div class="stock-catalog-filters" role="group" aria-label="Filter stock catalogue">
+          <button type="button" class="stock-catalog-filter is-active" data-stock-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="stock-catalog-filter" data-stock-filter="tubes" aria-pressed="false">Tubes</button>
+          <button type="button" class="stock-catalog-filter" data-stock-filter="paediatric" aria-pressed="false">Paediatric</button>
+          <button type="button" class="stock-catalog-filter" data-stock-filter="cultures" aria-pressed="false">Cultures</button>
+          <button type="button" class="stock-catalog-filter" data-stock-filter="supplies" aria-pressed="false">Supplies</button>
+          <button type="button" class="stock-catalog-filter" data-stock-filter="selected" aria-pressed="false">Selected</button>
+        </div>
+        <p class="stock-catalog-status" id="stockCatalogStatus" role="status" aria-live="polite">Preparing catalogue...</p>
+      </section>
+
       <div class="stock-order-grid" id="stockOrderGrid" aria-label="Consumables available to order"></div>
+      <p class="stock-order-scroll-hint" id="stockOrderScrollHint">Scroll to browse all stock <span aria-hidden="true">→</span></p>
 
       <section class="stock-order-request-card stock-order-preview-card" aria-labelledby="stockOrderRequestTitle">
         <div class="stock-order-request-head">
           <h3 id="stockOrderRequestTitle">Your request</h3>
           <div class="stock-order-request-status-wrap">
             <span class="stock-order-status-badge" id="stockOrderStatusBadge">Draft</span>
-            <p class="stock-order-request-meta" id="stockOrderRequestMeta">No items selected yet.</p>
+            <p class="stock-order-request-meta" id="stockOrderRequestMeta" role="status" aria-live="polite">No items selected yet.</p>
           </div>
         </div>
         <div class="stock-order-summary-grid" id="stockOrderSummaryGrid">
@@ -213,7 +245,7 @@
           aria-hidden="true"
         ></textarea>
         <div class="stock-order-request-actions">
-          <button type="button" class="quick-tool-launch-btn" id="submitStockOrderBtn">Submit Request</button>
+          <button type="button" class="quick-tool-launch-btn" id="submitStockOrderBtn" aria-busy="false">Submit Request</button>
           <button type="button" class="quick-tool-launch-btn" id="copyStockOrderBtn" hidden aria-hidden="true" tabindex="-1">Copy Request</button>
           <a
             class="draw-tool-btn ghost draw-tool-link-btn"
@@ -277,7 +309,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
-  <script src="assets/js/script.js?v=20260729q"></script>
+  <script src="assets/js/script.js?v=20260803a"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -292,14 +324,14 @@
         { key: "tan", helper: "Tan tubes.", trayMax: 1 }
       ];
       const tubeImageByKey = {
-        yellow: "assets/images/stock-tubes/realistic-tube-yellow-v2.png",
-        grey: "assets/images/stock-tubes/realistic-tube-grey-v2.png",
-        purple: "assets/images/stock-tubes/realistic-tube-purple-v2.png",
-        green: "assets/images/stock-tubes/realistic-tube-green-v2.png",
-        blue: "assets/images/stock-tubes/realistic-tube-blue-v2.png",
-        pearl: "assets/images/stock-tubes/realistic-tube-pearl-v2.png",
-        tan: "assets/images/stock-tubes/realistic-tube-tan-v2.png",
-        pink: "assets/images/stock-tubes/realistic-tube-pink-v2.png"
+        yellow: "assets/images/stock-tubes/realistic-empty-tube-yellow-v3.png",
+        grey: "assets/images/stock-tubes/realistic-empty-tube-grey-v3.png",
+        purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v3.png",
+        green: "assets/images/stock-tubes/realistic-empty-tube-green-v3.png",
+        blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v3.png",
+        pearl: "assets/images/stock-tubes/realistic-empty-tube-pearl-v3.png",
+        tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v3.png",
+        pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v3.png"
       };
       const tubeAccentByKey = {
         yellow: { bg: "rgba(250, 204, 21, 0.28)", border: "rgba(180, 120, 8, 0.42)" },
@@ -850,6 +882,7 @@
               <span class="stock-order-card-copy">
                 <span class="stock-order-item-kicker">${config.helper}</span>
                 <span class="stock-order-card-title">${buildTubeTitleMarkup(trayItem.label, config.key)}</span>
+                <span class="stock-order-card-availability" data-stock-unified-availability hidden></span>
               </span>
               <span class="stock-order-card-action">
                 <span class="stock-order-card-selection" data-stock-card-selection hidden></span>
@@ -900,13 +933,39 @@
           const quantityInput = card.querySelector('[data-stock-unified-input="true"]');
           const selectionLabel = card.querySelector("[data-stock-card-selection]");
           const selectionPrompt = card.querySelector("[data-stock-card-prompt]");
+          const availabilityLabel = card.querySelector("[data-stock-unified-availability]");
 
           function getActiveItemId() {
             return card.dataset.mode === "each" ? eachId : trayId;
           }
 
+          function getActiveItem() {
+            return card.dataset.mode === "each" ? eachItem : trayItem;
+          }
+
           function getActiveMax() {
             return card.dataset.mode === "each" ? eachMax : trayMax;
+          }
+
+          function syncStockStatusUi() {
+            if (typeof getStockStatusForItem !== "function") return;
+            const activeItem = getActiveItem();
+            const stockStatus = getStockStatusForItem(activeItem);
+            const isKnown = Boolean(stockStatus?.isKnown);
+
+            if (availabilityLabel instanceof HTMLElement) {
+              availabilityLabel.hidden = !isKnown;
+              availabilityLabel.textContent = isKnown
+                ? `${stockStatus.label} · ${stockStatus.onHand} available`
+                : "";
+              availabilityLabel.dataset.stockStatus = isKnown ? stockStatus.status : "";
+            }
+
+            if (isKnown) {
+              card.dataset.stockStatus = stockStatus.status;
+            } else {
+              delete card.dataset.stockStatus;
+            }
           }
 
           function syncToggleUi() {
@@ -974,6 +1033,7 @@
             setStockItemQuantity(eachId, 0);
             syncToggleUi();
             syncInputUi();
+            syncStockStatusUi();
           }
 
           function setActiveQuantity(quantity) {
@@ -1015,6 +1075,7 @@
 
           syncToggleUi();
           syncInputUi();
+          syncStockStatusUi();
 
           trayCard.insertAdjacentElement("beforebegin", card);
         });
@@ -1149,9 +1210,10 @@
       }
     })();
   </script>
+  <script src="assets/js/order-stock-catalog.js?v=20260803a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-07-29.1";
+      const APP_VERSION = "2026-08-03.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1172,7 +1234,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260617a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260803a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

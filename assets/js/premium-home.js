@@ -28,7 +28,9 @@
     });
   });
 
-  carousel.querySelector("[data-hero-next]")?.addEventListener("click", () => showSlide(1));
+  carousel.querySelectorAll("[data-hero-next]").forEach((control) => {
+    control.addEventListener("click", () => showSlide(1));
+  });
 
   carousel.addEventListener("touchstart", (event) => {
     touchStartX = event.changedTouches[0]?.screenX ?? null;
@@ -57,9 +59,35 @@
   const guideButton = document.querySelector("#collectionGuideButton");
   const guidePanel = document.querySelector("#collectionGuidePanel");
   const guideClose = document.querySelector("#collectionGuideClose");
+  const labDeskButton = document.querySelector("#homeLabDeskButton");
+  const labDeskPanel = document.querySelector("#homeLabDeskPanel");
+  const labDeskClose = document.querySelector("#homeLabDeskClose");
+  const labDeskBackdrop = document.querySelector("#homeLabDeskBackdrop");
+
+  const setLabDeskOpen = (isOpen, { restoreFocus = true } = {}) => {
+    if (!labDeskButton || !labDeskPanel || !labDeskBackdrop) return;
+    if (isOpen && guidePanel && !guidePanel.hidden) {
+      guidePanel.hidden = true;
+      guideButton?.setAttribute("aria-expanded", "false");
+      guideButton?.setAttribute("aria-label", "Open collection guide");
+      document.body.classList.remove("is-collection-guide-open");
+    }
+    labDeskPanel.hidden = !isOpen;
+    labDeskBackdrop.hidden = !isOpen;
+    labDeskButton.setAttribute("aria-expanded", String(isOpen));
+    document.body.classList.toggle("is-home-lab-desk-open", isOpen);
+    if (isOpen) {
+      window.requestAnimationFrame(() => labDeskClose?.focus({ preventScroll: true }));
+    } else if (restoreFocus) {
+      labDeskButton.focus({ preventScroll: true });
+    }
+  };
 
   const setGuideOpen = (isOpen) => {
     if (!guideButton || !guidePanel) return;
+    if (isOpen && labDeskPanel && !labDeskPanel.hidden) {
+      setLabDeskOpen(false, { restoreFocus: false });
+    }
     guidePanel.hidden = !isOpen;
     guideButton.setAttribute("aria-expanded", String(isOpen));
     guideButton.setAttribute("aria-label", isOpen ? "Close collection guide" : "Open collection guide");
@@ -70,7 +98,15 @@
 
   guideButton?.addEventListener("click", () => setGuideOpen(guidePanel?.hidden));
   guideClose?.addEventListener("click", () => setGuideOpen(false));
+  labDeskButton?.addEventListener("click", () => setLabDeskOpen(labDeskPanel?.hidden));
+  labDeskClose?.addEventListener("click", () => setLabDeskOpen(false));
+  labDeskBackdrop?.addEventListener("click", () => setLabDeskOpen(false));
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !guidePanel?.hidden) setGuideOpen(false);
+    if (event.key !== "Escape") return;
+    if (!guidePanel?.hidden) {
+      setGuideOpen(false);
+      return;
+    }
+    if (!labDeskPanel?.hidden) setLabDeskOpen(false);
   });
 })();

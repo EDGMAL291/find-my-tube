@@ -224,8 +224,12 @@
   }
 
   async function loadOrders({ silent = false } = {}) {
+    table.setAttribute("aria-busy", "true");
+    archiveTable.setAttribute("aria-busy", "true");
     if (!silent) {
       meta.textContent = "Loading requests...";
+      table.innerHTML = '<div class="stock-loading-skeleton" aria-hidden="true"><span></span><span></span><span></span></div>';
+      archiveTable.innerHTML = '<div class="stock-loading-skeleton" aria-hidden="true"><span></span><span></span></div>';
     }
     if (refreshBtn) refreshBtn.disabled = true;
 
@@ -247,6 +251,8 @@
       table.innerHTML = '<p class="stock-dashboard-empty">Tracking is unavailable right now. Please refresh and try again.</p>';
       meta.textContent = error instanceof Error ? error.message : "Tracking is unavailable right now.";
     } finally {
+      table.setAttribute("aria-busy", "false");
+      archiveTable.setAttribute("aria-busy", "false");
       if (refreshBtn) refreshBtn.disabled = false;
     }
   }

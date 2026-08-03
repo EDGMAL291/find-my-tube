@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20260729g" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20260803a" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -183,6 +183,58 @@
       <p class="collection-guide-note">Reference guidance only. Follow your laboratory’s current collection and safety procedures.</p>
     </aside>
 
+    <svg class="lab-desk-icon-library" aria-hidden="true" focusable="false">
+      <defs>
+        <symbol id="lab-icon-desk" viewBox="0 0 24 24">
+          <path d="M4 8h16v10H4z"></path><path d="M8 8V5h8v3M8 18v2m8-2v2M9 13h6"></path>
+        </symbol>
+        <symbol id="lab-icon-tube" viewBox="0 0 24 24">
+          <path d="M8 3h8M9 3v8.5a5 5 0 0 0 10 0V3M9.4 12h5.2"></path>
+        </symbol>
+        <symbol id="lab-icon-test" viewBox="0 0 24 24">
+          <rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 7h6M9 11h3m2 0h2m-7 5 2 2 4-4"></path>
+        </symbol>
+        <symbol id="lab-icon-stock" viewBox="0 0 24 24">
+          <path d="m4 8 8-4 8 4v9l-8 4-8-4zM4 8l8 4 8-4m-8 4v9M15.5 5.8v4M13.5 7.8h4"></path>
+        </symbol>
+        <symbol id="lab-icon-history" viewBox="0 0 24 24">
+          <path d="M4 7v5h5M5.2 17a8 8 0 1 0-.7-8.7L4 12m8-4v4l3 2"></path>
+        </symbol>
+        <symbol id="lab-icon-shield" viewBox="0 0 24 24">
+          <path d="M12 3 19 6v5c0 4.4-2.8 7.7-7 10-4.2-2.3-7-5.6-7-10V6zM12 8v5m0 3h.01"></path>
+        </symbol>
+        <symbol id="lab-icon-flask" viewBox="0 0 24 24">
+          <path d="M8 4h8M9 4v6.5a4 4 0 0 1-.8 2.4l-1.6 2.2A3 3 0 0 0 9 20h6a3 3 0 0 0 2.4-4.9l-1.6-2.2a4 4 0 0 1-.8-2.4V4M8.2 15h7.6"></path>
+        </symbol>
+        <symbol id="lab-icon-contact" viewBox="0 0 24 24">
+          <path d="M5 5h14v10H9l-4 4zM9 9h6m-6 3h4"></path>
+        </symbol>
+        <symbol id="lab-icon-chat" viewBox="0 0 24 24">
+          <path d="M5 5h14v11H9l-4 4zM8.5 10.5h.01m3.49 0h.01m3.49 0h.01"></path>
+        </symbol>
+        <symbol id="lab-icon-phone" viewBox="0 0 24 24">
+          <path d="M8 4 5.5 6.5c.8 5.7 6.3 11.2 12 12L20 16l-4-3-2 2c-2.1-.8-4.2-2.9-5-5l2-2z"></path>
+        </symbol>
+        <symbol id="lab-icon-arrow" viewBox="0 0 24 24">
+          <path d="M5 12h14m-4-4 4 4-4 4"></path>
+        </symbol>
+        <symbol id="lab-icon-close" viewBox="0 0 24 24">
+          <path d="m7 7 10 10M17 7 7 17"></path>
+        </symbol>
+      </defs>
+    </svg>
+
+    <button
+      type="button"
+      class="home-lab-desk-fab"
+      id="homeLabDeskButton"
+      aria-controls="homeLabDeskPanel"
+      aria-expanded="false"
+    >
+      <span class="home-lab-desk-fab-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-desk"></use></svg></span>
+      <span>Lab desk</span>
+    </button>
+
     <section class="home-hub home-dashboard" id="homeHub">
       <section class="home-hero-carousel" id="homeHeroCarousel" aria-roledescription="carousel" aria-label="Find My Tube services" data-hero-tone="overview" tabindex="0">
         <article class="home-hero-slide home-hero-slide-overview is-active" data-hero-slide data-hero-tone="overview" aria-hidden="false">
@@ -225,45 +277,56 @@
         </div>
       </section>
 
-      <section class="home-dashboard-actions" aria-label="Primary actions" hidden>
+      <div class="home-lab-desk-backdrop" id="homeLabDeskBackdrop" hidden></div>
+      <aside class="home-lab-desk-panel" id="homeLabDeskPanel" role="dialog" aria-modal="true" aria-labelledby="homeLabDeskTitle" hidden>
+        <div class="home-lab-desk-head">
+          <div>
+            <p>Workspace</p>
+            <h2 id="homeLabDeskTitle">Lab desk</h2>
+          </div>
+          <button type="button" class="home-lab-desk-close" id="homeLabDeskClose"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-close"></use></svg><span>Close</span></button>
+        </div>
+        <p class="home-lab-desk-intro">Jump into a tool, check recent stock requests, or get quick collection support without leaving the laboratory scene.</p>
+
+      <section class="home-dashboard-actions" aria-label="Primary actions">
         <div class="home-quick-actions-grid">
-          <a href="./find-my-tube.html" class="home-action-tile home-action-tile-tube" data-menu-action="tube" aria-label="Open Find a Tube">
-            <span class="home-action-label">Find a Tube</span>
-            <span class="home-action-copy">Find the right collection tube</span>
+          <a href="./find-my-tube.html" class="home-action-tile home-action-tile-tube" data-menu-action="tube" aria-label="Open Find My Tube">
+            <span class="home-action-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-tube"></use></svg></span>
+            <span class="home-action-text"><span class="home-action-label">Find My Tube</span><span class="home-action-copy">Find the right collection tube</span></span>
+            <span class="home-action-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg></span>
           </a>
           <a href="./index.html?tool=find-my-test" class="home-action-tile home-action-tile-test" data-menu-action="find-my-test" aria-label="Open Find My Test">
-            <span class="home-action-label">Find My Test</span>
-            <span class="home-action-copy">Search by symptoms, signs, or clinical concern</span>
+            <span class="home-action-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-test"></use></svg></span>
+            <span class="home-action-text"><span class="home-action-label">Find My Test</span><span class="home-action-copy">Search by symptoms, signs, or clinical concern</span></span>
+            <span class="home-action-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg></span>
           </a>
           <a href="./order-stock.html" class="home-action-tile home-action-tile-order" data-menu-action="stock" aria-label="Open Order My Stock">
-            <span class="home-action-label">Order My Stock</span>
-            <span class="home-action-copy">Request tubes and consumables</span>
+            <span class="home-action-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-stock"></use></svg></span>
+            <span class="home-action-text"><span class="home-action-label">Order My Stock</span><span class="home-action-copy">Request tubes and consumables</span></span>
+            <span class="home-action-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg></span>
           </a>
         </div>
       </section>
 
-      <section class="home-dashboard-section home-order-status-card" aria-labelledby="homeStatusTitle" hidden>
+      <section class="home-dashboard-section home-order-status-card" aria-labelledby="homeStatusTitle">
         <div class="home-dashboard-head">
           <div class="home-dashboard-head-row">
-            <h2 id="homeStatusTitle">Recent Stock Requests</h2>
-            <a href="./track-orders.html" class="home-status-track-btn" id="homeStatusTrackOrdersBtn">View all orders</a>
+            <h2 id="homeStatusTitle" class="lab-desk-section-title"><span class="lab-desk-heading-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-history"></use></svg></span><span>Recent Stock Requests</span></h2>
+            <a href="./track-orders.html" class="home-status-track-btn" id="homeStatusTrackOrdersBtn"><span>View all orders</span><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg></a>
           </div>
         </div>
         <div class="home-status-list" id="homeStatusList"></div>
       </section>
 
-      <section class="home-dashboard-section home-reference-card" aria-label="Reference use only" hidden>
+      <section class="home-dashboard-section home-reference-card" aria-label="Reference use only">
+        <span class="lab-desk-reference-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-shield"></use></svg></span>
         <p>Reference use only. Confirm urgent, paediatric, transfusion, and site-specific requirements with local protocol or senior review.</p>
       </section>
 
-      <section class="home-dashboard-section home-tip-card" aria-labelledby="homeTipTitle" hidden>
+      <section class="home-dashboard-section home-tip-card" aria-labelledby="homeTipTitle">
         <div class="home-tip-head">
           <span class="home-tip-icon" aria-hidden="true">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false">
-              <path d="M8 4h8"></path>
-              <path d="M9 4v6.5a4 4 0 0 1-.8 2.4l-1.6 2.2A3 3 0 0 0 9 20h6a3 3 0 0 0 2.4-4.9l-1.6-2.2a4 4 0 0 1-.8-2.4V4"></path>
-              <path d="M8.2 15h7.6"></path>
-            </svg>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" focusable="false"><use href="#lab-icon-flask"></use></svg>
           </span>
           <div class="home-tip-title-group">
             <h2 id="homeTipTitle">Collection Tips</h2>
@@ -272,15 +335,16 @@
         <p class="home-tip-text" id="homeTipText">Fill citrate tubes to the line to prevent clotting errors.</p>
       </section>
 
-      <section class="home-dashboard-section home-help-card" aria-labelledby="homeHelpTitle" hidden>
+      <section class="home-dashboard-section home-help-card" aria-labelledby="homeHelpTitle">
         <div class="home-dashboard-head">
-          <h2 id="homeHelpTitle">Contact the lab</h2>
+          <h2 id="homeHelpTitle" class="lab-desk-section-title"><span class="lab-desk-heading-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-contact"></use></svg></span><span>Contact the lab</span></h2>
         </div>
         <div class="home-help-actions">
-          <a href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20" target="_blank" rel="noopener noreferrer">WhatsApp Feedback</a>
-          <a href="tel:0217996279">Call Laboratory</a>
+          <a href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-chat"></use></svg><span>WhatsApp Feedback</span></a>
+          <a href="tel:0217996279"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-phone"></use></svg><span>Call Laboratory</span></a>
         </div>
       </section>
+      </aside>
 
     </section>
 
@@ -349,7 +413,7 @@
                 <textarea
                   id="clinicalSymptomsInput"
                   rows="3"
-                  placeholder="Symptoms"
+                  placeholder="Symptoms, e.g. fever, vomiting, chest pain"
                 ></textarea>
               </div>
 
@@ -358,7 +422,7 @@
                 <textarea
                   id="clinicalSignsInput"
                   rows="3"
-                  placeholder="Signs"
+                  placeholder="Signs, e.g. jaundice, pallor, dehydration"
                 ></textarea>
               </div>
 
@@ -367,7 +431,7 @@
                 <textarea
                   id="clinicalConcernInput"
                   rows="4"
-                  placeholder="Clinical concern"
+                  placeholder="Clinical concern, e.g. sepsis, anaemia, renal impairment"
                 ></textarea>
               </div>
             </fieldset>
@@ -380,7 +444,7 @@
           </div>
 
           <p class="clinical-workup-note">
-            Reference only. Confirm urgent or site-specific requirements locally.
+            Reference only. Confirm urgent, paediatric, transfusion, and site-specific requirements with local protocol or senior review.
           </p>
           <p class="clinical-workup-status" id="clinicalWorkupStatus" role="status" aria-live="polite"></p>
         </form>
@@ -520,12 +584,12 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260729q"></script>
+  <script src="assets/js/script.js?v=20260803a"></script>
   <script src="assets/js/find-my-test.js?v=20260728b"></script>
-  <script src="assets/js/premium-home.js?v=20260728d"></script>
+  <script src="assets/js/premium-home.js?v=20260729e"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-07-29.9";
+      const APP_VERSION = "2026-08-03.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -546,7 +610,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260612a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260803a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
