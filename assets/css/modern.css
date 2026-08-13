@@ -10325,3 +10325,39 @@ html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-collectio
 html[data-theme] body :is(.stock-dashboard-login-modal-card, #stockDashboardCreateUserModal .profile-modal-card) input::placeholder {
   color: rgba(35, 48, 56, 0.48);
 }
+
+/* Shared display scale: page titles should guide the eye without crowding the work. */
+:root {
+  --fmt-display-title-size: clamp(2.1rem, 3.25vw, 2.65rem);
+  --fmt-page-title-size: clamp(2rem, 3vw, 2.5rem);
+  --fmt-display-title-line-height: 1.06;
+}
+
+body[data-app-page="home"] .home-hero-content h2,
+body[data-app-page="home"] .home-hero-slide-overview .home-hero-content h2 {
+  font-size: var(--fmt-display-title-size);
+  line-height: var(--fmt-display-title-line-height);
+}
+
+body[data-app-page="home"] .home-hero-slide:not(.home-hero-slide-overview) .home-hero-content h2 {
+  font-size: var(--fmt-page-title-size);
+  line-height: var(--fmt-display-title-line-height);
+}
+
+body.find-my-test-page .clinical-workspace-intro h2,
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro h2,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-panel > .stock-order-head h2,
+body[data-app-page="track-orders"] .stock-order-panel > .stock-order-head h2,
+body[data-app-page="stock-dashboard"] .stock-control-intro h2,
+body[data-app-page$="-page"]:not(.find-my-test-page) .header h1 {
+  font-size: var(--fmt-page-title-size);
+  line-height: var(--fmt-display-title-line-height);
+}
+
+@media (max-width: 620px) {
+  :root {
+    --fmt-display-title-size: clamp(1.9rem, 7.8vw, 2.05rem);
+    --fmt-page-title-size: clamp(1.8rem, 7.4vw, 1.95rem);
+    --fmt-display-title-line-height: 1.08;
+  }
+}
