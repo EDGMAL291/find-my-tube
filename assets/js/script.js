@@ -884,6 +884,11 @@ function updateBackToTopVisibility() {
   resultsBackToTopBtn.setAttribute("aria-hidden", isVisible ? "false" : "true");
 }
 
+// Keeps the fixed masthead useful at the top without covering active page work.
+function updateFixedHeaderScrollState() {
+  document.body.classList.toggle("is-page-scrolled", window.scrollY > 42);
+}
+
 // Lightweight interaction helpers keep the shared shell responsive without extra framework state.
 function showSelectionNotice(message) {
   if (!selectionNoticeToast) return;
@@ -1311,6 +1316,17 @@ const paediatricMicrotainerImageByGroup = Object.freeze({
   "Gold/Yellow": paediatricMicrotainerImageById["paediatric-yellow-microtainer"],
   Purple: paediatricMicrotainerImageById["paediatric-purple-microtainer"],
   Gray: paediatricMicrotainerImageById["paediatric-grey-microtainer"]
+});
+
+const adultEmptyTubeImageByGroup = Object.freeze({
+  "Gold/Yellow": "assets/images/stock-tubes/realistic-empty-tube-yellow-v3.png",
+  Purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v3.png",
+  Pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v3.png",
+  Blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v3.png",
+  Green: "assets/images/stock-tubes/realistic-empty-tube-green-v3.png",
+  Gray: "assets/images/stock-tubes/realistic-empty-tube-grey-v3.png",
+  Tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v3.png",
+  "Pearl/White": "assets/images/stock-tubes/realistic-empty-tube-pearl-v3.png"
 });
 
 function getPaediatricMicrotainerImageForItem(itemOrId) {
@@ -4958,6 +4974,11 @@ function getTubeVisualMarkup(tubeGroup, sizeClass = "", options = {}) {
     return `<span class="tube-photo-visual tube-photo-visual-paediatric${sizeClass}" aria-hidden="true"><img src="${paediatricTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async"></span>`;
   }
 
+  const adultTubeImage = adultEmptyTubeImageByGroup[tubeGroup] || "";
+  if (adultTubeImage) {
+    return `<span class="tube-photo-visual tube-photo-visual-adult${sizeClass}" aria-hidden="true"><img src="${adultTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async"></span>`;
+  }
+
   const toneClass = getTubeToneClass(tubeGroup);
   return `<span class="tube-icon tube-icon-${toneClass}${sizeClass}${getTubeIconModifierClass(tubeGroup)}" style="--tube-color: ${getTubeSwatchColor(tubeGroup)};" aria-hidden="true"></span>`;
 }
@@ -7753,6 +7774,7 @@ function getResolvedDrawPlan(selectedTests) {
   ].filter(Boolean);
 
   applyTubeVariantNotes(plan, selectedTests);
+  sortPlanItemsByOrderOfDraw(plan.items);
 
   return { plan, guidanceNotes };
 }
@@ -7816,6 +7838,65 @@ function getPlanItemAlternativeGroups(item) {
     .filter(Boolean);
 }
 
+// NHLS venepuncture order: sort by additive family to reduce tube additive carryover.
+const venousOrderOfDrawRankByGroup = Object.freeze({
+  "Blood Culture Bottles": 10,
+  Blue: 20,
+  Black: 20,
+  Red: 30,
+  "Gold/Yellow": 40,
+  "Royal Blue": 45,
+  Green: 50,
+  Purple: 60,
+  Pink: 60,
+  "Pearl/White": 60,
+  Tan: 60,
+  Gray: 70,
+  "Light Yellow": 80
+});
+
+function getPlanItemOrderOfDrawRank(item) {
+  const alternativeGroups = getPlanItemAlternativeGroups(item);
+  const groups = alternativeGroups.length
+    ? alternativeGroups
+    : [String(item?.key || "").trim()].filter(Boolean);
+  const ranks = groups
+    .map((group) => venousOrderOfDrawRankByGroup[group])
+    .filter((rank) => Number.isFinite(rank));
+  return ranks.length ? Math.min(...ranks) : Number.POSITIVE_INFINITY;
+}
+
+function sortPlanItemsByOrderOfDraw(items = []) {
+  items.sort((first, second) => {
+    const firstRank = getPlanItemOrderOfDrawRank(first);
+    const secondRank = getPlanItemOrderOfDrawRank(second);
+    if (firstRank !== secondRank) return firstRank < secondRank ? -1 : 1;
+    return String(first?.label || "").localeCompare(String(second?.label || ""));
+  });
+  return items;
+}
+
+function getVenousOrderOfDrawItems(plan) {
+  return (plan?.items || []).filter((item) => Number.isFinite(getPlanItemOrderOfDrawRank(item)));
+}
+
+function getDrawOrderPlannerAlert(plan) {
+  const orderedItems = getVenousOrderOfDrawItems(plan);
+  if (!orderedItems.length) return null;
+
+  const sequence = orderedItems.map((item) => item.label).join(" → ");
+  return {
+    id: "venous-order-of-draw",
+    tone: "order",
+    title: "Venous order of draw",
+    items: [
+      `Draw top to bottom: ${sequence}. Unneeded tube types are skipped.`,
+      "This sequence reduces additive carryover between tubes; it does not replace local collection policy.",
+      "Capillary or microcollection order differs. Confirm butterfly discard-tube needs, specialised tubes, and local exceptions with the laboratory SOP."
+    ]
+  };
+}
+
 // Renders draw result.
 function renderDrawResult() {
   if (!drawResultCard || !drawPlannerCount || !drawPlannerAlerts || !drawGroups || !drawPlannerNote) return;
@@ -7838,7 +7919,13 @@ function renderDrawResult() {
   }
 
   const { plan } = getResolvedDrawPlan(selectedTests);
+  const orderOfDrawItems = getVenousOrderOfDrawItems(plan);
+  const orderOfDrawStepByItem = new Map(
+    orderOfDrawItems.map((item, index) => [item, index + 1])
+  );
+  const drawOrderAlert = getDrawOrderPlannerAlert(plan);
   const plannerAlerts = [
+    ...(drawOrderAlert ? [drawOrderAlert] : []),
     ...getDrawPlannerReminders(plan),
     ...getDrawPlannerAlerts(selectedTests)
   ];
@@ -7858,6 +7945,7 @@ function renderDrawResult() {
 
   drawGroups.innerHTML = plan.items
     .map((item) => {
+      const orderOfDrawStep = orderOfDrawStepByItem.get(item) || 0;
       const alternativeGroups = getPlanItemAlternativeGroups(item);
       const primaryGroup = alternativeGroups[0] || item.key;
       const planTubeVariant = getPlanItemTubeVariant(
@@ -7894,6 +7982,7 @@ function renderDrawResult() {
 
       return `
         <article class="draw-group-card draw-group-card-${planToneClass}" style="--plan-tube-accent: ${planAccent};">
+          ${orderOfDrawStep ? `<span class="draw-order-step">Draw ${orderOfDrawStep}</span>` : `<span class="draw-order-step draw-order-step-separate">Separate specimen</span>`}
           <div class="draw-group-top">
             ${headMarkup}
           </div>
@@ -9320,7 +9409,9 @@ function bindEvents() {
   }
 
   window.addEventListener("scroll", updateBackToTopVisibility, { passive: true });
+  window.addEventListener("scroll", updateFixedHeaderScrollState, { passive: true });
   window.addEventListener("resize", updateBackToTopVisibility);
+  updateFixedHeaderScrollState();
 
   if (openDrawPlannerBtn) {
     openDrawPlannerBtn.addEventListener("click", (event) => {
