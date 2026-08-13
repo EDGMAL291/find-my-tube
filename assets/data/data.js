@@ -854,11 +854,11 @@ const tests = [
     borderColor: "#64748b"
   },
   {
-    name: "Celiac Screen",
+    name: "Coeliac Disease Screen (Anti-tTG IgA)",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
-    notes: "Coeliac antibody screening panel.",
+    notes: "Coeliac serology screen using IgA anti-tissue transglutaminase antibodies. The patient should still be eating gluten for diagnostic testing; the laboratory may add total IgA or IgG-based testing when indicated.",
     borderColor: "yellow"
   },
   {
@@ -1450,11 +1450,12 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Homocysteine (Fasting)",
+    name: "Plasma Homocysteine",
     tubeColor: "Purple",
     specimen: "EDTA plasma",
     turnaroundTime: "1 day",
-    notes: "Cardiovascular/thrombotic risk marker.",
+    notes: "Special handling is time-sensitive because delayed separation from blood cells can falsely increase the result. Fasting may be preferred by the receiving laboratory.",
+    criticalPrep: "Call the laboratory before requesting this test or drawing blood. Confirm that the laboratory and transport are ready, then collect the purple EDTA tube and send it immediately using the laboratory's handling instructions.",
     borderColor: "purple"
   },
   {
@@ -1919,11 +1920,19 @@ const tests = [
     borderColor: "purple"
   },
   {
-    name: "Peripheral Blood Smear / Blood Film",
+    name: "Blood Smear / Peripheral Blood Film",
     tubeColor: "Purple",
     specimen: "EDTA whole blood",
     turnaroundTime: "Same day to 1 day",
     notes: "Peripheral smear or blood film morphology review requested with hematology workup.",
+    borderColor: "purple"
+  },
+  {
+    name: "Differential Count (WBC)",
+    tubeColor: "Purple",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Same day",
+    notes: "White blood cell differential count; may be reported with a full blood count or requested for a manual differential when clinically indicated.",
     borderColor: "purple"
   },
   {
@@ -1956,14 +1965,6 @@ const tests = [
     specimen: "EDTA whole blood",
     turnaroundTime: "Same day",
     notes: "Reticulocyte count.",
-    borderColor: "purple"
-  },
-  {
-    name: "WBC and Differential Count",
-    tubeColor: "Purple",
-    specimen: "EDTA whole blood",
-    turnaroundTime: "Same day",
-    notes: "White cell count and differential.",
     borderColor: "purple"
   },
   {
@@ -2335,11 +2336,19 @@ const tests = [
     borderColor: "yellow"
   },
   {
-    name: "Gastric Antibodies (IF and Parietal Cell)",
+    name: "Anti-Parietal Cell Antibody (APCA)",
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "1-3 days",
-    notes: "Autoimmune gastritis/pernicious anemia serology.",
+    notes: "Gastric parietal cell antibody used in the investigation of autoimmune gastritis and pernicious anaemia.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Intrinsic Factor Antibody (IFA)",
+    tubeColor: "Gold",
+    specimen: "Serum",
+    turnaroundTime: "1-3 days",
+    notes: "Intrinsic factor antibody used in the investigation of autoimmune gastritis, vitamin B12 deficiency, and pernicious anaemia.",
     borderColor: "yellow"
   },
   {

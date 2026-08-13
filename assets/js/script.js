@@ -255,7 +255,7 @@ let lastSectionBrowseModalTrigger = null;
 const CONDITION_SHORTCUT_DISCLAIMER = "Common initial request shortcut only. Confirm with local protocol, senior review, and patient context.";
 const CLINICAL_WORKUP_DISCLAIMER = "Reference-only test support. Confirm urgent, paediatric, transfusion, and site-specific requests with local protocol or senior review.";
 const RACK_HINT_STORAGE_KEY = "fmt-rack-hint-dismissed";
-const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transfusion", "ACTH"]);
+const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transfusion", "ACTH", "Plasma Homocysteine"]);
 const selectedClinicalChipIds = new Set();
 let hasDismissedRackHint = false;
 let lastLegalModalTrigger = null;
@@ -2934,7 +2934,7 @@ const exactDrawRules = [
 const profileComponentsByName = {
   "FBC": [
     "Haemoglobin",
-    "WBC and Differential Count",
+    "Differential Count (WBC)",
     "RBC Count",
     "Haematocrit (HCT)",
     "MCV",
@@ -3533,6 +3533,94 @@ const aliasByName = {
   "U&E": ["U+E", "UE", "Renal profile", "Kidney function", "U and E"],
   "CMP": ["CMP profile", "Bone profile", "Calcium magnesium phosphate profile"],
   "FBC": ["CBC", "Complete blood count", "Full blood count"],
+  "Blood Smear / Peripheral Blood Film": [
+    "Smear",
+    "Blood smear",
+    "Peripheral smear",
+    "Peripheral blood smear",
+    "Blood film",
+    "Peripheral blood film",
+    "PBF",
+    "PBS",
+    "Morphology",
+    "Blood morphology",
+    "Film review",
+    "Manual film"
+  ],
+  "Differential Count (WBC)": [
+    "Diff",
+    "Differential",
+    "Differential count",
+    "WBC differential",
+    "White cell differential",
+    "White blood cell differential",
+    "Leucocyte differential",
+    "Leukocyte differential",
+    "Full differential",
+    "Manual differential",
+    "FBC diff",
+    "CBC diff"
+  ],
+  "Coeliac Disease Screen (Anti-tTG IgA)": [
+    "Coeliac",
+    "Celiac",
+    "Coeliac disease",
+    "Celiac disease",
+    "Coeliac screen",
+    "Celiac screen",
+    "Coeliac serology",
+    "Celiac serology",
+    "Anti transglutaminase",
+    "Anti-transglutaminase",
+    "Anti tissue transglutaminase",
+    "Anti-tissue transglutaminase",
+    "Tissue transglutaminase antibody",
+    "Transglutaminase antibody",
+    "tTG",
+    "tTG IgA",
+    "TTGA",
+    "Anti tTG IgA",
+    "Gluten antibody",
+    "Gluten sensitivity blood test"
+  ],
+  "Plasma Homocysteine": [
+    "Homocysteine",
+    "Homocystiene",
+    "Homocystein",
+    "Homocystine",
+    "Plasma homocysteine",
+    "Total homocysteine",
+    "Fasting homocysteine",
+    "HCY",
+    "Hcy"
+  ],
+  "Anti-Parietal Cell Antibody (APCA)": [
+    "Anti parietal cell antibody",
+    "Anti-parietal cell antibody",
+    "Parietal cell antibody",
+    "Parietal cell antibodies",
+    "Gastric parietal cell antibody",
+    "Gastric parietal cell antibodies",
+    "APCA",
+    "PCA",
+    "GPC antibody",
+    "Pernicious anaemia antibody",
+    "Pernicious anemia antibody"
+  ],
+  "Intrinsic Factor Antibody (IFA)": [
+    "Intrinsic factor antibody",
+    "Intrinsic factor antibodies",
+    "Anti intrinsic factor",
+    "Anti-intrinsic factor",
+    "IF antibody",
+    "IF antibodies",
+    "IFA",
+    "IFAB",
+    "GIFAB",
+    "Gastric intrinsic factor antibody",
+    "Pernicious anaemia antibody",
+    "Pernicious anemia antibody"
+  ],
   "Lipid Profile / Lipogram": ["Lipid profile", "Lipogram", "Lipid", "Lipids", "Lipid panel"],
   "Blood Gases": ["ABG", "Blood gas", "Blood gases"],
   "Cholesterol Total": ["Total cholesterol", "TC"],
@@ -3547,7 +3635,6 @@ const aliasByName = {
   "Transferrin Saturation (Calculated)": ["TSAT", "Transferrin sat", "Iron saturation"],
   "Uric Acid": ["UA", "Urate", "Serum uric acid", "S-urate", "S urate"],
   "RBC Count": ["RBC", "Red cell count"],
-  "WBC and Differential Count": ["WBC", "White cell count", "Differential"],
   "Platelet Count": ["Platelets", "PLT"],
   "Haematocrit (HCT)": ["HCT", "Hematocrit"],
   "Sodium": ["Na"],
@@ -4032,7 +4119,6 @@ const aliasByName = {
   "Vitamin B12": ["Vit B12", "Vitamin B12", "VITB12", "B12"],
   "Vitamin D (25OH)": ["Vit D", "Vitamin D", "VitD", "VITD", "25 OH vitamin D", "25-OH vitamin D"],
   "NT-proBNP": ["BNP", "Pro-BNP", "proBNP", "NTproBNP"],
-  "Peripheral Blood Smear / Blood Film": ["Blood film", "Peripheral blood smear", "Peripheral smear", "Blood smear"],
   "Immunoglobulin Profile (IgG, IgA, IgM)": ["Immunoglobulins", "Immunoglobulin profile", "Ig profile", "IgG IgA IgM"],
   "HE4": ["Human epididymis protein 4"],
   "CSF Cell Count and Chemistry": [
@@ -4992,7 +5078,7 @@ const conditionShortcutDefinitions = [
     id: "coeliac-disease",
     label: "suspected coeliac disease",
     terms: ["coeliac disease", "celiac disease", "coeliac sprue", "celiac sprue"],
-    tests: ["Celiac Screen", "Immunoglobulin A (IgA)"]
+    tests: ["Coeliac Disease Screen (Anti-tTG IgA)", "Immunoglobulin A (IgA)"]
   },
   {
     id: "inflammatory-arthritis",
@@ -6918,6 +7004,9 @@ function renderHomeStatusSummary() {
     const requestedBy = sanitizeDashboardText(formatRequesterName(request?.requestedBy), 56) || "Unknown requester";
     const wardUnit = sanitizeDashboardText(request?.wardUnit, 56) || "Ward not set";
     const statusLabel = sanitizeDashboardText(request?.statusLabel, 44) || "Pending";
+    const statusKey = sanitizeDashboardText(request?.statusKey, 24)
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "") || "pending";
     return `
       <article class="home-status-item">
         <div class="home-status-item-head">
@@ -6925,7 +7014,7 @@ function renderHomeStatusSummary() {
           <span class="home-status-item-ward">${escapeHtml(wardUnit)}</span>
         </div>
         <p class="home-status-item-line">
-          <span class="home-status-item-value home-status-item-status">${escapeHtml(statusLabel)}</span>
+          <span class="home-status-item-value home-status-item-status" data-status="${escapeHtml(statusKey)}">${escapeHtml(statusLabel)}</span>
         </p>
       </article>
     `;
@@ -6963,7 +7052,8 @@ async function loadHomeDashboardStockSnapshot() {
       return {
         requestedBy: request?.requestedBy || "",
         wardUnit: request?.wardUnit || "",
-        statusLabel
+        statusLabel,
+        statusKey: normalizedStatus
       };
     });
 
@@ -8045,6 +8135,9 @@ function getTestGrouping(testOrName) {
     name.includes("gbm") ||
     name.includes("complement") ||
     name.includes("celiac") ||
+    name.includes("coeliac") ||
+    name.includes("parietal cell") ||
+    name.includes("intrinsic factor") ||
     name.includes("immunoglobulin") ||
     name.includes("igg subfraction") ||
     name.includes("systemic sclerosis") ||
@@ -8135,7 +8228,8 @@ function getTestGrouping(testOrName) {
     name.includes("mch") ||
     name.includes("mchc") ||
     name.includes("platelet count") ||
-    name.includes("wbc and differential") ||
+    name.includes("differential count") ||
+    name.includes("blood smear") ||
     name.includes("haemolytic profile")
   ) return { sectionId: "haematology", subsection: "General" };
 

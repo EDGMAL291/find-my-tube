@@ -41,49 +41,36 @@ body[data-app-page="home"] .home-lab-desk-fab svg {
 body[data-app-page="home"] .home-lab-desk-fab {
   position: fixed;
   z-index: 92;
-  right: clamp(24px, 3vw, 34px);
-  bottom: 88px;
-  min-height: 42px;
-  padding: 0 18px;
+  top: clamp(126px, 17vh, 154px);
+  right: clamp(20px, 3vw, 40px);
+  min-height: 30px;
+  padding: 3px 0;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  border: 1px solid rgba(230, 207, 140, 0.62);
-  border-radius: 999px;
-  background: rgba(3, 17, 31, 0.54);
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #fffdf8;
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  text-shadow: 0 2px 12px rgba(1, 13, 20, 0.64);
   cursor: pointer;
+  transition: color 180ms ease;
 }
 
 body[data-app-page="home"] .home-lab-desk-fab:hover,
 body[data-app-page="home"] .home-lab-desk-fab:focus-visible {
-  border-color: #e6cf8c;
-  background: rgba(3, 17, 31, 0.78);
-  outline: none;
+  background: transparent;
+  color: #fff0bd;
 }
 
-body[data-app-page="home"] .home-lab-desk-fab-glyph {
-  width: 26px;
-  height: 26px;
-  display: inline-grid;
-  place-items: center;
-  border: 1px solid rgba(230, 207, 140, 0.42);
-  border-radius: 50%;
-  background: rgba(230, 207, 140, 0.09);
-  color: #e6cf8c;
-  box-shadow: 0 0 0 4px rgba(230, 207, 140, 0.06);
-}
-
-body[data-app-page="home"] .home-lab-desk-fab-glyph svg {
-  width: 15px;
-  height: 15px;
+body[data-app-page="home"] .home-lab-desk-fab:focus-visible,
+body[data-app-page="home"] .collection-guide-fab:focus-visible {
+  outline: 1px solid #e6cf8c;
+  outline-offset: 5px;
 }
 
 body[data-app-page="home"] .home-lab-desk-backdrop {
@@ -526,19 +513,7 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-scroll-hint span
 @media (max-width: 620px) {
   body[data-app-page="home"] .home-lab-desk-fab {
     right: 20px;
-    bottom: 76px;
-    width: 44px;
-    min-height: 44px;
-    padding: 0;
-    justify-content: center;
-  }
-
-  body[data-app-page="home"] .home-lab-desk-fab > span:last-child {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    top: 122px;
   }
 
   body[data-app-page="home"] .home-lab-desk-panel {
@@ -1171,46 +1146,47 @@ body[data-app-page="home"] .brand-gap { width: 0.32ch; }
 
 .collection-guide-fab {
   position: fixed;
-  z-index: 40;
-  right: clamp(18px, 3vw, 40px);
-  bottom: clamp(20px, 4vw, 44px);
+  z-index: 92;
+  top: clamp(88px, 12vh, 112px);
+  right: clamp(20px, 3vw, 40px);
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  border: 1px solid rgba(221, 198, 130, 0.9);
-  border-radius: 999px;
-  padding: 8px 15px 8px 9px;
+  gap: 8px;
+  min-height: 30px;
+  border: 0;
+  border-radius: 0;
+  padding: 3px 0;
   background: transparent;
   color: #fffdf8;
   box-shadow: none;
   cursor: pointer;
   text-shadow: 0 2px 12px rgba(1, 13, 20, 0.56);
-  transition: border-color 220ms ease, color 220ms ease, transform 220ms ease;
+  transition: color 180ms ease;
 }
 
 .collection-guide-fab:hover,
 .collection-guide-fab:focus-visible {
-  border-color: #fff0bd;
   color: #fff0bd;
   background: transparent;
-  transform: translateY(-2px);
 }
 
-.collection-guide-fab-icon {
-  display: inline-grid;
-  width: 25px;
-  height: 25px;
-  place-items: center;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  color: inherit;
-  font-family: "IBM Plex Sans", Arial, sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
+.collection-guide-fab-label,
+.home-lab-desk-fab-label { font-size: 0.76rem; font-weight: 600; }
+
+.home-utility-arrow {
+  display: inline-block;
+  color: #e6cf8c;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 180ms ease;
 }
 
-.collection-guide-fab-label { font-size: 0.78rem; font-weight: 600; }
+.collection-guide-fab:hover .home-utility-arrow,
+.collection-guide-fab:focus-visible .home-utility-arrow,
+.home-lab-desk-fab:hover .home-utility-arrow,
+.home-lab-desk-fab:focus-visible .home-utility-arrow {
+  transform: translateX(3px);
+}
 
 body[data-app-page="home"] .home-hero-carousel {
   transition: filter 420ms ease;
@@ -1298,8 +1274,10 @@ body[data-app-page="home"].is-collection-guide-open .home-hero-carousel {
 .collection-guide-note { margin: 0; padding-top: 16px; border-top: 1px solid rgba(255, 253, 248, 0.42); color: rgba(255, 253, 248, 0.78); font-size: 0.8rem; line-height: 1.5; }
 
 @media (max-width: 620px) {
-  .collection-guide-fab { padding-right: 10px; }
-  .collection-guide-fab-label { display: none; }
+  body[data-app-page="home"] .collection-guide-fab {
+    top: 86px;
+    right: 20px;
+  }
   .collection-guide-panel { bottom: 76px; }
 }
 
@@ -1546,10 +1524,6 @@ body[data-app-page="stock-dashboard"] .stock-dashboard-grid > .stock-order-reque
 }
 
 @media (max-width: 860px) {
-  body.has-mobile-bottom-nav .collection-guide-fab {
-    bottom: calc(env(safe-area-inset-bottom) + 92px);
-  }
-
   body.has-mobile-bottom-nav .collection-guide-panel {
     bottom: calc(env(safe-area-inset-bottom) + 148px);
   }
@@ -8328,5 +8302,506 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-card {
 @media (prefers-reduced-motion: reduce) {
   .stock-loading-skeleton span {
     animation: none;
+  }
+}
+
+/* Preserve the recognisable specimen-cap colours against the dark stock workspace. */
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card {
+  border-color: var(--tube-accent-border, var(--tool-line));
+  background:
+    linear-gradient(100deg, var(--tube-accent-bg, transparent), transparent 42%),
+    linear-gradient(145deg, rgba(7, 30, 50, 0.9), rgba(3, 17, 31, 0.76));
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card::before {
+  width: 5px;
+  background: var(--tube-cap-color, var(--tube-accent-border, var(--tool-accent)));
+  box-shadow: 0 0 16px var(--tube-accent-border, transparent);
+  opacity: 1;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card:hover,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card:focus-within,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card.is-expanded {
+  border-color: var(--tube-cap-color, var(--tube-accent-border, var(--tool-accent)));
+  background:
+    linear-gradient(100deg, var(--tube-accent-bg, transparent), transparent 50%),
+    linear-gradient(145deg, rgba(11, 42, 66, 0.94), rgba(3, 17, 31, 0.84));
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card .stock-tube-photo {
+  width: 30px;
+  height: 72px;
+  flex-basis: 30px;
+  filter:
+    saturate(1.55)
+    brightness(1.16)
+    contrast(1.08)
+    drop-shadow(0 0 7px var(--tube-accent-border, rgba(0, 0, 0, 0.34)))
+    drop-shadow(0 7px 7px rgba(0, 0, 0, 0.34));
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card .stock-tube-title-row {
+  gap: 12px;
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card .stock-order-item-kicker {
+  color: var(--tube-cap-color, var(--tool-muted));
+}
+
+html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card.is-expanded .stock-tube-photo {
+  width: 23px;
+  height: 48px;
+  flex-basis: 23px;
+}
+
+/* 2026-08-13 Lab Desk refinement: one restrained, uniform workspace system. */
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel {
+  --lab-desk-accent: #e6cf8c;
+  --lab-desk-text: #fffdf8;
+  --lab-desk-muted: rgba(241, 241, 235, 0.66);
+  --lab-desk-line: rgba(230, 207, 140, 0.18);
+  --lab-desk-surface: rgba(255, 255, 255, 0.045);
+  --lab-desk-surface-strong: rgba(255, 255, 255, 0.07);
+  width: min(520px, 100vw);
+  padding: clamp(24px, 3vw, 34px);
+  gap: 14px;
+  border-left-color: rgba(230, 207, 140, 0.26);
+  background:
+    radial-gradient(circle at 88% 4%, rgba(230, 207, 140, 0.09), transparent 26%),
+    linear-gradient(180deg, #061625 0%, #071c2d 54%, #061725 100%);
+  box-shadow: -24px 0 72px rgba(0, 0, 0, 0.34);
+  scrollbar-color: rgba(230, 207, 140, 0.34) transparent;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lab-desk-accent) 48%, transparent);
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-head {
+  align-items: center;
+  min-height: 74px;
+  padding-bottom: 18px;
+  border-bottom-color: var(--lab-desk-line);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-head p {
+  color: var(--lab-desk-accent);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-head h2 {
+  margin-top: 6px;
+  color: var(--lab-desk-text);
+  font-size: clamp(2rem, 4vw, 2.45rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-close {
+  min-height: 38px;
+  padding: 0 14px;
+  border-color: rgba(255, 253, 248, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-close:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-close:focus-visible {
+  border-color: rgba(230, 207, 140, 0.62);
+  background: rgba(230, 207, 140, 0.08);
+  color: var(--lab-desk-accent);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-intro {
+  max-width: 48ch;
+  margin: 2px 0 4px;
+  color: var(--lab-desk-muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-quick-actions-grid {
+  gap: 9px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile {
+  min-height: 76px;
+  padding: 12px 14px;
+  grid-template-columns: 40px minmax(0, 1fr) 18px;
+  gap: 12px;
+  border: 1px solid rgba(255, 253, 248, 0.13);
+  border-radius: 12px;
+  background: var(--lab-desk-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile::before {
+  content: "";
+  position: absolute;
+  inset: 10px auto 10px 0;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--lab-desk-accent);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:focus-visible {
+  transform: translateX(2px);
+  border-color: rgba(230, 207, 140, 0.42);
+  background: var(--lab-desk-surface-strong);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:hover::before,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:focus-visible::before {
+  opacity: 1;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-glyph,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile-tube .home-action-glyph,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile-test .home-action-glyph,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile-order .home-action-glyph,
+html[data-theme] body[data-app-page="home"] .lab-desk-heading-glyph,
+html[data-theme] body[data-app-page="home"] .lab-desk-reference-glyph,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-icon {
+  border-color: rgba(230, 207, 140, 0.24);
+  border-radius: 10px;
+  background: rgba(230, 207, 140, 0.065);
+  color: var(--lab-desk-accent);
+  box-shadow: none;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-glyph {
+  width: 40px;
+  height: 40px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-label {
+  color: var(--lab-desk-text);
+  font-size: 0.91rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-copy {
+  margin-top: 1px;
+  color: var(--lab-desk-muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-arrow {
+  color: rgba(255, 253, 248, 0.36);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-order-status-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-card {
+  padding: 16px;
+  gap: 12px;
+  border: 1px solid rgba(255, 253, 248, 0.13);
+  border-radius: 14px;
+  background: var(--lab-desk-surface);
+  color: var(--lab-desk-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-head-row {
+  align-items: center;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-head h2,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-card h2 {
+  color: var(--lab-desk-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+html[data-theme] body[data-app-page="home"] .lab-desk-heading-glyph,
+html[data-theme] body[data-app-page="home"] .lab-desk-reference-glyph,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-icon {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn {
+  min-height: 34px;
+  padding: 6px 11px;
+  border-color: rgba(230, 207, 140, 0.24);
+  border-radius: 999px;
+  background: rgba(230, 207, 140, 0.055);
+  color: var(--lab-desk-accent);
+  font-size: 0.7rem;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-list {
+  gap: 7px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item {
+  padding: 11px 12px;
+  border-color: rgba(255, 253, 248, 0.1);
+  border-radius: 10px;
+  background: rgba(2, 15, 27, 0.28);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item-requester {
+  color: var(--lab-desk-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item-ward {
+  color: var(--lab-desk-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item-line {
+  display: flex;
+  margin: 8px 0 0;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item-status {
+  width: fit-content;
+  min-height: 24px;
+  padding: 3px 9px;
+  border: 1px solid rgba(230, 207, 140, 0.22);
+  border-radius: 999px;
+  background: rgba(230, 207, 140, 0.08);
+  color: #ead797;
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item-status[data-status="packed"] {
+  border-color: rgba(112, 183, 237, 0.3);
+  background: rgba(112, 183, 237, 0.1);
+  color: #9ecbf0;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item-status[data-status="ready"] {
+  border-color: rgba(110, 196, 147, 0.3);
+  background: rgba(110, 196, 147, 0.1);
+  color: #9bd7b5;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card {
+  padding: 13px 14px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  border-color: rgba(230, 207, 140, 0.12);
+  background: rgba(230, 207, 140, 0.035);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card p,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-text {
+  color: var(--lab-desk-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-head {
+  align-items: center;
+  gap: 10px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions {
+  gap: 8px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a {
+  min-height: 40px;
+  padding: 0 12px;
+  border-color: rgba(255, 253, 248, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--lab-desk-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:focus-visible,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:focus-visible {
+  border-color: rgba(230, 207, 140, 0.48);
+  background: rgba(230, 207, 140, 0.09);
+  color: var(--lab-desk-accent);
+}
+
+@media (max-width: 620px) {
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel {
+    width: 100vw;
+    padding: 20px 16px 30px;
+    gap: 12px;
+  }
+
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-head {
+    min-height: 66px;
+    padding-bottom: 15px;
+  }
+
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-head h2 {
+    font-size: 1.9rem;
+  }
+
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile {
+    min-height: 72px;
+  }
+
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section,
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-order-status-card,
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-card,
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card,
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel,
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile,
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile::before {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Carry the site's L-shaped card signature into the main Lab Desk surfaces. */
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-order-status-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-card {
+  position: relative;
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid rgba(230, 207, 140, 0.25);
+  border-left: 1px solid rgba(230, 207, 140, 0.25);
+  border-radius: 0;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.018));
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile::before,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-dashboard-section::before,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-order-status-card::before,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-tip-card::before,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-reference-card::before,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-card::before {
+  display: none;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-action-tile:focus-visible {
+  border-color: rgba(230, 207, 140, 0.52);
+  background: linear-gradient(120deg, rgba(230, 207, 140, 0.075), rgba(255, 255, 255, 0.025));
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-item {
+  overflow: hidden;
+  border: 1px solid rgba(255, 253, 248, 0.1);
+  border-radius: 10px;
+  background: rgba(2, 15, 27, 0.28);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a {
+  min-height: 32px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--lab-desk-accent);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:focus-visible,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:focus-visible {
+  border: 0;
+  background: transparent;
+  color: var(--lab-desk-text);
+  text-decoration: underline;
+  outline: none;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn svg {
+  transition: transform 180ms ease;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:hover svg,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn:focus-visible svg {
+  transform: translateX(3px);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a {
+  min-height: 42px;
+  padding: 0 14px;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(230, 207, 140, 0.2);
+  border-radius: 999px;
+  background: rgba(230, 207, 140, 0.055);
+  color: var(--lab-desk-text);
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a svg {
+  color: var(--lab-desk-accent);
+}
+
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:hover,
+html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions a:focus-visible {
+  border: 1px solid rgba(230, 207, 140, 0.48);
+  background: rgba(230, 207, 140, 0.1);
+  color: var(--lab-desk-text);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 420px) {
+  html[data-theme] body[data-app-page="home"] .home-lab-desk-panel .home-help-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 }

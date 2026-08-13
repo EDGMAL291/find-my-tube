@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260803a" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260813e" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -334,14 +334,14 @@
         pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v3.png"
       };
       const tubeAccentByKey = {
-        yellow: { bg: "rgba(250, 204, 21, 0.28)", border: "rgba(180, 120, 8, 0.42)" },
-        grey: { bg: "rgba(156, 163, 175, 0.24)", border: "rgba(107, 114, 128, 0.42)" },
-        purple: { bg: "rgba(168, 85, 247, 0.22)", border: "rgba(126, 34, 206, 0.42)" },
-        green: { bg: "rgba(34, 197, 94, 0.2)", border: "rgba(22, 163, 74, 0.42)" },
-        blue: { bg: "rgba(147, 197, 253, 0.28)", border: "rgba(96, 165, 250, 0.44)" },
-        pearl: { bg: "rgba(229, 231, 235, 0.7)", border: "rgba(148, 163, 184, 0.5)" },
-        tan: { bg: "rgba(212, 163, 115, 0.24)", border: "rgba(180, 125, 76, 0.42)" },
-        pink: { bg: "rgba(236, 72, 153, 0.2)", border: "rgba(219, 39, 119, 0.42)" }
+        yellow: { solid: "#f4c430", bg: "rgba(244, 196, 48, 0.2)", border: "rgba(244, 196, 48, 0.72)" },
+        grey: { solid: "#aeb4bd", bg: "rgba(174, 180, 189, 0.18)", border: "rgba(174, 180, 189, 0.66)" },
+        purple: { solid: "#a970d6", bg: "rgba(169, 112, 214, 0.2)", border: "rgba(169, 112, 214, 0.72)" },
+        green: { solid: "#3da66f", bg: "rgba(61, 166, 111, 0.18)", border: "rgba(61, 166, 111, 0.7)" },
+        blue: { solid: "#70b7ed", bg: "rgba(112, 183, 237, 0.2)", border: "rgba(112, 183, 237, 0.72)" },
+        pearl: { solid: "#eee9df", bg: "rgba(238, 233, 223, 0.16)", border: "rgba(238, 233, 223, 0.68)" },
+        tan: { solid: "#c98955", bg: "rgba(201, 137, 85, 0.2)", border: "rgba(201, 137, 85, 0.72)" },
+        pink: { solid: "#ec5a9b", bg: "rgba(236, 90, 155, 0.2)", border: "rgba(236, 90, 155, 0.72)" }
       };
       function ensureTubeIconStyles() {
         if (document.getElementById("stockTubeMiniIconStyles")) return;
@@ -698,6 +698,7 @@
       function applyTubeAccent(card, key) {
         const accent = tubeAccentByKey[key];
         if (!accent || !(card instanceof HTMLElement)) return;
+        card.style.setProperty("--tube-cap-color", accent.solid);
         card.style.setProperty("--tube-accent-bg", accent.bg);
         card.style.setProperty("--tube-accent-border", accent.border);
       }
@@ -1213,7 +1214,7 @@
   <script src="assets/js/order-stock-catalog.js?v=20260803a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-08-03.1";
+      const APP_VERSION = "2026-08-13.5";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1234,7 +1235,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260803a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260813e", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
