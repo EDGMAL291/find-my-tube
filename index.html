@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20260813f" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20260813q" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -133,6 +133,7 @@
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
             <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Tube Plan</button>
+            <button type="button" class="site-menu-link" data-menu-action="collection-desk" role="menuitem">Collection Desk</button>
             <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
             <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order My Stock</button>
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
@@ -153,35 +154,6 @@
     </header>
 
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
-
-    <button
-      type="button"
-      class="collection-guide-fab"
-      id="collectionGuideButton"
-      aria-controls="collectionGuidePanel"
-      aria-expanded="false"
-      aria-label="Open collection guide"
-    >
-      <span class="collection-guide-fab-label">Collection guide</span>
-      <span class="home-utility-arrow" aria-hidden="true">→</span>
-    </button>
-
-    <aside class="collection-guide-panel" id="collectionGuidePanel" aria-labelledby="collectionGuideTitle" hidden>
-      <div class="collection-guide-head">
-        <div>
-          <p>At the collection point</p>
-          <h2 id="collectionGuideTitle">Label and collect with confidence</h2>
-        </div>
-        <button type="button" class="collection-guide-close" id="collectionGuideClose" aria-label="Close collection guide">×</button>
-      </div>
-      <ol class="collection-guide-list">
-        <li><strong>Confirm identity.</strong> Check the patient against your local identification process before collection.</li>
-        <li><strong>Label at the patient.</strong> Apply labels immediately after collection, never in advance.</li>
-        <li><strong>Use the right tube.</strong> Check the test requirement, fill line, and additive before drawing.</li>
-        <li><strong>Handle to protocol.</strong> Mix, transport, and prioritise samples according to your local laboratory SOP.</li>
-      </ol>
-      <p class="collection-guide-note">Reference guidance only. Follow your laboratory’s current collection and safety procedures.</p>
-    </aside>
 
     <svg class="lab-desk-icon-library" aria-hidden="true" focusable="false">
       <defs>
@@ -223,17 +195,6 @@
         </symbol>
       </defs>
     </svg>
-
-    <button
-      type="button"
-      class="home-lab-desk-fab"
-      id="homeLabDeskButton"
-      aria-controls="homeLabDeskPanel"
-      aria-expanded="false"
-    >
-      <span class="home-lab-desk-fab-label">Lab desk</span>
-      <span class="home-utility-arrow" aria-hidden="true">→</span>
-    </button>
 
     <section class="home-hub home-dashboard" id="homeHub">
       <section class="home-hero-carousel" id="homeHeroCarousel" aria-roledescription="carousel" aria-label="Find My Tube services" data-hero-tone="overview" tabindex="0">
@@ -281,12 +242,12 @@
       <aside class="home-lab-desk-panel" id="homeLabDeskPanel" role="dialog" aria-modal="true" aria-labelledby="homeLabDeskTitle" hidden>
         <div class="home-lab-desk-head">
           <div>
-            <p>Laboratory workspace</p>
-            <h2 id="homeLabDeskTitle">Lab Desk</h2>
+            <p>At the collection point</p>
+            <h2 id="homeLabDeskTitle">Collection Desk</h2>
           </div>
-          <button type="button" class="home-lab-desk-close" id="homeLabDeskClose"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-close"></use></svg><span>Close</span></button>
+          <button type="button" class="home-lab-desk-close" id="homeLabDeskClose" aria-label="Close Collection Desk"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-close"></use></svg><span>Close</span></button>
         </div>
-        <p class="home-lab-desk-intro">Your essential collection, clinical support, and stock tools—organised in one focused workspace.</p>
+        <p class="home-lab-desk-intro">Collection guidance, tube planning, clinical support, and stock tools in one focused workspace.</p>
 
       <section class="home-dashboard-actions" aria-label="Primary actions">
         <div class="home-quick-actions-grid">
@@ -306,6 +267,17 @@
             <span class="home-action-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg></span>
           </a>
         </div>
+      </section>
+
+      <section class="home-dashboard-section home-collection-checklist-card" aria-labelledby="homeCollectionChecklistTitle">
+        <h2 id="homeCollectionChecklistTitle" class="lab-desk-section-title"><span class="lab-desk-heading-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-shield"></use></svg></span><span>Collection checklist</span></h2>
+        <ol class="home-collection-checklist">
+          <li><strong>Confirm identity.</strong> Check the patient against your local identification process before collection.</li>
+          <li><strong>Label at the patient.</strong> Apply labels immediately after collection, never in advance.</li>
+          <li><strong>Use the right tube.</strong> Check the test requirement, fill line, and additive before drawing.</li>
+          <li><strong>Handle to protocol.</strong> Mix, transport, and prioritise samples according to your local laboratory SOP.</li>
+        </ol>
+        <p class="home-collection-checklist-note">Reference guidance only. Follow your laboratory’s current collection and safety procedures.</p>
       </section>
 
       <section class="home-dashboard-section home-order-status-card" aria-labelledby="homeStatusTitle">
@@ -584,12 +556,12 @@
 
   <script src="assets/data/data.js?v=20260812a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260813a"></script>
+  <script src="assets/js/script.js?v=20260813f"></script>
   <script src="assets/js/find-my-test.js?v=20260728b"></script>
-  <script src="assets/js/premium-home.js?v=20260729e"></script>
+  <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-08-13.6";
+      const APP_VERSION = "2026-08-13.17";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -610,7 +582,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260813f", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260813q", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

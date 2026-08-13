@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260813f" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260813q" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -111,6 +111,7 @@
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
             <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Tube Plan</button>
+            <button type="button" class="site-menu-link" data-menu-action="collection-desk" role="menuitem">Collection Desk</button>
             <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
             <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order My Stock</button>
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
@@ -309,7 +310,7 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
-  <script src="assets/js/script.js?v=20260803a"></script>
+  <script src="assets/js/script.js?v=20260813f"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -650,6 +651,10 @@
               window.location.assign("./index.html?tool=find-my-test");
               return;
             }
+            if (action === "collection-desk") {
+              window.location.assign("./index.html?tool=collection-desk");
+              return;
+            }
             if (action === "stock") {
               window.location.assign("./order-stock.html");
               return;
@@ -892,9 +897,23 @@
               </span>
             </button>
             <div class="stock-order-item-controls" id="${controlsId}" hidden>
+              <div class="stock-tube-control-head">
+                <span class="stock-tube-control-label">Order as</span>
+                <span class="stock-tube-control-hint">Choose the pack size</span>
+              </div>
               <div class="group-chips stock-tube-mode-toggle" role="group" aria-label="${trayItem.label} mode">
-                <button type="button" class="group-chip active" data-stock-mode="tray" aria-pressed="true">Tray (100)</button>
-                <button type="button" class="group-chip" data-stock-mode="each" aria-pressed="false">Each</button>
+                <button type="button" class="group-chip active" data-stock-mode="tray" aria-pressed="true">
+                  <span>Tray</span>
+                  <small>100 tubes</small>
+                </button>
+                <button type="button" class="group-chip" data-stock-mode="each" aria-pressed="false">
+                  <span>Each</span>
+                  <small>Individual tubes</small>
+                </button>
+              </div>
+              <div class="stock-tube-control-head stock-tube-amount-head">
+                <span class="stock-tube-control-label">Amount</span>
+                <span class="stock-tube-control-hint" data-stock-unit-help>1 tray = 100 tubes</span>
               </div>
               <div class="stock-order-qty-row">
                 <button
@@ -905,17 +924,20 @@
                 >
                   −
                 </button>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value="0"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  class="stock-order-qty-input"
-                  data-stock-unified-input="true"
-                  aria-label="${trayItem.label} quantity"
-                />
+                <span class="stock-tube-qty-readout">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    class="stock-order-qty-input"
+                    data-stock-unified-input="true"
+                    aria-label="Number of ${trayItem.label} trays"
+                  />
+                  <span class="stock-tube-qty-unit" data-stock-unit-label>trays</span>
+                </span>
                 <button
                   type="button"
                   class="stock-order-qty-btn"
@@ -935,6 +957,8 @@
           const selectionLabel = card.querySelector("[data-stock-card-selection]");
           const selectionPrompt = card.querySelector("[data-stock-card-prompt]");
           const availabilityLabel = card.querySelector("[data-stock-unified-availability]");
+          const unitHelpLabel = card.querySelector("[data-stock-unit-help]");
+          const quantityUnitLabel = card.querySelector("[data-stock-unit-label]");
 
           function getActiveItemId() {
             return card.dataset.mode === "each" ? eachId : trayId;
@@ -1007,14 +1031,29 @@
           function syncInputUi() {
             if (!(quantityInput instanceof HTMLInputElement)) return;
             const currentQuantity = getQuantityFromState(getActiveItemId());
+            const isEach = card.dataset.mode === "each";
             quantityInput.value = String(currentQuantity);
             quantityInput.max = String(getActiveMax());
-            quantityInput.step = card.dataset.mode === "each" ? "5" : "1";
+            quantityInput.step = isEach ? "5" : "1";
             quantityInput.inputMode = "numeric";
             quantityInput.pattern = "[0-9]*";
+            quantityInput.setAttribute(
+              "aria-label",
+              isEach
+                ? `Number of individual ${trayItem.label}`
+                : `Number of ${trayItem.label} trays`
+            );
+            if (unitHelpLabel instanceof HTMLElement) {
+              unitHelpLabel.textContent = isEach ? "Added in steps of 5" : "1 tray = 100 tubes";
+            }
+            if (quantityUnitLabel instanceof HTMLElement) {
+              quantityUnitLabel.textContent = isEach
+                ? "tubes"
+                : `tray${currentQuantity === 1 ? "" : "s"}`;
+            }
             if (selectionLabel instanceof HTMLElement) {
               selectionLabel.textContent = currentQuantity
-                ? card.dataset.mode === "each"
+                ? isEach
                   ? `${currentQuantity} each`
                   : `${currentQuantity} tray${currentQuantity === 1 ? "" : "s"}`
                 : "";
@@ -1112,6 +1151,8 @@
           }
           const selection = card.querySelector("[data-stock-card-selection]");
           const prompt = card.querySelector("[data-stock-card-prompt]");
+          const unitHelp = card.querySelector("[data-stock-unit-help]");
+          const unitLabel = card.querySelector("[data-stock-unit-label]");
           if (selection instanceof HTMLElement) {
             selection.textContent = quantity
               ? mode === "each"
@@ -1122,6 +1163,18 @@
           }
           if (prompt instanceof HTMLElement) {
             prompt.hidden = quantity > 0;
+          }
+          if (unitHelp instanceof HTMLElement) {
+            unitHelp.textContent = mode === "each" ? "Added in steps of 5" : "1 tray = 100 tubes";
+          }
+          if (unitLabel instanceof HTMLElement) {
+            unitLabel.textContent = mode === "each" ? "tubes" : `tray${quantity === 1 ? "" : "s"}`;
+          }
+          if (input instanceof HTMLInputElement) {
+            input.setAttribute(
+              "aria-label",
+              mode === "each" ? "Number of individual tubes" : "Number of tube trays"
+            );
           }
           card.classList.toggle("has-selection", quantity > 0);
         });
@@ -1214,7 +1267,7 @@
   <script src="assets/js/order-stock-catalog.js?v=20260803a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-08-13.6";
+      const APP_VERSION = "2026-08-13.17";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1235,7 +1288,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20260813f", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20260813q", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

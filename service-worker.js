@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v250";
+const CACHE_NAME = "find-my-tube-v261";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -20,8 +20,9 @@ const CORE_ASSETS = [
   "./sitemap.xml",
   "./manifest.webmanifest?v=20260316b",
   "./assets/css/style.css?v=20260729a",
-  "./assets/css/modern.css?v=20260813f",
-  "./assets/js/script.js?v=20260813a",
+  "./assets/css/modern.css?v=20260813q",
+  "./assets/js/script.js?v=20260813f",
+  "./assets/js/premium-home.js?v=20260813a",
   "./assets/js/order-stock-catalog.js?v=20260803a",
   "./assets/js/track-orders.js?v=20260803a",
   "./assets/js/stock-dashboard.js?v=20260617a",
@@ -47,6 +48,9 @@ const CORE_ASSETS = [
   "./assets/images/stock-tubes/realistic-empty-tube-pearl-v3.png",
   "./assets/images/stock-tubes/realistic-empty-tube-tan-v3.png",
   "./assets/images/stock-tubes/realistic-empty-tube-pink-v3.png",
+  "./assets/images/stock-tubes/realistic-empty-paediatric-microtainer-yellow-v1.png",
+  "./assets/images/stock-tubes/realistic-empty-paediatric-microtainer-purple-v1.png",
+  "./assets/images/stock-tubes/realistic-empty-paediatric-microtainer-grey-v1.png",
   "./assets/icons/favicon-16.png",
   "./assets/icons/favicon-32.png",
   "./assets/icons/icon-192.png?v=20260316b",

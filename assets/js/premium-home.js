@@ -56,57 +56,39 @@
 
   showSlide(activeIndex);
 
-  const guideButton = document.querySelector("#collectionGuideButton");
-  const guidePanel = document.querySelector("#collectionGuidePanel");
-  const guideClose = document.querySelector("#collectionGuideClose");
-  const labDeskButton = document.querySelector("#homeLabDeskButton");
   const labDeskPanel = document.querySelector("#homeLabDeskPanel");
   const labDeskClose = document.querySelector("#homeLabDeskClose");
   const labDeskBackdrop = document.querySelector("#homeLabDeskBackdrop");
+  const menuToggleButton = document.querySelector("#menuToggleBtn");
+  const collectionDeskRequested = new URLSearchParams(window.location.search).get("tool") === "collection-desk";
 
   const setLabDeskOpen = (isOpen, { restoreFocus = true } = {}) => {
-    if (!labDeskButton || !labDeskPanel || !labDeskBackdrop) return;
-    if (isOpen && guidePanel && !guidePanel.hidden) {
-      guidePanel.hidden = true;
-      guideButton?.setAttribute("aria-expanded", "false");
-      guideButton?.setAttribute("aria-label", "Open collection guide");
-      document.body.classList.remove("is-collection-guide-open");
-    }
+    if (!labDeskPanel || !labDeskBackdrop) return;
     labDeskPanel.hidden = !isOpen;
     labDeskBackdrop.hidden = !isOpen;
-    labDeskButton.setAttribute("aria-expanded", String(isOpen));
     document.body.classList.toggle("is-home-lab-desk-open", isOpen);
+    if (typeof window.updateMenuActiveState === "function") {
+      window.updateMenuActiveState();
+    }
     if (isOpen) {
       window.requestAnimationFrame(() => labDeskClose?.focus({ preventScroll: true }));
     } else if (restoreFocus) {
-      labDeskButton.focus({ preventScroll: true });
+      menuToggleButton?.focus({ preventScroll: true });
+      if (new URLSearchParams(window.location.search).get("tool") === "collection-desk") {
+        window.history.replaceState({}, "", "./index.html");
+      }
     }
   };
 
-  const setGuideOpen = (isOpen) => {
-    if (!guideButton || !guidePanel) return;
-    if (isOpen && labDeskPanel && !labDeskPanel.hidden) {
-      setLabDeskOpen(false, { restoreFocus: false });
-    }
-    guidePanel.hidden = !isOpen;
-    guideButton.setAttribute("aria-expanded", String(isOpen));
-    guideButton.setAttribute("aria-label", isOpen ? "Close collection guide" : "Open collection guide");
-    document.body.classList.toggle("is-collection-guide-open", isOpen);
-    if (isOpen) guideClose?.focus();
-    else guideButton.focus();
-  };
-
-  guideButton?.addEventListener("click", () => setGuideOpen(guidePanel?.hidden));
-  guideClose?.addEventListener("click", () => setGuideOpen(false));
-  labDeskButton?.addEventListener("click", () => setLabDeskOpen(labDeskPanel?.hidden));
+  window.openCollectionDesk = () => setLabDeskOpen(true, { restoreFocus: false });
   labDeskClose?.addEventListener("click", () => setLabDeskOpen(false));
   labDeskBackdrop?.addEventListener("click", () => setLabDeskOpen(false));
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (!guidePanel?.hidden) {
-      setGuideOpen(false);
-      return;
-    }
     if (!labDeskPanel?.hidden) setLabDeskOpen(false);
   });
+
+  if (collectionDeskRequested) {
+    setLabDeskOpen(true, { restoreFocus: false });
+  }
 })();

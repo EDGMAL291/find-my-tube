@@ -38,7 +38,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260813f" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260813q" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -74,6 +74,7 @@
             <button type="button" class="site-menu-link" data-menu-action="home" role="menuitem">Home</button>
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
             <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Tube Plan</button>
+            <button type="button" class="site-menu-link" data-menu-action="collection-desk" role="menuitem">Collection Desk</button>
             <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
             <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order My Stock</button>
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
@@ -406,11 +407,11 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
-  <script src="assets/js/script.js?v=20260803a"></script>
+  <script src="assets/js/script.js?v=20260813f"></script>
   <script src="assets/js/stock-dashboard.js?v=20260617a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-08-13.6";
+      const APP_VERSION = "2026-08-13.17";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -442,7 +443,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260813f", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260813q", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

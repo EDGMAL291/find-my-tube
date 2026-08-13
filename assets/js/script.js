@@ -172,6 +172,7 @@ const stockOrderSubmissionMessage = document.getElementById("stockOrderSubmissio
 const stockOrderTrackOrderBtn = document.getElementById("stockOrderTrackOrderBtn");
 const aboutPanel = document.getElementById("aboutPanel");
 const drawModal = document.getElementById("drawModal");
+const drawModalCard = drawModal?.querySelector(".draw-modal-card") || null;
 const drawResultCard = document.getElementById("drawResultCard");
 const drawPlannerCount = document.getElementById("drawPlannerCount");
 const drawPlannerAlerts = document.getElementById("drawPlannerAlerts");
@@ -285,7 +286,7 @@ const isFindMyTestPage = currentAppPage === "find-my-test";
 const isStockOrderPage = currentAppPage === "stock-order";
 const isStockDashboardPage = currentAppPage === "stock-dashboard";
 const isTrackOrdersPage = currentAppPage === "track-orders";
-const MENU_MAIN_ACTION_ORDER = ["home", "tube", "find-my-test", "draw", "stock", "stock-dashboard", "track-orders"];
+const MENU_MAIN_ACTION_ORDER = ["home", "tube", "find-my-test", "draw", "collection-desk", "stock", "stock-dashboard", "track-orders"];
 const MENU_SECONDARY_ACTION_ORDER = ["settings", "about"];
 const MENU_ACTION_ORDER = [...MENU_MAIN_ACTION_ORDER, ...MENU_SECONDARY_ACTION_ORDER];
 const MENU_ACTION_ORDER_INDEX = MENU_ACTION_ORDER.reduce((acc, action, index) => {
@@ -298,6 +299,7 @@ const MENU_ACTION_ICONS = Object.freeze({
   tube: '<svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v8.6c0 1.7.9 3.3 2.4 4.2l.3.2a5 5 0 0 1 2.3 4.2V21H9v-.8a5 5 0 0 1 2.3-4.2l.3-.2A5 5 0 0 0 14 11.6V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   "find-my-test": '<svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>',
   draw: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 16c4.5 0 4.5-8 9-8s4.5 8 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="16" r="1.4" stroke="currentColor" stroke-width="1.8"/><circle cx="13" cy="8" r="1.4" stroke="currentColor" stroke-width="1.8"/><circle cx="22" cy="16" r="1.4" stroke="currentColor" stroke-width="1.8"/></svg>',
+  "collection-desk": '<svg viewBox="0 0 24 24" fill="none"><path d="M8 4h8M9 3v3h6V3M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="m8 11 1.6 1.6L13 9.2M8 16h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   stock: '<svg viewBox="0 0 24 24" fill="none"><path d="M3.8 8.2 12 4l8.2 4.2M3.8 8.2V16L12 20l8.2-4V8.2M3.8 8.2 12 12.4m8.2-4.2L12 12.4m0 0V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   "stock-dashboard": '<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16M6 9h5v8H6zM14 9h4v3h-4zM14 15h4v2h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   "track-orders": '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h10v8H5zM15 10h3.5l2 2.4V15H15zM7.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4ZM17.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -309,6 +311,7 @@ const MENU_ACTION_META = Object.freeze({
   tube: "Match tests to tube colours",
   "find-my-test": "Symptoms and signs to suggested tests",
   draw: "Review selected tubes before collection",
+  "collection-desk": "Collection checklist and lab tools",
   stock: "Request tubes and consumables",
   "stock-dashboard": "Manage requests and stock levels",
   "track-orders": "Check active request status",
@@ -573,6 +576,7 @@ function enhanceMenuButton(button, actionAttribute) {
 
 function getCurrentPageMenuAction() {
   if (isThemePanelOpen) return "settings";
+  if (document.body.classList.contains("is-home-lab-desk-open")) return "collection-desk";
   if (isTrackOrdersPage) return "track-orders";
   if (isStockDashboardPage) return "stock-dashboard";
   if (isStockOrderPage) return "stock";
@@ -1297,6 +1301,29 @@ const stockBloodCultureBottleMetaById = Object.freeze({
   })
 });
 
+const paediatricMicrotainerImageById = Object.freeze({
+  "paediatric-yellow-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-yellow-v1.png",
+  "paediatric-purple-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-purple-v1.png",
+  "paediatric-grey-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-grey-v1.png"
+});
+
+const paediatricMicrotainerImageByGroup = Object.freeze({
+  "Gold/Yellow": paediatricMicrotainerImageById["paediatric-yellow-microtainer"],
+  Purple: paediatricMicrotainerImageById["paediatric-purple-microtainer"],
+  Gray: paediatricMicrotainerImageById["paediatric-grey-microtainer"]
+});
+
+function getPaediatricMicrotainerImageForItem(itemOrId) {
+  const safeId = typeof itemOrId === "string"
+    ? String(itemOrId || "").trim()
+    : String(itemOrId?.id || "").trim();
+  return paediatricMicrotainerImageById[safeId] || "";
+}
+
+function isPaediatricMicrotainerVariant(value) {
+  return /paed|pediatric|microtainer/i.test(String(value || ""));
+}
+
 const stockBloodCultureBottleIdByLegacyLabel = Object.freeze({
   "blood culture bottle - aerobic": "blood-culture-bottle-aerobic",
   "blood culture bottle - anaerobic": "blood-culture-bottle-anaerobic",
@@ -1444,6 +1471,12 @@ function formatRequesterName(value) {
 }
 
 function getStockItemGlyphMarkup(item, options = {}) {
+  const paediatricTubeImage = getPaediatricMicrotainerImageForItem(item);
+  if (paediatricTubeImage) {
+    const isCompact = String(options.glyphClassName || "").includes("compact");
+    return `<img class="stock-item-photo-paediatric${isCompact ? " stock-item-photo-paediatric-compact" : ""}" src="${paediatricTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async" aria-hidden="true">`;
+  }
+
   const meta = getBloodCultureBottleMetadata(item);
   const glyphClassName = String(options.glyphClassName || "").trim();
   const classSuffix = glyphClassName ? ` ${glyphClassName}` : "";
@@ -2408,6 +2441,10 @@ function renderStockOrderItems() {
     .map((item) => {
       const cardLabel = getStockDisplayLabel(item);
       const cardLabelMarkup = getStockDisplayLabelMarkup(item, cardLabel);
+      const paediatricTubeImage = getPaediatricMicrotainerImageForItem(item);
+      const paediatricTubeAccent = paediatricTubeImage
+        ? getTubeSwatchColor(getStockTubeGroup(item))
+        : "";
       const stockStatus = getStockStatusForItem(item);
       const availabilityMarkup = stockStatus.isKnown
         ? `<span class="stock-order-card-availability" data-stock-status="${escapeHtml(stockStatus.status)}">${escapeHtml(stockStatus.label)} · ${stockStatus.onHand} available</span>`
@@ -2425,7 +2462,7 @@ function renderStockOrderItems() {
         : "Each";
 
       return `
-      <article class="stock-order-card stock-order-item-card" data-stock-item="${item.id}" data-stock-expanded="false">
+      <article class="stock-order-card stock-order-item-card${paediatricTubeImage ? " stock-order-tube-card stock-order-paediatric-tube-card" : ""}" data-stock-item="${item.id}" data-stock-expanded="false"${paediatricTubeAccent ? ` style="--tube-cap-color:${escapeHtml(paediatricTubeAccent)};"` : ""}>
         <button
           type="button"
           class="stock-order-item-trigger"
@@ -3511,9 +3548,10 @@ function closeSectionBrowseModal({ restoreFocus = true } = {}) {
   syncModalOpenClass();
   updateGroupChipState();
 
-  if (restoreFocus && lastSectionBrowseModalTrigger && typeof lastSectionBrowseModalTrigger.focus === "function") {
+  const focusTarget = lastSectionBrowseModalTrigger;
+  if (restoreFocus && focusTarget && typeof focusTarget.focus === "function") {
     window.requestAnimationFrame(() => {
-      lastSectionBrowseModalTrigger.focus({ preventScroll: true });
+      focusTarget.focus({ preventScroll: true });
     });
   }
 
@@ -4762,6 +4800,28 @@ function getTubeSwatchColor(tubeGroup) {
   return swatch[tubeGroup] || "#94a3b8";
 }
 
+function getTubeToneClass(tubeGroup) {
+  const toneByGroup = {
+    Tan: "tan",
+    Purple: "purple",
+    Pink: "pink",
+    Blue: "blue",
+    "Gold/Yellow": "gold-yellow",
+    "Pearl/White": "pearl-white",
+    Green: "green",
+    Gray: "gray",
+    "Swab Transport Medium": "teal",
+    "Specimen Jar": "royal-blue",
+    "Urine Container": "urine-yellow",
+    "24hr Urine Container": "amber",
+    Red: "red",
+    Black: "black",
+    "Blood Culture Bottles": "culture"
+  };
+
+  return toneByGroup[tubeGroup] || "neutral";
+}
+
 const tubeCardStyleTokens = {
   yellow: {
     background: "rgba(255, 249, 222, 0.9)",
@@ -4890,8 +4950,16 @@ function getTubeIconModifierClass(tubeGroup) {
 }
 
 // Gets tube visual markup.
-function getTubeVisualMarkup(tubeGroup, sizeClass = "") {
-  return `<span class="tube-icon${sizeClass}${getTubeIconModifierClass(tubeGroup)}" style="--tube-color: ${getTubeSwatchColor(tubeGroup)};" aria-hidden="true"></span>`;
+function getTubeVisualMarkup(tubeGroup, sizeClass = "", options = {}) {
+  const paediatricTubeImage = isPaediatricMicrotainerVariant(options.tubeVariant)
+    ? paediatricMicrotainerImageByGroup[tubeGroup] || ""
+    : "";
+  if (paediatricTubeImage) {
+    return `<span class="tube-photo-visual tube-photo-visual-paediatric${sizeClass}" aria-hidden="true"><img src="${paediatricTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async"></span>`;
+  }
+
+  const toneClass = getTubeToneClass(tubeGroup);
+  return `<span class="tube-icon tube-icon-${toneClass}${sizeClass}${getTubeIconModifierClass(tubeGroup)}" style="--tube-color: ${getTubeSwatchColor(tubeGroup)};" aria-hidden="true"></span>`;
 }
 
 const NON_TUBE_COLLECTION_GROUPS = new Set([
@@ -6555,6 +6623,15 @@ function handleSiteNavigationAction(action, trigger = null) {
     return;
   }
 
+  if (action === "collection-desk") {
+    if (isHomePage && typeof window.openCollectionDesk === "function") {
+      window.openCollectionDesk();
+      return;
+    }
+    window.location.assign("./index.html?tool=collection-desk");
+    return;
+  }
+
   if (action === "tube") {
     recordHomeQuickActionActivity("tube");
     openLookupHomeView();
@@ -7106,6 +7183,10 @@ function initHomeDashboard() {
 function openDrawModal() {
   if (!drawModal) return;
   resetClearDrawSelectionConfirmation({ update: false });
+  if (drawModalCard) {
+    drawModalCard.scrollTop = 0;
+    drawModalCard.classList.remove("is-scrolled");
+  }
   drawModal.hidden = false;
   updateDrawPlannerToggleState();
   refreshSelectionUi({ rerenderCards: false });
@@ -7121,6 +7202,7 @@ function openDrawModal() {
 function closeDrawModal() {
   if (!drawModal) return;
   resetClearDrawSelectionConfirmation({ update: false });
+  drawModalCard?.classList.remove("is-scrolled");
   drawModal.hidden = true;
   updateDrawPlannerToggleState();
   syncModalOpenClass();
@@ -7170,9 +7252,10 @@ function closeLegalModal({ restoreFocus = true } = {}) {
   legalModal.hidden = true;
   syncModalOpenClass();
 
-  if (restoreFocus && lastLegalModalTrigger && typeof lastLegalModalTrigger.focus === "function") {
+  const focusTarget = lastLegalModalTrigger;
+  if (restoreFocus && focusTarget && typeof focusTarget.focus === "function") {
     window.requestAnimationFrame(() => {
-      lastLegalModalTrigger.focus({ preventScroll: true });
+      focusTarget.focus({ preventScroll: true });
     });
   }
 
@@ -7199,9 +7282,10 @@ function closeContactFeedbackModal({ restoreFocus = true } = {}) {
   contactFeedbackModal.hidden = true;
   syncModalOpenClass();
 
-  if (restoreFocus && lastContactFeedbackTrigger && typeof lastContactFeedbackTrigger.focus === "function") {
+  const focusTarget = lastContactFeedbackTrigger;
+  if (restoreFocus && focusTarget && typeof focusTarget.focus === "function") {
     window.requestAnimationFrame(() => {
-      lastContactFeedbackTrigger.focus({ preventScroll: true });
+      focusTarget.focus({ preventScroll: true });
     });
   }
   lastContactFeedbackTrigger = null;
@@ -7260,9 +7344,10 @@ function closeAboutInfoModal({ restoreFocus = true } = {}) {
   aboutInfoModal.hidden = true;
   syncModalOpenClass();
 
-  if (restoreFocus && lastAboutInfoTrigger && typeof lastAboutInfoTrigger.focus === "function") {
+  const focusTarget = lastAboutInfoTrigger;
+  if (restoreFocus && focusTarget && typeof focusTarget.focus === "function") {
     window.requestAnimationFrame(() => {
-      lastAboutInfoTrigger.focus({ preventScroll: true });
+      focusTarget.focus({ preventScroll: true });
     });
   }
   lastAboutInfoTrigger = null;
@@ -7624,6 +7709,24 @@ function applyTubeVariantNotes(plan, selectedTests) {
   });
 }
 
+function getPlanItemTubeVariant(item, selectedTests, collectionGroups = []) {
+  const itemTestNames = new Set(Array.isArray(item?.tests) ? item.tests : []);
+  if (!itemTestNames.size) return "";
+
+  const safeGroups = collectionGroups.length
+    ? collectionGroups
+    : [String(item?.key || "").trim()].filter(Boolean);
+  const linkedTests = selectedTests.filter((test) => (
+    itemTestNames.has(test.name)
+    && getTubeGroups(test.tubeColor).some((group) => safeGroups.includes(group))
+  ));
+  if (!linkedTests.length || !linkedTests.every((test) => isPaediatricMicrotainerVariant(test.tubeVariant))) {
+    return "";
+  }
+
+  return String(linkedTests[0].tubeVariant || "Paeds microtainer").trim();
+}
+
 // Gets lab draw plan.
 function getLabDrawPlan(selectedTests) {
   const exactRule = findExactDrawRule(selectedTests);
@@ -7756,6 +7859,14 @@ function renderDrawResult() {
   drawGroups.innerHTML = plan.items
     .map((item) => {
       const alternativeGroups = getPlanItemAlternativeGroups(item);
+      const primaryGroup = alternativeGroups[0] || item.key;
+      const planTubeVariant = getPlanItemTubeVariant(
+        item,
+        selectedTests,
+        alternativeGroups.length ? alternativeGroups : [primaryGroup]
+      );
+      const planToneClass = getTubeToneClass(primaryGroup);
+      const planAccent = getTubeSwatchColor(primaryGroup);
       const headMarkup = alternativeGroups.length
         ? `
           <div class="draw-group-main">
@@ -7763,7 +7874,7 @@ function renderDrawResult() {
               ${alternativeGroups.map((group, index) => `
                 ${index > 0 ? `<span class="tube-option-separator">or</span>` : ""}
                 <span class="tube-option alternative">
-                  ${getTubeVisualMarkup(group)}
+                  ${getTubeVisualMarkup(group, "", { tubeVariant: planTubeVariant })}
                   <span class="tube-option-copy">
                     <span class="tube-option-label">${item.count} x ${group}</span>
                     ${getTubeAdditiveLabel(group) ? `<span class="tube-option-additive">${getTubeAdditiveLabel(group)}</span>` : ""}
@@ -7775,14 +7886,14 @@ function renderDrawResult() {
         `
         : `
           <div class="draw-group-main">
-            ${getTubeVisualMarkup(item.key)}
+            ${getTubeVisualMarkup(item.key, "", { tubeVariant: planTubeVariant })}
             <h3>${item.label}</h3>
             <span class="draw-group-count-badge">${item.count}x</span>
           </div>
         `;
 
       return `
-        <article class="draw-group-card">
+        <article class="draw-group-card draw-group-card-${planToneClass}" style="--plan-tube-accent: ${planAccent};">
           <div class="draw-group-top">
             ${headMarkup}
           </div>
@@ -8855,6 +8966,7 @@ function renderCards(filteredTests) {
       : tubeGroups.length >= 3
         ? " tube-icon-sm"
         : "";
+    const tubeVariantValue = String(test.tubeVariant || "").trim();
     const useOrBetweenTubeOptions = isAlternativeTubeChoice(test.tubeColor, tubeGroups);
     const tubeOptionsMarkup = tubeGroups.length
       ? `
@@ -8862,7 +8974,7 @@ function renderCards(filteredTests) {
         ${tubeGroups.map((group, index) => `
           ${index > 0 && useOrBetweenTubeOptions ? `<span class="tube-option-separator">or</span>` : ""}
           <span class="tube-option${useOrBetweenTubeOptions ? " alternative" : ""}">
-            ${getTubeVisualMarkup(group, tubeIconSizeClass)}
+            ${getTubeVisualMarkup(group, tubeIconSizeClass, { tubeVariant: tubeVariantValue })}
             <span class="tube-option-copy">
               <span class="tube-option-label">${group}</span>
               ${getTubeAdditiveLabel(group) ? `<span class="tube-option-additive">${getTubeAdditiveLabel(group)}</span>` : ""}
@@ -8877,7 +8989,6 @@ function renderCards(filteredTests) {
     const showTubeChoiceNote = tubeGroups.length > 1
       ? useOrBetweenTubeOptions
       : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
-    const tubeVariantValue = String(test.tubeVariant || "").trim();
     const hasTubeOptions = tubeGroups.length > 0;
     const collectionFieldLabel = getCollectionFieldLabel(tubeGroups);
     const specimenValue = getCardSpecimenValue(test, { isMicro });
@@ -9277,6 +9388,12 @@ function bindEvents() {
       if (event.target !== drawModal) return;
       closeDrawModal();
     });
+  }
+
+  if (drawModalCard) {
+    drawModalCard.addEventListener("scroll", () => {
+      drawModalCard.classList.toggle("is-scrolled", drawModalCard.scrollTop > 24);
+    }, { passive: true });
   }
 
   if (closeProfileModalBtn) {
