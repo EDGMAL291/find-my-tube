@@ -10328,9 +10328,9 @@ html[data-theme] body :is(.stock-dashboard-login-modal-card, #stockDashboardCrea
 
 /* Shared display scale: page titles should guide the eye without crowding the work. */
 :root {
-  --fmt-display-title-size: clamp(2.1rem, 3.25vw, 2.65rem);
-  --fmt-page-title-size: clamp(2rem, 3vw, 2.5rem);
-  --fmt-display-title-line-height: 1.06;
+  --fmt-display-title-size: clamp(1.95rem, 2.85vw, 2.35rem);
+  --fmt-page-title-size: clamp(1.8rem, 2.6vw, 2.2rem);
+  --fmt-display-title-line-height: 1.08;
 }
 
 body[data-app-page="home"] .home-hero-content h2,
@@ -10356,8 +10356,8 @@ body[data-app-page$="-page"]:not(.find-my-test-page) .header h1 {
 
 @media (max-width: 620px) {
   :root {
-    --fmt-display-title-size: clamp(1.9rem, 7.8vw, 2.05rem);
-    --fmt-page-title-size: clamp(1.8rem, 7.4vw, 1.95rem);
-    --fmt-display-title-line-height: 1.08;
+    --fmt-display-title-size: clamp(1.62rem, 6.7vw, 1.72rem);
+    --fmt-page-title-size: clamp(1.52rem, 6.35vw, 1.62rem);
+    --fmt-display-title-line-height: 1.1;
   }
 }
