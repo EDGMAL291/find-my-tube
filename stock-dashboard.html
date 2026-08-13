@@ -38,7 +38,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260813e" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260813f" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -410,7 +410,7 @@
   <script src="assets/js/stock-dashboard.js?v=20260617a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-08-13.5";
+      const APP_VERSION = "2026-08-13.6";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -442,7 +442,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20260813e", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20260813f", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

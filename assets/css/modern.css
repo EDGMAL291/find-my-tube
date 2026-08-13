@@ -8305,6 +8305,278 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-tracking-card {
   }
 }
 
+/* 2026-08-13 interior surfaces: one clinical window and support-page palette. */
+:root {
+  --fmt-window-night: #071b2d;
+  --fmt-window-deep: #03111f;
+  --fmt-window-cream: #fffdf8;
+  --fmt-window-muted: rgba(237, 245, 247, 0.72);
+  --fmt-window-line: rgba(164, 200, 207, 0.3);
+  --fmt-window-line-strong: rgba(196, 222, 226, 0.5);
+  --fmt-window-accent: #c4dee2;
+  --fmt-window-accent-soft: rgba(164, 200, 207, 0.11);
+  --fmt-window-gold: #ead797;
+}
+
+/* Standalone information pages now feel like part of the photographic app. */
+body[data-app-page$="-page"]:not(.find-my-test-page) {
+  color: var(--fmt-window-cream);
+  background:
+    linear-gradient(180deg, rgba(3, 17, 31, 0.96), rgba(7, 27, 45, 0.98)),
+    var(--support-image) center / cover fixed;
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .header {
+  background-image:
+    linear-gradient(90deg, rgba(3, 17, 31, 0.95), rgba(3, 17, 31, 0.56) 62%, rgba(3, 17, 31, 0.28)),
+    var(--support-image);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .support-home-link {
+  border-color: var(--fmt-window-line-strong);
+  background: rgba(3, 17, 31, 0.28);
+  color: var(--fmt-window-cream);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .support-nav {
+  border-color: var(--fmt-window-line);
+  background: rgba(3, 17, 31, 0.58);
+  box-shadow: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .support-nav a {
+  color: var(--fmt-window-muted);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .support-nav a:hover,
+body[data-app-page$="-page"]:not(.find-my-test-page) .support-nav a:focus-visible,
+body[data-app-page$="-page"]:not(.find-my-test-page) .support-nav a[aria-current="page"] {
+  background: var(--fmt-window-accent-soft);
+  color: var(--fmt-window-cream);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) > .container > .stock-order-request-card {
+  border-color: var(--fmt-window-line);
+  border-left-color: var(--fmt-window-accent);
+  background:
+    radial-gradient(circle at 100% 0, rgba(164, 200, 207, 0.09), transparent 30%),
+    rgba(7, 27, 45, 0.88);
+  color: var(--fmt-window-cream);
+  box-shadow: 0 24px 56px rgba(1, 9, 18, 0.24);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card :is(h2, h3) {
+  color: var(--fmt-window-cream);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card p {
+  color: var(--fmt-window-muted);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card a:not(.contact-sheet-action) {
+  border-color: var(--fmt-window-line-strong);
+  background: transparent;
+  color: var(--fmt-window-cream);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card a:not(.contact-sheet-action):hover,
+body[data-app-page$="-page"]:not(.find-my-test-page) .stock-order-request-card a:not(.contact-sheet-action):focus-visible {
+  background: var(--fmt-window-accent-soft);
+  color: var(--fmt-window-accent);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .site-footer {
+  border-top-color: var(--fmt-window-line);
+  color: var(--fmt-window-muted);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action {
+  border-color: var(--fmt-window-line);
+  background: rgba(3, 17, 31, 0.42);
+  color: var(--fmt-window-cream);
+}
+
+body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action:hover,
+body[data-app-page$="-page"]:not(.find-my-test-page) .contact-sheet-action:focus-visible {
+  border-color: var(--fmt-window-line-strong);
+  background: var(--fmt-window-accent-soft);
+}
+
+/* Shared overlays no longer fall back to the retired beige and brown window theme. */
+html[data-theme] body :is(.draw-modal, .profile-modal, .contact-sheet-modal) {
+  background: rgba(2, 12, 23, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+html[data-theme] body :is(.draw-modal-card, .profile-modal-card, .legal-modal-card, .contact-sheet-card, .about-info-modal-card) {
+  border-color: var(--fmt-window-line);
+  background:
+    radial-gradient(circle at 96% 0, rgba(164, 200, 207, 0.12), transparent 30%),
+    linear-gradient(145deg, rgba(7, 27, 45, 0.98), rgba(3, 17, 31, 0.98));
+  color: var(--fmt-window-cream);
+  box-shadow: 0 28px 80px rgba(1, 8, 16, 0.5);
+}
+
+html[data-theme] body :is(.draw-selection-head, .profile-modal-head, .contact-sheet-head) {
+  border-bottom-color: var(--fmt-window-line);
+}
+
+html[data-theme] body :is(.draw-selection-head h3, .profile-modal-head h3, .contact-sheet-head h3, .about-info-title, .legal-copy h4) {
+  color: var(--fmt-window-cream);
+}
+
+html[data-theme] body :is(.draw-close-btn, .profile-modal-close-btn, .contact-sheet-close-btn) {
+  border-color: var(--fmt-window-line);
+  background: rgba(3, 17, 31, 0.52);
+  color: var(--fmt-window-cream);
+  box-shadow: none;
+}
+
+html[data-theme] body :is(.draw-close-btn, .profile-modal-close-btn, .contact-sheet-close-btn):hover,
+html[data-theme] body :is(.draw-close-btn, .profile-modal-close-btn, .contact-sheet-close-btn):focus-visible {
+  border-color: var(--fmt-window-line-strong);
+  background: var(--fmt-window-accent-soft);
+  color: var(--fmt-window-accent);
+}
+
+html[data-theme] body :is(.profile-modal-list li, .legal-copy, .contact-sheet-action, .about-info-link-btn) {
+  border-color: var(--fmt-window-line);
+  background: rgba(3, 17, 31, 0.46);
+  color: var(--fmt-window-cream);
+}
+
+html[data-theme] body :is(.legal-copy p, .legal-copy li, .legal-copy-note, .about-info-copy, .contact-sheet-action-subtitle) {
+  color: var(--fmt-window-muted);
+}
+
+html[data-theme] body .contact-sheet-action-whatsapp,
+html[data-theme] body .contact-sheet-action-whatsapp .contact-sheet-action-icon {
+  border-color: rgba(155, 215, 181, 0.36);
+  color: #9bd7b5;
+}
+
+html[data-theme] body .contact-sheet-action-call,
+html[data-theme] body .contact-sheet-action-call .contact-sheet-action-icon {
+  border-color: rgba(158, 203, 240, 0.36);
+  color: #9ecbf0;
+}
+
+/* Tube Plan uses the same window on Find My Tube and Find My Test. */
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-modal {
+  justify-content: center;
+  align-items: center;
+  padding: 18px;
+  background: rgba(2, 12, 23, 0.72);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-modal-card {
+  width: min(650px, 100%);
+  height: auto;
+  max-height: min(86svh, 720px);
+  margin: 0;
+  gap: 10px;
+  padding: 16px;
+  border-color: var(--fmt-window-line);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 96% 0, rgba(164, 200, 207, 0.12), transparent 30%),
+    linear-gradient(145deg, rgba(7, 27, 45, 0.98), rgba(3, 17, 31, 0.98));
+  color: var(--fmt-window-cream);
+  box-shadow: 0 28px 80px rgba(1, 8, 16, 0.5);
+  animation: none;
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-selection-head {
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--fmt-window-line);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) :is(.draw-selection-head h3, .draw-group-top h3) {
+  color: var(--fmt-window-cream);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) :is(.draw-close-btn, .draw-return-btn) {
+  border-color: var(--fmt-window-line-strong);
+  background: transparent;
+  color: var(--fmt-window-cream);
+  box-shadow: none;
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) :is(.draw-close-btn, .draw-return-btn):hover,
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) :is(.draw-close-btn, .draw-return-btn):focus-visible {
+  border-color: var(--fmt-window-accent);
+  background: var(--fmt-window-accent-soft);
+  color: var(--fmt-window-accent);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) :is(.draw-selection-count, .draw-planner-note, .draw-group-tests, .draw-group-detail) {
+  color: var(--fmt-window-muted);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-selected-chip {
+  border-color: var(--fmt-window-line);
+  background: rgba(3, 17, 31, 0.54);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-selected-chip-name {
+  color: var(--fmt-window-cream);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-selected-chip-remove {
+  color: var(--fmt-window-accent);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) :is(.draw-selected-empty, .draw-result-card, .draw-group-card, .draw-planner-alert) {
+  border-color: var(--fmt-window-line);
+  background: rgba(3, 17, 31, 0.5);
+  color: var(--fmt-window-muted);
+  box-shadow: none;
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-planner-alert h4 {
+  color: var(--fmt-window-accent);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-planner-alert-info {
+  border-color: rgba(172, 216, 223, 0.4);
+  background: rgba(20, 58, 68, 0.44);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-planner-alert-info h4 {
+  color: #acd8df;
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-planner-alert-urgent {
+  border-color: rgba(241, 170, 162, 0.45);
+  border-left: 3px solid #f1aaa2;
+  background: rgba(77, 35, 43, 0.46);
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-planner-alert-urgent h4 {
+  color: #f1aaa2;
+}
+
+html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-group-count-badge {
+  background: var(--fmt-window-accent-soft);
+  color: var(--fmt-window-accent);
+}
+
+@media (max-width: 620px) {
+  html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .draw-modal-card {
+    width: 100%;
+    max-height: calc(100dvh - (env(safe-area-inset-bottom) + 116px));
+    border-radius: 6px;
+  }
+}
+
 /* Preserve the recognisable specimen-cap colours against the dark stock workspace. */
 html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card {
   border-color: var(--tube-accent-border, var(--tool-line));
