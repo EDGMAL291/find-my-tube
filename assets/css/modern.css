@@ -10367,9 +10367,10 @@ html[data-theme] body .tube-photo-visual-adult {
   width: 24px;
   height: 50px;
   flex: 0 0 24px;
-  border-radius: 5px;
-  background: #001a36;
-  box-shadow: 0 5px 12px rgba(1, 8, 15, 0.28);
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 html[data-theme] body .tube-photo-visual-adult.tube-icon-sm {
@@ -10385,7 +10386,66 @@ html[data-theme] body .tube-photo-visual-adult.tube-icon-mini {
 }
 
 html[data-theme] body .tube-photo-visual-adult img {
-  filter: saturate(1.04) brightness(1.05) contrast(1.03);
+  filter:
+    saturate(1.04)
+    brightness(1.05)
+    contrast(1.03)
+    drop-shadow(0 5px 6px rgba(1, 8, 15, 0.28));
+}
+
+/* Find My Tube results show the tube as clinical product photography, not a tiny glyph. */
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-option {
+  min-height: 88px;
+  gap: 10px;
+  padding: 4px 10px 4px 5px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-tube-action {
+  min-height: 132px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-photo-visual-adult {
+  width: 48px;
+  height: 88px;
+  flex-basis: 48px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-photo-visual-adult.tube-icon-sm {
+  width: 32px;
+  height: 64px;
+  flex-basis: 32px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-photo-visual-adult.tube-icon-mini {
+  width: 27px;
+  height: 56px;
+  flex-basis: 27px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-photo-visual-adult img {
+  filter:
+    saturate(1.08)
+    brightness(1.08)
+    contrast(1.05)
+    drop-shadow(0 7px 8px rgba(1, 8, 15, 0.34));
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-option-copy {
+  gap: 3px;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-option-label {
+  font-size: 0.8rem;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-option-additive {
+  font-size: 0.68rem;
+}
+
+html[data-theme] body[data-app-page="find-my-tube"] .card-summary-action .tube-option-grid:is(.compact, .dense) .tube-option {
+  min-height: 68px;
+  gap: 7px;
+  padding-right: 7px;
 }
 
 html[data-theme] body[data-app-page="stock-order"] .stock-item-glyph-tube {

@@ -1319,14 +1319,14 @@ const paediatricMicrotainerImageByGroup = Object.freeze({
 });
 
 const adultEmptyTubeImageByGroup = Object.freeze({
-  "Gold/Yellow": "assets/images/stock-tubes/realistic-empty-tube-yellow-v3.png",
-  Purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v3.png",
-  Pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v3.png",
-  Blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v3.png",
-  Green: "assets/images/stock-tubes/realistic-empty-tube-green-v3.png",
-  Gray: "assets/images/stock-tubes/realistic-empty-tube-grey-v3.png",
-  Tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v3.png",
-  "Pearl/White": "assets/images/stock-tubes/realistic-empty-tube-pearl-v3.png"
+  "Gold/Yellow": "assets/images/stock-tubes/realistic-empty-tube-yellow-v4.png",
+  Purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v4.png",
+  Pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v4.png",
+  Blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v4.png",
+  Green: "assets/images/stock-tubes/realistic-empty-tube-green-v4.png",
+  Gray: "assets/images/stock-tubes/realistic-empty-tube-grey-v4.png",
+  Tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v4.png",
+  "Pearl/White": "assets/images/stock-tubes/realistic-empty-tube-pearl-v4.png"
 });
 
 function getPaediatricMicrotainerImageForItem(itemOrId) {
@@ -9121,7 +9121,8 @@ function renderCards(filteredTests) {
           content: `<div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
             ${tubeOptionsMarkup}
           </div>`,
-          isAction: true
+          isAction: true,
+          className: "card-summary-tube-action"
         })
         : ""}
       ${showRequestedSpecimen
