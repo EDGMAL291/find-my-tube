@@ -1723,18 +1723,18 @@ async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
   };
 }
 
-async function postJson(urlString, payload, redirectCount = 0) {
+async function postJson(urlString, payload, redirectCount = 0, method = "POST") {
   return new Promise((resolve, reject) => {
     const target = new URL(urlString);
     const transport = target.protocol === "https:" ? https : http;
-    const body = JSON.stringify(payload);
+    const body = method === "GET" ? "" : JSON.stringify(payload);
     const request = transport.request({
       protocol: target.protocol,
       hostname: target.hostname,
       port: target.port || (target.protocol === "https:" ? 443 : 80),
       path: `${target.pathname}${target.search}`,
-      method: "POST",
-      headers: {
+      method,
+      headers: method === "GET" ? {} : {
         "Content-Type": "text/plain; charset=utf-8",
         "Content-Length": Buffer.byteLength(body)
       }
@@ -1748,7 +1748,9 @@ async function postJson(urlString, payload, redirectCount = 0) {
         const statusCode = Number(response.statusCode) || 0;
         const location = typeof response.headers.location === "string" ? response.headers.location : "";
         if (location && [301, 302, 303, 307, 308].includes(statusCode) && redirectCount < 5) {
-          resolve(postJson(new URL(location, target).toString(), payload, redirectCount + 1));
+          // Apps Script redirects its response to a read-only content URL.
+          const nextMethod = [301, 302, 303].includes(statusCode) ? "GET" : method;
+          resolve(postJson(new URL(location, target).toString(), payload, redirectCount + 1, nextMethod));
           return;
         }
         resolve({ statusCode, body: responseBody });
@@ -1759,7 +1761,7 @@ async function postJson(urlString, payload, redirectCount = 0) {
     request.setTimeout(STOCK_SHEETS_TIMEOUT_MS, () => {
       request.destroy(new Error("Google Sheets sync timed out"));
     });
-    request.write(body);
+    if (body) request.write(body);
     request.end();
   });
 }

@@ -111,6 +111,11 @@ const clinicalWorkupChipList = document.getElementById("clinicalWorkupChipList")
 const clinicalAgeInput = document.getElementById("clinicalAgeInput");
 const clinicalSexSelect = document.getElementById("clinicalSexSelect");
 const clinicalPregnancySelect = document.getElementById("clinicalPregnancySelect");
+const clinicalChoiceModal = document.getElementById("clinicalChoiceModal");
+const clinicalChoiceBackdrop = document.getElementById("clinicalChoiceBackdrop");
+const clinicalChoiceTitle = document.getElementById("clinicalChoiceTitle");
+const clinicalChoiceOptions = document.getElementById("clinicalChoiceOptions");
+const clinicalChoiceCloseBtn = document.getElementById("clinicalChoiceCloseBtn");
 const clinicalSymptomsInput = document.getElementById("clinicalSymptomsInput");
 const clinicalSignsInput = document.getElementById("clinicalSignsInput");
 const clinicalConcernInput = document.getElementById("clinicalConcernInput");
@@ -266,6 +271,9 @@ let closeAboutInfoModalBtn = null;
 let aboutInfoLegalButtons = [];
 let lastAboutInfoTrigger = null;
 let clinicalWorkupOutput = null;
+let activeClinicalChoiceSelect = null;
+let activeClinicalChoiceTrigger = null;
+let clinicalChoiceCloseTimeoutId = 0;
 const stockOrderState = Object.create(null);
 let stockOrderStatusMode = "draft";
 let isSubmittingStockOrder = false;
@@ -286,9 +294,10 @@ const isFindMyTestPage = currentAppPage === "find-my-test";
 const isStockOrderPage = currentAppPage === "stock-order";
 const isStockDashboardPage = currentAppPage === "stock-dashboard";
 const isTrackOrdersPage = currentAppPage === "track-orders";
-const MENU_MAIN_ACTION_ORDER = ["home", "tube", "find-my-test", "draw", "collection-desk", "stock", "stock-dashboard", "track-orders"];
+const MENU_MAIN_ACTION_ORDER = ["home", "tube", "find-my-test", "draw", "collection-desk"];
+const MENU_STOCK_ACTION_ORDER = ["stock", "stock-dashboard", "track-orders"];
 const MENU_SECONDARY_ACTION_ORDER = ["settings", "about"];
-const MENU_ACTION_ORDER = [...MENU_MAIN_ACTION_ORDER, ...MENU_SECONDARY_ACTION_ORDER];
+const MENU_ACTION_ORDER = [...MENU_MAIN_ACTION_ORDER, ...MENU_STOCK_ACTION_ORDER, ...MENU_SECONDARY_ACTION_ORDER];
 const MENU_ACTION_ORDER_INDEX = MENU_ACTION_ORDER.reduce((acc, action, index) => {
   acc[action] = index;
   return acc;
@@ -634,6 +643,7 @@ function enhanceSiteMenuStructure() {
   });
 
   const mainButtons = [];
+  const stockButtons = [];
   const secondaryButtons = [];
   buttons.forEach((button) => {
     const action = normalizeMenuAction(button.getAttribute("data-menu-action"));
@@ -641,6 +651,11 @@ function enhanceSiteMenuStructure() {
     if (MENU_SECONDARY_ACTION_ORDER.includes(action)) {
       button.dataset.menuGroup = "secondary";
       secondaryButtons.push(button);
+      return;
+    }
+    if (MENU_STOCK_ACTION_ORDER.includes(action)) {
+      button.dataset.menuGroup = "stock";
+      stockButtons.push(button);
       return;
     }
     button.dataset.menuGroup = "main";
@@ -657,6 +672,16 @@ function enhanceSiteMenuStructure() {
   mainButtons.forEach((button) => mainGroup.appendChild(button));
   siteMenuList.appendChild(mainGroup);
 
+  if (stockButtons.length) {
+    const stockGroup = document.createElement("div");
+    stockGroup.className = "site-menu-group";
+    stockGroup.dataset.group = "stock";
+    stockGroup.setAttribute("role", "none");
+    stockGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Stock Control</p>';
+    stockButtons.forEach((button) => stockGroup.appendChild(button));
+    siteMenuList.appendChild(stockGroup);
+  }
+
   if (secondaryButtons.length) {
     const secondaryGroup = document.createElement("div");
     secondaryGroup.className = "site-menu-group";
@@ -667,7 +692,7 @@ function enhanceSiteMenuStructure() {
     siteMenuList.appendChild(secondaryGroup);
   }
 
-  [...mainButtons, ...secondaryButtons].forEach((button, index) => {
+  [...mainButtons, ...stockButtons, ...secondaryButtons].forEach((button, index) => {
     button.style.setProperty("--menu-item-index", String(index));
   });
 }
@@ -1509,7 +1534,16 @@ function getStockItemGlyphMarkup(item, options = {}) {
   }
 
   const tubeGroup = getStockTubeGroup(item);
-  if (!tubeGroup) return "";
+  if (!tubeGroup) {
+    const supplyGlyphs = {
+      "specimen-jars": '<rect x="6" y="4" width="20" height="5" rx="1.5"/><path d="M8 9v18q0 3 3 3h10q3 0 3-3V9"/><path d="M11 17h10v8H11zM11 6.5h10"/>',
+      "lab-bags": '<path d="M6 5h20v24H6zM6 10h20M10 7.5h12"/><path d="M12 16h8v9h-8zM14 19h4M14 22h4"/>',
+      "blood-gas-syringes": '<path d="m8 22 14-14 4 4-14 14zM20 6l8 8M24 4l6 6M25 9l2-2M8 22l-3 3M5 25l-3 5M15 15l3 3M18 12l3 3"/>',
+      "swabs-transport-media": '<rect x="18" y="13" width="8" height="17" rx="3"/><path d="M17 13h10M21 18v7M9 11v18"/><rect x="6" y="2" width="6" height="11" rx="3"/>'
+    };
+    const glyph = supplyGlyphs[item?.id];
+    return glyph ? `<span class="stock-item-glyph stock-item-glyph-supply${classSuffix}" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${glyph}</svg></span>` : "";
+  }
   const tubeColor = escapeHtml(getTubeSwatchColor(tubeGroup));
 
   return `
@@ -1986,8 +2020,10 @@ async function loadStockTrackingList() {
 }
 
 async function loadStockDuplicateCheckRequests() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(STOCK_ORDER_DUPLICATE_CHECK_URL, { cache: "no-store" });
+    const response = await fetch(STOCK_ORDER_DUPLICATE_CHECK_URL, { cache: "no-store", signal: controller.signal });
     if (!response.ok) throw new Error(`Duplicate check fetch failed with status ${response.status}`);
     const payload = await response.json().catch(() => ({}));
     stockOrderRecentRequestsForChecks = Array.isArray(payload?.requests) ? payload.requests : [];
@@ -1996,6 +2032,7 @@ async function loadStockDuplicateCheckRequests() {
     console.warn("Stock repeat check unavailable", error);
     stockOrderRecentRequestsForChecks = [];
   } finally {
+    clearTimeout(timeoutId);
     updateStockOrderPreview();
   }
 }
@@ -2703,31 +2740,36 @@ function initStockOrderPanel() {
   bindPressAction(submitStockOrderBtn, async () => {
     if (isSubmittingStockOrder) return;
 
-    await loadStockDuplicateCheckRequests();
-
-    const blockedReason = getStockSubmitBlockedReason();
-    if (blockedReason) {
-      showSelectionNotice(blockedReason);
-      return;
-    }
-
-    const payload = buildStockOrderPayload();
-    if (!payload.requestedBy || !payload.wardUnit || !payload.items.length) {
-      showSelectionNotice("Add your name, ward / unit, and at least one item first.");
-      return;
-    }
-
-    lastStockSubmitErrorMessage = "";
+    // Lock synchronously: a second click must not start another preflight or POST.
     isSubmittingStockOrder = true;
+    lastStockSubmitErrorMessage = "";
     updateStockOrderPreview();
+    let payload = null;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
+      await loadStockDuplicateCheckRequests();
+
+      const blockedReason = getStockSubmitBlockedReason();
+      if (blockedReason) {
+        showSelectionNotice(blockedReason);
+        return;
+      }
+
+      payload = buildStockOrderPayload();
+      if (!payload.requestedBy || !payload.wardUnit || !payload.items.length) {
+        showSelectionNotice("Add your name, ward / unit, and at least one item first.");
+        return;
+      }
+
       const response = await fetch(STOCK_ORDER_SUBMIT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
 
       if (!response.ok) {
@@ -2735,11 +2777,16 @@ function initStockOrderPanel() {
         const serverMessage = String(result?.error || "").trim();
         const detailMessage = String(result?.detail || "").trim();
         const combinedMessage = [serverMessage, detailMessage].filter(Boolean).join(" - ");
-        throw new Error(combinedMessage || `Submit failed with status ${response.status}`);
+        throw new Error(response.status >= 500
+          ? "The laboratory service could not confirm the request. Your selections are kept. Check Track Orders before trying again."
+          : combinedMessage || `Submit failed with status ${response.status}`);
       }
 
       const result = await response.json().catch(() => ({}));
-      submittedStockOrderRecord = result?.request || null;
+      if (result?.ok !== true || !result?.request?.id) {
+        throw new Error("The server did not confirm an order number. Check Track Orders before trying again.");
+      }
+      submittedStockOrderRecord = result.request;
       stockOrderStatusMode = "submitted";
       const sheetSyncWarning = result?.sheetSync && result.sheetSync.ok === false
         ? " Order saved, but Google Sheets still needs attention."
@@ -2765,7 +2812,9 @@ function initStockOrderPanel() {
       stockOrderStatusMode = "submit-failed";
       hideStockOrderSubmissionConfirmation();
       const message = error instanceof Error ? error.message : "Unknown error";
-      lastStockSubmitErrorMessage = "Request could not be submitted. Please try again or contact the lab.";
+      lastStockSubmitErrorMessage = error?.name === "AbortError" || error instanceof TypeError
+        ? "The connection was interrupted before confirmation. Your selections are kept. Check Track Orders before trying again."
+        : message || "Request could not be submitted. Your selections are kept. Please contact the lab.";
       console.error("Stock order submit failed", {
         submitUrl: STOCK_ORDER_SUBMIT_URL,
         requestedBy: payload?.requestedBy || "",
@@ -2776,6 +2825,7 @@ function initStockOrderPanel() {
       });
       showSelectionNotice(lastStockSubmitErrorMessage);
     } finally {
+      clearTimeout(timeoutId);
       isSubmittingStockOrder = false;
       updateStockOrderPreview();
     }
@@ -2922,6 +2972,56 @@ function restoreSearchFocusWithoutScroll() {
   if (typeof searchInput.setSelectionRange === "function") {
     searchInput.setSelectionRange(cursorEnd, cursorEnd);
   }
+}
+
+// Keeps mobile test results inside the visual space above the on-screen keyboard.
+function isMobileTubeSearchViewport() {
+  return Boolean(isFindMyTubePage && window.matchMedia("(max-width: 620px)").matches);
+}
+
+function updateMobileTubeSearchViewport() {
+  if (!isMobileTubeSearchViewport() || !document.body.classList.contains("is-mobile-search-active")) return;
+
+  const viewport = window.visualViewport;
+  const viewportTop = Math.max(0, Number(viewport?.offsetTop || 0));
+  const viewportHeight = Math.max(180, Number(viewport?.height || window.innerHeight || 0));
+  document.documentElement.style.setProperty("--mobile-search-viewport-top", `${viewportTop}px`);
+  document.documentElement.style.setProperty("--mobile-search-viewport-height", `${viewportHeight}px`);
+}
+
+function setMobileTubeSearchActive(isActive) {
+  const nextActive = Boolean(isActive && isMobileTubeSearchViewport());
+  document.body.classList.toggle("is-mobile-search-active", nextActive);
+
+  if (!nextActive) {
+    document.documentElement.style.removeProperty("--mobile-search-viewport-top");
+    document.documentElement.style.removeProperty("--mobile-search-viewport-height");
+    return;
+  }
+
+  updateMobileTubeSearchViewport();
+  window.requestAnimationFrame(() => {
+    if (cardsContainer) cardsContainer.scrollTop = 0;
+  });
+}
+
+function initMobileTubeSearchViewportSync() {
+  if (!isFindMyTubePage || !searchInput) return;
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateMobileTubeSearchViewport);
+    window.visualViewport.addEventListener("scroll", updateMobileTubeSearchViewport);
+  }
+
+  window.addEventListener("resize", () => {
+    if (!isMobileTubeSearchViewport()) {
+      setMobileTubeSearchActive(false);
+      return;
+    }
+    if (document.activeElement === searchInput) {
+      setMobileTubeSearchActive(true);
+    }
+  });
 }
 
 // Clears search for next plan entry.
@@ -4976,7 +5076,10 @@ function getTubeVisualMarkup(tubeGroup, sizeClass = "", options = {}) {
 
   const adultTubeImage = adultEmptyTubeImageByGroup[tubeGroup] || "";
   if (adultTubeImage) {
-    return `<span class="tube-photo-visual tube-photo-visual-adult${sizeClass}" aria-hidden="true"><img src="${adultTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async"></span>`;
+    const adultTubeVolumeClass = tubeGroup === "Gold/Yellow"
+      ? " tube-photo-visual-adult-yellow-6ml"
+      : " tube-photo-visual-adult-standard-4ml";
+    return `<span class="tube-photo-visual tube-photo-visual-adult${adultTubeVolumeClass}${sizeClass}" aria-hidden="true"><img src="${adultTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async"></span>`;
   }
 
   const toneClass = getTubeToneClass(tubeGroup);
@@ -5848,6 +5951,199 @@ function renderClinicalWorkupResults(output = clinicalWorkupOutput) {
     .join("");
 }
 
+function getClinicalChoiceConfig(select) {
+  if (select === clinicalPregnancySelect) {
+    return { title: "Choose pregnancy status", label: "Pregnancy status" };
+  }
+  return { title: "Choose sex", label: "Sex" };
+}
+
+function getClinicalChoiceTrigger(select) {
+  if (!select?.id || !clinicalWorkupForm) return null;
+  return clinicalWorkupForm.querySelector(`.clinical-choice-trigger[data-choice-for="${select.id}"]`);
+}
+
+function syncClinicalChoiceTrigger(select) {
+  const trigger = getClinicalChoiceTrigger(select);
+  if (!trigger) return;
+
+  const selectedOption = select.options[select.selectedIndex] || select.options[0];
+  const selectedLabel = String(selectedOption?.textContent || "Choose an option").trim();
+  const labelNode = trigger.querySelector(".clinical-choice-trigger-label");
+  if (labelNode) labelNode.textContent = selectedLabel;
+  trigger.classList.toggle("is-placeholder", select.selectedIndex === 0);
+  trigger.setAttribute("aria-label", `${getClinicalChoiceConfig(select).label}. Current selection: ${selectedLabel}`);
+}
+
+function syncClinicalChoiceTriggers() {
+  [clinicalSexSelect, clinicalPregnancySelect].forEach(syncClinicalChoiceTrigger);
+}
+
+function handleClinicalChoiceSelectChange(event) {
+  syncClinicalChoiceTrigger(event.currentTarget);
+}
+
+function closeClinicalChoiceModal({ restoreFocus = true } = {}) {
+  if (!clinicalChoiceModal) return;
+
+  window.clearTimeout(clinicalChoiceCloseTimeoutId);
+  clinicalChoiceCloseTimeoutId = 0;
+  const triggerToRestore = activeClinicalChoiceTrigger;
+  clinicalChoiceModal.classList.remove("is-open");
+  document.body.classList.remove("clinical-choice-open");
+  triggerToRestore?.setAttribute("aria-expanded", "false");
+  activeClinicalChoiceSelect = null;
+  activeClinicalChoiceTrigger = null;
+
+  clinicalChoiceCloseTimeoutId = window.setTimeout(() => {
+    clinicalChoiceModal.hidden = true;
+    if (clinicalChoiceOptions) clinicalChoiceOptions.innerHTML = "";
+    if (restoreFocus && triggerToRestore?.isConnected) {
+      triggerToRestore.focus({ preventScroll: true });
+    }
+    clinicalChoiceCloseTimeoutId = 0;
+  }, 180);
+}
+
+function openClinicalChoiceModal(select, trigger) {
+  if (!clinicalChoiceModal || !clinicalChoiceOptions || !clinicalChoiceTitle || !select || !trigger) return;
+
+  window.clearTimeout(clinicalChoiceCloseTimeoutId);
+  clinicalChoiceCloseTimeoutId = 0;
+  activeClinicalChoiceSelect = select;
+  activeClinicalChoiceTrigger = trigger;
+  clinicalChoiceTitle.textContent = getClinicalChoiceConfig(select).title;
+  clinicalChoiceOptions.innerHTML = "";
+
+  Array.from(select.options).forEach((option, index) => {
+    const optionButton = document.createElement("button");
+    const isSelected = option.value === select.value;
+    optionButton.type = "button";
+    optionButton.className = `clinical-choice-option${isSelected ? " is-selected" : ""}`;
+    optionButton.setAttribute("role", "option");
+    optionButton.setAttribute("aria-selected", isSelected ? "true" : "false");
+    optionButton.dataset.choiceValue = option.value;
+    optionButton.innerHTML = `
+      <span class="clinical-choice-option-label">${escapeHtml(String(option.textContent || "").trim())}</span>
+      <span class="clinical-choice-option-check" aria-hidden="true">${isSelected ? "✓" : ""}</span>
+    `;
+    optionButton.addEventListener("click", () => {
+      select.value = option.value;
+      select.dispatchEvent(new Event("input", { bubbles: true }));
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      syncClinicalChoiceTrigger(select);
+      closeClinicalChoiceModal();
+    });
+    optionButton.style.setProperty("--choice-option-index", String(index));
+    clinicalChoiceOptions.appendChild(optionButton);
+  });
+
+  clinicalChoiceModal.hidden = false;
+  document.body.classList.add("clinical-choice-open");
+  trigger.setAttribute("aria-expanded", "true");
+  window.requestAnimationFrame(() => {
+    clinicalChoiceModal.classList.add("is-open");
+    const selectedButton = clinicalChoiceOptions.querySelector(".clinical-choice-option.is-selected");
+    (selectedButton || clinicalChoiceOptions.querySelector(".clinical-choice-option"))?.focus({ preventScroll: true });
+  });
+}
+
+function enhanceClinicalChoiceSelect(select) {
+  if (!select || select.dataset.choiceEnhanced === "true") return;
+
+  const config = getClinicalChoiceConfig(select);
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "clinical-choice-trigger";
+  trigger.dataset.choiceFor = select.id;
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-controls", "clinicalChoiceOptions");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.innerHTML = `
+    <span class="clinical-choice-trigger-label"></span>
+    <span class="clinical-choice-trigger-chevron" aria-hidden="true"></span>
+  `;
+  trigger.addEventListener("click", () => openClinicalChoiceModal(select, trigger));
+
+  select.dataset.choiceEnhanced = "true";
+  select.classList.add("clinical-choice-native");
+  select.setAttribute("aria-hidden", "true");
+  select.tabIndex = -1;
+  select.insertAdjacentElement("afterend", trigger);
+  select.addEventListener("change", handleClinicalChoiceSelectChange);
+  trigger.setAttribute("aria-label", config.label);
+  syncClinicalChoiceTrigger(select);
+}
+
+function restoreNativeClinicalChoiceSelect(select) {
+  if (!select || select.dataset.choiceEnhanced !== "true") return;
+
+  getClinicalChoiceTrigger(select)?.remove();
+  select.removeEventListener("change", handleClinicalChoiceSelectChange);
+  select.classList.remove("clinical-choice-native");
+  select.removeAttribute("aria-hidden");
+  select.removeAttribute("data-choice-enhanced");
+  select.tabIndex = 0;
+}
+
+function syncClinicalChoiceEnhancement() {
+  const selects = [clinicalSexSelect, clinicalPregnancySelect].filter(Boolean);
+  if (window.matchMedia("(max-width: 620px)").matches) {
+    selects.forEach(enhanceClinicalChoiceSelect);
+    return;
+  }
+
+  if (clinicalChoiceModal && !clinicalChoiceModal.hidden) {
+    closeClinicalChoiceModal({ restoreFocus: false });
+  }
+  selects.forEach(restoreNativeClinicalChoiceSelect);
+}
+
+function initClinicalChoiceFields() {
+  if (!isFindMyTestPage || !clinicalWorkupForm || !clinicalChoiceModal) return;
+
+  syncClinicalChoiceEnhancement();
+  window.addEventListener("resize", syncClinicalChoiceEnhancement);
+  clinicalChoiceBackdrop?.addEventListener("click", () => closeClinicalChoiceModal());
+  clinicalChoiceCloseBtn?.addEventListener("click", () => closeClinicalChoiceModal());
+  clinicalChoiceModal.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeClinicalChoiceModal();
+      return;
+    }
+
+    const optionButtons = Array.from(clinicalChoiceOptions?.querySelectorAll(".clinical-choice-option") || []);
+    const currentIndex = optionButtons.indexOf(document.activeElement);
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) && optionButtons.length) {
+      event.preventDefault();
+      const nextIndex = event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? optionButtons.length - 1
+          : event.key === "ArrowDown"
+            ? (Math.max(currentIndex, -1) + 1) % optionButtons.length
+            : (currentIndex <= 0 ? optionButtons.length : currentIndex) - 1;
+      optionButtons[nextIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "Tab") {
+      const focusable = [clinicalChoiceCloseBtn, ...optionButtons].filter(Boolean);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+}
+
 // Clears clinical workup inputs.
 function clearClinicalWorkupInputs() {
   selectedClinicalChipIds.clear();
@@ -5857,6 +6153,7 @@ function clearClinicalWorkupInputs() {
   if (clinicalSymptomsInput) clinicalSymptomsInput.value = "";
   if (clinicalSignsInput) clinicalSignsInput.value = "";
   if (clinicalConcernInput) clinicalConcernInput.value = "";
+  syncClinicalChoiceTriggers();
   renderClinicalWorkupChips();
 }
 
@@ -9288,12 +9585,18 @@ function applyFilters() {
 function bindEvents() {
   if (searchInput) {
     searchInput.addEventListener("focus", () => {
+      setMobileTubeSearchActive(true);
       if (!searchInput.value.trim()) {
         searchInput.placeholder = SEARCH_PLACEHOLDER_BASE;
       }
     });
 
     searchInput.addEventListener("blur", () => {
+      window.setTimeout(() => {
+        if (document.activeElement !== searchInput) {
+          setMobileTubeSearchActive(false);
+        }
+      }, 120);
       if (!searchInput.value.trim()) {
         refreshSearchPlaceholder();
       }
@@ -9317,6 +9620,9 @@ function bindEvents() {
       updateSearchClearButton();
       refreshSearchPlaceholder();
       applyFilters();
+      if (document.body.classList.contains("is-mobile-search-active") && cardsContainer) {
+        cardsContainer.scrollTop = 0;
+      }
     });
   }
 
@@ -9671,9 +9977,12 @@ initHomeDashboard();
 ensureAboutInfoModal();
 renderGroupChips();
 refreshSearchPlaceholder();
+initClinicalWorkup();
+initClinicalChoiceFields();
 bindEvents();
 updateMenuActiveState();
 initSelectionCartViewportSync();
+initMobileTubeSearchViewportSync();
 applyFilters();
 updateSearchClearButton();
 refreshSelectionUi({ rerenderCards: false });

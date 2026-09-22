@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20260814d" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20260922a" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -272,12 +272,13 @@
       <section class="home-dashboard-section home-collection-checklist-card" aria-labelledby="homeCollectionChecklistTitle">
         <h2 id="homeCollectionChecklistTitle" class="lab-desk-section-title"><span class="lab-desk-heading-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-shield"></use></svg></span><span>Collection checklist</span></h2>
         <ol class="home-collection-checklist">
-          <li><strong>Confirm identity.</strong> Check the patient against your local identification process before collection.</li>
+          <li><strong>Confirm identity.</strong> Confirm at least two patient identifiers using your local identification process before collection.</li>
           <li><strong>Label at the patient.</strong> Apply labels immediately after collection, never in advance.</li>
+          <li><strong>Check preparation and supplies.</strong> Review test-specific fasting or preparation instructions and check containers for expiry or damage.</li>
           <li><strong>Use the right tube.</strong> Check the test requirement, fill line, and additive before drawing.</li>
           <li><strong>Handle to protocol.</strong> Mix, transport, and prioritise samples according to your local laboratory SOP.</li>
         </ol>
-        <p class="home-collection-checklist-note">Reference guidance only. Follow your laboratory’s current collection and safety procedures.</p>
+        <p class="home-collection-checklist-note">Reference guidance only. Follow your laboratory’s current collection and safety procedures. <a href="https://www.labcorp.com/test-menu/resources/introduction-to-specimen-collection" target="_blank" rel="noopener noreferrer">Specimen collection reference</a>.</p>
       </section>
 
       <section class="home-dashboard-section home-order-status-card" aria-labelledby="homeStatusTitle">
@@ -355,26 +356,28 @@
               </label>
 
               <div class="clinical-workup-context-pair">
-                <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
-                  <span class="sr-only">Sex</span>
+                <div class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-sex">
+                  <span class="sr-only" id="clinicalSexLabel">Sex</span>
                   <div class="clinical-workup-select-wrap clinical-workup-sex-wrap">
-                    <select id="clinicalSexSelect">
+                    <select id="clinicalSexSelect" aria-labelledby="clinicalSexLabel">
                       <option value="unspecified">Sex</option>
                       <option value="female">Female</option>
                       <option value="male">Male</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
-                </label>
+                </div>
 
-                <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
-                  <span class="sr-only">Pregnancy status</span>
-                  <select id="clinicalPregnancySelect">
-                    <option value="unknown">Pregnancy status</option>
-                    <option value="pregnant">Pregnant / possible pregnancy</option>
-                    <option value="not-pregnant">Not pregnant</option>
-                  </select>
-                </label>
+                <div class="clinical-workup-field clinical-workup-context-field clinical-workup-context-half clinical-workup-context-pregnancy">
+                  <span class="sr-only" id="clinicalPregnancyLabel">Pregnancy status</span>
+                  <div class="clinical-workup-select-wrap clinical-workup-pregnancy-wrap">
+                    <select id="clinicalPregnancySelect" aria-labelledby="clinicalPregnancyLabel">
+                      <option value="unknown">Pregnancy status</option>
+                      <option value="pregnant">Pregnant / possible pregnancy</option>
+                      <option value="not-pregnant">Not pregnant</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </fieldset>
 
@@ -468,6 +471,20 @@
     </span>
   </button>
 
+  <section class="clinical-choice-modal" id="clinicalChoiceModal" hidden>
+    <div class="clinical-choice-backdrop" id="clinicalChoiceBackdrop" aria-hidden="true"></div>
+    <div class="clinical-choice-sheet" role="dialog" aria-modal="true" aria-labelledby="clinicalChoiceTitle">
+      <div class="clinical-choice-head">
+        <div>
+          <p class="clinical-choice-kicker">Patient details</p>
+          <h3 id="clinicalChoiceTitle">Choose an option</h3>
+        </div>
+        <button type="button" class="clinical-choice-close" id="clinicalChoiceCloseBtn" aria-label="Close options">Close</button>
+      </div>
+      <div class="clinical-choice-options" id="clinicalChoiceOptions" role="listbox" aria-labelledby="clinicalChoiceTitle"></div>
+    </div>
+  </section>
+
   <section class="draw-modal" id="drawModal" hidden>
     <div class="draw-modal-card" role="dialog" aria-modal="true" aria-labelledby="drawModalTitle">
       <div class="draw-selection-head">
@@ -556,12 +573,12 @@
 
   <script src="assets/data/data.js?v=20260812a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/script.js?v=20260814c"></script>
+  <script src="assets/js/script.js?v=20260922a"></script>
   <script src="assets/js/find-my-test.js?v=20260728b"></script>
   <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-08-14.3";
+      const APP_VERSION = "2026-09-22.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
