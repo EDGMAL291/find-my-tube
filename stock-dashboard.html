@@ -38,7 +38,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20260814d" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20260930a" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -121,19 +121,20 @@
           <p class="stock-dashboard-status">For shared computers, do not save login details in the browser.</p>
 
           <div class="stock-dashboard-auth-shell" id="stockDashboardAuthShell">
-            <form class="stock-dashboard-auth-form" id="stockDashboardAuthForm" autocomplete="off">
+            <form class="stock-dashboard-auth-form" id="stockDashboardAuthForm">
               <label class="stock-order-field">
                 <span class="stock-order-field-label">eLab user number</span>
-                <input type="text" id="stockDashboardUserNumberInput" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="Use the same user number you use on eLab." />
+                <input type="text" id="stockDashboardUserNumberInput" inputmode="numeric" maxlength="3" autocomplete="username" placeholder="e.g. 001" aria-describedby="stockDashboardUserNumberHelp" />
+                <span class="stock-dashboard-field-help" id="stockDashboardUserNumberHelp">Use your 2- or 3-digit eLab user number.</span>
               </label>
 
               <label class="stock-order-field">
                 <span class="stock-order-field-label">4-digit PIN</span>
-                <input type="password" id="stockDashboardPinInput" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="4 digits" />
+                <input type="password" id="stockDashboardPinInput" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="4 digits" />
               </label>
 
               <div class="stock-dashboard-auth-actions">
-                <button type="button" class="quick-tool-launch-btn" id="stockDashboardLoginBtn">Log In</button>
+                <button type="submit" class="quick-tool-launch-btn" id="stockDashboardLoginBtn">Log in</button>
               </div>
             </form>
           </div>
@@ -407,11 +408,12 @@
 
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
-  <script src="assets/js/script.js?v=20260814c"></script>
-  <script src="assets/js/stock-dashboard.js?v=20260617a"></script>
+  <script src="assets/js/stock-catalog-data.js?v=20260930a"></script>
+  <script src="assets/js/script.js?v=20260930a"></script>
+  <script src="assets/js/stock-dashboard.js?v=20260930a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-08-14.3";
+      const APP_VERSION = "2026-09-30.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"

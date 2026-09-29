@@ -10,16 +10,16 @@ This project can use Render for the hosted stock API while the frontend stays on
 
 ## Files Added For This
 
-- [`render.yaml`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/render.yaml) - Render blueprint for the Node API
-- [`server.js`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/server.js) - uses Supabase-backed auth and stock persistence
-- [`supabase/migrations/20260419_stock_dashboard.sql`](/Users/edgarmalesa/Desktop/new%20project/find%20my%20tube/supabase/migrations/20260419_stock_dashboard.sql) - required DB schema
+- [`render.yaml`](../render.yaml) - Render blueprint for the Node API
+- [`server.js`](../server.js) - uses Supabase-backed auth and stock persistence
+- [`supabase/migrations/20260419_stock_dashboard.sql`](../supabase/migrations/20260419_stock_dashboard.sql) - required DB schema
 
 ## Create The Backend In Render
 
 1. Push this repo to GitHub.
 2. In Render, choose **New +** -> **Blueprint**.
 3. Connect this GitHub repo.
-4. Render should detect [`render.yaml`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/render.yaml).
+4. Render should detect [`render.yaml`](../render.yaml).
 5. Create the service.
 
 Render will create a Node web service called `find-my-tube-api`.
@@ -29,6 +29,9 @@ Set these environment variables in Render:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY` (server-only secret)
 - optional: `SUPABASE_ANON_KEY` (frontend-safe only if needed for direct browser Supabase calls)
+- optional: `ALLOWED_ORIGINS` (comma-separated extra frontend origins)
+
+Apply every SQL file in `supabase/migrations/` in filename order. The latest migration enables RLS and installs the atomic order-fulfilment function; deploy it before the server change is treated as fully production-ready.
 
 ## Set The First Admin
 
@@ -44,7 +47,7 @@ If you prefer not to use the Render shell, the live dashboard can now bootstrap 
 
 ## Wire The Live Frontend To The Backend
 
-Once Render gives you the backend URL, update [`assets/js/app-config.js`](/Users/edgarmalesa/.codex/worktrees/f964/find%20my%20tube/assets/js/app-config.js):
+Once Render gives you the backend URL, update [`assets/js/app-config.js`](../assets/js/app-config.js):
 
 ```js
 window.FMT_APP_CONFIG = Object.assign({}, window.FMT_APP_CONFIG, {

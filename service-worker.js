@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v267";
+const CACHE_NAME = "find-my-tube-v300";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -12,6 +12,7 @@ const CORE_ASSETS = [
   "./disclaimer.html",
   "./contact-feedback.html",
   "./find-my-test.html",
+  "./find-my-tube.html",
   "./order-stock.html",
   "./track-orders.html",
   "./stock-dashboard.html",
@@ -20,12 +21,13 @@ const CORE_ASSETS = [
   "./sitemap.xml",
   "./manifest.webmanifest?v=20260316b",
   "./assets/css/style.css?v=20260729a",
-  "./assets/css/modern.css?v=20260814d",
-  "./assets/js/script.js?v=20260814c",
+  "./assets/css/modern.css?v=20260930a",
+  "./assets/js/stock-catalog-data.js?v=20260930a",
+  "./assets/js/script.js?v=20260930a",
   "./assets/js/premium-home.js?v=20260813a",
   "./assets/js/order-stock-catalog.js?v=20260803a",
   "./assets/js/track-orders.js?v=20260803a",
-  "./assets/js/stock-dashboard.js?v=20260617a",
+  "./assets/js/stock-dashboard.js?v=20260930a",
   "./assets/js/find-my-test.js?v=20260728b",
   "./assets/data/data.js?v=20260812a",
   "./assets/data/find-my-test-map.json?v=20260728p",
@@ -139,7 +141,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match("./index.html"));
+        .catch(() => Response.error());
     })
   );
 });

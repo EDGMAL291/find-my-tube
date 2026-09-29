@@ -81,6 +81,11 @@ const stockDashboardTopItems = document.getElementById("stockDashboardTopItems")
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
 const STOCK_DASHBOARD_STATUS_ORDER = ["pending", "packed", "ready", "collected", "completed", "cancelled", "no-stock"];
+const STOCK_DASHBOARD_STATUS_TRANSITIONS = Object.freeze({
+  pending: ["packed", "ready", "cancelled", "no-stock"],
+  packed: ["pending", "ready", "cancelled", "no-stock"],
+  ready: ["packed", "collected", "completed", "cancelled", "no-stock"]
+});
 const STOCK_DASHBOARD_LEGACY_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_SESSION_TOKEN_KEY = "fmt-stock-lab-session-token";
 const STOCK_DASHBOARD_BROWSER_ALERTS_KEY = "fmt-stock-browser-alerts";
@@ -411,7 +416,7 @@ function stockDashboardGetHeaders(includeJson = false) {
 
 function stockDashboardReadSessionToken() {
   try {
-    return String(localStorage.getItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY) || "").trim();
+    return String(sessionStorage.getItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY) || "").trim();
   } catch {
     return "";
   }
@@ -421,12 +426,26 @@ function stockDashboardWriteSessionToken(token) {
   const safeToken = String(token || "").trim();
   try {
     if (safeToken) {
-      localStorage.setItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY, safeToken);
+      sessionStorage.setItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY, safeToken);
+      localStorage.removeItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY);
       return;
     }
+    sessionStorage.removeItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY);
     localStorage.removeItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY);
   } catch {
     // The HttpOnly cookie path still works in browsers that allow cross-site cookies.
+  }
+}
+
+function stockDashboardMigratePersistentSessionToken() {
+  try {
+    const persistentToken = String(localStorage.getItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY) || "").trim();
+    if (persistentToken && !sessionStorage.getItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY)) {
+      sessionStorage.setItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY, persistentToken);
+    }
+    localStorage.removeItem(STOCK_DASHBOARD_SESSION_TOKEN_KEY);
+  } catch {
+    // Cookie authentication remains available.
   }
 }
 
@@ -3116,12 +3135,14 @@ function renderStockDashboardRequests(requests) {
     const repeatBadge = typeof requestHasRepeatOverride === "function" && requestHasRepeatOverride(request)
       ? '<span class="stock-order-repeat-mini-badge">48h override</span>'
       : "";
-    const statusButtons = STOCK_DASHBOARD_STATUS_ORDER.map((status) => `
+    const allowedStatuses = STOCK_DASHBOARD_STATUS_TRANSITIONS[safeStatus] || [];
+    const statusButtons = allowedStatuses.map((status) => `
       <button
         type="button"
-        class="stock-dashboard-status-btn${safeStatus === status ? " active" : ""}"
+        class="stock-dashboard-status-btn"
         data-request-id="${stockDashboardEscapeHtml(request.id)}"
         data-request-status="${stockDashboardEscapeHtml(status)}"
+        aria-label="Move order ${stockDashboardEscapeHtml(request.id)} to ${stockDashboardEscapeHtml(stockDashboardFormatStatus(status))}"
       >
         ${stockDashboardEscapeHtml(stockDashboardFormatStatus(status))}
       </button>
@@ -3478,10 +3499,6 @@ async function clearStockDashboardData() {
   }
 }
 
-stockDashboardLoginBtn?.addEventListener("click", () => {
-  stockDashboardSendAuthRequest(stockDashboardSetupRequired ? STOCK_DASHBOARD_BOOTSTRAP_URL : STOCK_DASHBOARD_LOGIN_URL);
-});
-
 stockDashboardSessionLoginBtn?.addEventListener("click", () => {
   stockDashboardOpenLoginModal();
 });
@@ -3784,6 +3801,7 @@ document.addEventListener("keydown", (event) => {
 initStockDashboardTools();
 stockDashboardInitAuthSync();
 stockDashboardSanitizeDashboardUrlOnLoad();
+stockDashboardMigratePersistentSessionToken();
 localStorage.removeItem(STOCK_DASHBOARD_LEGACY_TOKEN_KEY);
 stockDashboardSetSummaryOpen(false);
 stockDashboardSetSessionRestorePending(true);

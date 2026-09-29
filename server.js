@@ -7,10 +7,12 @@ const fsSync = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
+const STOCK_CATALOG = require("./assets/js/stock-catalog-data.js");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
+const APP_RELEASE = "2026-09-30.1";
 const STOCK_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
@@ -29,6 +31,27 @@ const LAB_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const CANCELLED_ARCHIVE_WINDOW_MS = 5 * 60 * 60 * 1000;
 const AUTH_COOKIE_NAME = "fmt_lab_session";
 const VALID_REQUEST_STATUSES = new Set(["pending", "packed", "ready", "collected", "completed", "cancelled", "no-stock"]);
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://findmytube.co.za",
+  "https://www.findmytube.co.za",
+  "https://edgmal291.github.io",
+  "https://find-my-tube-api.onrender.com"
+];
+const CONFIGURED_ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+const ALLOWED_ORIGINS = new Set([...DEFAULT_ALLOWED_ORIGINS, ...CONFIGURED_ALLOWED_ORIGINS]);
+const RATE_LIMIT_BUCKETS = new Map();
+const STOCK_STATUS_TRANSITIONS = Object.freeze({
+  pending: new Set(["packed", "ready", "cancelled", "no-stock"]),
+  packed: new Set(["pending", "ready", "cancelled", "no-stock"]),
+  ready: new Set(["packed", "collected", "completed", "cancelled", "no-stock"]),
+  collected: new Set(),
+  completed: new Set(),
+  cancelled: new Set(),
+  "no-stock": new Set()
+});
 
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
@@ -68,6 +91,28 @@ const MIME_TYPES = {
   ".xml": "application/xml; charset=utf-8"
 };
 
+const PUBLIC_ROOT_FILES = new Set([
+  "index.html",
+  "find-my-tube.html",
+  "find-my-test.html",
+  "tube-plan.html",
+  "order-stock.html",
+  "track-orders.html",
+  "stock-dashboard.html",
+  "about.html",
+  "contact-feedback.html",
+  "privacy-policy.html",
+  "terms-of-use.html",
+  "disclaimer.html",
+  "manifest.webmanifest",
+  "service-worker.js",
+  "robots.txt",
+  "sitemap.xml",
+  "favicon.svg",
+  "favicon-16.png",
+  "favicon-32.png"
+]);
+
 const STOCK_SHEETS_COLUMN_DEFAULTS = Object.freeze({
   yellowTubes: 0,
   greyTubes: 0,
@@ -99,21 +144,74 @@ const STOCK_REQUEST_ITEM_LIMITS = Object.freeze({
   "pink-tubes-single": 5
 });
 
-function getAllowedOrigin(req) {
-  const origin = String(req.headers.origin || "").trim();
-  if (!origin) return "*";
-  return origin;
+function isAllowedOrigin(origin) {
+  const safeOrigin = String(origin || "").trim();
+  if (!safeOrigin) return true;
+  if (ALLOWED_ORIGINS.has(safeOrigin)) return true;
+  try {
+    const url = new URL(safeOrigin);
+    return ["localhost", "127.0.0.1", "0.0.0.0"].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function setSecurityHeaders(res) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("X-Frame-Options", "DENY");
 }
 
 function setCorsHeaders(req, res) {
-  const origin = getAllowedOrigin(req);
-  res.setHeader("Access-Control-Allow-Origin", origin);
+  const origin = String(req.headers.origin || "").trim();
+  if (origin && isAllowedOrigin(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else if (!origin) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (origin !== "*") {
-    res.setHeader("Access-Control-Allow-Credentials", "true");
+  setSecurityHeaders(res);
+}
+
+function getClientAddress(req) {
+  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return forwarded || String(req.socket?.remoteAddress || "unknown");
+}
+
+function consumeRateLimit(req, scope, { limit, windowMs }) {
+  const now = Date.now();
+  const key = `${scope}:${getClientAddress(req)}`;
+  const current = RATE_LIMIT_BUCKETS.get(key);
+  if (!current || current.resetAt <= now) {
+    RATE_LIMIT_BUCKETS.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, remaining: Math.max(0, limit - 1), resetAt: now + windowMs };
   }
+  current.count += 1;
+  if (RATE_LIMIT_BUCKETS.size > 1000) {
+    for (const [bucketKey, bucket] of RATE_LIMIT_BUCKETS) {
+      if (bucket.resetAt <= now) RATE_LIMIT_BUCKETS.delete(bucketKey);
+    }
+  }
+  return {
+    allowed: current.count <= limit,
+    remaining: Math.max(0, limit - current.count),
+    resetAt: current.resetAt
+  };
+}
+
+function enforceRateLimit(req, res, scope, options) {
+  const result = consumeRateLimit(req, scope, options);
+  res.setHeader("RateLimit-Limit", String(options.limit));
+  res.setHeader("RateLimit-Remaining", String(result.remaining));
+  res.setHeader("RateLimit-Reset", String(Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000))));
+  if (result.allowed) return true;
+  res.setHeader("Retry-After", String(Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000))));
+  sendJson(req, res, 429, { ok: false, error: "Too many attempts. Please wait and try again." });
+  return false;
 }
 
 function sendJson(req, res, statusCode, payload) {
@@ -277,6 +375,13 @@ function formatStatusLabel(status) {
   return safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
 }
 
+function isAllowedStockStatusTransition(currentStatus, nextStatus) {
+  const current = slugifyStatus(currentStatus);
+  const next = slugifyStatus(nextStatus);
+  if (current === next) return true;
+  return Boolean(STOCK_STATUS_TRANSITIONS[current]?.has(next));
+}
+
 function createLabSessionToken() {
   return crypto.randomBytes(24).toString("hex");
 }
@@ -379,22 +484,23 @@ function buildAuthClearCookies(req) {
 }
 
 function sanitizeItem(item) {
-  const quantity = Math.max(0, Number(item?.quantity) || 0);
-  if (!quantity) return null;
+  const catalogItem = STOCK_CATALOG.getItem(item?.id || item?.itemId || item?.stock_item_id);
+  const quantity = Number(item?.quantity);
+  if (!catalogItem || !Number.isInteger(quantity) || quantity <= 0) return null;
 
   return {
-    id: sanitizeString(item?.id, 80),
-    label: sanitizeString(item?.label, 120),
-    variantLabel: sanitizeString(item?.variantLabel, 80),
+    id: catalogItem.id,
+    label: catalogItem.label,
+    variantLabel: catalogItem.variantLabel || "",
     quantity,
-    unitType: sanitizeString(item?.unitType, 40),
-    traySize: Number(item?.traySize) || null,
-    packetSize: Number(item?.packetSize) || null,
-    formattedQuantity: sanitizeString(item?.formattedQuantity, 120),
-    inventoryUnits: Math.max(0, Number(item?.inventoryUnits) || 0),
-    sheetColumnKey: sanitizeString(item?.sheetColumnKey, 80),
-    sheetTrayColumnKey: sanitizeString(item?.sheetTrayColumnKey, 80),
-    sheetSingleColumnKey: sanitizeString(item?.sheetSingleColumnKey, 80)
+    unitType: catalogItem.unitType,
+    traySize: Number(catalogItem.traySize) || null,
+    packetSize: Number(catalogItem.packetSize) || null,
+    formattedQuantity: STOCK_CATALOG.formatQuantity(catalogItem, quantity),
+    inventoryUnits: STOCK_CATALOG.getInventoryUnits(catalogItem, quantity),
+    sheetColumnKey: catalogItem.sheetColumnKey || "",
+    sheetTrayColumnKey: catalogItem.sheetTrayColumnKey || "",
+    sheetSingleColumnKey: catalogItem.sheetSingleColumnKey || ""
   };
 }
 
@@ -472,14 +578,17 @@ function validateStockReceiptPayload(payload) {
       return `${itemPosition}: item id is required.`;
     }
 
+    const catalogItem = STOCK_CATALOG.getItem(itemId);
+    if (!catalogItem) {
+      return `${itemPosition}: item is not in the current stock catalogue.`;
+    }
+
     const quantity = Number(item?.quantity);
     if (!Number.isInteger(quantity) || quantity <= 0) {
       return `${itemPosition}: quantity must be a positive whole number.`;
     }
-
-    const inventoryUnits = Number(item?.inventoryUnits);
-    if (!Number.isFinite(inventoryUnits) || inventoryUnits <= 0) {
-      return `${itemPosition}: inventoryUnits must be a positive number.`;
+    if (quantity > Number(catalogItem.maxQuantity || 99)) {
+      return `${itemPosition}: ${catalogItem.label} is limited to ${catalogItem.maxQuantity || 99} per entry.`;
     }
   }
 
@@ -488,10 +597,15 @@ function validateStockReceiptPayload(payload) {
 
 function validateStockRequestItems(items = []) {
   for (const item of items) {
-    const maxAllowed = Number(STOCK_REQUEST_ITEM_LIMITS[item?.id] || 0);
-    if (maxAllowed && Number(item?.quantity || 0) > maxAllowed) {
-      return `${sanitizeString(item?.label, 120) || "This item"} is limited to ${maxAllowed} per request.`;
+    const itemId = sanitizeString(item?.id || item?.itemId || item?.stock_item_id, 80);
+    const catalogItem = STOCK_CATALOG.getItem(itemId);
+    if (!catalogItem) return "One or more requested items are not in the current stock catalogue.";
+    const quantity = Number(item?.quantity);
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      return `${catalogItem.label} must use a positive whole-number quantity.`;
     }
+    const maxAllowed = Number(catalogItem.maxQuantity || STOCK_REQUEST_ITEM_LIMITS[itemId] || 99);
+    if (quantity > maxAllowed) return `${catalogItem.label} is limited to ${maxAllowed} per request.`;
   }
   return "";
 }
@@ -1618,14 +1732,64 @@ async function dbInsertReceipt(payload, sessionUser) {
   };
 }
 
+function isMissingAtomicStockTransitionFunction(error) {
+  const message = getErrorMessage(error).toLowerCase();
+  return error?.code === "PGRST202"
+    || (message.includes("transition_stock_request_status") && message.includes("function"));
+}
+
+async function dbTryAtomicStockTransition(requestId, nextStatus, sessionUser) {
+  const { data, error } = await supabase.rpc("transition_stock_request_status", {
+    p_request_id: requestId,
+    p_next_status: nextStatus,
+    p_actor_user_id: sessionUser?.id || null,
+    p_actor_number: normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || ""
+  });
+  if (error) {
+    if (isMissingAtomicStockTransitionFunction(error)) return null;
+    throw new Error(error.message || "Atomic stock transition failed");
+  }
+  if (!data || data.ok !== true) {
+    return {
+      error: String(data?.error || "transition-failed"),
+      shortages: Array.isArray(data?.shortages) ? data.shortages : [],
+      previousStatus: String(data?.previousStatus || ""),
+      nextStatus
+    };
+  }
+
+  const reloaded = await dbGetRequestById(requestId);
+  return {
+    record: mapRequestFromDb(reloaded),
+    previousStatus: String(data.previousStatus || "")
+  };
+}
+
 async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
   const dbRecord = await dbGetRequestById(requestId);
   if (!dbRecord) return { error: "not-found" };
 
   const request = mapRequestFromDb(dbRecord);
   const previousStatus = slugifyStatus(request.status);
+  if (!isAllowedStockStatusTransition(previousStatus, nextStatus)) {
+    return { error: "invalid-transition", previousStatus, nextStatus };
+  }
   const wasDeducted = isRequestInventoryDeducted(request);
   const shouldDeductInventory = (nextStatus === "completed" || nextStatus === "collected") && !wasDeducted;
+
+  if (shouldDeductInventory) {
+    const atomicResult = await dbTryAtomicStockTransition(requestId, nextStatus, sessionUser);
+    if (atomicResult) {
+      if (atomicResult.record) {
+        await dbCreateAuditLog(sessionUser?.id || null, "update-stock-request-status", "stock_request", requestId, {
+          previousStatus: atomicResult.previousStatus,
+          nextStatus,
+          inventoryTransition: "atomic"
+        });
+      }
+      return atomicResult;
+    }
+  }
 
   if (shouldDeductInventory) {
     const inventoryMap = await dbGetInventoryMap();
@@ -1723,18 +1887,18 @@ async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
   };
 }
 
-async function postJson(urlString, payload, redirectCount = 0) {
+async function postJson(urlString, payload, redirectCount = 0, method = "POST") {
   return new Promise((resolve, reject) => {
     const target = new URL(urlString);
     const transport = target.protocol === "https:" ? https : http;
-    const body = JSON.stringify(payload);
+    const body = method === "GET" ? "" : JSON.stringify(payload);
     const request = transport.request({
       protocol: target.protocol,
       hostname: target.hostname,
       port: target.port || (target.protocol === "https:" ? 443 : 80),
       path: `${target.pathname}${target.search}`,
-      method: "POST",
-      headers: {
+      method,
+      headers: method === "GET" ? {} : {
         "Content-Type": "text/plain; charset=utf-8",
         "Content-Length": Buffer.byteLength(body)
       }
@@ -1748,7 +1912,9 @@ async function postJson(urlString, payload, redirectCount = 0) {
         const statusCode = Number(response.statusCode) || 0;
         const location = typeof response.headers.location === "string" ? response.headers.location : "";
         if (location && [301, 302, 303, 307, 308].includes(statusCode) && redirectCount < 5) {
-          resolve(postJson(new URL(location, target).toString(), payload, redirectCount + 1));
+          // Apps Script redirects its response to a read-only content URL.
+          const nextMethod = [301, 302, 303].includes(statusCode) ? "GET" : method;
+          resolve(postJson(new URL(location, target).toString(), payload, redirectCount + 1, nextMethod));
           return;
         }
         resolve({ statusCode, body: responseBody });
@@ -1759,7 +1925,7 @@ async function postJson(urlString, payload, redirectCount = 0) {
     request.setTimeout(STOCK_SHEETS_TIMEOUT_MS, () => {
       request.destroy(new Error("Google Sheets sync timed out"));
     });
-    request.write(body);
+    if (body) request.write(body);
     request.end();
   });
 }
@@ -1870,22 +2036,33 @@ async function mirrorStockRequestToGoogleSheets(record) {
 }
 
 function getStaticFilePath(urlPathname) {
-  let pathname = decodeURIComponent(urlPathname);
-  if (pathname === "/") pathname = "/index.html";
-
-  const safePath = path.normalize(pathname).replace(/^(\.\.[/\\])+/, "");
-  const absolutePath = path.join(ROOT_DIR, safePath);
-  if (!absolutePath.startsWith(ROOT_DIR)) {
+  let pathname = "";
+  try {
+    pathname = decodeURIComponent(String(urlPathname || ""));
+  } catch {
     return "";
   }
+  if (pathname === "/") pathname = "/index.html";
 
+  const relativePath = pathname.replace(/^\/+/, "");
+  const segments = relativePath.split(/[\\/]+/).filter(Boolean);
+  if (!segments.length || segments.some((segment) => segment === ".." || segment.startsWith("."))) {
+    return "";
+  }
+  const isAllowedRootFile = segments.length === 1 && PUBLIC_ROOT_FILES.has(segments[0]);
+  const isAllowedAsset = segments[0] === "assets" && segments.length > 1;
+  if (!isAllowedRootFile && !isAllowedAsset) return "";
+
+  const absolutePath = path.resolve(ROOT_DIR, ...segments);
+  const relativeToRoot = path.relative(ROOT_DIR, absolutePath);
+  if (!relativeToRoot || relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) return "";
   return absolutePath;
 }
 
 async function serveStaticAsset(req, res, pathname) {
   const filePath = getStaticFilePath(pathname);
   if (!filePath) {
-    sendText(req, res, 400, "Bad request");
+    sendText(req, res, 404, "Not found");
     return;
   }
 
@@ -1903,7 +2080,7 @@ async function serveStaticAsset(req, res, pathname) {
 
     const extension = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[extension] || "application/octet-stream";
-    setCorsHeaders(req, res);
+    setSecurityHeaders(res);
     res.writeHead(200, {
       "Content-Type": contentType,
       "Content-Length": stat.size,
@@ -1916,6 +2093,12 @@ async function serveStaticAsset(req, res, pathname) {
 }
 
 async function handleApiRequest(req, res, pathname, searchParams) {
+  const requestOrigin = String(req.headers.origin || "").trim();
+  if (requestOrigin && !isAllowedOrigin(requestOrigin)) {
+    sendJson(req, res, 403, { ok: false, error: "Origin not allowed" });
+    return;
+  }
+
   if (req.method === "OPTIONS") {
     setCorsHeaders(req, res);
     res.writeHead(204, {
@@ -1930,6 +2113,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     sendJson(req, res, 200, {
       ok: true,
       service: "find-my-tube-backend",
+      release: APP_RELEASE,
+      commit: String(process.env.RENDER_GIT_COMMIT || "").slice(0, 12) || null,
       timestamp: new Date().toISOString()
     });
     return;
@@ -2009,6 +2194,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "POST" && pathname === "/api/stock-auth/login") {
+    if (!enforceRateLimit(req, res, "stock-auth-login", { limit: 30, windowMs: 15 * 60 * 1000 })) return;
     let bodyText = "";
     try {
       bodyText = await collectRequestBody(req);
@@ -2115,6 +2301,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "POST" && pathname === "/api/stock-auth/bootstrap") {
+    if (!enforceRateLimit(req, res, "stock-auth-bootstrap", { limit: 8, windowMs: 30 * 60 * 1000 })) return;
     const { count, error: countError } = await supabase.from("users").select("id", { count: "exact", head: true });
     if (countError) {
       throw new Error(countError.message || "Could not determine setup status");
@@ -2820,11 +3007,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
+    const itemValidationError = validateStockRequestItems(payload?.items);
     const cleanPayload = sanitizeStockRequestPayload({
       ...payload,
       source: "lab-manual-entry"
     });
-    const itemValidationError = validateStockRequestItems(cleanPayload.items);
     if (!cleanPayload.requestedBy || !cleanPayload.wardUnit || !cleanPayload.items.length) {
       sendJson(req, res, 400, {
         ok: false,
@@ -2862,6 +3049,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
   }
 
   if (req.method === "POST" && pathname === "/api/stock-requests") {
+    if (!enforceRateLimit(req, res, "stock-request-create", { limit: 120, windowMs: 15 * 60 * 1000 })) return;
     let bodyText = "";
     try {
       bodyText = await collectRequestBody(req);
@@ -2878,21 +3066,17 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
+    const itemValidationError = validateStockRequestItems(payload?.items);
     const cleanPayload = sanitizeStockRequestPayload(payload);
     console.info("[stock-submit] request-received", {
       origin: sanitizeString(req.headers.origin, 200),
       host: sanitizeString(req.headers.host, 200),
-      requestedBy: cleanPayload.requestedBy,
-      wardUnit: cleanPayload.wardUnit,
       lineItemCount: cleanPayload.lineItemCount,
       totalRequestedQuantity: cleanPayload.totalRequestedQuantity
     });
-    const itemValidationError = validateStockRequestItems(cleanPayload.items);
     if (!cleanPayload.requestedBy || !cleanPayload.wardUnit || !cleanPayload.items.length) {
       console.warn("[stock-submit] validation-failed", {
         reason: "missing_required_fields",
-        requestedBy: cleanPayload.requestedBy,
-        wardUnit: cleanPayload.wardUnit,
         lineItemCount: cleanPayload.lineItemCount
       });
       sendJson(req, res, 400, {
@@ -2964,8 +3148,6 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       sheetMirror = await mirrorStockRequestToGoogleSheets(record);
     } catch (error) {
       console.error("[stock-submit] write-failed", {
-        requestedBy: cleanPayload.requestedBy,
-        wardUnit: cleanPayload.wardUnit,
         lineItemCount: cleanPayload.lineItemCount,
         errorMessage: getErrorMessage(error),
         errorCode: error?.code || "",
@@ -3029,7 +3211,12 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
-    const nextStatus = slugifyStatus(payload.status);
+    const rawStatus = String(payload?.status || "").trim().toLowerCase();
+    if (!VALID_REQUEST_STATUSES.has(rawStatus)) {
+      sendJson(req, res, 400, { ok: false, error: "Invalid request status" });
+      return;
+    }
+    const nextStatus = rawStatus;
     const requestId = sanitizeString(match[1], 80);
     const updatedResult = await dbUpdateRequestStatus(requestId, nextStatus, session.user);
 
@@ -3041,6 +3228,14 @@ async function handleApiRequest(req, res, pathname, searchParams) {
             ? "Not enough stock on hand to complete this order."
             : "Not enough stock on hand to mark this order as collected.",
           shortages: updatedResult.shortages || []
+        });
+        return;
+      }
+      if (updatedResult?.error === "invalid-transition") {
+        sendJson(req, res, 409, {
+          ok: false,
+          code: "invalid_status_transition",
+          error: `This order cannot move from ${formatStatusLabel(updatedResult.previousStatus)} to ${formatStatusLabel(updatedResult.nextStatus)}.`
         });
         return;
       }
@@ -3098,16 +3293,37 @@ const server = http.createServer(async (req, res) => {
     } catch {
       // no-op
     }
+    const isProduction = String(process.env.NODE_ENV || "").trim().toLowerCase() === "production";
     sendJson(req, res, 500, {
       ok: false,
       code: "server_error",
       error: "Server error",
-      detail: error instanceof Error ? error.message : "Unknown error"
+      ...(isProduction ? {} : { detail: error instanceof Error ? error.message : "Unknown error" })
     });
   }
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`Find My Tube server running at http://${HOST}:${PORT}`);
-  console.log(`SUPABASE_URL loaded: ${SUPABASE_URL ? SUPABASE_URL : "(missing)"}`);
-});
+function startServer() {
+  return server.listen(PORT, HOST, () => {
+    console.log(`Find My Tube server running at http://${HOST}:${PORT}`);
+    console.log(`Supabase configured: ${HAS_SUPABASE ? "yes" : "no"}`);
+  });
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = {
+  server,
+  startServer,
+  sanitizeStockRequestPayload,
+  sanitizeStockReceiptPayload,
+  validateStockRequestItems,
+  validateStockReceiptPayload,
+  getItemInventoryUnits,
+  getStaticFilePath,
+  isAllowedOrigin,
+  isAllowedStockStatusTransition,
+  slugifyStatus
+};
