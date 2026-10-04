@@ -31,7 +31,7 @@ Set these environment variables in Render:
 - optional: `SUPABASE_ANON_KEY` (frontend-safe only if needed for direct browser Supabase calls)
 - optional: `ALLOWED_ORIGINS` (comma-separated extra frontend origins)
 
-Apply every SQL file in `supabase/migrations/` in filename order. The latest migration enables RLS and installs the atomic order-fulfilment function; deploy it before the server change is treated as fully production-ready.
+Apply schema migrations in filename order, excluding `20260617_reset_current_stock_only.sql` (a one-time inventory reset). The latest migration enables RLS and installs the atomic order-fulfilment function; apply it before relying on atomic inventory deduction in production.
 
 ## Set The First Admin
 

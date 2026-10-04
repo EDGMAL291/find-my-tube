@@ -20,7 +20,7 @@ Find My Tube is a progressively enhanced, multi-page web application. GitHub Pag
 
 ## Security boundary
 
-Supabase tables have RLS enabled with no browser roles granted. Public and protected data are exposed only through explicit API routes. Production browser origins are allowlisted with `ALLOWED_ORIGINS`; local loopback origins remain available for development.
+The September 2026 migration enables RLS and removes browser-role grants; verify that it has been applied in each environment. Public and protected data are exposed through explicit API routes. Production browser origins are allowlisted with `ALLOWED_ORIGINS`; local loopback origins remain available for development.
 
 ## Known structural debt
 

@@ -44,7 +44,7 @@ Optional:
 - `STOCK_SHEETS_WEBHOOK_URL`
 - `STOCK_ORDER_SHEETS_WEBHOOK_URL`
 
-Apply the SQL migrations in `supabase/migrations/` in filename order before deploying server changes.
+Apply schema migrations in `supabase/migrations/` in filename order. Do not rerun `20260617_reset_current_stock_only.sql`: it is a one-time inventory reset, not a routine schema migration.
 
 ## Deployment
 
