@@ -244,6 +244,8 @@ const OGTT_MULTI_DRAW_TESTS = new Set([
   "OGTT Pregnancy (fasting, 1hr, 2hr)"
 ]);
 const selectedTestNames = new Set();
+// Inspecting a result is independent of adding it to a collection plan.
+const expandedTestNames = new Set();
 let activeSectionGroup = "";
 const activeBrowseGroupBySection = {
   chemistry: "",
@@ -1335,23 +1337,6 @@ const paediatricMicrotainerImageById = Object.freeze({
   "paediatric-yellow-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-yellow-v1.png",
   "paediatric-purple-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-purple-v1.png",
   "paediatric-grey-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-grey-v1.png"
-});
-
-const paediatricMicrotainerImageByGroup = Object.freeze({
-  "Gold/Yellow": paediatricMicrotainerImageById["paediatric-yellow-microtainer"],
-  Purple: paediatricMicrotainerImageById["paediatric-purple-microtainer"],
-  Gray: paediatricMicrotainerImageById["paediatric-grey-microtainer"]
-});
-
-const adultEmptyTubeImageByGroup = Object.freeze({
-  "Gold/Yellow": "assets/images/stock-tubes/realistic-empty-tube-yellow-v4.png",
-  Purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v4.png",
-  Pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v4.png",
-  Blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v4.png",
-  Green: "assets/images/stock-tubes/realistic-empty-tube-green-v4.png",
-  Gray: "assets/images/stock-tubes/realistic-empty-tube-grey-v4.png",
-  Tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v4.png",
-  "Pearl/White": "assets/images/stock-tubes/realistic-empty-tube-pearl-v4.png"
 });
 
 function getPaediatricMicrotainerImageForItem(itemOrId) {
@@ -3598,7 +3583,31 @@ const chipGroups = [
   "cytohistology"
 ];
 
+// Search synonyms only: these never define specimen or tube assignments.
+// Brand identity references are recorded in docs/test-discovery.md.
+const drugSearchAliases = {
+  "Sodium Valproate": ["Valproate", "Valproic acid", "Epilim", "Epilim Chrono", "Epilim Chronosphere", "Depakote", "Convulex", "Episenta", "Epival", "Valproate semisodium"],
+  "Carbamazepine (Tegretol)": ["Carbamazepine", "Tegretol", "Tegretol CR", "Curatil"],
+  "Phenytoin": ["Epanutin", "Phenytoin sodium"],
+  "Levetiracetam (Keppra)": ["Levetiracetam", "Keppra"],
+  "Phenobarbitone": ["Phenobarbital", "Phenobarbital sodium"],
+  "Digoxin": ["Lanoxin"],
+  "Lithium": ["Lithium carbonate", "Lithium citrate", "Priadel", "Camcolit", "Liskonum", "Li-Liquid"],
+  "Theophylline": ["Uniphyllin"],
+  "Trough Amikacin": ["Amikacin", "Amikin", "Amikin trough"],
+  "Peak Amikacin": ["Amikacin", "Amikin", "Amikin peak"],
+  "Trough Gentamycin": ["Gentamicin", "Gentamycin", "Garamycin", "Gentamicin trough", "Garamycin trough"],
+  "Peak Gentamycin": ["Gentamicin", "Gentamycin", "Garamycin", "Gentamicin peak", "Garamycin peak"],
+  "Trough Tobramycin": ["Tobramycin", "Nebcin", "Nebcin trough"],
+  "Peak Tobramycin": ["Tobramycin", "Nebcin", "Nebcin peak"],
+  "Trough Vancomycin": ["Vancomycin", "Vancocin", "Vancocin trough"],
+  "Peak Vancomycin": ["Vancomycin", "Vancocin", "Vancocin peak"],
+  "Paracetamol (Blood)": ["Paracetamol", "Acetaminophen", "Panado"],
+  "Salicylate (Blood)": ["Salicylate", "Salicylates", "Aspirin", "Acetylsalicylic acid"]
+};
+
 const aliasByName = {
+  ...drugSearchAliases,
   "U&E": ["U+E", "UE", "Renal profile", "Kidney function", "U and E"],
   "CMP": ["CMP profile", "Bone profile", "Calcium magnesium phosphate profile"],
   "FBC": ["CBC", "Complete blood count", "Full blood count"],
@@ -4771,6 +4780,7 @@ const tubeGroupPatternEntries = [
   { key: "Blood Culture Bottles", pattern: /\bblood culture\b|\bculture bottles?\b/ },
   { key: "Swab Transport Medium", pattern: /\bswab in transport medium\b|\btransport medium\b/ },
   { key: "Specimen Jar", pattern: /\b(?:dark\s+blue\s+|blue\s+)?(?:sterile\s+)?specimen jar\b/ },
+  { key: "Semen Container", pattern: /\bsterile semen container\b/ },
   { key: "Tan", pattern: /\btan\b/ },
   { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
   { key: "Pink", pattern: /\bpink\b/ },
@@ -4853,100 +4863,6 @@ function getTubeToneClass(tubeGroup) {
   return toneByGroup[tubeGroup] || "neutral";
 }
 
-const tubeCardStyleTokens = {
-  yellow: {
-    background: "rgba(255, 249, 222, 0.9)",
-    border: "rgba(202, 138, 4, 0.2)",
-    accent: "rgba(202, 138, 4, 0.28)",
-    chip: "rgba(254, 243, 199, 0.9)"
-  },
-  purple: {
-    background: "rgba(248, 245, 255, 0.92)",
-    border: "rgba(124, 58, 237, 0.16)",
-    accent: "rgba(124, 58, 237, 0.22)",
-    chip: "rgba(243, 232, 255, 0.78)"
-  },
-  blue: {
-    background: "rgba(238, 248, 253, 0.92)",
-    border: "rgba(14, 116, 144, 0.16)",
-    accent: "rgba(14, 116, 144, 0.22)",
-    chip: "rgba(224, 242, 254, 0.82)"
-  },
-  green: {
-    background: "rgba(240, 253, 246, 0.9)",
-    border: "rgba(22, 101, 52, 0.14)",
-    accent: "rgba(22, 101, 52, 0.2)",
-    chip: "rgba(220, 252, 231, 0.76)"
-  },
-  grey: {
-    background: "rgba(246, 248, 250, 0.92)",
-    border: "rgba(100, 116, 139, 0.16)",
-    accent: "rgba(100, 116, 139, 0.22)",
-    chip: "rgba(241, 245, 249, 0.86)"
-  },
-  pearl: {
-    background: "rgba(248, 247, 252, 0.92)",
-    border: "rgba(129, 140, 168, 0.16)",
-    accent: "rgba(129, 140, 168, 0.22)",
-    chip: "rgba(244, 243, 248, 0.86)"
-  },
-  tan: {
-    background: "rgba(251, 247, 240, 0.92)",
-    border: "rgba(146, 104, 63, 0.16)",
-    accent: "rgba(146, 104, 63, 0.22)",
-    chip: "rgba(245, 235, 220, 0.78)"
-  },
-  pink: {
-    background: "rgba(253, 244, 248, 0.9)",
-    border: "rgba(190, 24, 93, 0.14)",
-    accent: "rgba(190, 24, 93, 0.2)",
-    chip: "rgba(252, 231, 243, 0.74)"
-  },
-  neutral: {
-    background: "rgba(249, 251, 252, 0.88)",
-    border: "rgba(100, 116, 139, 0.14)",
-    accent: "rgba(100, 116, 139, 0.18)",
-    chip: "rgba(248, 250, 252, 0.86)"
-  }
-};
-
-function getTubeCardStyleKey(tubeGroup) {
-  const keyByTubeGroup = {
-    Tan: "tan",
-    Purple: "purple",
-    Pink: "pink",
-    Blue: "blue",
-    "Gold/Yellow": "yellow",
-    "Pearl/White": "pearl",
-    Green: "green",
-    Gray: "grey"
-  };
-
-  return keyByTubeGroup[tubeGroup] || "neutral";
-}
-
-function getTubeCardStyleData(tubeGroups = []) {
-  const styleKeys = [...new Set(tubeGroups.map(getTubeCardStyleKey).filter(Boolean))];
-  const activeStyleKeys = styleKeys.length && styleKeys.length <= 2 ? styleKeys : ["neutral"];
-  const firstStyle = tubeCardStyleTokens[activeStyleKeys[0]] || tubeCardStyleTokens.neutral;
-  const secondStyle = tubeCardStyleTokens[activeStyleKeys[1]] || firstStyle;
-  const isSplit = activeStyleKeys.length === 2;
-
-  return {
-    className: `tube-tinted-card${isSplit ? " tube-card-split" : ""}`,
-    dataTube: activeStyleKeys[0],
-    dataTubes: activeStyleKeys.join(","),
-    style: [
-      `--tube-card-bg-one: ${firstStyle.background}`,
-      `--tube-card-bg-two: ${secondStyle.background}`,
-      `--tube-card-border: ${isSplit ? secondStyle.border : firstStyle.border}`,
-      `--tube-card-accent-one: ${firstStyle.accent}`,
-      `--tube-card-accent-two: ${secondStyle.accent}`,
-      `--tube-card-chip-bg: ${firstStyle.chip}`
-    ].join("; ")
-  };
-}
-
 // Gets tube additive label.
 function getTubeAdditiveLabel(tubeGroup) {
   const additiveByGroup = {
@@ -4970,43 +4886,32 @@ function getTubeAdditiveLabel(tubeGroup) {
   return additiveByGroup[tubeGroup] || "";
 }
 
-// Gets tube icon modifier class.
-function getTubeIconModifierClass(tubeGroup) {
-  if (tubeGroup === "Pearl/White") return " tube-icon-pearl";
-  if (tubeGroup === "Swab Transport Medium") return " tube-icon-swab-medium";
-  if (tubeGroup === "Specimen Jar") return " tube-icon-specimen-jar";
-  if (tubeGroup === "Urine Container") return " tube-icon-urine-container";
-  if (tubeGroup === "24hr Urine Container") return " tube-icon-urine-24hr";
-  return "";
-}
-
 // Gets tube visual markup.
 function getTubeVisualMarkup(tubeGroup, sizeClass = "", options = {}) {
-  const paediatricTubeImage = isPaediatricMicrotainerVariant(options.tubeVariant)
-    ? paediatricMicrotainerImageByGroup[tubeGroup] || ""
-    : "";
-  if (paediatricTubeImage) {
-    return `<span class="tube-photo-visual tube-photo-visual-paediatric${sizeClass}" aria-hidden="true"><img src="${paediatricTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async"></span>`;
+  const cap = getTubeSwatchColor(tubeGroup);
+  const label = escapeHtml(options.label || (tubeGroup + " collection " + (isTubeLikeCollectionGroup(tubeGroup) ? "tube" : "container")));
+  const small = isPaediatricMicrotainerVariant(options.tubeVariant);
+  const container = !isTubeLikeCollectionGroup(tubeGroup);
+  // One geometry and palette for all blood tubes; container silhouettes remain distinct.
+  let body = container
+    ? '<rect x="9" y="32" width="46" height="98" rx="12" fill="#e7edf0" stroke="#87969e" stroke-width="1.5"/><rect x="7" y="22" width="50" height="19" rx="4" fill="' + cap + '" stroke="#64727a"/>'
+    : '<path d="M17 30h30v103a15 15 0 0 1-30 0Z" fill="#e7edf0" stroke="#87969e" stroke-width="1.5"/><path d="M21 39v90" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="12" y="10" width="40" height="28" rx="5" fill="' + cap + '" stroke="#64727a" stroke-width="1.2"/><path d="M18 15v17m7-17v17m7-17v17m7-17v17m7-17v17" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>';
+  if (tubeGroup === "Swab Transport Medium") {
+    body = '<rect x="30" y="60" width="23" height="87" rx="9" fill="#e7edf0" stroke="#87969e"/><rect x="28" y="51" width="27" height="16" rx="3" fill="' + cap + '"/><path d="M17 35v105" stroke="#87969e" stroke-width="3"/><rect x="12" y="10" width="10" height="30" rx="5" fill="#fff" stroke="#87969e"/>';
+  } else if (tubeGroup === "Blood Culture Bottles") {
+    body = '<path d="M23 25h18v22l12 16v71a10 10 0 0 1-10 10H21a10 10 0 0 1-10-10V63l12-16Z" fill="#e7edf0" stroke="#87969e" stroke-width="1.5"/><rect x="19" y="12" width="26" height="18" rx="4" fill="' + cap + '" stroke="#87969e"/>';
   }
-
-  const adultTubeImage = adultEmptyTubeImageByGroup[tubeGroup] || "";
-  if (adultTubeImage) {
-    const adultTubeVolumeClass = tubeGroup === "Gold/Yellow"
-      ? " tube-photo-visual-adult-yellow-6ml"
-      : " tube-photo-visual-adult-standard-4ml";
-    return `<span class="tube-photo-visual tube-photo-visual-adult${adultTubeVolumeClass}${sizeClass}" aria-hidden="true"><img src="${adultTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async"></span>`;
-  }
-
-  const toneClass = getTubeToneClass(tubeGroup);
-  return `<span class="tube-icon tube-icon-${toneClass}${sizeClass}${getTubeIconModifierClass(tubeGroup)}" style="--tube-color: ${getTubeSwatchColor(tubeGroup)};" aria-hidden="true"></span>`;
+  return '<svg class="collection-illustration' + sizeClass + (small ? ' collection-illustration-paediatric' : '') + '" viewBox="0 0 64 160" width="48" height="120" role="img" aria-label="' + label + '" focusable="false"><title>' + label + '</title>' + body
+    + '<rect x="21" y="53" width="22" height="54" rx="3" fill="#fff" stroke="#d2dbe0"/><path d="M25 63h14m-14 6h10m-10 22v9m3-9v9m3-9v9m4-9v9m3-9v9" stroke="#87969e" stroke-width="1.2"/>'
+    + (options.fill ? '<path d="M20 116h24v17a12 12 0 0 1-24 0Z" fill="#9b444b" opacity=".8"/>' : '') + '</svg>';
 }
-
 const NON_TUBE_COLLECTION_GROUPS = new Set([
   "Specimen Jar",
   "Swab Transport Medium",
   "Urine Container",
   "24hr Urine Container",
-  "Blood Culture Bottles"
+  "Blood Culture Bottles",
+  "Semen Container"
 ]);
 
 function isTubeLikeCollectionGroup(group) {
@@ -7964,11 +7869,18 @@ function getPlanItemTubeVariant(item, selectedTests, collectionGroups = []) {
 function getLabDrawPlan(selectedTests) {
   const exactRule = findExactDrawRule(selectedTests);
   if (exactRule) {
-    return {
-      ruleId: exactRule.id,
-      items: exactRule.items.map((item) => ({ ...item, tests: [...selectedTests.map((test) => test.name)] })),
-      manual: []
-    };
+    const items = exactRule.items.map((item) => ({
+        ...item,
+        tests: selectedTests.filter((test) => {
+          const alternatives = getPlanItemAlternativeGroups(item);
+          const groups = alternatives.length ? alternatives : [item.key];
+          return getTubeGroups(test.tubeColor).some((group) => groups.includes(group));
+        }).map((test) => test.name)
+      }));
+    // Exact overrides define minimum counts, but must not drop a mapped test.
+    const unassigned = selectedTests.filter((test) => !items.some((item) => item.tests.includes(test.name)));
+    const additional = getDefaultPlanItems(unassigned);
+    return { ruleId: exactRule.id, items: [...items, ...additional.items], manual: additional.manual };
   }
 
   return getDefaultPlanItems(selectedTests);
@@ -8130,7 +8042,7 @@ function renderDrawResult() {
     return;
   }
 
-  const { plan } = getResolvedDrawPlan(selectedTests);
+  const { plan, guidanceNotes } = getResolvedDrawPlan(selectedTests);
   const orderOfDrawItems = getVenousOrderOfDrawItems(plan);
   const orderOfDrawStepByItem = new Map(
     orderOfDrawItems.map((item, index) => [item, index + 1])
@@ -8146,12 +8058,12 @@ function renderDrawResult() {
   drawPlannerAlerts.hidden = plannerAlerts.length === 0;
   drawPlannerAlerts.innerHTML = plannerAlerts
     .map((alert) => `
-      <article class="draw-planner-alert draw-planner-alert-${alert.tone}">
-        <h4>${alert.title}</h4>
+      <${alert.tone === "urgent" ? "article" : "details"} class="draw-planner-alert draw-planner-alert-${alert.tone}">
+        ${alert.tone === "urgent" ? `<h4>${alert.title}</h4>` : `<summary>${alert.title}</summary>`}
         ${alert.items.length === 1
           ? `<p>${alert.items[0]}</p>`
           : `<ul>${alert.items.map((item) => `<li>${item}</li>`).join("")}</ul>`}
-      </article>
+      </${alert.tone === "urgent" ? "article" : "details"}>
     `)
     .join("");
 
@@ -8198,15 +8110,20 @@ function renderDrawResult() {
           <div class="draw-group-top">
             ${headMarkup}
           </div>
+          <ul class="draw-group-test-list" aria-label="Tests in this collection group">${item.tests.map((name) => `<li>${escapeHtml(name)}</li>`).join("")}</ul>
           ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
         </article>
       `;
     })
     .join("");
 
-  const plannerNoteText = plan.manual.length
-    ? `Manual review needed for: ${plan.manual.join(", ")}.`
-    : "";
+  const plannerNoteText = [
+    ...guidanceNotes,
+    ...plan.manual.map((name) => {
+      const test = selectedTests.find((entry) => entry.name === name);
+      return `${name}: ${test?.tubeColor || "Collection mapping not recorded"}. Confirm collection requirements with the laboratory.`;
+    })
+  ].join("\n");
 
   drawPlannerNote.hidden = !plannerNoteText;
   drawPlannerNote.textContent = plannerNoteText;
@@ -8247,7 +8164,7 @@ function inferSpecimenGuide(test) {
 
 // Gets card specimen value.
 function getCardSpecimenValue(test, { isMicro = false } = {}) {
-  const baseValue = String(isMicro ? test.specimenGuide : test.specimen || "").trim();
+  const baseValue = String(test.specimen || test.specimenGuide || "").trim();
   const isCsf = /\bcsf\b/i.test(`${test.name} ${test.specimen} ${test.specimenGuide} ${test.tubeColor}`);
   if (!isCsf) return baseValue;
 
@@ -8264,11 +8181,6 @@ function getCardCollectionTips(test) {
   const primaryValue = String(test.criticalPrep || "").trim();
   if (primaryValue) return primaryValue;
   return String(test.notes || "").trim();
-}
-
-// Checks whether hide specimen on card.
-function shouldHideSpecimenOnCard(test) {
-  return test.name === "HIV Viral Load";
 }
 
 // Gets micro specimen bucket.
@@ -8767,9 +8679,7 @@ function enrichTest(test) {
     notes: String(test.notes || "").trim(),
     criticalPrep: String(test.criticalPrep || "").trim() || inferCriticalPrep(test),
     specimenGuide: grouping.sectionId === "micro_virology"
-      ? (shouldHideSpecimenOnCard(test)
-          ? ""
-          : (String(test.specimenGuide || "").trim() || inferSpecimenGuide(test)))
+      ? (String(test.specimenGuide || "").trim() || inferSpecimenGuide(test))
       : "",
     clinicalUse: clinicalProfile.use,
     clinicalKeywords: clinicalProfile.keywords,
@@ -9122,11 +9032,31 @@ function matchesQuery(test, rawQuery) {
   if (!query) return true;
 
   const tokens = query.split(" ").filter(Boolean);
-  return tokens.every((token) => {
+  if (/^Peak /.test(test.name) && tokens.includes("trough")) return false;
+  if (/^Trough /.test(test.name) && tokens.includes("peak")) return false;
+  const directMatch = tokens.every((token) => {
     // Prefix match each query token against any word in the search blob.
     const pattern = new RegExp(`\\b${escapeRegExp(token)}`);
     return pattern.test(test.searchBlob);
   });
+  if (directMatch) return true;
+  // Restrict typo tolerance to established drug names, never arbitrary clinical content.
+  if (!drugSearchAliases[test.name]) return false;
+  const drugWords = normalizeForSearch([test.name, ...drugSearchAliases[test.name]].join(" ")).split(" ");
+  return tokens.every((token) => new RegExp(`\\b${escapeRegExp(token)}`).test(test.searchBlob)
+    || (token.length >= 5 && drugWords.some((word) => word.length >= 5 && isOneEditApart(token, word))));
+}
+
+function isOneEditApart(first, second) {
+  if (Math.abs(first.length - second.length) > 1) return false;
+  let i = 0, j = 0, edits = 0;
+  while (i < first.length && j < second.length) {
+    if (first[i] === second[j]) { i += 1; j += 1; continue; }
+    if (++edits > 1) return false;
+    if (first.length >= second.length) i += 1;
+    if (second.length >= first.length) j += 1;
+  }
+  return edits + Number(i < first.length || j < second.length) <= 1;
 }
 
 // Checks whether profile components.
@@ -9245,216 +9175,73 @@ function renderCards(filteredTests) {
       : `${resultsPrefix}${filteredTests.length} test${filteredTests.length > 1 ? "s" : ""} found`
   );
 
-  filteredTests.forEach((test) => {
-    const isMicro = test.grouping.sectionId === "micro_virology";
-    const card = document.createElement("div");
-    card.className = "card";
+  filteredTests.forEach((test, index) => {
+    const card = document.createElement("article");
     const isSelected = selectedTestNames.has(test.name);
-    const shouldShowCriticalAlert = shouldAutoExpandCriticalNote(test.name, isSelected);
-    card.classList.toggle("card-selected", isSelected);
-    card.classList.toggle("expanded", shouldShowCriticalAlert);
-    card.classList.toggle("card-critical-alert", shouldShowCriticalAlert);
-    const profileComponents = profileComponentsByName[test.name] || [];
-    const hasProfileComponents = profileComponents.length > 0;
-    const tubeGroups = getTubeGroups(test.tubeColor);
-    const tubeCardStyleData = getTubeCardStyleData(tubeGroups);
-    card.classList.add(...tubeCardStyleData.className.split(" "));
-    card.dataset.tube = tubeCardStyleData.dataTube;
-    card.dataset.tubes = tubeCardStyleData.dataTubes;
-    card.setAttribute("style", tubeCardStyleData.style);
-    const tubeIconSizeClass = tubeGroups.length >= 4
-      ? " tube-icon-mini"
-      : tubeGroups.length >= 3
-        ? " tube-icon-sm"
-        : "";
-    const tubeVariantValue = String(test.tubeVariant || "").trim();
-    const useOrBetweenTubeOptions = isAlternativeTubeChoice(test.tubeColor, tubeGroups);
-    const tubeOptionsMarkup = tubeGroups.length
-      ? `
-      <div class="tube-option-grid${tubeGroups.length >= 3 ? " compact" : ""}${tubeGroups.length >= 4 ? " dense" : ""}">
-        ${tubeGroups.map((group, index) => `
-          ${index > 0 && useOrBetweenTubeOptions ? `<span class="tube-option-separator">or</span>` : ""}
-          <span class="tube-option${useOrBetweenTubeOptions ? " alternative" : ""}">
-            ${getTubeVisualMarkup(group, tubeIconSizeClass, { tubeVariant: tubeVariantValue })}
-            <span class="tube-option-copy">
-              <span class="tube-option-label">${group}</span>
-              ${getTubeAdditiveLabel(group) ? `<span class="tube-option-additive">${getTubeAdditiveLabel(group)}</span>` : ""}
-            </span>
-          </span>
-        `).join("")}
-      </div>
-      `
-      : `<span>${test.tubeColor}</span>`;
-    const normalizedTubeText = normalizeForSearch(normalizeTubeColor(test.tubeColor));
-    const normalizedSingleGroup = normalizeForSearch(tubeGroups[0] || "");
-    const showTubeChoiceNote = tubeGroups.length > 1
-      ? useOrBetweenTubeOptions
-      : tubeGroups.length === 1 && normalizedTubeText && normalizedTubeText !== normalizedSingleGroup;
-    const hasTubeOptions = tubeGroups.length > 0;
-    const collectionFieldLabel = getCollectionFieldLabel(tubeGroups);
-    const specimenValue = getCardSpecimenValue(test, { isMicro });
-    const hasSpecimenValue = Boolean(specimenValue);
-    const showRequestedSpecimen = hasSpecimenValue && !shouldHideSpecimenOnCard(test);
-    const collectionTipsValue = getCardCollectionTips(test);
-    const hasCollectionTipsValue = Boolean(collectionTipsValue);
-    const showRackHint = !hasDismissedRackHint && !isSelected && filteredTests[0]?.name === test.name;
-    // Renders summary field.
-    const renderSummaryField = ({ label, content, isAction = false, className = "" }) => {
-      if (!isAction) {
-        return `
-        <div class="field card-summary-field${className ? ` ${className}` : ""}">
-          <span class="label">${label}</span>
-          ${content}
-        </div>
-        `;
-      }
-
-      return `
-      <button
-        type="button"
-        class="field card-summary-field card-summary-action${className ? ` ${className}` : ""}${isSelected ? " selected" : ""}${showRackHint ? " hinted" : ""}"
-        data-card-select="${encodeURIComponent(test.name)}"
-        aria-pressed="${isSelected ? "true" : "false"}"
-        aria-label="${isSelected ? `Remove ${test.name} from Tube Plan` : `Add ${test.name} to Tube Plan`}"
-      >
-        <span class="card-summary-action-head">
-          <span class="label">${label}</span>
-          <span class="card-summary-action-indicator${isSelected ? "" : " is-add"}" aria-hidden="true">${isSelected ? "\u2713" : "+"}</span>
-        </span>
-        ${content}
-        ${showRackHint ? `<span class="card-summary-hint">Tap to add to Tube Plan</span>` : ""}
-      </button>
-      `;
+    const isExpanded = expandedTestNames.has(test.name);
+    const groups = getTubeGroups(test.tubeColor);
+    const alternative = isAlternativeTubeChoice(test.tubeColor, groups);
+    const detailId = "test-inspection-" + index;
+    card.className = "card discovery-card" + (isSelected ? " card-selected" : "") + (isExpanded ? " is-inspecting" : "");
+    card.dataset.testName = test.name;
+    const useful = (value) => {
+      const text = String(value || "").trim();
+      return text && !/^(undefined|null|n\/a|none|-)$/i.test(text) ? text : "";
     };
-    const summaryFields = `
-      ${hasTubeOptions
-        ? renderSummaryField({
-          label: collectionFieldLabel,
-          content: `<div class="tube-color-row${tubeGroups.length > 1 ? " multiple" : ""}">
-            ${tubeOptionsMarkup}
-          </div>`,
-          isAction: true,
-          className: "card-summary-tube-action"
-        })
-        : ""}
-      ${showRequestedSpecimen
-        ? renderSummaryField({
-          label: "Requested Specimen",
-          content: `<span class="card-summary-value">${specimenValue}</span>`
-        })
-        : ""}
-      ${hasCollectionTipsValue
-        ? renderSummaryField({
-          label: "Collection Tips",
-          content: `<span class="card-summary-value">${collectionTipsValue}</span>`,
-          className: "card-summary-field-wide"
-        })
-        : ""}
-    `;
-    const summaryFieldCount = Number(hasTubeOptions) + Number(showRequestedSpecimen) + Number(hasCollectionTipsValue);
-    const cardMetaRow = hasProfileComponents
-      ? `
-      <div class="card-meta-row">
-        <button class="profile-tests-btn" type="button" data-profile-name="${test.name}">Tests</button>
-      </div>
-      `
-      : "";
-
-    card.innerHTML = `
-      <div class="card-head">
-        <button
-          type="button"
-          class="card-title-select-btn${isSelected ? " selected" : ""}"
-          data-card-select-title="${encodeURIComponent(test.name)}"
-          aria-pressed="${isSelected ? "true" : "false"}"
-          aria-label="${isSelected ? `Remove ${test.name} from Tube Plan` : `Add ${test.name} to Tube Plan`}"
-        >
-          <span class="card-title-select-copy">${test.name}</span>
-        </button>
-      </div>
-      ${cardMetaRow}
-      ${summaryFieldCount ? `
-      <div class="card-summary-grid${summaryFieldCount <= 1 ? " single" : ""}">
-        ${summaryFields}
-      </div>
-      ` : ""}
-      <div class="card-extra">
-        <div class="test-subgroup-badge">${test.grouping.subsection}</div>
-        ${showTubeChoiceNote ? `
-        <div class="field">
-          <span class="label">${collectionFieldLabel} Note</span>
-          <span>${test.tubeColor}</span>
-        </div>
-        ` : ""}
-        ${tubeVariantValue ? `
-        <div class="field">
-          <span class="label">${collectionFieldLabel} Type</span>
-          <span>${tubeVariantValue}</span>
-        </div>
-        ` : ""}
-        <div class="field critical-prep-field${shouldShowCriticalAlert ? " critical-prep-field-alert" : ""}">
-          <span class="label">Critical Preparation</span>
-          <span>${test.criticalPrep}</span>
-        </div>
-        <div class="field">
-          <span class="label">Clinical Use</span>
-          <span>${test.clinicalUse}</span>
-        </div>
-      </div>
-      <div class="card-actions">
-        <button class="card-toggle-btn" type="button" aria-expanded="${shouldShowCriticalAlert ? "true" : "false"}">${shouldShowCriticalAlert ? "See less" : "See more"}</button>
-      </div>
-    `;
-
-    const toggleBtn = card.querySelector(".card-toggle-btn");
-    const titleActionBtn = card.querySelector("button[data-card-select-title]");
-    const summaryActionBtn = card.querySelector("button[data-card-select]");
-    const profileTestsBtn = card.querySelector(".profile-tests-btn");
-    toggleBtn.addEventListener("click", () => {
-      const expanded = card.classList.toggle("expanded");
-      toggleBtn.textContent = expanded ? "See less" : "See more";
-      toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    const specimen = useful(test.specimen) || useful(test.specimenGuide);
+    const instruction = useful(test.criticalPrep);
+    const detailFields = [
+      ["Collection notes", test.notes], ["Tube type", test.tubeVariant],
+      ["Handling", test.handling], ["Department", test.section?.label],
+      ["Processing", test.processing], ["Turnaround", test.turnaroundTime],
+      ["Rejection", test.rejection], ["Clinical use", test.clinicalUse]
+    ].filter(([,value]) => useful(value));
+    const tubes = groups.length
+      ? groups.map((group, i) => (i && alternative ? '<span class="discovery-or">or</span>' : '')
+        + '<div class="discovery-tube">' + getTubeVisualMarkup(group, "", {tubeVariant:test.tubeVariant})
+        + '<div><strong>' + escapeHtml(group) + '</strong><span>' + escapeHtml(getTubeAdditiveLabel(group)) + '</span></div></div>').join('')
+      : '<p class="discovery-collection-note">' + escapeHtml(useful(test.tubeColor) || "Collection mapping not recorded. Confirm with the laboratory.") + '</p>';
+    card.innerHTML =
+      '<button class="discovery-open" type="button" aria-expanded="' + isExpanded + '" aria-controls="' + detailId + '">'
+      + '<span><span class="discovery-name">' + escapeHtml(test.name) + '</span><span class="discovery-meta">' + escapeHtml(test.section?.label || "Laboratory test") + (isSelected ? ' · In Tube Plan' : '') + '</span></span>'
+      + '<span class="discovery-chevron" aria-hidden="true">' + (isExpanded ? '−' : '+') + '</span></button>'
+      + '<div class="discovery-body" id="' + detailId + '"' + (isExpanded ? '' : ' hidden') + '>'
+      + '<div class="discovery-tubes">' + tubes + '</div>'
+      + (specimen ? '<p class="discovery-specimen"><span>Specimen</span>' + escapeHtml(specimen) + '</p>' : '')
+      + (instruction ? '<p class="discovery-instruction">' + escapeHtml(instruction) + '</p>' : '')
+      + '<button type="button" class="discovery-add" aria-pressed="' + isSelected + '">' + (isSelected ? 'Remove from Tube Plan' : 'Add to Tube Plan') + '</button>'
+      + (detailFields.length ? '<details class="discovery-details"><summary>More details</summary><dl>' + detailFields.map(([label,value]) => '<div><dt>' + escapeHtml(label) + '</dt><dd>' + escapeHtml(useful(value)) + '</dd></div>').join('') + '</dl></details>' : '')
+      + ((profileComponentsByName[test.name] || []).length ? '<button type="button" class="profile-tests-btn">Tests in this profile</button>' : '')
+      + '</div>';
+    const open = card.querySelector('.discovery-open');
+    open.addEventListener('click', () => {
+      const expanded = !expandedTestNames.has(test.name);
+      if (expanded) expandedTestNames.add(test.name); else expandedTestNames.delete(test.name);
+      card.classList.toggle('is-inspecting', expanded);
+      card.querySelector('.discovery-body').hidden = !expanded;
+      open.setAttribute('aria-expanded', String(expanded));
+      card.querySelector('.discovery-chevron').textContent = expanded ? '−' : '+';
     });
-
-    // Preserve search focus on press.
-    const preserveSearchFocusOnPress = (event) => {
-      if (!shouldPreserveSearchFocusOnMobile()) return;
-      event.preventDefault();
-    };
-
-    // Handles select.
-    const handleSelect = (trigger) => {
-      const shouldRestoreSearchFocus = shouldPreserveSearchFocusOnMobile();
-      const wasSelected = isSelected;
-      const sourceRect = trigger?.getBoundingClientRect
-        ? trigger.getBoundingClientRect()
-        : null;
-      toggleSelectedTest(test.name);
-      const wasAddedToPlan = !wasSelected && selectedTestNames.has(test.name);
-      if (wasAddedToPlan && sourceRect) {
-        animateAddToPlanFeedback({ sourceRect, tubeColorValue: test.tubeColor });
-      }
-      if (shouldRestoreSearchFocus && wasAddedToPlan) {
-        clearSearchForNextPlanEntry();
-      }
-      if (shouldRestoreSearchFocus) {
-        restoreSearchFocusWithoutScroll();
-      }
-    };
-
-    [titleActionBtn, summaryActionBtn].forEach((trigger) => {
-      trigger?.addEventListener("pointerdown", preserveSearchFocusOnPress);
-      trigger?.addEventListener("mousedown", preserveSearchFocusOnPress);
-      trigger?.addEventListener("click", () => handleSelect(trigger));
-    });
-
-    if (profileTestsBtn) {
-      profileTestsBtn.addEventListener("click", () => {
-        const name = profileTestsBtn.getAttribute("data-profile-name");
-        openProfileModal(name);
+    const add = card.querySelector('.discovery-add');
+    add.addEventListener('click', () => {
+      const wasSelected = selectedTestNames.has(test.name);
+      toggleSelectedTest(test.name, {rerenderCards:false});
+      const selected = selectedTestNames.has(test.name);
+      if (selected === wasSelected) return; // Keep the existing profile-coverage explanation.
+      // A profile can replace several selected component tests. Sync every visible card.
+      cardsContainer.querySelectorAll('.discovery-card').forEach((visibleCard) => {
+        const name = visibleCard.dataset.testName;
+        const inPlan = selectedTestNames.has(name);
+        const record = enrichedTests.find((entry) => entry.name === name);
+        visibleCard.classList.toggle('card-selected', inPlan);
+        const action = visibleCard.querySelector('.discovery-add');
+        action.textContent = inPlan ? 'Remove from Tube Plan' : 'Add to Tube Plan';
+        action.setAttribute('aria-pressed', String(inPlan));
+        visibleCard.querySelector('.discovery-meta').textContent = (record?.section?.label || 'Laboratory test') + (inPlan ? ' · In Tube Plan' : '');
       });
-    }
-
+      showSelectionNotice(selected ? test.name + ' added to Tube Plan.' : test.name + ' removed from Tube Plan.');
+    });
+    card.querySelector('.profile-tests-btn')?.addEventListener('click', () => openProfileModal(test.name));
     cardsContainer.appendChild(card);
   });
 }

@@ -1,0 +1,148 @@
+/* Test discovery and collection planning. Local laboratory mappings live in data.js. */
+:root {
+  --clinical-surface: #fff;
+  --clinical-page: #f3f5f6;
+  --clinical-ink: #202a31;
+  --clinical-muted: #56636c;
+  --clinical-line: #d9e0e4;
+  --clinical-action: #086c70;
+}
+html[data-theme="dark"] {
+  --clinical-surface: #20282e;
+  --clinical-page: #151c21;
+  --clinical-ink: #f0f4f6;
+  --clinical-muted: #b7c3cb;
+  --clinical-line: #414e58;
+  --clinical-action: #8bd6d3;
+}
+html[data-theme] body[data-app-page="find-my-tube"] {
+  background: var(--clinical-page) !important;
+  color: var(--clinical-ink);
+}
+html[data-theme] body[data-app-page="find-my-tube"]::before,
+html[data-theme] body[data-app-page="find-my-tube"]::after { display: none !important; }
+html[data-theme] body[data-app-page="find-my-tube"] .container { background: none; }
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro { border: 0; padding-left: 0; padding-bottom: 0; }
+html[data-theme] body[data-app-page="find-my-tube"] #tubeLookupPanel { width: 100%; max-width: 900px; }
+html[data-theme] body[data-app-page="find-my-tube"] #selectionNoticeToast {
+  top: auto; bottom: 86px; left: 50%; transform: translateX(-50%); width: max-content;
+  max-width: calc(100vw - 32px); padding: 12px 16px; background: var(--clinical-surface);
+  color: var(--clinical-ink); border: 1px solid var(--clinical-line); box-shadow: 0 4px 16px #0002;
+  border-radius: 10px; z-index: 1300;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar {
+  background: var(--clinical-surface) !important; color: var(--clinical-ink) !important;
+  border: 1px solid var(--clinical-line); border-radius: 12px;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar::before,
+html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar::after { display: none; }
+html[data-theme] body[data-app-page="find-my-tube"] :is(.selection-cart-label, .selection-cart-icon) { color: var(--clinical-ink) !important; }
+html[data-theme] body[data-app-page="find-my-tube"] #selectionCartCount { background: var(--clinical-action); color: var(--clinical-surface); }
+html[data-theme] body[data-app-page="find-my-tube"] :is(.brand-home-btn, .tube-workspace-intro h2, .tube-workspace-intro p, .group-hints h3, .quick-tools-panel h3, .quick-tools-panel p, .results-info, .section-context-label) {
+  color: var(--clinical-ink) !important;
+  text-shadow: none !important;
+}
+html[data-theme] body[data-app-page="find-my-tube"] :is(.search-box, #tubeLookupPanel, .group-hints, .quick-tools-panel, .group-chip, .section-context-back-btn, .quick-tool-launch-btn, .quick-tool-clear-btn) {
+  background: var(--clinical-surface) !important;
+  color: var(--clinical-ink) !important;
+  border: 1px solid var(--clinical-line) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #searchInput { color: var(--clinical-ink) !important; background: transparent !important; }
+html[data-theme] body[data-app-page="find-my-tube"] #searchInput::placeholder { color: var(--clinical-muted) !important; }
+html[data-theme] body[data-app-page="find-my-tube"] :is(#cardsContainer, .results-toolbar) { background: var(--clinical-page) !important; }
+html[data-theme] body #cardsContainer {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  grid-template-rows: none;
+  max-width: 900px;
+  align-items: start;
+  gap: 10px;
+}
+html[data-theme] body #cardsContainer .discovery-card {
+  padding: 0 !important;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--clinical-line) !important;
+  border-radius: 14px !important;
+  background: var(--clinical-surface) !important;
+  color: var(--clinical-ink) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  overflow: hidden;
+  transform: none !important;
+}
+html[data-theme] body #cardsContainer .discovery-card::before,
+html[data-theme] body #cardsContainer .discovery-card::after { display: none; }
+html[data-theme] body #cardsContainer .discovery-card.card-selected { border-color: var(--clinical-action) !important; }
+.discovery-open {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  width: 100%; min-height: 76px; padding: 16px 20px; text-align: left;
+  border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.discovery-open > span:first-child { min-width: 0; }
+.discovery-name { display: block; font-size: 1rem; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
+.discovery-meta { display: block; margin-top: 4px; font-size: .78rem; color: var(--clinical-muted); line-height: 1.4; }
+.discovery-chevron { font-size: 1.4rem; color: var(--clinical-action); flex-shrink: 0; }
+.discovery-body { padding: 0 20px 20px; border-top: 1px solid var(--clinical-line); }
+.discovery-body[hidden] { display: none !important; }
+.discovery-tubes { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; padding: 18px 0 12px; }
+.discovery-tube { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.discovery-tube strong { display: block; font-size: 1.1rem; color: var(--clinical-ink); }
+.discovery-tube span, .discovery-or { display: block; margin-top: 5px; font-size: .85rem; color: var(--clinical-muted); }
+.discovery-specimen { margin: 8px 0 14px; font-size: .95rem; line-height: 1.5; }
+.discovery-specimen > span { display: block; font-size: .75rem; font-weight: 650; color: var(--clinical-muted); margin-bottom: 3px; }
+.discovery-instruction, .discovery-collection-note { font-size: .88rem; line-height: 1.6; margin: 8px 0 18px; color: var(--clinical-ink); overflow-wrap: anywhere; }
+.discovery-add { min-height: 46px; width: 100%; border: 1px solid var(--clinical-action); border-radius: 9px; background: var(--clinical-action); color: var(--clinical-surface); padding: 10px 16px; font: inherit; font-size: .9rem; font-weight: 650; cursor: pointer; }
+.discovery-add[aria-pressed="true"] { color: var(--clinical-action); background: transparent; }
+.discovery-details { margin-top: 12px; border-top: 1px solid var(--clinical-line); }
+.discovery-details summary { padding: 14px 0; min-height: 44px; cursor: pointer; font-size: .85rem; font-weight: 600; }
+.discovery-details dl { margin: 0; }
+.discovery-details dl > div { margin: 0 0 16px; }
+.discovery-details dt { font-size: .75rem; font-weight: 650; color: var(--clinical-muted); margin-bottom: 4px; }
+.discovery-details dd { margin: 0; font-size: .88rem; line-height: 1.6; overflow-wrap: anywhere; }
+html[data-theme] body .collection-illustration { display: inline-block; width: 42px; height: 105px; flex: 0 0 auto; vertical-align: middle; }
+html[data-theme] body .collection-illustration.tube-icon-mini { width: 22px; height: 55px; }
+html[data-theme] body .collection-illustration.tube-icon-sm { width: 30px; height: 75px; }
+html[data-theme] body .collection-illustration-paediatric { height: 78px; }
+html[data-theme] body .draw-modal-card {
+  background: var(--clinical-surface) !important; color: var(--clinical-ink) !important;
+  border: 1px solid var(--clinical-line) !important; border-radius: 18px !important;
+  backdrop-filter: none !important;
+}
+html[data-theme] body .draw-modal-card :is(h3, h4, p, li, .draw-selection-count, .draw-selected-chip-name, .tube-option-label) { color: var(--clinical-ink) !important; }
+html[data-theme] body .draw-modal-card :is(.draw-group-card, .draw-result-card, .draw-planner-alert, .draw-selected-chip) {
+  background: var(--clinical-surface) !important; border: 1px solid var(--clinical-line) !important;
+  box-shadow: none !important; border-radius: 12px !important;
+}
+html[data-theme] body .draw-group-card::before { display: none !important; }
+html[data-theme] body .draw-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+html[data-theme] body .draw-result-card { display: flex; flex-direction: column; }
+html[data-theme] body .draw-planner-count { order: 0; }
+html[data-theme] body .draw-groups { order: 1; }
+html[data-theme] body .draw-planner-note { order: 2; }
+html[data-theme] body .draw-planner-alerts { order: 3; }
+html[data-theme] body .draw-planner-alert summary { cursor: pointer; min-height: 44px; display: list-item; align-content: center; font-weight: 600; font-size: .85rem; color: var(--clinical-ink); }
+html[data-theme] body .draw-group-main { gap: 14px; min-width: 0; }
+html[data-theme] body .draw-group-main h3 { font-size: 1.1rem; flex: 1; }
+html[data-theme] body .draw-order-step { background: var(--clinical-page) !important; color: var(--clinical-muted) !important; border: 1px solid var(--clinical-line) !important; }
+html[data-theme] body .discovery-card .profile-tests-btn { min-height: 44px; background: var(--clinical-surface); color: var(--clinical-action); border: 1px solid var(--clinical-line); border-radius: 8px; }
+html[data-theme] body .draw-group-count-badge { background: var(--clinical-page) !important; color: var(--clinical-ink) !important; border: 1px solid var(--clinical-line) !important; font-size: 1.2rem; }
+.draw-group-test-list { padding-left: 20px; margin: 12px 0 4px; font-size: .9rem; line-height: 1.7; }
+html[data-theme] body .draw-planner-note { white-space: pre-line; font-size: .86rem; line-height: 1.6; }
+html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-tool-btn, .draw-selected-chip-remove) { background: var(--clinical-page) !important; border: 1px solid var(--clinical-line) !important; color: var(--clinical-ink) !important; min-height: 44px; min-width: 44px; }
+html[data-theme] body .discovery-card :is(button, summary):focus-visible { outline: 3px solid var(--clinical-action); outline-offset: -3px; }
+@media (max-width: 620px) {
+  .discovery-open { padding: 14px 16px; }
+  .discovery-body { padding: 0 16px 16px; }
+  html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro h2 { font-size: 1.8rem; }
+  html[data-theme] body[data-app-page="find-my-tube"].is-mobile-search-active .selection-cart-bar:not([hidden]) { opacity: 1; visibility: visible; pointer-events: auto; z-index: 1201; }
+  html[data-theme] body[data-app-page="find-my-tube"].is-mobile-search-active #cardsContainer { padding-bottom: 90px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .discovery-body:not([hidden]) { animation: discovery-enter 140ms ease-out; }
+  @keyframes discovery-enter { from { opacity: .4; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+}

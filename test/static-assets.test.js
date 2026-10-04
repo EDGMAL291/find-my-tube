@@ -30,7 +30,10 @@ test("every dynamic page loads the shared stock catalogue before the main script
 
 test("cache-busted shell versions are synchronized", () => {
   const worker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
-  assert.match(worker, /modern\.css\?v=20260930a/);
-  assert.match(worker, /script\.js\?v=20260930a/);
-  assert.match(worker, /stock-catalog-data\.js\?v=20260930a/);
+  for (const asset of ['assets/css/modern.css', 'assets/css/discovery.css', 'assets/js/script.js', 'assets/js/stock-catalog-data.js']) {
+    const html = fs.readFileSync(path.join(root, 'find-my-tube.html'), 'utf8');
+    const versioned = html.match(new RegExp(asset.replaceAll('.', '\\.') + '\\?v=[^"\\s]+'))?.[0];
+    assert.ok(versioned, `${asset} must be versioned`);
+    assert.ok(worker.includes(versioned), `${asset} version must match the service worker`);
+  }
 });
