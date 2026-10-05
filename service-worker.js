@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v312";
+const CACHE_NAME = "find-my-tube-v313";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -43,30 +43,15 @@ const CORE_ASSETS = [
   "./assets/images/hero-lab-collection.jpg",
   "./assets/images/hero-lab-logistics.jpg",
   "./assets/images/hero-lab-tubes.jpg",
-  "./assets/images/stock-tubes/realistic-empty-tube-yellow-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-grey-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-purple-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-green-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-blue-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-pearl-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-tan-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-pink-v3.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-yellow-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-grey-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-purple-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-green-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-blue-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-pearl-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-tan-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-tube-pink-v4.png",
-  "./assets/images/stock-tubes/realistic-empty-paediatric-microtainer-yellow-v1.png",
-  "./assets/images/stock-tubes/realistic-empty-paediatric-microtainer-purple-v1.png",
-  "./assets/images/stock-tubes/realistic-empty-paediatric-microtainer-grey-v1.png",
   "./assets/icons/favicon-16.png",
   "./assets/icons/favicon-32.png",
   "./assets/icons/icon-192.png?v=20260316b",
   "./assets/icons/icon-512.png?v=20260316b"
 ];
+
+// Tube photography is cached by the runtime fetch handler when it is first used.
+// Keeping these larger images out of the blocking app-shell install lets visual
+// releases take control quickly instead of leaving returning users on stale UI.
 
 // Pre-caches the core app shell as soon as the service worker installs.
 self.addEventListener("install", (event) => {
