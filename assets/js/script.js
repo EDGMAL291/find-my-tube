@@ -8134,7 +8134,6 @@ function renderDrawResult() {
           <div class="draw-group-top">
             ${headMarkup}
           </div>
-          <ul class="draw-group-test-list" aria-label="Tests in this collection group">${item.tests.map((name) => `<li>${escapeHtml(name)}</li>`).join("")}</ul>
           ${item.detail ? `<p class="draw-group-detail">${item.detail}</p>` : ""}
         </article>
       `;

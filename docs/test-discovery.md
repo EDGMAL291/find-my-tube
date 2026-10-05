@@ -12,13 +12,13 @@
 - Adding a test preserves the search and the inspected card. Previously mobile selection cleared the search while keeping the keyboard focused, and the focused layout hid the plan control.
 - Cards show the recorded specimen without the former HIV Viral Load exclusion. Unrecognised collection descriptions remain visible instead of losing the entire collection field.
 - The parser recognises the existing `Sterile semen container` label.
-- Planner cards show their assigned tests. Exact profile overrides associate each test only with its mapped collection group. Previously every selected test was attached to every exact-rule group, although those associations were hidden in the UI.
+- Selected tests appear once in the removable list at the top of the planner. Tube cards show collection type, count, and guidance without repeating test names; their illustrations are 60% of discovery-card size. Exact profile overrides still associate each test only with its mapped collection group internally.
 - Exact overrides retain their minimum quantities and include unassigned tests from their recorded mappings. This fixes the sepsis-panel omission of Lactate's grey tube without altering the catalogue or patching a specific test name.
 - Planner guidance explains the existing dedicated Gold/Yellow, purple volume, OGTT, and profile rules. No quantity rule is relaxed for visual consolidation.
 
 ## Presentation
 
-Content cards and modal sheets use the shared `--fmt-card-radius: 0px` token in `modern.css`; do not add page-specific rounded-card overrides. Controls, badges, and illustrations are separate from card geometry. Page photographs stay fixed behind the content. Find My Tube uses the same dark photographic treatment in each theme, with theme-aware solid clinical cards; department links and result counts remain transparent. Avoid pale full-page overlays that wash out the photograph.
+Content cards and modal sheets use the shared `--fmt-card-radius: 0px` token in `modern.css`; do not add page-specific rounded-card overrides. Controls, badges, and illustrations are separate from card geometry. Page photographs stay fixed behind the content. Find My Tube uses the same dark photographic treatment in each theme; department links, result counts, and collapsed or expanded discovery cards remain transparent so the page photograph stays visible. Use light high-contrast text and restrained shadows rather than filling the discovery card. Avoid pale full-page overlays that wash out the photograph.
 
 `assets/css/discovery.css` owns the neutral search/card/planner surfaces, light/dark tokens, focus styles, and mobile layout. `getTubeVisualMarkup` supplies one scalable SVG family for shared tube displays, with cap colour, size, paediatric proportions, optional fill, and accessible labels. Non-blood containers use a separate silhouette.
 

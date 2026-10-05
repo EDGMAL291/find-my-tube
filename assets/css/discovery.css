@@ -73,8 +73,8 @@ html[data-theme] body #cardsContainer .discovery-card {
   min-width: 0;
   border: 1px solid var(--clinical-line) !important;
   border-radius: var(--fmt-card-radius) !important;
-  background: var(--clinical-surface) !important;
-  color: var(--clinical-ink) !important;
+  background: transparent !important;
+  color: #fffdf8 !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   overflow: hidden !important;
@@ -84,7 +84,7 @@ html[data-theme] body #cardsContainer .discovery-card {
 }
 html[data-theme] body #cardsContainer .discovery-card::before,
 html[data-theme] body #cardsContainer .discovery-card::after { display: none; }
-html[data-theme] body #cardsContainer .discovery-card.card-selected { border-color: var(--clinical-action) !important; }
+html[data-theme] body #cardsContainer .discovery-card.card-selected { border-color: #8bd6d3 !important; }
 .discovery-open {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   width: 100%; min-height: 76px; padding: 16px 20px; text-align: left;
@@ -92,25 +92,30 @@ html[data-theme] body #cardsContainer .discovery-card.card-selected { border-col
 }
 .discovery-open > span:first-child { min-width: 0; }
 .discovery-name { display: block; font-size: 1rem; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
-.discovery-meta { display: block; margin-top: 4px; font-size: .78rem; color: var(--clinical-muted); line-height: 1.4; }
-.discovery-chevron { font-size: 1.4rem; color: var(--clinical-action); flex-shrink: 0; }
-.discovery-body { padding: 0 20px 20px; border-top: 1px solid var(--clinical-line); }
+.discovery-meta { display: block; margin-top: 4px; font-size: .78rem; color: rgba(255, 253, 248, .78); line-height: 1.4; }
+.discovery-chevron { font-size: 1.4rem; color: #8bd6d3; flex-shrink: 0; }
+.discovery-body { padding: 0 20px 20px; border-top: 1px solid rgba(255, 255, 255, .34); }
 .discovery-body[hidden] { display: none !important; }
 .discovery-tubes { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; padding: 18px 0 12px; }
 .discovery-tube { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.discovery-tube strong { display: block; font-size: 1.1rem; color: var(--clinical-ink); }
-.discovery-tube span, .discovery-or { display: block; margin-top: 5px; font-size: .85rem; color: var(--clinical-muted); }
+.discovery-tube strong { display: block; font-size: 1.1rem; color: #fffdf8; }
+.discovery-tube span, .discovery-or { display: block; margin-top: 5px; font-size: .85rem; color: rgba(255, 253, 248, .78); }
 .discovery-specimen { margin: 8px 0 14px; font-size: .95rem; line-height: 1.5; }
-.discovery-specimen > span { display: block; font-size: .75rem; font-weight: 650; color: var(--clinical-muted); margin-bottom: 3px; }
-.discovery-instruction, .discovery-collection-note { font-size: .88rem; line-height: 1.6; margin: 8px 0 18px; color: var(--clinical-ink); overflow-wrap: anywhere; }
-.discovery-add { min-height: 46px; width: 100%; border: 1px solid var(--clinical-action); border-radius: 9px; background: var(--clinical-action); color: var(--clinical-surface); padding: 10px 16px; font: inherit; font-size: .9rem; font-weight: 650; cursor: pointer; }
-.discovery-add[aria-pressed="true"] { color: var(--clinical-action); background: transparent; }
-.discovery-details { margin-top: 12px; border-top: 1px solid var(--clinical-line); }
+.discovery-specimen > span { display: block; font-size: .75rem; font-weight: 650; color: rgba(255, 253, 248, .78); margin-bottom: 3px; }
+.discovery-instruction, .discovery-collection-note { font-size: .88rem; line-height: 1.6; margin: 8px 0 18px; color: #fffdf8; overflow-wrap: anywhere; }
+.discovery-add { min-height: 46px; width: 100%; border: 1px solid #8bd6d3; border-radius: 9px; background: rgba(3, 17, 31, .5); color: #d9ffff; padding: 10px 16px; font: inherit; font-size: .9rem; font-weight: 650; cursor: pointer; }
+.discovery-add[aria-pressed="true"] { color: #d9ffff; background: rgba(3, 17, 31, .5); }
+.discovery-details { margin-top: 12px; border-top: 1px solid rgba(255, 255, 255, .34); }
 .discovery-details summary { padding: 14px 0; min-height: 44px; cursor: pointer; font-size: .85rem; font-weight: 600; }
 .discovery-details dl { margin: 0; }
 .discovery-details dl > div { margin: 0 0 16px; }
-.discovery-details dt { font-size: .75rem; font-weight: 650; color: var(--clinical-muted); margin-bottom: 4px; }
+.discovery-details dt { font-size: .75rem; font-weight: 650; color: rgba(255, 253, 248, .78); margin-bottom: 4px; }
 .discovery-details dd { margin: 0; font-size: .88rem; line-height: 1.6; overflow-wrap: anywhere; }
+html[data-theme] body[data-app-page="find-my-tube"] #cardsContainer .discovery-card :is(.discovery-open, .discovery-body, .discovery-details, .discovery-details summary, .discovery-details dd) {
+  color: #fffdf8 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .72);
+}
+html[data-theme] body[data-app-page="find-my-tube"] #cardsContainer .discovery-card :is(.discovery-open, .discovery-body) { background: transparent !important; }
 html[data-theme] body .collection-illustration { display: inline-block; width: 42px; height: 105px; flex: 0 0 auto; vertical-align: middle; }
 html[data-theme] body .collection-illustration.tube-icon-mini { width: 22px; height: 55px; }
 html[data-theme] body .collection-illustration.tube-icon-sm { width: 30px; height: 75px; }
@@ -138,7 +143,9 @@ html[data-theme] body .draw-group-main h3 { font-size: 1.1rem; flex: 1; }
 html[data-theme] body .draw-order-step { background: var(--clinical-page) !important; color: var(--clinical-muted) !important; border: 1px solid var(--clinical-line) !important; }
 html[data-theme] body .discovery-card .profile-tests-btn { min-height: 44px; background: var(--clinical-surface); color: var(--clinical-action); border: 1px solid var(--clinical-line); border-radius: 8px; }
 html[data-theme] body .draw-group-count-badge { background: var(--clinical-page) !important; color: var(--clinical-ink) !important; border: 1px solid var(--clinical-line) !important; font-size: 1.2rem; }
-.draw-group-test-list { padding-left: 20px; margin: 12px 0 4px; font-size: .9rem; line-height: 1.7; }
+/* Planner illustrations are 60% of the discovery size; leave search cards unchanged. */
+html[data-theme] body .draw-group-card .collection-illustration { width: 25.2px; height: 63px; }
+html[data-theme] body .draw-group-card .collection-illustration-paediatric { height: 46.8px; }
 html[data-theme] body .draw-planner-note { white-space: pre-line; font-size: .86rem; line-height: 1.6; }
 html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-tool-btn, .draw-selected-chip-remove) { background: var(--clinical-page) !important; border: 1px solid var(--clinical-line) !important; color: var(--clinical-ink) !important; min-height: 44px; min-width: 44px; }
 html[data-theme] body .discovery-card :is(button, summary):focus-visible { outline: 3px solid var(--clinical-action); outline-offset: -3px; }
