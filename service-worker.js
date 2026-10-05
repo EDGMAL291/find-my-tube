@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v313";
+const CACHE_NAME = "find-my-tube-v314";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -6,52 +6,22 @@ const isLocalPreview = () => (
 const CORE_ASSETS = [
   "./",
   "./index.html",
-  "./about.html",
-  "./privacy-policy.html",
-  "./terms-of-use.html",
-  "./disclaimer.html",
-  "./contact-feedback.html",
-  "./find-my-test.html",
   "./find-my-tube.html",
-  "./order-stock.html",
-  "./track-orders.html",
-  "./stock-dashboard.html",
-  "./tube-plan.html",
-  "./robots.txt",
-  "./sitemap.xml",
   "./manifest.webmanifest?v=20260316b",
   "./assets/css/style.css?v=20260729a",
   "./assets/css/modern.css?v=20261005j",
   "./assets/css/discovery.css?v=20261005j",
   "./assets/js/stock-catalog-data.js?v=20261005j",
   "./assets/js/script.js?v=20261005j",
-  "./assets/js/premium-home.js?v=20260813a",
-  "./assets/js/order-stock-catalog.js?v=20260803a",
-  "./assets/js/track-orders.js?v=20260803a",
-  "./assets/js/stock-dashboard.js?v=20261005j",
-  "./assets/js/find-my-test.js?v=20260728b",
   "./assets/data/data.js?v=20260812a",
-  "./assets/data/find-my-test-map.json?v=20260728p",
-  "./assets/data/find-my-test-dictionary.json?v=20260728p",
   "./favicon.svg",
-  "./favicon-16.png",
-  "./favicon-32.png",
-  "./assets/images/lab-bg.svg",
-  "./assets/images/find-my-tube-lab-overview.jpg",
-  "./assets/images/find-my-tube-departments-v1.jpg",
-  "./assets/images/hero-lab-analyser.jpg",
-  "./assets/images/hero-lab-collection.jpg",
-  "./assets/images/hero-lab-logistics.jpg",
-  "./assets/images/hero-lab-tubes.jpg",
-  "./assets/icons/favicon-16.png",
-  "./assets/icons/favicon-32.png",
-  "./assets/icons/icon-192.png?v=20260316b",
-  "./assets/icons/icon-512.png?v=20260316b"
+  "./assets/images/find-my-tube-lab-overview.jpg"
 ];
 
-// Tube photography is cached by the runtime fetch handler when it is first used.
-// Keeping these larger images out of the blocking app-shell install lets visual
-// releases take control quickly instead of leaving returning users on stale UI.
+// Page-specific scripts, reference pages, icons, and photography are cached by
+// the runtime fetch handler when first used. Keeping them out of the blocking
+// app-shell install lets visual releases take control quickly instead of leaving
+// returning users on stale UI.
 
 // Pre-caches the core app shell as soon as the service worker installs.
 self.addEventListener("install", (event) => {
