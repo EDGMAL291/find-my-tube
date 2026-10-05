@@ -6,13 +6,39 @@ const os = require('node:os');
 const path = require('node:path');
 const base = process.env.FMT_TEST_URL || 'http://127.0.0.1:3000';
 const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
+const isRemoteBase = !['127.0.0.1', 'localhost', '0.0.0.0'].includes(new URL(base).hostname);
+let remoteAppVersion = '';
+
+async function createTestPage(browser, options = {}) {
+  const page = await browser.newPage(options);
+  if (isRemoteBase) {
+    if (!remoteAppVersion) {
+      const response = await fetch(`${base}/find-my-tube.html`);
+      assert.equal(response.ok, true, `Could not read remote shell: ${response.status}`);
+      const html = await response.text();
+      remoteAppVersion = html.match(/const APP_VERSION = "([^"]+)"/)?.[1] || '';
+      assert.ok(remoteAppVersion, 'Remote shell must expose an app version');
+    }
+    await page.addInitScript((version) => {
+      localStorage.setItem('fmt-app-version', version);
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.register = async () => ({
+          waiting: null,
+          addEventListener() {},
+          update() {}
+        });
+      }
+    }, remoteAppVersion);
+  }
+  return page;
+}
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
   try {
     for (const width of [360, 390, 412, 430, 768, 1280]) {
       for (const theme of ['light', 'dark']) {
-        const page = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
+        const page = await createTestPage(browser, { viewport: { width, height: 900 }, reducedMotion: 'reduce' });
         const errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}/find-my-tube.html`);
@@ -214,7 +240,7 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         console.log(`PASS ${width}px ${theme}: compact/expanded cards, HIV, add/remove, grouped planner, catalogue, overflow, runtime`);
       }
     }
-    const drugPage = await browser.newPage({viewport:{width:390,height:844}, reducedMotion:'reduce'});
+    const drugPage = await createTestPage(browser, {viewport:{width:390,height:844}, reducedMotion:'reduce'});
     await drugPage.goto(`${base}/find-my-tube.html`);
     const drugCases = {
       'Epilim':['Sodium Valproate'], 'valproac acid':['Sodium Valproate'], 'valproic acid':['Sodium Valproate'],
@@ -239,7 +265,7 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
     assert.deepEqual(await drugPage.evaluate(()=>[...selectedTestNames]), ['Sodium Valproate']);
     await drugPage.close();
     console.log(`PASS ${Object.keys(drugCases).length} drug alias, typo, peak/trough and local mapping checks`);
-    const motionPage = await browser.newPage({viewport:{width:390,height:844}});
+    const motionPage = await createTestPage(browser, {viewport:{width:390,height:844}});
     await motionPage.goto(`${base}/find-my-tube.html`);
     await motionPage.locator('#menuToggleBtn').click();
     await motionPage.waitForTimeout(40);
@@ -252,7 +278,7 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
     assert.deepEqual(menuMotion.map(item => item.delay), ['0s','0.022s','0.044s'], 'Menu items enter from top to bottom');
     await motionPage.close();
     for (const route of ['index.html', 'order-stock.html', 'track-orders.html', 'stock-dashboard.html']) {
-      const page = await browser.newPage({ viewport:{width:390,height:844}, reducedMotion:'reduce' });
+      const page = await createTestPage(browser, { viewport:{width:390,height:844}, reducedMotion:'reduce' });
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
       await page.goto(`${base}/${route}`);
