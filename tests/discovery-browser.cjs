@@ -22,10 +22,17 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         await page.locator('#menuToggleBtn').click();
         await page.waitForTimeout(250);
         assert.equal(await page.locator('#siteMenuPanel .menu-action-icon').count(), 0, 'Menu has no glyphs');
+        assert.equal(await page.locator('#siteMenuPanel .menu-action-meta').count(), 0, 'Menu has no descriptive subtitles');
         assert.equal(await page.locator('#siteMenuPanel [data-menu-action="settings"]').count(), 0, 'Non-functional Settings entry is removed');
         assert.equal(await page.locator('#siteMenuPanel .site-menu-link').first().evaluate(el => getComputedStyle(el, '::after').display), 'none', 'Menu has no trailing arrows');
         assert.equal(await page.locator('#siteMenuPanel a[href="tel:0217996290"]').count(), 1, 'Laboratory number is present');
         assert.equal(await page.locator('#siteMenuPanel a[href^="https://wa.me/27606286757"]').count(), 1, 'WhatsApp support link is present');
+        const menuVisual = await page.locator('#siteMenuPanel').evaluate(el => ({
+          backgroundImage: getComputedStyle(el).backgroundImage,
+          backdropFilter: getComputedStyle(el).backdropFilter
+        }));
+        assert.match(menuVisual.backgroundImage, /hero-lab-tubes/);
+        assert.equal(menuVisual.backdropFilter, 'none', 'Menu photograph must remain sharp');
         const menuBox = await page.locator('#siteMenuPanel').boundingBox();
         assert.equal(Math.round(menuBox.width), width);
         assert.equal(Math.round(menuBox.height), 900);

@@ -11743,7 +11743,13 @@ html[data-theme] body #siteMenuPanel {
   width: 100% !important; height: 100dvh !important; max-width: none !important; max-height: none !important;
   margin: 0 !important; padding: max(76px, env(safe-area-inset-top)) max(24px, calc((100vw - 1000px) / 2)) 32px !important;
   border: 0 !important; border-radius: 0 !important; overflow: auto !important;
-  background: linear-gradient(110deg, #071822f5, #071822c9), url("../images/hero-lab-collection.jpg") center / cover no-repeat !important;
+  background-color: #071822 !important;
+  background-image:
+    linear-gradient(90deg, rgba(2,15,34,.9) 0%, rgba(2,15,34,.7) 46%, rgba(2,15,34,.45) 100%),
+    url("../images/hero-lab-tubes.jpg") !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
   color: #fff !important; box-shadow: none !important; backdrop-filter: none !important;
   opacity: 0; transform: translateY(-16px) !important;
   transition: opacity 190ms ease, transform 190ms ease !important;
@@ -11770,9 +11776,8 @@ html[data-theme] body #siteMenuPanel .site-menu-link:last-child { border-bottom-
 html[data-theme] body #siteMenuPanel .site-menu-link::before,
 html[data-theme] body #siteMenuPanel .site-menu-link::after,
 html[data-theme] body #siteMenuPanel .menu-action-icon { display: none !important; content: none !important; }
-html[data-theme] body #siteMenuPanel .menu-action-copy { display: grid; gap: 4px; }
+html[data-theme] body #siteMenuPanel .menu-action-copy { display: block; }
 html[data-theme] body #siteMenuPanel .menu-action-label { font-size: 1.08rem; line-height: 1.25; }
-html[data-theme] body #siteMenuPanel .menu-action-meta { color: rgba(235,244,246,.72); font-size: .78rem; line-height: 1.4; }
 html[data-theme] body #siteMenuPanel .site-menu-link:is(:hover,:focus-visible,.is-active,[aria-current="page"]) {
   background: transparent !important; color: #fff !important; box-shadow: none !important;
 }
@@ -11784,6 +11789,14 @@ html[data-theme] body #siteMenuPanel .site-menu-contact-link span { font-size: 1
 html[data-theme] body #siteMenuPanel .site-menu-contact-link small { color: rgba(235,244,246,.72); font-size: .78rem; }
 html[data-theme] body #siteMenuPanel :is(button,a):focus-visible { outline: 2px solid #a7dedc; outline-offset: 3px; }
 @media (min-width: 720px) { html[data-theme] body #siteMenuPanel .site-menu-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 64px; } }
+@media (max-width: 719px) {
+  html[data-theme] body #siteMenuPanel {
+    background-image:
+      linear-gradient(180deg, rgba(2,15,34,.35) 0%, rgba(2,15,34,.73) 44%, rgba(2,15,34,.92) 100%),
+      url("../images/hero-lab-tubes.jpg") !important;
+    background-position: 74% center !important;
+  }
+}
 @media (prefers-reduced-motion: reduce) { html[data-theme] body #siteMenuPanel { transition: none !important; } }
 
 /* Shared surface geometry: content cards are square, controls remain distinct.

@@ -305,17 +305,6 @@ const MENU_ACTION_ORDER_INDEX = MENU_ACTION_ORDER.reduce((acc, action, index) =>
   return acc;
 }, Object.create(null));
 const SITE_MENU_CLOSE_DURATION_MS = 190;
-const MENU_ACTION_META = Object.freeze({
-  home: "Start screen and quick actions",
-  tube: "Match tests to tube colours",
-  "find-my-test": "Symptoms and signs to suggested tests",
-  draw: "Review selected tubes before collection",
-  "collection-desk": "Collection checklist and lab tools",
-  stock: "Request tubes and consumables",
-  "stock-dashboard": "Manage requests and stock levels",
-  "track-orders": "Check active request status",
-  about: "Reference use and app information"
-});
 const MOBILE_BOTTOM_NAV_BREAKPOINT = 860;
 const MOBILE_BOTTOM_NAV_HIDE_MIN_SCROLL_Y = 88;
 const MOBILE_BOTTOM_NAV_HIDE_SCROLL_DELTA = 54;
@@ -557,16 +546,13 @@ function normalizeMenuAction(action) {
   return safeAction;
 }
 
-function enhanceMenuButton(button, actionAttribute) {
+function enhanceMenuButton(button) {
   if (!(button instanceof HTMLElement) || button.dataset.menuEnhanced === "true") return;
-  const action = normalizeMenuAction(button.getAttribute(actionAttribute));
   const label = String(button.textContent || "").trim();
-  const meta = MENU_ACTION_META[action] || "";
   button.dataset.menuEnhanced = "true";
   button.innerHTML = `
     <span class="menu-action-copy">
       <span class="menu-action-label">${label}</span>
-      ${meta ? `<span class="menu-action-meta">${meta}</span>` : ""}
     </span>
   `;
 }
@@ -654,7 +640,7 @@ function enhanceSiteMenuStructure() {
   const secondaryButtons = [];
   buttons.forEach((button) => {
     const action = normalizeMenuAction(button.getAttribute("data-menu-action"));
-    enhanceMenuButton(button, "data-menu-action");
+    enhanceMenuButton(button);
     if (MENU_SECONDARY_ACTION_ORDER.includes(action)) {
       button.dataset.menuGroup = "secondary";
       secondaryButtons.push(button);
@@ -7052,7 +7038,7 @@ function initMobileBottomNav() {
     setMobileBottomMenuOpen(false);
   });
   menuSheet.querySelectorAll("[data-mobile-menu-action]").forEach((button) => {
-    enhanceMenuButton(button, "data-mobile-menu-action");
+    enhanceMenuButton(button);
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-mobile-menu-action") || "";
       setMobileBottomMenuOpen(false);
