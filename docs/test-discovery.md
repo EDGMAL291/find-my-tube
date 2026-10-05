@@ -18,6 +18,8 @@
 
 ## Presentation
 
+Content cards and modal sheets use the shared `--fmt-card-radius: 0px` token in `modern.css`; do not add page-specific rounded-card overrides. Controls, badges, and illustrations are separate from card geometry. Page photographs stay fixed behind the content. Find My Tube uses the same dark photographic treatment in each theme, with theme-aware solid clinical cards; department links and result counts remain transparent. Avoid pale full-page overlays that wash out the photograph.
+
 `assets/css/discovery.css` owns the neutral search/card/planner surfaces, light/dark tokens, focus styles, and mobile layout. `getTubeVisualMarkup` supplies one scalable SVG family for shared tube displays, with cap colour, size, paediatric proportions, optional fill, and accessible labels. Non-blood containers use a separate silhouette.
 
 Design references: [NHS cards](https://service-manual.nhs.uk/design-system/components/card) for clear interactive hierarchy, and [BD tube label illustrations](https://www.bd.com/content/dam/bd-assets/na/integrated-diagnostic-solutions/documents/in-service-material/3711-WW-0924-SM-Fill-Line-ch.pdf) for tube geometry conventions only. Neither source defines this laboratory's mappings.

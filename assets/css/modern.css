@@ -11770,6 +11770,21 @@ html[data-theme] body #siteMenuPanel button:focus-visible { outline: 2px solid #
 @media (min-width: 720px) { html[data-theme] body #siteMenuPanel .site-menu-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { html[data-theme] body #siteMenuPanel { transition: none !important; } }
 
+/* Shared surface geometry: content cards are square, controls remain distinct.
+   Keep this token in sync with discovery.css instead of page-specific radii. */
+:root { --fmt-card-radius: 0px; --fmt-window-shell-radius: 0px; --fmt-window-group-radius: 0px; --fmt-window-tile-radius: 0px; }
+html body[data-app-page] :is(
+  .card, .stock-order-card, .stock-order-request-card, .stock-request-compact-card,
+  .stock-order-form, .stock-catalog-toolbar, .stock-order-grid,
+  .stock-dashboard-request-card, .draw-modal-card, .draw-group-card, .draw-result-card,
+  .draw-planner-alert, .profile-modal-card, .contact-sheet-card, .about-info-modal-card,
+  .stock-request-detail-card, .clinical-choice-sheet, .footer-card,
+  .home-action-tile, .home-order-status-card, .home-tip-card, .home-reference-card, .home-help-card
+) {
+  border-radius: var(--fmt-card-radius) !important;
+  background-clip: padding-box !important;
+}
+
 .stock-dashboard-field-help {
   display: block;
   margin-top: 6px;
