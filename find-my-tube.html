@@ -41,8 +41,8 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20261005i" />
-  <link rel="stylesheet" href="assets/css/discovery.css?v=20261005i" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20261005j" />
+  <link rel="stylesheet" href="assets/css/discovery.css?v=20261005j" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -216,21 +216,9 @@
   </div>
 
   <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Tube Plan: 0" hidden>
-    <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0</span>
-    <span class="selection-cart-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 18h16" />
-        <path d="M6 18v-4h12v4" />
-        <path d="M8 6v8" />
-        <path d="M12 5v9" />
-        <path d="M16 7v7" />
-        <path d="M7 6h2" />
-        <path d="M11 5h2" />
-        <path d="M15 7h2" />
-      </svg>
-    </span>
     <span class="selection-cart-copy">
       <span class="selection-cart-label">Tube Plan</span>
+      <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0 tests</span>
     </span>
   </button>
 
@@ -270,7 +258,10 @@
   <section class="profile-modal" id="profileModal" hidden>
     <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
       <div class="profile-modal-head">
-        <h3 id="profileModalTitle">Profile Tests</h3>
+        <div class="profile-modal-heading">
+          <p class="profile-modal-brand">Find My Tube</p>
+          <h3 id="profileModalTitle">Profile Tests</h3>
+        </div>
         <button type="button" class="profile-modal-close-btn" id="closeProfileModalBtn" aria-label="Close profile tests" title="Close profile tests">&times;</button>
       </div>
       <ul class="profile-modal-list" id="profileModalList"></ul>
@@ -292,12 +283,12 @@
 
   <script src="assets/data/data.js?v=20260812a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/stock-catalog-data.js?v=20261005i"></script>
-  <script src="assets/js/script.js?v=20261005i"></script>
+  <script src="assets/js/stock-catalog-data.js?v=20261005j"></script>
+  <script src="assets/js/script.js?v=20261005j"></script>
   <script src="assets/js/find-my-test.js?v=20260728b"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-05.9";
+      const APP_VERSION = "2026-10-05.10";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -318,7 +309,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261005c", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261005d", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

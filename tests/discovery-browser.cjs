@@ -19,6 +19,13 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         await page.evaluate(theme => applyTheme(theme), theme);
         assert.equal(await page.locator('.tube-workspace-kicker, .group-hints > h3').count(), 0);
         assert.equal(await page.locator('.group-hints').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
+        const hamburger = await page.locator('#menuToggleBtn').evaluate(el => ({
+          background: getComputedStyle(el).backgroundColor,
+          border: getComputedStyle(el).borderTopStyle,
+          paths: el.querySelectorAll('.header-menu-icon path').length,
+          middleOpacity: getComputedStyle(el.querySelector('.header-menu-icon path:nth-child(2)')).opacity
+        }));
+        assert.deepEqual(hamburger, { background:'rgba(0, 0, 0, 0)', border:'none', paths:3, middleOpacity:'1' });
         await page.locator('#menuToggleBtn').click();
         await page.waitForTimeout(250);
         assert.equal(await page.locator('#siteMenuPanel .menu-action-icon').count(), 0, 'Menu has no glyphs');
@@ -50,6 +57,7 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         await page.screenshot({ path:path.join(screenshots, `browse-${width}-${theme}.png`) });
         await page.locator('#searchInput').fill('HIV');
         const card = page.locator('[data-test-name="HIV ELISA"]');
+        assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Result card uses 10% frost');
         assert.equal(await card.locator('.discovery-body').isVisible(), false);
         assert.equal(await page.locator('#drawModal').isVisible(), false);
         assert.equal(await page.locator('#selectionCartBar').isVisible(), false);
@@ -68,7 +76,7 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         assert.equal(surfaces.grid, 'rgba(0, 0, 0, 0)', 'No rectangle behind result cards');
         assert.equal(surfaces.clipping, 'hidden', 'Card contents stay within card edges');
         assert.equal(await card.evaluate(el => getComputedStyle(el).borderRadius), '0px', 'Discovery uses shared square card geometry');
-        assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Collapsed result shows the page photograph');
+        assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Collapsed result keeps the page photograph behind 10% frost');
         assert.equal(await card.locator('.discovery-body').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Expanded result shows the page photograph');
         assert.match(await card.innerText(), /Gold\/Yellow/);
         assert.match(await card.innerText(), /Serum/);
@@ -77,6 +85,10 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         await page.keyboard.press('Enter');
         assert.equal(await page.locator('#searchInput').inputValue(), 'HIV', 'Adding must preserve search results');
         assert.equal(await page.locator('#selectionCartBar').isVisible(), true);
+        assert.equal(await page.locator('#selectionCartBar .selection-cart-icon').count(), 0, 'Floating Tube Plan has no glyph');
+        assert.equal((await page.locator('#selectionCartBar .selection-cart-label').innerText()).trim(), 'Tube Plan');
+        assert.equal((await page.locator('#selectionCartCount').innerText()).trim(), '1 test');
+        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).borderTopStyle), 'none');
         assert.equal(await page.locator('#drawModal').isVisible(), false, 'Adding does not force open planner');
         await card.locator('summary').click();
         assert.equal(await card.locator('details').getAttribute('open'), '');
@@ -186,7 +198,13 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan bar is transparent');
         await fbcCard.locator('.profile-tests-btn').click();
         assert.equal(await page.locator('#profileModal').isVisible(), true, 'Profile test list opens');
+        await page.waitForFunction(() => getComputedStyle(document.querySelector('.container')).opacity === '0');
         assert.equal((await page.locator('#closeProfileModalBtn').innerText()).trim(), '×');
+        assert.equal((await page.locator('#profileModal .profile-modal-brand').innerText()).trim(), 'FIND MY TUBE');
+        assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile contents have no enclosing card');
+        assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).borderTopStyle), 'none');
+        assert.equal(await page.locator('.container').evaluate(el => getComputedStyle(el).opacity), '0', 'Underlying workspace is removed while profile contents are open');
+        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'Floating plan does not compete with profile contents');
         assert.equal(await page.locator('#profileModalList').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile list has no grey panel');
         assert.equal(await page.locator('#profileModalList').evaluate(el => getComputedStyle(el).borderTopWidth), '0px', 'Profile list has no nested outline');
         assert.ok(await page.locator('#profileModalList li').evaluateAll(items => items.every(el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)')), 'Profile rows have no grey tiles');
@@ -221,6 +239,18 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
     assert.deepEqual(await drugPage.evaluate(()=>[...selectedTestNames]), ['Sodium Valproate']);
     await drugPage.close();
     console.log(`PASS ${Object.keys(drugCases).length} drug alias, typo, peak/trough and local mapping checks`);
+    const motionPage = await browser.newPage({viewport:{width:390,height:844}});
+    await motionPage.goto(`${base}/find-my-tube.html`);
+    await motionPage.locator('#menuToggleBtn').click();
+    await motionPage.waitForTimeout(40);
+    const menuMotion = await motionPage.locator('#siteMenuPanel .site-menu-group-title, #siteMenuPanel .site-menu-link, #siteMenuPanel .site-menu-contact-link').evaluateAll(items => items.slice(0, 3).map(item => ({
+      name:getComputedStyle(item).animationName,
+      delay:getComputedStyle(item).animationDelay,
+      duration:getComputedStyle(item).animationDuration
+    })));
+    assert.ok(menuMotion.every(item => item.name === 'siteMenuFallIn' && item.duration === '0.23s'), 'Menu items use the fast fall-in motion');
+    assert.deepEqual(menuMotion.map(item => item.delay), ['0s','0.022s','0.044s'], 'Menu items enter from top to bottom');
+    await motionPage.close();
     for (const route of ['index.html', 'order-stock.html', 'track-orders.html', 'stock-dashboard.html']) {
       const page = await browser.newPage({ viewport:{width:390,height:844}, reducedMotion:'reduce' });
       const errors = [];
@@ -230,6 +260,8 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
       assert.deepEqual(errors, [], `${route} runtime errors`);
       const radii = await page.locator('.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).borderRadius));
       assert.ok(radii.every(radius=>radius==='0px'), `${route} inconsistent card corners: ${radii}`);
+      const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).backgroundColor));
+      assert.ok(frost.every(color=>color === 'rgba(255, 255, 255, 0.1)'), `${route} inconsistent card frost: ${frost}`);
       if(route === 'order-stock.html') assert.match(await page.locator('body').innerText(), /20 of 20 stock items/);
       await page.screenshot({path:path.join(screenshots, route.replace('.html','.png'))});
       await page.close();

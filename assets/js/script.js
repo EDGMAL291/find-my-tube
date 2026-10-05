@@ -702,8 +702,8 @@ function enhanceSiteMenuStructure() {
   `;
   siteMenuList.appendChild(contactGroup);
 
-  [...mainButtons, ...stockButtons, ...secondaryButtons].forEach((button, index) => {
-    button.style.setProperty("--menu-item-index", String(index));
+  siteMenuList.querySelectorAll(".site-menu-group-title, .site-menu-link, .site-menu-contact-link").forEach((item, index) => {
+    item.style.setProperty("--menu-item-index", String(index));
   });
 }
 
@@ -6448,7 +6448,7 @@ function updateSelectionCartBar() {
   const count = selectedTests.length;
   const hasHighAttentionTest = selectedTests.some((test) => AUTO_EXPAND_CRITICAL_NOTE_TESTS.has(test.name));
   if (!count) {
-    selectionCartCount.textContent = "0";
+    selectionCartCount.textContent = "0 tests";
     const emptyPlanLabel = "Tube Plan: 0";
     const emptyCartLabel = selectionCartBar.querySelector(".selection-cart-label");
     if (emptyCartLabel) emptyCartLabel.textContent = "Tube Plan";
@@ -6466,7 +6466,7 @@ function updateSelectionCartBar() {
   const { plan } = getResolvedDrawPlan(selectedTests);
   const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
   const countLabel = formatPlanCountLabel(totalTubes, plan);
-  const badgeCount = count > 99 ? "99+" : String(count);
+  const badgeCount = count > 99 ? "99+ tests" : `${count} test${count === 1 ? "" : "s"}`;
 
   selectionCartBar.hidden = false;
   selectionCartCount.textContent = badgeCount;
@@ -6475,7 +6475,7 @@ function updateSelectionCartBar() {
   selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
-    `Tube Plan: ${badgeCount}. ${countLabel} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
+    `Tube Plan: ${count} added test${count === 1 ? "" : "s"}. ${countLabel} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
   );
   selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
   document.body.classList.add("has-selection-cart");
@@ -7539,6 +7539,7 @@ function syncModalOpenClass() {
   const contactFeedbackOpen = Boolean(contactFeedbackModal && !contactFeedbackModal.hidden);
   const aboutInfoOpen = Boolean(aboutInfoModal && !aboutInfoModal.hidden);
   document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen || sectionBrowseOpen || contactFeedbackOpen || aboutInfoOpen);
+  document.body.classList.toggle("profile-modal-open", profileOpen);
   updateBackToTopVisibility();
 }
 

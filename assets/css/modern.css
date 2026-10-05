@@ -11732,12 +11732,19 @@ html body:is([data-app-page="track-orders"], [data-app-page="stock-dashboard"]) 
 }
 body.fullscreen-menu-open { overflow: hidden !important; }
 html[data-theme] body #menuToggleBtn {
-  width: 52px; height: 48px; min-height: 48px; border-radius: 12px !important;
-  background: rgba(7, 24, 34, .88) !important; color: #fff !important;
-  border: 1px solid #ffffff45 !important; box-shadow: none !important;
+  width: 48px; min-width: 48px; height: 48px; min-height: 48px; padding: 0 !important;
+  border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; color: #fff !important; box-shadow: none !important;
 }
-html[data-theme] body #menuToggleBtn .header-menu-icon path:nth-child(2) { opacity: 0; }
-html[data-theme] body #menuToggleBtn .header-menu-icon path { stroke-width: 1.6; }
+html[data-theme] body #menuToggleBtn .header-menu-label { display: none !important; }
+html[data-theme] body #menuToggleBtn .header-menu-icon,
+html[data-theme] body #menuToggleBtn .header-menu-icon .icon { width: 28px; height: 24px; }
+html[data-theme] body #menuToggleBtn .header-menu-icon path,
+html[data-theme] body #menuToggleBtn.active .header-menu-icon path {
+  opacity: 1 !important; transform: none !important; stroke-width: 1.7;
+}
+html[data-theme] body #menuToggleBtn:is(:hover,:active) { background: transparent !important; }
+html[data-theme] body #menuToggleBtn:focus-visible { outline: 2px solid #a7dedc; outline-offset: 2px; }
 html[data-theme] body #siteMenuPanel {
   position: fixed !important; inset: 0 !important; z-index: 20000 !important;
   width: 100% !important; height: 100dvh !important; max-width: none !important; max-height: none !important;
@@ -11770,7 +11777,7 @@ html[data-theme] body #siteMenuPanel .site-menu-link {
   display: block; width: 100%; min-height: 64px; padding: 12px 0; text-align: left;
   background: transparent !important; border: 0 !important; border-bottom: 1px solid rgba(255,255,255,.18) !important;
   color: #fff !important; font-size: 1.15rem; box-shadow: none !important;
-  opacity: 1 !important; transform: none !important; animation: none !important;
+  opacity: 0; transform: translateX(28px);
 }
 html[data-theme] body #siteMenuPanel .site-menu-link:last-child { border-bottom-color: rgba(255,255,255,.18) !important; }
 html[data-theme] body #siteMenuPanel .site-menu-link::before,
@@ -11788,6 +11795,18 @@ html[data-theme] body #siteMenuPanel .site-menu-contact-link {
 html[data-theme] body #siteMenuPanel .site-menu-contact-link span { font-size: 1.08rem; font-weight: 600; }
 html[data-theme] body #siteMenuPanel .site-menu-contact-link small { color: rgba(235,244,246,.72); font-size: .78rem; }
 html[data-theme] body #siteMenuPanel :is(button,a):focus-visible { outline: 2px solid #a7dedc; outline-offset: 3px; }
+html[data-theme] body #siteMenuPanel :is(.site-menu-group-title, .site-menu-link, .site-menu-contact-link) {
+  opacity: 0; transform: translateX(28px);
+}
+html[data-theme] body #siteMenuPanel.is-open :is(.site-menu-group-title, .site-menu-link, .site-menu-contact-link) {
+  animation: siteMenuFallIn 230ms cubic-bezier(.2,.8,.2,1) both;
+  animation-delay: calc(var(--menu-item-index, 0) * 22ms);
+}
+@keyframes siteMenuFallIn {
+  0% { opacity: 0; transform: translateX(28px); }
+  72% { opacity: 1; transform: translateX(-3px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
 @media (min-width: 720px) { html[data-theme] body #siteMenuPanel .site-menu-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 64px; } }
 @media (max-width: 719px) {
   html[data-theme] body #siteMenuPanel {
@@ -11797,7 +11816,40 @@ html[data-theme] body #siteMenuPanel :is(button,a):focus-visible { outline: 2px 
     background-position: 74% center !important;
   }
 }
-@media (prefers-reduced-motion: reduce) { html[data-theme] body #siteMenuPanel { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] body #siteMenuPanel { transition: none !important; }
+  html[data-theme] body #siteMenuPanel :is(.site-menu-group-title, .site-menu-link, .site-menu-contact-link) {
+    animation: none !important; opacity: 1; transform: none;
+  }
+}
+
+/* The floating plan affordance is text-only so it does not compete with test results. */
+html[data-theme] body #selectionCartBar,
+html[data-theme] body #selectionCartBar:is(:hover, :focus-visible) {
+  width: auto; min-width: 0; min-height: 48px; padding: 10px 4px !important;
+  align-items: center; justify-content: center; overflow: visible;
+  border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; background-image: none !important;
+  color: #fffdf8 !important; box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  text-shadow: 0 1px 4px rgba(1, 8, 15, .92);
+}
+html[data-theme] body #selectionCartBar:is(:hover, :focus-visible) { transform: none; }
+html[data-theme] body #selectionCartBar:focus-visible { outline: 2px solid #a7dedc; outline-offset: 2px; }
+html[data-theme] body #selectionCartBar .selection-cart-icon { display: none !important; }
+html[data-theme] body #selectionCartBar .selection-cart-copy {
+  display: inline-flex; align-items: baseline; gap: 8px; position: static;
+}
+html[data-theme] body #selectionCartBar .selection-cart-label {
+  color: #fffdf8 !important; font-size: .9rem; font-weight: 700; line-height: 1.2; white-space: nowrap;
+}
+html[data-theme] body #selectionCartBar #selectionCartCount,
+html[data-theme] body #selectionCartBar.requires-attention #selectionCartCount {
+  position: static; min-width: 0; width: auto; height: auto; padding: 0;
+  border: 0; border-radius: 0; background: transparent !important;
+  color: #a7dedc !important; box-shadow: none;
+  font-size: .78rem; font-weight: 650; line-height: 1.2; white-space: nowrap;
+}
 
 /* Shared surface geometry: content cards are square, controls remain distinct.
    Keep this token in sync with discovery.css instead of page-specific radii. */
@@ -11812,6 +11864,25 @@ html body[data-app-page] :is(
 ) {
   border-radius: var(--fmt-card-radius) !important;
   background-clip: padding-box !important;
+  background-color: rgba(255, 255, 255, .10) !important;
+  background-image: none !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+}
+
+/* Static reference pages use the same visible photographic canvas as the working tools. */
+html body:is(
+  [data-app-page="about-page"], [data-app-page="contact-feedback-page"],
+  [data-app-page="disclaimer-page"], [data-app-page="privacy-policy-page"],
+  [data-app-page="terms-of-use-page"], [data-app-page="tube-plan-page"]
+) {
+  background-color: #03111f !important;
+  background-image:
+    linear-gradient(110deg, rgba(3,17,31,.74), rgba(3,17,31,.48)),
+    url("../images/find-my-tube-lab-overview.jpg") !important;
+  background-position: center !important; background-size: cover !important;
+  background-repeat: no-repeat !important; background-attachment: fixed !important;
 }
 
 .stock-dashboard-field-help {

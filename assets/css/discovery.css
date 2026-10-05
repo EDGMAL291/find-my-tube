@@ -75,10 +75,11 @@ html[data-theme] body #cardsContainer .discovery-card {
   min-width: 0;
   border: 1px solid var(--clinical-line) !important;
   border-radius: var(--fmt-card-radius) !important;
-  background: transparent !important;
+  background: rgba(255, 255, 255, .10) !important;
   color: #fffdf8 !important;
   box-shadow: none !important;
-  backdrop-filter: none !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
   overflow: hidden !important;
   background-clip: padding-box !important;
   isolation: isolate;
@@ -126,14 +127,17 @@ html[data-theme] body .collection-illustration-paediatric { height: 78px; }
 html[data-theme] body .discovery-tube .tube-photo-visual-adult { width: 42px; height: 96px; flex-basis: 42px; }
 html[data-theme] body .discovery-tube .tube-photo-visual-paediatric { width: 42px; height: 78px; flex-basis: 42px; }
 html[data-theme] body .draw-modal-card {
-  background: var(--clinical-surface) !important; color: var(--clinical-ink) !important;
+  background: rgba(255, 255, 255, .10) !important; color: var(--clinical-ink) !important;
   border: 1px solid var(--clinical-line) !important; border-radius: var(--fmt-card-radius) !important;
-  backdrop-filter: none !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
 }
 html[data-theme] body .draw-modal-card :is(h3, h4, p, li, .draw-selection-count, .draw-selected-chip-name, .tube-option-label) { color: var(--clinical-ink) !important; }
 html[data-theme] body .draw-modal-card :is(.draw-group-card, .draw-result-card, .draw-planner-alert) {
-  background: var(--clinical-surface) !important; border: 1px solid var(--clinical-line) !important;
+  background: rgba(255, 255, 255, .10) !important; border: 1px solid var(--clinical-line) !important;
   box-shadow: none !important; border-radius: var(--fmt-card-radius) !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
 }
 html[data-theme] body .draw-group-card::before { display: none !important; }
 html[data-theme] body .draw-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -158,7 +162,7 @@ html[data-theme] body .discovery-card :is(button, summary):focus-visible { outli
 html[data-theme] body .draw-modal-card .draw-selection-head {
   position: sticky !important; top: 0 !important; z-index: 12;
   justify-content: space-between !important; margin: 0 !important; padding: 0 0 8px !important;
-  background: var(--clinical-surface) !important; background-image: none !important;
+  background: rgba(255, 255, 255, .10) !important; background-image: none !important;
   border-bottom: 1px solid var(--clinical-line) !important; box-shadow: none !important;
   backdrop-filter: none !important; -webkit-backdrop-filter: none !important; transition: none !important;
 }
@@ -197,15 +201,35 @@ html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-labe
 html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-stack:last-child .group-chip { border-bottom: 0 !important; }
 html[data-theme] body[data-app-page="find-my-tube"] .group-chip::before,
 html[data-theme] body[data-app-page="find-my-tube"] .group-chip::after { display: none !important; }
-/* Profile contents follow the same dark photographic workspace instead of nested grey tiles. */
-html[data-theme] body[data-app-page="find-my-tube"] #profileModal { align-items: flex-start; padding: max(12px, env(safe-area-inset-top)) 12px 12px; background: rgba(2, 12, 23, .78) !important; }
+/* Profile contents sit directly on the page photograph rather than inside another card. */
+html[data-theme] body[data-app-page="find-my-tube"] #profileModal {
+  align-items: flex-start; padding: max(12px, env(safe-area-inset-top)) 12px 12px;
+  background: rgba(2, 12, 23, .12) !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+html[data-theme] body[data-app-page="find-my-tube"].profile-modal-open .container,
+html[data-theme] body[data-app-page="find-my-tube"]:has(#profileModal:not([hidden])) .container {
+  opacity: 0 !important; filter: none !important; pointer-events: none;
+}
+html[data-theme] body[data-app-page="find-my-tube"].profile-modal-open :is(#selectionCartBar, .mobile-bottom-nav),
+html[data-theme] body[data-app-page="find-my-tube"]:has(#profileModal:not([hidden])) :is(#selectionCartBar, .mobile-bottom-nav) {
+  opacity: 0 !important; visibility: hidden !important; pointer-events: none !important;
+}
 html[data-theme] body[data-app-page="find-my-tube"] #profileModal .profile-modal-card {
-  width: min(520px, 100%); max-height: calc(100dvh - 24px); margin: 0 auto; padding: 16px;
-  background: rgba(3, 17, 31, .96) !important; color: #fffdf8 !important;
-  border: 1px solid rgba(255, 255, 255, .34) !important;
+  width: min(600px, 100%); max-height: calc(100dvh - 24px); margin: 0 auto; padding: 16px;
+  background: transparent !important; background-image: none !important; color: #fffdf8 !important;
+  border: 0 !important; box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
 }
 html[data-theme] body[data-app-page="find-my-tube"] #profileModal .profile-modal-head {
-  min-height: 52px; margin: 0; padding: 0 0 12px; border-bottom: 1px solid rgba(255, 255, 255, .26) !important;
+  min-height: 62px; margin: 0; padding: 0 0 12px; border-bottom: 1px solid rgba(255, 255, 255, .26) !important;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #profileModal .profile-modal-heading { display: grid; gap: 4px; }
+html[data-theme] body[data-app-page="find-my-tube"] #profileModal .profile-modal-brand {
+  margin: 0; color: #a7dedc; font-size: .68rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #profileModal #profileModalTitle {
+  margin: 0; color: #fffdf8 !important; font-size: 1.35rem; text-shadow: 0 1px 4px rgba(1, 8, 15, .9);
 }
 html[data-theme] body[data-app-page="find-my-tube"] .profile-modal-list,
 html[data-theme] body[data-app-page="find-my-tube"] .profile-modal-list li { background: transparent !important; color: #fffdf8 !important; box-shadow: none !important; }
