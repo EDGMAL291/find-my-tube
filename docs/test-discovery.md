@@ -18,7 +18,7 @@
 
 ## Presentation
 
-Content cards and modal sheets use the shared `--fmt-card-radius: 0px` token in `modern.css`; do not add page-specific rounded-card overrides. Controls, badges, and illustrations are separate from card geometry. Page photographs stay fixed behind the content. Find My Tube uses the same dark photographic treatment in each theme; department links, result counts, and collapsed or expanded discovery cards remain transparent so the page photograph stays visible. Use light high-contrast text and restrained shadows rather than filling the discovery card. Avoid pale full-page overlays that wash out the photograph.
+Content cards and modal sheets use the shared `--fmt-card-radius: 0px` token in `modern.css`; do not add page-specific rounded-card overrides. Controls, badges, and illustrations are separate from card geometry. Page photographs stay fixed behind the content. Find My Tube uses the same dark photographic treatment in each theme; its search shell, department links, result counts, collapsed or expanded discovery cards, profile action, plan action, and Tube Plan bar remain transparent so the page photograph stays visible. Profile contents use a single dark modal surface with transparent list rows. Use light high-contrast text and restrained shadows rather than filling discovery controls. Avoid pale full-page overlays that wash out the photograph.
 
 `assets/css/discovery.css` owns the neutral search/card/planner surfaces, light/dark tokens, focus styles, and mobile layout. `getTubeVisualMarkup` supplies one scalable SVG family for shared tube displays, with cap colour, size, paediatric proportions, optional fill, and accessible labels. Non-blood containers use a separate silhouette.
 
