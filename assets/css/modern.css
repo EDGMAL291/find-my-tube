@@ -11616,6 +11616,19 @@ html[data-theme] body[data-app-page="stock-order"] .stock-item-glyph-tube.stock-
   }
 }
 
+/* A viewport-owned photographic layer stays put on mobile as well as desktop.
+   Inherit each page's existing image/tint instead of substituting a generic image.
+   Home owns its full-screen slide backgrounds and is intentionally excluded. */
+html body[data-app-page]:not([data-app-page="home"]) { isolation: isolate; }
+html body[data-app-page]:not([data-app-page="home"])::before {
+  content: ""; display: block !important; position: fixed !important; inset: 0 !important;
+  width: 100% !important; height: 100% !important; z-index: -1 !important;
+  background: inherit !important; background-attachment: scroll !important;
+  background-size: cover !important; background-position: center !important;
+  border: 0 !important; border-radius: 0 !important; opacity: 1 !important;
+  transform: none !important; filter: none !important; pointer-events: none;
+}
+
 /* Responsive catalogue: every supply remains reachable without sideways scrolling. */
 html[data-theme] body[data-app-page="stock-order"] .stock-order-grid {
   grid-auto-flow: row;
@@ -11711,6 +11724,47 @@ html[data-theme] body[data-app-page="home"] .home-hero-dot::before {
 html[data-theme] body[data-app-page="home"] .home-hero-dot.is-active::before {
   background: var(--hero-accent, #a4c8cf);
 }
+
+/* Full-screen navigation has its own collection-room photograph. */
+body.fullscreen-menu-open { overflow: hidden !important; }
+html[data-theme] body #menuToggleBtn {
+  width: 52px; height: 48px; min-height: 48px; border-radius: 12px !important;
+  background: rgba(7, 24, 34, .88) !important; color: #fff !important;
+  border: 1px solid #ffffff45 !important; box-shadow: none !important;
+}
+html[data-theme] body #menuToggleBtn .header-menu-icon path:nth-child(2) { opacity: 0; }
+html[data-theme] body #menuToggleBtn .header-menu-icon path { stroke-width: 1.6; }
+html[data-theme] body #siteMenuPanel {
+  position: fixed !important; inset: 0 !important; z-index: 20000 !important;
+  width: 100% !important; height: 100dvh !important; max-width: none !important; max-height: none !important;
+  margin: 0 !important; padding: max(76px, env(safe-area-inset-top)) max(24px, calc((100vw - 1000px) / 2)) 32px !important;
+  border: 0 !important; border-radius: 0 !important; overflow: auto !important;
+  background: linear-gradient(110deg, #071822f5, #071822c9), url("../images/hero-lab-collection.jpg") center / cover no-repeat !important;
+  color: #fff !important; box-shadow: none !important; backdrop-filter: none !important;
+  opacity: 0; transform: translateY(-16px) !important;
+  transition: opacity 190ms ease, transform 190ms ease !important;
+}
+html[data-theme] body #siteMenuPanel.is-open { opacity: 1; transform: none !important; }
+html[data-theme] body #siteMenuPanel::before,
+html[data-theme] body #siteMenuPanel::after { display: none !important; }
+html[data-theme] body #siteMenuPanel .site-menu-close {
+  position: absolute; top: max(16px, env(safe-area-inset-top)); right: 20px;
+  width: 48px; height: 48px; border: 1px solid #ffffff60; border-radius: 12px;
+  background: transparent; color: #fff; font-size: 32px; cursor: pointer;
+}
+html[data-theme] body #siteMenuPanel .site-menu-title { color: #fff; font-size: 1.6rem; margin-bottom: 24px; }
+html[data-theme] body #siteMenuPanel .site-menu-list { display: grid; gap: 24px; background: transparent !important; border: 0; backdrop-filter: none !important; }
+html[data-theme] body #siteMenuPanel .site-menu-group { padding: 0; border: 0; background: transparent; }
+html[data-theme] body #siteMenuPanel .site-menu-group-title { color: #bacbd1; font-size: .7rem; letter-spacing: .1em; }
+html[data-theme] body #siteMenuPanel .site-menu-link {
+  min-height: 48px; padding: 10px 0; background: transparent !important; border: 0 !important;
+  color: #fff !important; font-size: 1.15rem; box-shadow: none !important;
+  opacity: 1 !important; transform: none !important; animation: none !important;
+}
+html[data-theme] body #siteMenuPanel .site-menu-link::before { display: none !important; }
+html[data-theme] body #siteMenuPanel button:focus-visible { outline: 2px solid #a7dedc; outline-offset: 3px; }
+@media (min-width: 720px) { html[data-theme] body #siteMenuPanel .site-menu-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { html[data-theme] body #siteMenuPanel { transition: none !important; } }
 
 .stock-dashboard-field-help {
   display: block;

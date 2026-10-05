@@ -16,11 +16,12 @@ html[data-theme="dark"] {
   --clinical-action: #8bd6d3;
 }
 html[data-theme] body[data-app-page="find-my-tube"] {
-  background: var(--clinical-page) !important;
+  background: linear-gradient(#f3f5f6e8, #f3f5f6e8), url("../images/find-my-tube-lab-overview.jpg") center / cover no-repeat !important;
   color: var(--clinical-ink);
 }
-html[data-theme] body[data-app-page="find-my-tube"]::before,
-html[data-theme] body[data-app-page="find-my-tube"]::after { display: none !important; }
+html[data-theme="dark"] body[data-app-page="find-my-tube"] {
+  background-image: linear-gradient(#151c21df, #151c21df), url("../images/find-my-tube-lab-overview.jpg") !important;
+}
 html[data-theme] body[data-app-page="find-my-tube"] .container { background: none; }
 html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro { border: 0; padding-left: 0; padding-bottom: 0; }
 html[data-theme] body[data-app-page="find-my-tube"] #tubeLookupPanel { width: 100%; max-width: 900px; }
@@ -52,7 +53,9 @@ html[data-theme] body[data-app-page="find-my-tube"] :is(.search-box, #tubeLookup
 }
 html[data-theme] body[data-app-page="find-my-tube"] #searchInput { color: var(--clinical-ink) !important; background: transparent !important; }
 html[data-theme] body[data-app-page="find-my-tube"] #searchInput::placeholder { color: var(--clinical-muted) !important; }
-html[data-theme] body[data-app-page="find-my-tube"] :is(#cardsContainer, .results-toolbar) { background: var(--clinical-page) !important; }
+html[data-theme] body[data-app-page="find-my-tube"] :is(#cardsContainer, .results-toolbar, .results-info) {
+  background: transparent !important; box-shadow: none !important;
+}
 html[data-theme] body #cardsContainer {
   grid-template-columns: minmax(0, 1fr);
   grid-auto-rows: max-content;
@@ -72,7 +75,9 @@ html[data-theme] body #cardsContainer .discovery-card {
   color: var(--clinical-ink) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
-  overflow: hidden;
+  overflow: hidden !important;
+  background-clip: padding-box !important;
+  isolation: isolate;
   transform: none !important;
 }
 html[data-theme] body #cardsContainer .discovery-card::before,
@@ -161,6 +166,12 @@ html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-selected-chip-
 html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-selected-chip-remove):hover { background: var(--clinical-page) !important; }
 html[data-theme] body .draw-modal-card button:focus-visible { outline: 2px solid var(--clinical-action); outline-offset: -2px; }
 /* Quiet department navigation: text rows rather than decorative icon tiles. */
+html[data-theme] body[data-app-page="find-my-tube"] #preSearchPanel .group-hints,
+html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip {
+  background: transparent !important; border: 0 !important; box-shadow: none !important;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #preSearchPanel .group-hints { padding: 0 !important; }
+html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip:focus-visible { outline: 2px solid var(--clinical-action); outline-offset: -2px; }
 html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon { display: none !important; }
 html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip {
   min-height: 48px; padding: 12px 0 !important; border: 0 !important;

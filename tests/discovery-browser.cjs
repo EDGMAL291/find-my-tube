@@ -17,6 +17,22 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}/find-my-tube.html`);
         await page.evaluate(theme => applyTheme(theme), theme);
+        assert.equal(await page.locator('.tube-workspace-kicker, .group-hints > h3').count(), 0);
+        assert.equal(await page.locator('.group-hints').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
+        await page.locator('#menuToggleBtn').click();
+        await page.waitForTimeout(250);
+        const menuBox = await page.locator('#siteMenuPanel').boundingBox();
+        assert.equal(Math.round(menuBox.width), width);
+        assert.equal(Math.round(menuBox.height), 900);
+        assert.equal(Math.round(menuBox.y), 0);
+        await page.locator('.site-menu-close').focus();
+        await page.keyboard.press('Shift+Tab');
+        assert.ok(await page.locator('#siteMenuPanel').evaluate(el => el.contains(document.activeElement)), 'Menu traps keyboard focus');
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(250);
+        assert.equal(await page.locator('#siteMenuPanel').isVisible(), false);
+        const pageBackdrop = await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage);
+        assert.match(pageBackdrop, /find-my-tube-lab-overview/);
         assert.equal(await page.locator('.group-chip-icon:visible').count(), 0, 'Department navigation has no decorative glyphs');
         await page.screenshot({ path:path.join(screenshots, `browse-${width}-${theme}.png`) });
         await page.locator('#searchInput').fill('HIV');
@@ -26,6 +42,18 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         assert.equal(await page.locator('#selectionCartBar').isVisible(), false);
         await card.locator('.discovery-open').focus();
         await page.keyboard.press('Enter');
+        const surfaces = await page.evaluate(() => ({
+          backdrop: getComputedStyle(document.body, '::before').backgroundImage,
+          fixed: getComputedStyle(document.body, '::before').position,
+          count: getComputedStyle(document.querySelector('.results-toolbar')).backgroundColor,
+          grid: getComputedStyle(document.querySelector('#cardsContainer')).backgroundColor,
+          clipping: getComputedStyle(document.querySelector('.discovery-card')).overflow
+        }));
+        assert.equal(surfaces.backdrop, pageBackdrop, 'Search preserves the page photograph');
+        assert.equal(surfaces.fixed, 'fixed');
+        assert.equal(surfaces.count, 'rgba(0, 0, 0, 0)', 'Result count has no background strip');
+        assert.equal(surfaces.grid, 'rgba(0, 0, 0, 0)', 'No rectangle behind rounded cards');
+        assert.equal(surfaces.clipping, 'hidden', 'Card contents clip to rounded corners');
         assert.match(await card.innerText(), /Gold\/Yellow/);
         assert.match(await card.innerText(), /Serum/);
         assert.equal(await page.evaluate(() => selectedTestNames.size), 0, 'Inspection must not add a test');

@@ -520,12 +520,9 @@ function setThemePanelOpen(isOpen) {
 
 // Sets site menu open state.
 function setSiteMenuOpen(isOpen) {
-  if (Boolean(isOpen) && shouldShowMobileBottomNav() && isMobileBottomNavViewport()) {
-    setMobileBottomMenuOpen(true);
-    return;
-  }
   const nextOpen = Boolean(isOpen);
   isSiteMenuOpen = nextOpen;
+  document.body.classList.toggle("fullscreen-menu-open", nextOpen);
 
   window.clearTimeout(siteMenuCloseTimeoutId);
   siteMenuCloseTimeoutId = 0;
@@ -535,9 +532,12 @@ function setSiteMenuOpen(isOpen) {
       siteMenuPanel.hidden = false;
       siteMenuPanel.classList.remove("is-closing");
       window.requestAnimationFrame(() => {
+        if (!isSiteMenuOpen) return;
         siteMenuPanel?.classList.add("is-open");
+        siteMenuPanel.querySelector(".site-menu-close")?.focus({ preventScroll: true });
       });
     } else {
+      if (siteMenuPanel.contains(document.activeElement)) menuToggleBtn?.focus({ preventScroll: true });
       siteMenuPanel.classList.remove("is-open");
       if (!siteMenuPanel.hidden) {
         siteMenuPanel.classList.add("is-closing");
@@ -558,6 +558,10 @@ function setSiteMenuOpen(isOpen) {
   }
   syncSurfacePanelState();
   updateMenuActiveState();
+  document.querySelectorAll('[data-mobile-nav="menu"]').forEach(button => {
+    button.setAttribute("aria-expanded", String(nextOpen));
+    button.setAttribute("aria-controls", "siteMenuPanel");
+  });
 }
 
 function normalizeMenuAction(action) {
@@ -630,6 +634,26 @@ function updateMenuActiveState() {
 
 function enhanceSiteMenuStructure() {
   if (!siteMenuPanel) return;
+  document.body.appendChild(siteMenuPanel);
+  siteMenuPanel.setAttribute("role", "dialog");
+  siteMenuPanel.setAttribute("aria-modal", "true");
+  siteMenuPanel.setAttribute("aria-label", "Site navigation");
+  if (!siteMenuPanel.querySelector(".site-menu-close")) {
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "site-menu-close";
+    close.setAttribute("aria-label", "Close menu");
+    close.textContent = "×";
+    close.addEventListener("click", () => setSiteMenuOpen(false));
+    siteMenuPanel.prepend(close);
+    siteMenuPanel.addEventListener("keydown", event => {
+      if (event.key !== "Tab") return;
+      const items = [...siteMenuPanel.querySelectorAll("button, a[href]")].filter(el => !el.disabled && el.getClientRects().length);
+      const first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    });
+  }
   const siteMenuList = siteMenuPanel.querySelector(".site-menu-list");
   if (!(siteMenuList instanceof HTMLElement)) return;
 
@@ -6819,6 +6843,11 @@ function handleSiteNavigationAction(action, trigger = null) {
 }
 
 function handleMobileBottomNavAction(action) {
+  if (action === "menu") {
+    setThemePanelOpen(false);
+    setSiteMenuOpen(!isSiteMenuOpen);
+    return;
+  }
   setSiteMenuOpen(false);
   setThemePanelOpen(false);
   if (action !== "menu") {
@@ -6836,11 +6865,6 @@ function handleMobileBottomNavAction(action) {
     setBottomNavActive("tube");
     handleSiteNavigationAction("tube");
     setMobileBottomNavActiveState();
-    return;
-  }
-
-  if (action === "menu") {
-    setMobileBottomMenuOpen(!mobileBottomMenuOpen);
     return;
   }
 
@@ -9377,10 +9401,6 @@ function bindEvents() {
   if (menuToggleBtn) {
     menuToggleBtn.dataset.coreBound = "1";
     menuToggleBtn.addEventListener("click", () => {
-      if (shouldShowMobileBottomNav() && isMobileBottomNavViewport()) {
-        handleMobileBottomNavAction("menu");
-        return;
-      }
       setThemePanelOpen(false);
       setSiteMenuOpen(!isSiteMenuOpen);
     });
@@ -9639,7 +9659,7 @@ function bindEvents() {
 
   document.addEventListener("click", (event) => {
     if (!isSiteMenuOpen || !headerSettings) return;
-    if (headerSettings.contains(event.target)) return;
+    if (headerSettings.contains(event.target) || siteMenuPanel?.contains(event.target) || event.target.closest('[data-mobile-nav="menu"]')) return;
     setSiteMenuOpen(false);
   });
 }
