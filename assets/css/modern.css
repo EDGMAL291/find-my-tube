@@ -11726,6 +11726,10 @@ html[data-theme] body[data-app-page="home"] .home-hero-dot.is-active::before {
 }
 
 /* Full-screen navigation has its own collection-room photograph. */
+html body:is([data-app-page="track-orders"], [data-app-page="stock-dashboard"]) {
+  background-image: linear-gradient(110deg, rgba(3, 17, 31, .78), rgba(3, 17, 31, .58)), url("../images/hero-lab-logistics.jpg") !important;
+  background-size: cover !important; background-position: center !important;
+}
 body.fullscreen-menu-open { overflow: hidden !important; }
 html[data-theme] body #menuToggleBtn {
   width: 52px; height: 48px; min-height: 48px; border-radius: 12px !important;
