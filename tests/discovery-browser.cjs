@@ -114,7 +114,7 @@ async function createTestPage(browser, options = {}) {
         assert.equal(await page.locator('#selectionCartBar .selection-cart-icon').count(), 0, 'Floating Tube Plan has no glyph');
         assert.equal((await page.locator('#selectionCartBar .selection-cart-label').innerText()).trim(), 'Tube Plan');
         assert.equal((await page.locator('#selectionCartCount').innerText()).trim(), '1 test');
-        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).borderTopStyle), 'none');
+        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).borderTopStyle), 'solid');
         assert.equal(await page.locator('#drawModal').isVisible(), false, 'Adding does not force open planner');
         await card.locator('summary').click();
         assert.equal(await card.locator('details').getAttribute('open'), '');
@@ -222,6 +222,10 @@ async function createTestPage(browser, options = {}) {
         assert.equal(await fbcCard.locator('.profile-tests-btn').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile action is transparent');
         await fbcCard.locator('.discovery-add').click();
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan bar is transparent');
+        assert.deepEqual(await page.locator('#selectionCartBar').evaluate(el => ({
+          style: getComputedStyle(el).borderTopStyle,
+          width: getComputedStyle(el).borderTopWidth
+        })), { style: 'solid', width: '1px' }, 'Tube Plan bar has one restrained border');
         await fbcCard.locator('.profile-tests-btn').click();
         assert.equal(await page.locator('#profileModal').isVisible(), true, 'Profile test list opens');
         await page.waitForFunction(() => getComputedStyle(document.querySelector('.container')).opacity === '0');
