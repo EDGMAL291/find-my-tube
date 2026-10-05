@@ -114,7 +114,7 @@ html[data-theme] body .draw-modal-card {
   backdrop-filter: none !important;
 }
 html[data-theme] body .draw-modal-card :is(h3, h4, p, li, .draw-selection-count, .draw-selected-chip-name, .tube-option-label) { color: var(--clinical-ink) !important; }
-html[data-theme] body .draw-modal-card :is(.draw-group-card, .draw-result-card, .draw-planner-alert, .draw-selected-chip) {
+html[data-theme] body .draw-modal-card :is(.draw-group-card, .draw-result-card, .draw-planner-alert) {
   background: var(--clinical-surface) !important; border: 1px solid var(--clinical-line) !important;
   box-shadow: none !important; border-radius: 12px !important;
 }
@@ -135,6 +135,43 @@ html[data-theme] body .draw-group-count-badge { background: var(--clinical-page)
 html[data-theme] body .draw-planner-note { white-space: pre-line; font-size: .86rem; line-height: 1.6; }
 html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-tool-btn, .draw-selected-chip-remove) { background: var(--clinical-page) !important; border: 1px solid var(--clinical-line) !important; color: var(--clinical-ink) !important; min-height: 44px; min-width: 44px; }
 html[data-theme] body .discovery-card :is(button, summary):focus-visible { outline: 3px solid var(--clinical-action); outline-offset: -3px; }
+/* Keep the planner header stable when scrolling; retire the old navy collapse effect. */
+html[data-theme] body .draw-modal-card .draw-selection-head {
+  position: sticky !important; top: 0 !important; z-index: 12;
+  justify-content: space-between !important; margin: 0 !important; padding: 0 0 8px !important;
+  background: var(--clinical-surface) !important; background-image: none !important;
+  border-bottom: 1px solid var(--clinical-line) !important; box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important; transition: none !important;
+}
+html[data-theme] body .draw-modal-card .draw-selection-head h3 {
+  max-width: none !important; opacity: 1 !important; transform: none !important; transition: none !important;
+}
+html[data-theme] body .draw-modal-card .draw-selected-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+html[data-theme] body .draw-modal-card .draw-selected-chip {
+  display: flex; justify-content: space-between; width: 100%; min-width: 0;
+  padding: 0 !important; gap: 12px; border: 0 !important; border-bottom: 1px solid var(--clinical-line) !important;
+  border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
+}
+html[data-theme] body .draw-modal-card .draw-selected-chip-name { font-size: .875rem; line-height: 1.4; font-weight: 500; overflow-wrap: anywhere; }
+html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-selected-chip-remove) {
+  width: 44px; height: 44px; flex: 0 0 44px; padding: 0 !important;
+  background: transparent !important; border: 0 !important; border-radius: 8px !important;
+  box-shadow: none !important; font-size: 1.5rem; line-height: 1;
+}
+html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-selected-chip-remove):hover { background: var(--clinical-page) !important; }
+html[data-theme] body .draw-modal-card button:focus-visible { outline: 2px solid var(--clinical-action); outline-offset: -2px; }
+/* Quiet department navigation: text rows rather than decorative icon tiles. */
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon { display: none !important; }
+html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip {
+  min-height: 48px; padding: 12px 0 !important; border: 0 !important;
+  border-bottom: 1px solid var(--clinical-line) !important; border-radius: 0 !important;
+  transform: none !important; text-align: left;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-stack { border: 0 !important; background: transparent !important; box-shadow: none !important; }
+html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-label { color: var(--clinical-ink) !important; text-shadow: none !important; filter: none !important; }
+html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-stack:last-child .group-chip { border-bottom: 0 !important; }
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::before,
+html[data-theme] body[data-app-page="find-my-tube"] .group-chip::after { display: none !important; }
 @media (max-width: 620px) {
   .discovery-open { padding: 14px 16px; }
   .discovery-body { padding: 0 16px 16px; }

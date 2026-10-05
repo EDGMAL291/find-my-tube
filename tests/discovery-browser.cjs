@@ -17,6 +17,8 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}/find-my-tube.html`);
         await page.evaluate(theme => applyTheme(theme), theme);
+        assert.equal(await page.locator('.group-chip-icon:visible').count(), 0, 'Department navigation has no decorative glyphs');
+        await page.screenshot({ path:path.join(screenshots, `browse-${width}-${theme}.png`) });
         await page.locator('#searchInput').fill('HIV');
         const card = page.locator('[data-test-name="HIV ELISA"]');
         assert.equal(await card.locator('.discovery-body').isVisible(), false);
@@ -52,6 +54,32 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         assert.match(await page.locator('#drawGroups').innerText(), /Gold\/Yellow/);
         assert.match(await page.locator('#drawPlannerNote').innerText(), /own Gold\/Yellow tube/);
         await page.screenshot({ path:path.join(screenshots, `plan-${width}-${theme}.png`) });
+        assert.equal((await page.locator('#closeDrawPlannerBtn').innerText()).trim(), '×');
+        await page.evaluate(() => {
+          ['FBC', 'Liver Function Tests (LFT)', 'HIV Viral Load', 'CD4 Count'].forEach(name => selectedTestNames.add(name));
+          refreshSelectionUi({ rerenderCards: false });
+        });
+        const rows = await page.locator('.draw-selected-chip').evaluateAll(rows => rows.map(row => ({ height:row.getBoundingClientRect().height, width:row.getBoundingClientRect().width })));
+        assert.equal(rows.length, 5);
+        assert.ok(rows.every(row => row.height <= 62), 'Selected tests must be compact rows');
+        await page.screenshot({ path:path.join(screenshots, `multi-plan-${width}-${theme}.png`) });
+        await page.locator('.draw-modal-card').evaluate(el => { el.scrollTop = 260; });
+        await page.waitForTimeout(200);
+        const header = await page.locator('.draw-selection-head').evaluate(el => ({
+          background:getComputedStyle(el).backgroundColor, image:getComputedStyle(el).backgroundImage,
+          surface:getComputedStyle(el.closest('.draw-modal-card')).backgroundColor,
+          titleOpacity:getComputedStyle(el.querySelector('h3')).opacity
+        }));
+        assert.equal(header.background, header.surface, 'Scrolled header must match the planner surface');
+        assert.equal(header.image, 'none');
+        assert.equal(header.titleOpacity, '1', 'Planner title stays visible');
+        await page.screenshot({ path:path.join(screenshots, `scrolled-plan-${width}-${theme}.png`) });
+        await page.locator('.draw-modal-card').evaluate(el => { el.scrollTop = 0; });
+        await page.locator('[aria-label="Remove FBC from Tube Plan"]').click();
+        assert.equal(await page.locator('.draw-selected-chip').count(), 4);
+        await page.evaluate(() => {
+          selectedTestNames.clear(); selectedTestNames.add('HIV ELISA'); refreshSelectionUi({ rerenderCards: false });
+        });
         await page.locator('#closeDrawPlannerBtn').click();
         await card.locator('.discovery-add').click();
         assert.equal(await page.evaluate(() => selectedTestNames.size), 0);
