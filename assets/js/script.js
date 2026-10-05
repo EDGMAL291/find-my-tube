@@ -1361,6 +1361,25 @@ const paediatricMicrotainerImageById = Object.freeze({
   "paediatric-grey-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-grey-v1.png"
 });
 
+const paediatricMicrotainerImageByGroup = Object.freeze({
+  "Gold/Yellow": paediatricMicrotainerImageById["paediatric-yellow-microtainer"],
+  Purple: paediatricMicrotainerImageById["paediatric-purple-microtainer"],
+  Gray: paediatricMicrotainerImageById["paediatric-grey-microtainer"]
+});
+
+// One photographic family is shared by search results, Tube Plan, animations,
+// and stock summaries so a tube never changes appearance between workflows.
+const adultEmptyTubeImageByGroup = Object.freeze({
+  "Gold/Yellow": "assets/images/stock-tubes/realistic-empty-tube-yellow-v4.png",
+  Purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v4.png",
+  Pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v4.png",
+  Blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v4.png",
+  Green: "assets/images/stock-tubes/realistic-empty-tube-green-v4.png",
+  Gray: "assets/images/stock-tubes/realistic-empty-tube-grey-v4.png",
+  Tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v4.png",
+  "Pearl/White": "assets/images/stock-tubes/realistic-empty-tube-pearl-v4.png"
+});
+
 function getPaediatricMicrotainerImageForItem(itemOrId) {
   const safeId = typeof itemOrId === "string"
     ? String(itemOrId || "").trim()
@@ -4910,11 +4929,23 @@ function getTubeAdditiveLabel(tubeGroup) {
 
 // Gets tube visual markup.
 function getTubeVisualMarkup(tubeGroup, sizeClass = "", options = {}) {
-  const cap = getTubeSwatchColor(tubeGroup);
   const label = escapeHtml(options.label || (tubeGroup + " collection " + (isTubeLikeCollectionGroup(tubeGroup) ? "tube" : "container")));
-  const small = isPaediatricMicrotainerVariant(options.tubeVariant);
+  const paediatricTubeImage = isPaediatricMicrotainerVariant(options.tubeVariant)
+    ? paediatricMicrotainerImageByGroup[tubeGroup] || ""
+    : "";
+
+  if (paediatricTubeImage) {
+    return '<span class="tube-photo-visual tube-photo-visual-paediatric' + sizeClass + '" role="img" aria-label="' + label + '"><img src="' + paediatricTubeImage + '" alt="" width="320" height="720" loading="lazy" decoding="async" aria-hidden="true"></span>';
+  }
+
+  const adultTubeImage = adultEmptyTubeImageByGroup[tubeGroup] || "";
+  if (adultTubeImage) {
+    return '<span class="tube-photo-visual tube-photo-visual-adult' + sizeClass + '" role="img" aria-label="' + label + '"><img src="' + adultTubeImage + '" alt="" width="320" height="720" loading="lazy" decoding="async" aria-hidden="true"></span>';
+  }
+
+  const cap = getTubeSwatchColor(tubeGroup);
   const container = !isTubeLikeCollectionGroup(tubeGroup);
-  // One geometry and palette for all blood tubes; container silhouettes remain distinct.
+  // Non-tube specimen containers retain their recognisable silhouettes.
   let body = container
     ? '<rect x="9" y="32" width="46" height="98" rx="12" fill="#e7edf0" stroke="#87969e" stroke-width="1.5"/><rect x="7" y="22" width="50" height="19" rx="4" fill="' + cap + '" stroke="#64727a"/>'
     : '<path d="M17 30h30v103a15 15 0 0 1-30 0Z" fill="#e7edf0" stroke="#87969e" stroke-width="1.5"/><path d="M21 39v90" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="12" y="10" width="40" height="28" rx="5" fill="' + cap + '" stroke="#64727a" stroke-width="1.2"/><path d="M18 15v17m7-17v17m7-17v17m7-17v17m7-17v17" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>';
@@ -4923,7 +4954,7 @@ function getTubeVisualMarkup(tubeGroup, sizeClass = "", options = {}) {
   } else if (tubeGroup === "Blood Culture Bottles") {
     body = '<path d="M23 25h18v22l12 16v71a10 10 0 0 1-10 10H21a10 10 0 0 1-10-10V63l12-16Z" fill="#e7edf0" stroke="#87969e" stroke-width="1.5"/><rect x="19" y="12" width="26" height="18" rx="4" fill="' + cap + '" stroke="#87969e"/>';
   }
-  return '<svg class="collection-illustration' + sizeClass + (small ? ' collection-illustration-paediatric' : '') + '" viewBox="0 0 64 160" width="48" height="120" role="img" aria-label="' + label + '" focusable="false"><title>' + label + '</title>' + body
+  return '<svg class="collection-illustration' + sizeClass + '" viewBox="0 0 64 160" width="48" height="120" role="img" aria-label="' + label + '" focusable="false"><title>' + label + '</title>' + body
     + '<rect x="21" y="53" width="22" height="54" rx="3" fill="#fff" stroke="#d2dbe0"/><path d="M25 63h14m-14 6h10m-10 22v9m3-9v9m3-9v9m4-9v9m3-9v9" stroke="#87969e" stroke-width="1.2"/>'
     + (options.fill ? '<path d="M20 116h24v17a12 12 0 0 1-24 0Z" fill="#9b444b" opacity=".8"/>' : '') + '</svg>';
 }

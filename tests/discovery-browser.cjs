@@ -89,8 +89,11 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
         assert.match(await page.locator('#drawSelectedList').innerText(), /HIV ELISA/);
         assert.equal(await page.locator('#drawGroups .draw-group-test-list').count(), 0);
-        const tubeSize = await page.locator('#drawGroups .collection-illustration').first().boundingBox();
-        assert.ok(Math.abs(tubeSize.width - 25.2) < 1 && Math.abs(tubeSize.height - 63) < 1, 'Planner tube is 40% smaller');
+        const plannerTube = page.locator('#drawGroups .tube-photo-visual-adult').first();
+        const tubeSize = await plannerTube.boundingBox();
+        assert.ok(Math.abs(tubeSize.width - 25.2) < 1 && Math.abs(tubeSize.height - 57.6) < 1, 'Planner tube is 40% smaller');
+        assert.match(await plannerTube.locator('img').getAttribute('src'), /realistic-empty-tube-yellow-v4\.png$/, 'Planner uses realistic tube photography');
+        assert.match(await plannerTube.getAttribute('aria-label'), /Gold\/Yellow collection tube/);
         assert.match(await page.locator('#drawGroups').innerText(), /Gold\/Yellow/);
         assert.match(await page.locator('#drawPlannerNote').innerText(), /own Gold\/Yellow tube/);
         await page.screenshot({ path:path.join(screenshots, `plan-${width}-${theme}.png`) });
@@ -137,7 +140,8 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
               return records.every(t => resolved.items.some(item => item.tests.includes(t.name)) || resolved.manual.includes(t.name));
             }),
             records: enrichedTests.map(t => ({name:t.name, groups:getTubeGroups(t.tubeColor), plan:plan([t.name]).plan})),
-            variantMarkup: [...new Set(enrichedTests.flatMap(t=>getTubeGroups(t.tubeColor)))].map(g=>getTubeVisualMarkup(g)),
+            variantMarkup: [...new Set(enrichedTests.flatMap(t=>getTubeGroups(t.tubeColor)))].map(group=>({group, markup:getTubeVisualMarkup(group)})),
+            paediatricMarkup: getTubeVisualMarkup('Purple', '', {tubeVariant:'Paediatric microtainer'}),
             missing: getDefaultPlanItems([{name:'Unmapped regression fixture'}])
           };
         });
@@ -155,7 +159,14 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
           assert.ok(record.groups.length ? record.plan.items.some(i=>i.tests.includes(record.name)) : record.plan.manual.includes(record.name), `${record.name} lost from plan`);
         }
         assert.deepEqual(audit.missing.manual, ['Unmapped regression fixture']);
-        assert.ok(audit.variantMarkup.every(s=>s.includes('<svg') && s.includes('aria-label=') && !s.includes('<img')));
+        const photographicGroups = new Set(['Gold/Yellow', 'Purple', 'Pink', 'Blue', 'Green', 'Gray', 'Tan', 'Pearl/White']);
+        assert.ok(audit.variantMarkup.every(({group, markup}) => markup.includes('aria-label=') && (
+          photographicGroups.has(group)
+            ? markup.includes('tube-photo-visual-adult') && markup.includes('<img') && markup.includes('realistic-empty-tube-')
+            : markup.includes('<svg') && !markup.includes('<img')
+        )), 'Tube groups use photography while non-tube collections keep accessible silhouettes');
+        assert.match(audit.paediatricMarkup, /tube-photo-visual-paediatric/);
+        assert.match(audit.paediatricMarkup, /realistic-empty-paediatric-microtainer-purple-v1\.png/);
         // HIV viral-load specimen is visible, not merely present in data.
         await page.locator('[data-test-name="HIV Viral Load"] .discovery-open').click();
         assert.match(await page.locator('[data-test-name="HIV Viral Load"]').innerText(), /EDTA plasma/);

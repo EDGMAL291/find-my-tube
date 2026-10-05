@@ -122,6 +122,9 @@ html[data-theme] body .collection-illustration { display: inline-block; width: 4
 html[data-theme] body .collection-illustration.tube-icon-mini { width: 22px; height: 55px; }
 html[data-theme] body .collection-illustration.tube-icon-sm { width: 30px; height: 75px; }
 html[data-theme] body .collection-illustration-paediatric { height: 78px; }
+/* Photographic tubes match the former discovery scale while preserving their natural proportions. */
+html[data-theme] body .discovery-tube .tube-photo-visual-adult { width: 42px; height: 96px; flex-basis: 42px; }
+html[data-theme] body .discovery-tube .tube-photo-visual-paediatric { width: 42px; height: 78px; flex-basis: 42px; }
 html[data-theme] body .draw-modal-card {
   background: var(--clinical-surface) !important; color: var(--clinical-ink) !important;
   border: 1px solid var(--clinical-line) !important; border-radius: var(--fmt-card-radius) !important;
@@ -145,9 +148,9 @@ html[data-theme] body .draw-group-main h3 { font-size: 1.1rem; flex: 1; }
 html[data-theme] body .draw-order-step { background: var(--clinical-page) !important; color: var(--clinical-muted) !important; border: 1px solid var(--clinical-line) !important; }
 html[data-theme] body[data-app-page="find-my-tube"] .discovery-card .profile-tests-btn { min-height: 44px; background: transparent !important; color: #d9ffff !important; border: 1px solid #8bd6d3 !important; border-radius: 8px; }
 html[data-theme] body .draw-group-count-badge { background: var(--clinical-page) !important; color: var(--clinical-ink) !important; border: 1px solid var(--clinical-line) !important; font-size: 1.2rem; }
-/* Planner illustrations are 60% of the discovery size; leave search cards unchanged. */
-html[data-theme] body .draw-group-card .collection-illustration { width: 25.2px; height: 63px; }
-html[data-theme] body .draw-group-card .collection-illustration-paediatric { height: 46.8px; }
+/* Planner visuals stay 40% smaller than their discovery counterparts. */
+html[data-theme] body .draw-group-card :is(.collection-illustration, .tube-photo-visual-adult) { width: 25.2px; height: 57.6px; flex-basis: 25.2px; }
+html[data-theme] body .draw-group-card :is(.collection-illustration-paediatric, .tube-photo-visual-paediatric) { width: 25.2px; height: 46.8px; flex-basis: 25.2px; }
 html[data-theme] body .draw-planner-note { white-space: pre-line; font-size: .86rem; line-height: 1.6; }
 html[data-theme] body .draw-modal-card :is(.draw-close-btn, .draw-tool-btn, .draw-selected-chip-remove) { background: var(--clinical-page) !important; border: 1px solid var(--clinical-line) !important; color: var(--clinical-ink) !important; min-height: 44px; min-width: 44px; }
 html[data-theme] body .discovery-card :is(button, summary):focus-visible { outline: 3px solid var(--clinical-action); outline-offset: -3px; }
