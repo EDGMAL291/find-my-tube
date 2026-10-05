@@ -37,3 +37,14 @@ test("cache-busted shell versions are synchronized", () => {
     assert.ok(worker.includes(versioned), `${asset} version must match the service worker`);
   }
 });
+
+test("service worker registrations share the current cache-busting URL", () => {
+  const pages = ["index.html", "find-my-tube.html", "order-stock.html", "stock-dashboard.html"];
+  const registrations = pages.map((page) => {
+    const html = fs.readFileSync(path.join(root, page), "utf8");
+    const scriptUrl = html.match(/service-worker\.js\?v=[^"']+/)?.[0];
+    assert.ok(scriptUrl, `${page} must register a versioned service worker`);
+    return scriptUrl;
+  });
+  assert.equal(new Set(registrations).size, 1, `Service worker registration versions differ: ${registrations.join(", ")}`);
+});

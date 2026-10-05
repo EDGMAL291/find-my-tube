@@ -170,6 +170,7 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
         assert.equal(await page.locator('#profileModal').isVisible(), true, 'Profile test list opens');
         assert.equal((await page.locator('#closeProfileModalBtn').innerText()).trim(), '×');
         assert.equal(await page.locator('#profileModalList').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile list has no grey panel');
+        assert.equal(await page.locator('#profileModalList').evaluate(el => getComputedStyle(el).borderTopWidth), '0px', 'Profile list has no nested outline');
         assert.ok(await page.locator('#profileModalList li').evaluateAll(items => items.every(el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)')), 'Profile rows have no grey tiles');
         await page.locator('#closeProfileModalBtn').click();
         assert.deepEqual(errors, []);
