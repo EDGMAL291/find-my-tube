@@ -298,25 +298,13 @@ const isStockDashboardPage = currentAppPage === "stock-dashboard";
 const isTrackOrdersPage = currentAppPage === "track-orders";
 const MENU_MAIN_ACTION_ORDER = ["home", "tube", "find-my-test", "draw", "collection-desk"];
 const MENU_STOCK_ACTION_ORDER = ["stock", "stock-dashboard", "track-orders"];
-const MENU_SECONDARY_ACTION_ORDER = ["settings", "about"];
+const MENU_SECONDARY_ACTION_ORDER = ["about"];
 const MENU_ACTION_ORDER = [...MENU_MAIN_ACTION_ORDER, ...MENU_STOCK_ACTION_ORDER, ...MENU_SECONDARY_ACTION_ORDER];
 const MENU_ACTION_ORDER_INDEX = MENU_ACTION_ORDER.reduce((acc, action, index) => {
   acc[action] = index;
   return acc;
 }, Object.create(null));
 const SITE_MENU_CLOSE_DURATION_MS = 190;
-const MENU_ACTION_ICONS = Object.freeze({
-  home: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  tube: '<svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v8.6c0 1.7.9 3.3 2.4 4.2l.3.2a5 5 0 0 1 2.3 4.2V21H9v-.8a5 5 0 0 1 2.3-4.2l.3-.2A5 5 0 0 0 14 11.6V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  "find-my-test": '<svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>',
-  draw: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 16c4.5 0 4.5-8 9-8s4.5 8 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="16" r="1.4" stroke="currentColor" stroke-width="1.8"/><circle cx="13" cy="8" r="1.4" stroke="currentColor" stroke-width="1.8"/><circle cx="22" cy="16" r="1.4" stroke="currentColor" stroke-width="1.8"/></svg>',
-  "collection-desk": '<svg viewBox="0 0 24 24" fill="none"><path d="M8 4h8M9 3v3h6V3M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="m8 11 1.6 1.6L13 9.2M8 16h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  stock: '<svg viewBox="0 0 24 24" fill="none"><path d="M3.8 8.2 12 4l8.2 4.2M3.8 8.2V16L12 20l8.2-4V8.2M3.8 8.2 12 12.4m8.2-4.2L12 12.4m0 0V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  "stock-dashboard": '<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16M6 9h5v8H6zM14 9h4v3h-4zM14 15h4v2h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  "track-orders": '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h10v8H5zM15 10h3.5l2 2.4V15H15zM7.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4ZM17.5 18a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  settings: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 13.2v-2.4l2-.7.6-1.4-.9-1.9 1.7-1.7 1.9.9 1.4-.6.7-2h2.4l.7 2 1.4.6 1.9-.9 1.7 1.7-.9 1.9.6 1.4 2 .7v2.4l-2 .7-.6 1.4.9 1.9-1.7 1.7-1.9-.9-1.4.6-.7 2h-2.4l-.7-2-1.4-.6-1.9.9-1.7-1.7.9-1.9-.6-1.4-2-.7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
-  about: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
-});
 const MENU_ACTION_META = Object.freeze({
   home: "Start screen and quick actions",
   tube: "Match tests to tube colours",
@@ -326,7 +314,6 @@ const MENU_ACTION_META = Object.freeze({
   stock: "Request tubes and consumables",
   "stock-dashboard": "Manage requests and stock levels",
   "track-orders": "Check active request status",
-  settings: "Theme and display preferences",
   about: "Reference use and app information"
 });
 const MOBILE_BOTTOM_NAV_BREAKPOINT = 860;
@@ -570,10 +557,6 @@ function normalizeMenuAction(action) {
   return safeAction;
 }
 
-function getMenuActionIconSvg(action) {
-  return MENU_ACTION_ICONS[normalizeMenuAction(action)] || MENU_ACTION_ICONS.home;
-}
-
 function enhanceMenuButton(button, actionAttribute) {
   if (!(button instanceof HTMLElement) || button.dataset.menuEnhanced === "true") return;
   const action = normalizeMenuAction(button.getAttribute(actionAttribute));
@@ -581,7 +564,6 @@ function enhanceMenuButton(button, actionAttribute) {
   const meta = MENU_ACTION_META[action] || "";
   button.dataset.menuEnhanced = "true";
   button.innerHTML = `
-    <span class="menu-action-icon" aria-hidden="true">${getMenuActionIconSvg(action)}</span>
     <span class="menu-action-copy">
       <span class="menu-action-label">${label}</span>
       ${meta ? `<span class="menu-action-meta">${meta}</span>` : ""}
@@ -590,7 +572,6 @@ function enhanceMenuButton(button, actionAttribute) {
 }
 
 function getCurrentPageMenuAction() {
-  if (isThemePanelOpen) return "settings";
   if (document.body.classList.contains("is-home-lab-desk-open")) return "collection-desk";
   if (isTrackOrdersPage) return "track-orders";
   if (isStockDashboardPage) return "stock-dashboard";
@@ -717,6 +698,23 @@ function enhanceSiteMenuStructure() {
     secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
     siteMenuList.appendChild(secondaryGroup);
   }
+
+  const contactGroup = document.createElement("div");
+  contactGroup.className = "site-menu-group site-menu-contact";
+  contactGroup.dataset.group = "contact";
+  contactGroup.setAttribute("role", "none");
+  contactGroup.innerHTML = `
+    <p class="site-menu-group-title" role="presentation">Contact</p>
+    <a class="site-menu-contact-link" href="tel:0217996290" role="menuitem">
+      <span>Call laboratory</span>
+      <small>021 799 6290</small>
+    </a>
+    <a class="site-menu-contact-link" href="https://wa.me/27606286757?text=Hi%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20need%20help." target="_blank" rel="noopener noreferrer" role="menuitem">
+      <span>WhatsApp support</span>
+      <small>+27 60 628 6757</small>
+    </a>
+  `;
+  siteMenuList.appendChild(contactGroup);
 
   [...mainButtons, ...stockButtons, ...secondaryButtons].forEach((button, index) => {
     button.style.setProperty("--menu-item-index", String(index));

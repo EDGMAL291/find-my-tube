@@ -11757,17 +11757,33 @@ html[data-theme] body #siteMenuPanel .site-menu-close {
   background: transparent; color: #fff; font-size: 32px; cursor: pointer;
 }
 html[data-theme] body #siteMenuPanel .site-menu-title { color: #fff; font-size: 1.6rem; margin-bottom: 24px; }
-html[data-theme] body #siteMenuPanel .site-menu-list { display: grid; gap: 24px; background: transparent !important; border: 0; backdrop-filter: none !important; }
-html[data-theme] body #siteMenuPanel .site-menu-group { padding: 0; border: 0; background: transparent; }
-html[data-theme] body #siteMenuPanel .site-menu-group-title { color: #bacbd1; font-size: .7rem; letter-spacing: .1em; }
+html[data-theme] body #siteMenuPanel .site-menu-list { display: grid; gap: 30px; background: transparent !important; border: 0; backdrop-filter: none !important; }
+html[data-theme] body #siteMenuPanel .site-menu-group { display: grid; gap: 0; padding: 0; border: 0; background: transparent; }
+html[data-theme] body #siteMenuPanel .site-menu-group-title { margin: 0 0 8px; color: #bacbd1; font-size: .7rem; letter-spacing: .1em; }
 html[data-theme] body #siteMenuPanel .site-menu-link {
-  min-height: 48px; padding: 10px 0; background: transparent !important; border: 0 !important;
+  display: block; width: 100%; min-height: 64px; padding: 12px 0; text-align: left;
+  background: transparent !important; border: 0 !important; border-bottom: 1px solid rgba(255,255,255,.18) !important;
   color: #fff !important; font-size: 1.15rem; box-shadow: none !important;
   opacity: 1 !important; transform: none !important; animation: none !important;
 }
-html[data-theme] body #siteMenuPanel .site-menu-link::before { display: none !important; }
-html[data-theme] body #siteMenuPanel button:focus-visible { outline: 2px solid #a7dedc; outline-offset: 3px; }
-@media (min-width: 720px) { html[data-theme] body #siteMenuPanel .site-menu-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+html[data-theme] body #siteMenuPanel .site-menu-link:last-child { border-bottom-color: rgba(255,255,255,.18) !important; }
+html[data-theme] body #siteMenuPanel .site-menu-link::before,
+html[data-theme] body #siteMenuPanel .site-menu-link::after,
+html[data-theme] body #siteMenuPanel .menu-action-icon { display: none !important; content: none !important; }
+html[data-theme] body #siteMenuPanel .menu-action-copy { display: grid; gap: 4px; }
+html[data-theme] body #siteMenuPanel .menu-action-label { font-size: 1.08rem; line-height: 1.25; }
+html[data-theme] body #siteMenuPanel .menu-action-meta { color: rgba(235,244,246,.72); font-size: .78rem; line-height: 1.4; }
+html[data-theme] body #siteMenuPanel .site-menu-link:is(:hover,:focus-visible,.is-active,[aria-current="page"]) {
+  background: transparent !important; color: #fff !important; box-shadow: none !important;
+}
+html[data-theme] body #siteMenuPanel .site-menu-contact-link {
+  display: grid; gap: 4px; min-height: 64px; padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,.18); color: #fff; text-decoration: none;
+}
+html[data-theme] body #siteMenuPanel .site-menu-contact-link span { font-size: 1.08rem; font-weight: 600; }
+html[data-theme] body #siteMenuPanel .site-menu-contact-link small { color: rgba(235,244,246,.72); font-size: .78rem; }
+html[data-theme] body #siteMenuPanel :is(button,a):focus-visible { outline: 2px solid #a7dedc; outline-offset: 3px; }
+@media (min-width: 720px) { html[data-theme] body #siteMenuPanel .site-menu-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 64px; } }
 @media (prefers-reduced-motion: reduce) { html[data-theme] body #siteMenuPanel { transition: none !important; } }
 
 /* Shared surface geometry: content cards are square, controls remain distinct.
