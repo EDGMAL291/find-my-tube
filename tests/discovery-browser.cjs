@@ -309,7 +309,7 @@ async function createTestPage(browser, options = {}) {
         panelImage:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundImage,
         input:getComputedStyle(document.querySelector('#clinicalSymptomsInput')).backgroundColor
       }));
-      assert.match(initialVisual.background, /hero-lab-analyser/, `Find My Test photograph missing at ${width}`);
+      assert.match(initialVisual.background, /find-my-tube-lab-overview/, `Find My Test home-slide photograph missing at ${width}`);
       assert.equal(initialVisual.position, 'fixed', 'Find My Test photograph must stay still while scrolling');
       assert.equal(initialVisual.panel, 'rgba(255, 255, 255, 0.1)', 'Find My Test form uses 10% frost');
       assert.equal(initialVisual.panelImage, 'none', 'Find My Test form does not cover the photograph');
@@ -385,6 +385,12 @@ async function createTestPage(browser, options = {}) {
       const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).backgroundColor));
       assert.ok(frost.every(color=>color === 'rgba(255, 255, 255, 0.1)'), `${route} inconsistent card frost: ${frost}`);
       if(route === 'order-stock.html') {
+        const stockBackdrop = await page.evaluate(() => ({
+          image:getComputedStyle(document.body, '::before').backgroundImage,
+          position:getComputedStyle(document.body, '::before').position
+        }));
+        assert.match(stockBackdrop.image, /find-my-tube-lab-overview/, 'Order My Stock uses its home-slide photograph');
+        assert.equal(stockBackdrop.position, 'fixed', 'Order My Stock photograph stays still while scrolling');
         assert.match(await page.locator('body').innerText(), /22 of 22 stock items/);
         await page.locator('#stockCatalogSearch').fill('vacutainer');
         assert.deepEqual(

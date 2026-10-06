@@ -12129,14 +12129,48 @@ html body[data-app-page="home"].find-my-test-page::before {
   z-index: -1 !important;
   display: block !important;
   background:
-    linear-gradient(90deg, rgba(3, 17, 31, .54), rgba(3, 17, 31, .30) 58%, rgba(3, 17, 31, .08)),
-    url("../images/hero-lab-analyser.jpg") 68% center / cover no-repeat !important;
+    linear-gradient(90deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38) 58%, rgba(3, 17, 31, .12)),
+    url("../images/find-my-tube-lab-overview.jpg") 8% center / cover no-repeat !important;
   border: 0 !important;
   border-radius: 0 !important;
   opacity: 1 !important;
   transform: none !important;
   filter: none !important;
   pointer-events: none;
+}
+
+/* Order My Stock uses the exact warm tube-rack view from its home slide. */
+html body[data-app-page="stock-order"] {
+  min-height: 100lvh;
+  isolation: isolate;
+  background: transparent !important;
+}
+
+html body[data-app-page][data-app-page="stock-order"]::before {
+  content: "";
+  position: fixed !important;
+  inset: auto !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100lvh !important;
+  min-height: 100vh !important;
+  z-index: -1 !important;
+  display: block !important;
+  background:
+    linear-gradient(90deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .40) 58%, rgba(3, 17, 31, .14)),
+    url("../images/find-my-tube-lab-overview.jpg") 92% center / cover no-repeat !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  pointer-events: none;
+}
+
+html body[data-app-page="stock-order"] :is(.container, .header, .stock-order-panel) {
+  background-color: transparent !important;
+  background-image: none !important;
 }
 
 html body[data-app-page="home"].find-my-test-page :is(.container, .header, .clinical-workspace-intro) {
@@ -12198,8 +12232,14 @@ html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item:is(:h
 @media (max-width: 620px) {
   html body[data-app-page="home"].find-my-test-page::before {
     background:
-      linear-gradient(180deg, rgba(3, 17, 31, .28), rgba(3, 17, 31, .38) 52%, rgba(3, 17, 31, .50)),
-      url("../images/hero-lab-analyser.jpg") 72% center / cover no-repeat !important;
+      linear-gradient(180deg, rgba(3, 17, 31, .38), rgba(3, 17, 31, .48) 52%, rgba(3, 17, 31, .62)),
+      url("../images/find-my-tube-lab-overview.jpg") 8% center / cover no-repeat !important;
+  }
+
+  html body[data-app-page][data-app-page="stock-order"]::before {
+    background:
+      linear-gradient(180deg, rgba(38, 26, 14, .30), rgba(3, 17, 31, .46) 52%, rgba(3, 17, 31, .64)),
+      url("../images/find-my-tube-lab-overview.jpg") 82% center / cover no-repeat !important;
   }
 }
 
