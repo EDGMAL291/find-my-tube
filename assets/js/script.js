@@ -494,6 +494,16 @@ function setThemePanelOpen(isOpen) {
   updateMenuActiveState();
 }
 
+function syncSiteMenuClosePosition() {
+  if (!siteMenuPanel || !menuToggleBtn) return;
+  const rect = menuToggleBtn.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  siteMenuPanel.style.setProperty("--site-menu-close-top", `${Math.max(0, rect.top)}px`);
+  siteMenuPanel.style.setProperty("--site-menu-close-right", `${Math.max(0, window.innerWidth - rect.right)}px`);
+  siteMenuPanel.style.setProperty("--site-menu-close-width", `${rect.width}px`);
+  siteMenuPanel.style.setProperty("--site-menu-close-height", `${rect.height}px`);
+}
+
 // Sets site menu open state.
 function setSiteMenuOpen(isOpen) {
   const nextOpen = Boolean(isOpen);
@@ -505,10 +515,12 @@ function setSiteMenuOpen(isOpen) {
 
   if (siteMenuPanel) {
     if (nextOpen) {
+      syncSiteMenuClosePosition();
       siteMenuPanel.hidden = false;
       siteMenuPanel.classList.remove("is-closing");
       window.requestAnimationFrame(() => {
         if (!isSiteMenuOpen) return;
+        syncSiteMenuClosePosition();
         siteMenuPanel?.classList.add("is-open");
         siteMenuPanel.querySelector(".site-menu-close")?.focus({ preventScroll: true });
       });
@@ -9703,6 +9715,9 @@ function updateFindMyTubePublicApi() {
 }
 
 enhanceSiteMenuStructure();
+window.addEventListener("resize", () => {
+  if (isSiteMenuOpen) syncSiteMenuClosePosition();
+}, { passive: true });
 initTheme();
 updateFindMyTubePublicApi();
 renderFactsCarousel();

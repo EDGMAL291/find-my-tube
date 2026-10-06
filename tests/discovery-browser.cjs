@@ -52,8 +52,19 @@ async function createTestPage(browser, options = {}) {
           middleOpacity: getComputedStyle(el.querySelector('.header-menu-icon path:nth-child(2)')).opacity
         }));
         assert.deepEqual(hamburger, { background:'rgba(0, 0, 0, 0)', border:'none', paths:3, middleOpacity:'1' });
+        const menuToggleBox = await page.locator('#menuToggleBtn').boundingBox();
         await page.locator('#menuToggleBtn').click();
         await page.waitForTimeout(250);
+        const menuCloseBox = await page.locator('#siteMenuPanel .site-menu-close').boundingBox();
+        assert.ok(Math.abs(menuCloseBox.x - menuToggleBox.x) < 1, 'Menu close aligns horizontally with hamburger');
+        assert.ok(Math.abs(menuCloseBox.y - menuToggleBox.y) < 1, 'Menu close aligns vertically with hamburger');
+        assert.ok(Math.abs(menuCloseBox.width - menuToggleBox.width) < 1 && Math.abs(menuCloseBox.height - menuToggleBox.height) < 1, 'Menu close preserves the hamburger hit target');
+        const menuCloseVisual = await page.locator('#siteMenuPanel .site-menu-close').evaluate(el => ({
+          border:getComputedStyle(el).borderTopStyle,
+          background:getComputedStyle(el).backgroundColor,
+          radius:getComputedStyle(el).borderRadius
+        }));
+        assert.deepEqual(menuCloseVisual, {border:'none', background:'rgba(0, 0, 0, 0)', radius:'0px'});
         assert.equal(await page.locator('#siteMenuPanel .menu-action-icon').count(), 0, 'Menu has no glyphs');
         assert.equal(await page.locator('#siteMenuPanel .menu-action-meta').count(), 0, 'Menu has no descriptive subtitles');
         assert.equal(await page.locator('#siteMenuPanel [data-menu-action="settings"]').count(), 0, 'Non-functional Settings entry is removed');

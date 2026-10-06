@@ -11766,9 +11766,22 @@ html[data-theme] body #siteMenuPanel.is-open { opacity: 1; transform: none !impo
 html[data-theme] body #siteMenuPanel::before,
 html[data-theme] body #siteMenuPanel::after { display: none !important; }
 html[data-theme] body #siteMenuPanel .site-menu-close {
-  position: absolute; top: max(16px, env(safe-area-inset-top)); right: 20px;
-  width: 48px; height: 48px; border: 1px solid #ffffff60; border-radius: 12px;
-  background: transparent; color: #fff; font-size: 32px; cursor: pointer;
+  position: fixed !important;
+  top: var(--site-menu-close-top, max(16px, env(safe-area-inset-top))) !important;
+  right: var(--site-menu-close-right, 20px) !important;
+  width: var(--site-menu-close-width, 48px) !important;
+  height: var(--site-menu-close-height, 48px) !important;
+  min-width: 0 !important; min-height: 0 !important; padding: 0 !important;
+  display: grid; place-items: center;
+  border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; color: #fff; box-shadow: none !important;
+  font: 400 32px/1 Arial, sans-serif; cursor: pointer;
+}
+html[data-theme] body #siteMenuPanel .site-menu-close:is(:hover, :active) {
+  border: 0 !important; background: transparent !important; color: #fff !important; box-shadow: none !important;
+}
+html[data-theme] body #siteMenuPanel .site-menu-close:focus-visible {
+  outline: 2px solid #a7dedc; outline-offset: 2px;
 }
 html[data-theme] body #siteMenuPanel .site-menu-title { color: #fff; font-size: 1.6rem; margin-bottom: 24px; }
 html[data-theme] body #siteMenuPanel .site-menu-list { display: grid; gap: 30px; background: transparent !important; border: 0; backdrop-filter: none !important; }
