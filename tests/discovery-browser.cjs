@@ -348,7 +348,15 @@ async function createTestPage(browser, options = {}) {
       assert.ok(radii.every(radius=>radius==='0px'), `${route} inconsistent card corners: ${radii}`);
       const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).backgroundColor));
       assert.ok(frost.every(color=>color === 'rgba(255, 255, 255, 0.1)'), `${route} inconsistent card frost: ${frost}`);
-      if(route === 'order-stock.html') assert.match(await page.locator('body').innerText(), /20 of 20 stock items/);
+      if(route === 'order-stock.html') {
+        assert.match(await page.locator('body').innerText(), /22 of 22 stock items/);
+        await page.locator('#stockCatalogSearch').fill('vacutainer');
+        assert.deepEqual(
+          await page.locator('.stock-order-item-card:visible').evaluateAll(cards => cards.map(card => card.dataset.stockItem).sort()),
+          ['vacutainer-needle-black', 'vacutainer-needle-green']
+        );
+        assert.equal(await page.locator('.stock-item-glyph-needle:visible').count(), 2);
+      }
       await page.screenshot({path:path.join(screenshots, route.replace('.html','.png'))});
       await page.close();
     }

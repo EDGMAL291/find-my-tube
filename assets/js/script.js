@@ -1353,6 +1353,11 @@ const stockBloodCultureBottleMetaById = Object.freeze({
   })
 });
 
+const stockVacutainerNeedleMetaById = Object.freeze({
+  "vacutainer-needle-green": Object.freeze({ accentColor: "#18a66f" }),
+  "vacutainer-needle-black": Object.freeze({ accentColor: "#20262d" })
+});
+
 const paediatricMicrotainerImageById = Object.freeze({
   "paediatric-yellow-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-yellow-v1.png",
   "paediatric-purple-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-purple-v1.png",
@@ -1553,6 +1558,21 @@ function getStockItemGlyphMarkup(item, options = {}) {
     return `
       <span class="stock-item-glyph stock-item-glyph-blood-culture${classSuffix}" style="--stock-item-glyph-color:${safeAccentColor};--stock-item-glyph-bg:${safeAccentSoft};" aria-hidden="true">
         ${getBloodCultureBottleGlyphSvg()}
+      </span>
+    `;
+  }
+
+  const needleMeta = stockVacutainerNeedleMetaById[String(item?.id || "").trim()];
+  if (needleMeta) {
+    const safeAccentColor = escapeHtml(needleMeta.accentColor);
+    return `
+      <span class="stock-item-glyph stock-item-glyph-supply stock-item-glyph-needle${classSuffix}" style="--stock-needle-color:${safeAccentColor};" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" focusable="false">
+          <path class="stock-needle-metal" d="M16 2v11M16 21v8" />
+          <path class="stock-needle-tip" d="m16 2 1.6 3.2H16" />
+          <rect class="stock-needle-hub" x="10.5" y="12.5" width="11" height="9" rx="2" />
+          <path class="stock-needle-hub-detail" d="M12.5 16h7M13 19h6" />
+        </svg>
       </span>
     `;
   }
@@ -2539,7 +2559,7 @@ function renderStockOrderItems() {
         : "Each";
 
       return `
-      <article class="stock-order-card stock-order-item-card${paediatricTubeImage ? " stock-order-tube-card stock-order-paediatric-tube-card" : ""}" data-stock-item="${item.id}" data-stock-expanded="false"${paediatricTubeAccent ? ` style="--tube-cap-color:${escapeHtml(paediatricTubeAccent)};"` : ""}>
+      <article class="stock-order-card stock-order-item-card${paediatricTubeImage ? " stock-order-tube-card stock-order-paediatric-tube-card" : ""}" data-stock-item="${item.id}" data-stock-search="${escapeHtml(item.searchTerms || "")}" data-stock-expanded="false"${paediatricTubeAccent ? ` style="--tube-cap-color:${escapeHtml(paediatricTubeAccent)};"` : ""}>
         <button
           type="button"
           class="stock-order-item-trigger"

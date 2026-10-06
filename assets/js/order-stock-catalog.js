@@ -45,7 +45,8 @@
     let shown = 0;
 
     cards.forEach((card) => {
-      const searchableText = `${getCardKey(card)} ${String(card.textContent || "")}`.toLowerCase();
+      const searchTerms = String(card.getAttribute("data-stock-search") || "");
+      const searchableText = `${getCardKey(card)} ${searchTerms} ${String(card.textContent || "")}`.toLowerCase();
       const matchesSearch = !query || searchableText.includes(query);
       const matchesFilter = activeFilter === "all"
         || (activeFilter === "selected" ? isSelected(card) : getCardCategory(card) === activeFilter);

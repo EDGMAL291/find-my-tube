@@ -11695,6 +11695,31 @@ html[data-theme] body .stock-item-glyph-supply {
   border: 0;
 }
 html[data-theme] body .stock-item-glyph-supply svg { width: 32px; height: 32px; }
+html[data-theme] body .stock-item-glyph-needle {
+  color: rgba(235, 245, 247, .9);
+}
+html[data-theme] body .stock-item-glyph-needle svg {
+  width: 28px;
+  height: 38px;
+  overflow: visible;
+}
+html[data-theme] body .stock-item-glyph-needle .stock-needle-metal,
+html[data-theme] body .stock-item-glyph-needle .stock-needle-tip {
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+html[data-theme] body .stock-item-glyph-needle .stock-needle-hub {
+  fill: var(--stock-needle-color);
+  stroke: rgba(255, 255, 255, .72);
+  stroke-width: 1;
+}
+html[data-theme] body .stock-item-glyph-needle .stock-needle-hub-detail {
+  stroke: rgba(255, 255, 255, .74);
+  stroke-width: .8;
+  stroke-linecap: round;
+}
 
 /* Accessibility baseline: clear focus, practical touch targets, and concise field help. */
 html[data-theme] body :where(a, button, input, select, textarea):focus-visible {

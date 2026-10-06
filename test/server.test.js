@@ -11,6 +11,7 @@ const {
   validateStockRequestItems,
   validateStockReceiptPayload
 } = require("../server");
+const stockCatalog = require("../assets/js/stock-catalog-data.js");
 
 test("server derives tray inventory units from the canonical catalogue", () => {
   const payload = sanitizeStockRequestPayload({
@@ -47,6 +48,22 @@ test("receipt validation and normalization use catalogue packet sizes", () => {
   assert.equal(payload.items[0].packetSize, 50);
   assert.equal(payload.items[0].inventoryUnits, 100);
   assert.equal(payload.totalReceivedQuantity, 100);
+});
+
+test("green and black Vacutainer needles are canonical orderable stock items", () => {
+  const greenNeedle = stockCatalog.getItem("vacutainer-needle-green");
+  const blackNeedle = stockCatalog.getItem("vacutainer-needle-black");
+  assert.equal(greenNeedle.label, "Vacutainer needle (Green)");
+  assert.equal(blackNeedle.label, "Vacutainer needle (Black)");
+  assert.equal(greenNeedle.unitType, "each");
+  assert.equal(blackNeedle.unitType, "each");
+  assert.equal(validateStockRequestItems([{ id: greenNeedle.id, quantity: 10 }, { id: blackNeedle.id, quantity: 10 }]), "");
+  const payload = sanitizeStockRequestPayload({ items: [
+    { id: greenNeedle.id, label: "Spoofed", quantity: 2 },
+    { id: blackNeedle.id, label: "Spoofed", quantity: 3 }
+  ] });
+  assert.deepEqual(payload.items.map((item) => item.label), [greenNeedle.label, blackNeedle.label]);
+  assert.equal(payload.totalRequestedQuantity, 5);
 });
 
 test("order status transitions preserve the clinical work queue", () => {

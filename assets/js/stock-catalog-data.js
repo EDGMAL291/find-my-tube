@@ -92,6 +92,22 @@
     { id: "blood-culture-bottle-anaerobic", label: "Anaerobic Blood Culture Bottle (Orange)", unitType: "each", maxQuantity: 50, note: "Requested individually." },
     { id: "blood-culture-bottle-fungal-mycology", label: "Fungal / Mycology Blood Culture Bottle (Green)", unitType: "each", maxQuantity: 50, note: "Requested individually." },
     { id: "blood-culture-bottle-mycobacterial-tb", label: "Mycobacterial Blood Culture Bottle (Red)", unitType: "each", maxQuantity: 50, note: "Requested individually." },
+    {
+      id: "vacutainer-needle-green",
+      label: "Vacutainer needle (Green)",
+      unitType: "each",
+      maxQuantity: 50,
+      note: "Requested individually.",
+      searchTerms: "vacutainer needles blood collection needle green"
+    },
+    {
+      id: "vacutainer-needle-black",
+      label: "Vacutainer needle (Black)",
+      unitType: "each",
+      maxQuantity: 50,
+      note: "Requested individually.",
+      searchTerms: "vacutainer needles blood collection needle black"
+    },
     { id: "blood-gas-syringes", label: "Blood gas syringes", unitType: "each", maxQuantity: 50, note: "Requested individually." },
     { id: "swabs-transport-media", label: "Swabs with transport media", unitType: "each", maxQuantity: 50, note: "Requested individually." }
   ].map((item) => Object.freeze({ ...item }));
