@@ -285,6 +285,47 @@ async function createTestPage(browser, options = {}) {
     assert.ok(menuMotion.every(item => item.name === 'siteMenuFallIn' && item.duration === '0.23s'), 'Menu items use the fast fall-in motion');
     assert.deepEqual(menuMotion.map(item => item.delay), ['0s','0.022s','0.044s'], 'Menu items enter from top to bottom');
     await motionPage.close();
+    for (const width of [360, 390, 412, 430, 1280]) {
+      const aboutPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
+      await aboutPage.goto(`${base}/about.html`);
+      const aboutVisual = await aboutPage.evaluate(() => ({
+        background:getComputedStyle(document.body, '::before').backgroundImage,
+        position:getComputedStyle(document.body, '::before').position,
+        header:getComputedStyle(document.querySelector('.header')).backgroundColor,
+        card:getComputedStyle(document.querySelector('.stock-order-request-card')).backgroundColor,
+        nav:getComputedStyle(document.querySelector('.support-nav')).backgroundColor
+      }));
+      assert.match(aboutVisual.background, /find-my-tube-lab-overview/, `About photograph missing at ${width}`);
+      assert.equal(aboutVisual.position, 'fixed');
+      assert.equal(aboutVisual.header, 'rgba(0, 0, 0, 0)', 'About header must not cover the photograph');
+      assert.equal(aboutVisual.card, 'rgba(255, 255, 255, 0.1)', 'About content uses 10% frost');
+      assert.equal(aboutVisual.nav, 'rgba(255, 255, 255, 0.1)', 'About navigation uses 10% frost');
+      assert.ok(await aboutPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `About overflow at ${width}`);
+      await aboutPage.screenshot({path:path.join(screenshots, `about-${width}.png`), fullPage:true});
+      await aboutPage.close();
+
+      const deskPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
+      await deskPage.goto(`${base}/index.html?tool=collection-desk`);
+      assert.equal(await deskPage.locator('#homeLabDeskPanel').isVisible(), true);
+      const deskVisual = await deskPage.evaluate(() => ({
+        background:getComputedStyle(document.querySelector('#homeLabDeskBackdrop')).backgroundImage,
+        blur:getComputedStyle(document.querySelector('#homeLabDeskBackdrop')).backdropFilter,
+        panel:getComputedStyle(document.querySelector('#homeLabDeskPanel')).backgroundColor,
+        panelImage:getComputedStyle(document.querySelector('#homeLabDeskPanel')).backgroundImage,
+        card:getComputedStyle(document.querySelector('.home-collection-checklist-card')).backgroundColor,
+        action:getComputedStyle(document.querySelector('.home-action-tile')).backgroundColor
+      }));
+      assert.match(deskVisual.background, /hero-lab-collection/, `Collection Desk photograph missing at ${width}`);
+      assert.equal(deskVisual.blur, 'none', 'Collection Desk photograph stays sharp');
+      assert.equal(deskVisual.panel, 'rgba(0, 0, 0, 0)', 'Collection Desk panel stays transparent');
+      assert.equal(deskVisual.panelImage, 'none');
+      assert.equal(deskVisual.card, 'rgba(255, 255, 255, 0.1)', 'Collection Desk cards use 10% frost');
+      assert.equal(deskVisual.action, 'rgba(255, 255, 255, 0.1)', 'Collection Desk actions use 10% frost');
+      assert.ok(await deskPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Collection Desk overflow at ${width}`);
+      await deskPage.screenshot({path:path.join(screenshots, `collection-desk-${width}.png`), fullPage:true});
+      await deskPage.close();
+    }
+    console.log('PASS About and Collection Desk photographic, transparent and responsive surface checks');
     for (const route of ['index.html', 'order-stock.html', 'track-orders.html', 'stock-dashboard.html']) {
       const page = await createTestPage(browser, { viewport:{width:390,height:844}, reducedMotion:'reduce' });
       const errors = [];

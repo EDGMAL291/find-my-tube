@@ -11920,6 +11920,130 @@ html[data-theme] body #drawModal :is(.draw-order-step, .draw-group-count-badge) 
   color: #203039 !important;
 }
 
+/* About and Collection Desk share the same uninterrupted photographic canvas.
+   These final rules deliberately sit after the legacy window cascade so no
+   opaque shell or blurred backdrop can cover the page photograph. */
+html body[data-app-page="about-page"] {
+  min-height: 100lvh;
+  background:
+    linear-gradient(110deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38)),
+    url("../images/find-my-tube-lab-overview.jpg") center / cover fixed no-repeat !important;
+}
+
+html body[data-app-page][data-app-page="about-page"]::before {
+  background:
+    linear-gradient(110deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38)),
+    url("../images/find-my-tube-lab-overview.jpg") center / cover no-repeat !important;
+}
+
+html body[data-app-page="about-page"] :is(.header, .container) {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+html body[data-app-page="about-page"] :is(.support-home-link, .support-nav, .stock-order-request-card, .footer-card) {
+  background-color: rgba(255, 255, 255, .10) !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, .22) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
+}
+
+html body[data-app-page="about-page"] :is(.footer-card, .site-footer-title) {
+  color: #fffdf8 !important;
+}
+
+html body[data-app-page="home"] .home-lab-desk-backdrop {
+  background:
+    linear-gradient(110deg, rgba(3, 17, 31, .70), rgba(3, 17, 31, .46)),
+    url("../images/hero-lab-collection.jpg") 72% center / cover no-repeat !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body[data-app-page="home"] .home-lab-desk-panel {
+  height: 100lvh;
+  min-height: 100vh;
+  background: transparent !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, .24) !important;
+  color: #fffdf8 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body[data-app-page="home"] .home-lab-desk-panel :is(
+  .home-action-tile,
+  .home-dashboard-section,
+  .home-order-status-card,
+  .home-tip-card,
+  .home-reference-card,
+  .home-help-card,
+  .home-status-item,
+  .home-help-actions a
+) {
+  background-color: rgba(255, 255, 255, .10) !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, .20) !important;
+  color: #fffdf8 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
+}
+
+html body[data-app-page="home"] .home-lab-desk-panel :is(
+  .home-action-label,
+  .home-dashboard-head h2,
+  .home-tip-card h2,
+  .home-status-item-requester,
+  .home-collection-checklist strong,
+  .home-help-actions a
+) {
+  color: #fffdf8 !important;
+}
+
+html body[data-app-page="home"] .home-lab-desk-panel :is(
+  .home-action-copy,
+  .home-action-arrow,
+  .home-tip-text,
+  .home-reference-card p,
+  .home-collection-checklist li,
+  .home-collection-checklist-note,
+  .home-status-item,
+  .home-status-item-requester,
+  .home-status-item-ward,
+  .home-status-item-line
+) {
+  color: rgba(255, 253, 248, .80) !important;
+}
+
+html body[data-app-page="home"] .home-lab-desk-panel .home-status-track-btn {
+  color: #d7f3f0 !important;
+}
+
+@media (max-width: 620px) {
+  html body[data-app-page="about-page"] .support-nav {
+    width: calc(100% - 28px);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  html body[data-app-page="about-page"] .support-nav a {
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
+  }
+
+  html body[data-app-page="home"] .home-lab-desk-panel {
+    width: 100vw;
+    max-width: none;
+    border-left: 0 !important;
+  }
+}
+
 html[data-theme] body #drawModal :is(.draw-selection-head, .draw-result-card) {
   background: transparent !important;
   background-image: none !important;
