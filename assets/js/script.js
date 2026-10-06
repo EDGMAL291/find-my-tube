@@ -7539,6 +7539,7 @@ function syncModalOpenClass() {
   const contactFeedbackOpen = Boolean(contactFeedbackModal && !contactFeedbackModal.hidden);
   const aboutInfoOpen = Boolean(aboutInfoModal && !aboutInfoModal.hidden);
   document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen || sectionBrowseOpen || contactFeedbackOpen || aboutInfoOpen);
+  document.body.classList.toggle("draw-modal-open", drawOpen);
   document.body.classList.toggle("profile-modal-open", profileOpen);
   updateBackToTopVisibility();
 }

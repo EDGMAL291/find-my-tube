@@ -131,6 +131,10 @@ async function createTestPage(browser, options = {}) {
         await page.locator('#selectionCartBar').click();
         assert.equal(await page.locator('#drawModal').isVisible(), true);
         await page.waitForFunction(() => document.querySelector('.draw-modal-card').getBoundingClientRect().top >= 0 && getComputedStyle(document.querySelector('#drawModal')).opacity === '1');
+        assert.match(await page.locator('#drawModal').evaluate(el => getComputedStyle(el).backgroundImage), /find-my-tube-lab-overview/);
+        assert.equal(await page.locator('.draw-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan has no opaque enclosing card');
+        assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan results remain transparent over the photograph');
+        assert.equal(await page.evaluate(() => document.body.classList.contains('draw-modal-open')), true);
         await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
         assert.match(await page.locator('#drawSelectedList').innerText(), /HIV ELISA/);
         assert.equal(await page.locator('#drawGroups .draw-group-test-list').count(), 0);
