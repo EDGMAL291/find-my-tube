@@ -297,6 +297,42 @@ async function createTestPage(browser, options = {}) {
     assert.deepEqual(menuMotion.map(item => item.delay), ['0s','0.022s','0.044s'], 'Menu items enter from top to bottom');
     await motionPage.close();
     for (const width of [360, 390, 412, 430, 1280]) {
+      const testPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
+      const errors = [];
+      testPage.on('pageerror', error => errors.push(error.message));
+      await testPage.goto(`${base}/index.html?tool=find-my-test`);
+      assert.equal(await testPage.locator('body').evaluate(el => el.classList.contains('find-my-test-page')), true);
+      const initialVisual = await testPage.evaluate(() => ({
+        background:getComputedStyle(document.body, '::before').backgroundImage,
+        position:getComputedStyle(document.body, '::before').position,
+        panel:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundColor,
+        panelImage:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundImage,
+        input:getComputedStyle(document.querySelector('#clinicalSymptomsInput')).backgroundColor
+      }));
+      assert.match(initialVisual.background, /hero-lab-analyser/, `Find My Test photograph missing at ${width}`);
+      assert.equal(initialVisual.position, 'fixed', 'Find My Test photograph must stay still while scrolling');
+      assert.equal(initialVisual.panel, 'rgba(255, 255, 255, 0.1)', 'Find My Test form uses 10% frost');
+      assert.equal(initialVisual.panelImage, 'none', 'Find My Test form does not cover the photograph');
+      assert.equal(initialVisual.input, 'rgba(255, 255, 255, 0.1)', 'Find My Test fields use 10% frost');
+      await testPage.locator('#clinicalSymptomsInput').fill('fever');
+      await testPage.locator('#clinicalConcernInput').fill('infection');
+      await testPage.locator('#clinicalWorkupSubmitBtn').click();
+      await testPage.mouse.move(0, 0);
+      await testPage.waitForTimeout(250);
+      assert.equal(await testPage.locator('#clinicalWorkupResults').isVisible(), true);
+      assert.ok(await testPage.locator('.clinical-workup-test-option').count() > 0, 'Find My Test returns suggestions');
+      assert.equal(await testPage.locator('#clinicalWorkupResults').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Find My Test results use 10% frost');
+      const optionSurfaces = await testPage.locator('.clinical-workup-test-option').evaluateAll(items => items.map(item => getComputedStyle(item).backgroundColor));
+      assert.ok(optionSurfaces.every(color => color === 'rgba(255, 255, 255, 0.1)'), `Suggested tests use 10% frost at ${width}: ${JSON.stringify(optionSurfaces)}`);
+      await testPage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      assert.equal(await testPage.evaluate(() => getComputedStyle(document.body, '::before').position), 'fixed', 'Find My Test photograph remains fixed after scrolling');
+      assert.ok(await testPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Find My Test overflow at ${width}`);
+      assert.deepEqual(errors, [], `Find My Test runtime errors at ${width}`);
+      await testPage.screenshot({path:path.join(screenshots, `find-my-test-${width}.png`), fullPage:true});
+      await testPage.close();
+    }
+    console.log('PASS Find My Test sharp photograph, 10% frost, results and responsive checks');
+    for (const width of [360, 390, 412, 430, 1280]) {
       const aboutPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
       await aboutPage.goto(`${base}/about.html`);
       const aboutVisual = await aboutPage.evaluate(() => ({

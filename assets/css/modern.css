@@ -12109,6 +12109,100 @@ html[data-theme] body #drawModal .draw-return-btn {
   box-shadow: none !important;
 }
 
+/* Find My Test keeps the analyser photograph sharp and uses one restrained
+   10% frost language for the form, choices, suggestions, and results. */
+html body[data-app-page="home"].find-my-test-page {
+  min-height: 100lvh;
+  isolation: isolate;
+  background: transparent !important;
+}
+
+html body[data-app-page="home"].find-my-test-page::before {
+  content: "";
+  position: fixed !important;
+  inset: auto !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100lvh !important;
+  min-height: 100vh !important;
+  z-index: -1 !important;
+  display: block !important;
+  background:
+    linear-gradient(90deg, rgba(3, 17, 31, .54), rgba(3, 17, 31, .30) 58%, rgba(3, 17, 31, .08)),
+    url("../images/hero-lab-analyser.jpg") 68% center / cover no-repeat !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  pointer-events: none;
+}
+
+html body[data-app-page="home"].find-my-test-page :is(.container, .header, .clinical-workspace-intro) {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+html[data-theme] body.find-my-test-page :is(
+  .clinical-workup-panel,
+  .clinical-workup-results,
+  .clinical-workup-rule-card,
+  .clinical-workup-empty-state,
+  .clinical-workup-test-card,
+  .clinical-workup-test-option,
+  .clinical-workup-autocomplete
+) {
+  background-color: rgba(255, 255, 255, .10) !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, .22) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
+}
+
+html[data-theme] body.find-my-test-page :is(
+  .clinical-workup-field input,
+  .clinical-workup-field select,
+  .clinical-workup-field textarea,
+  .clinical-choice-trigger
+) {
+  background-color: rgba(255, 255, 255, .10) !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, .24) !important;
+  color: #fffdf8 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(6px) saturate(1.03) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(1.03) !important;
+}
+
+html[data-theme] body.find-my-test-page :is(
+  .clinical-workup-field input,
+  .clinical-workup-field select,
+  .clinical-workup-field textarea,
+  .clinical-choice-trigger,
+  .clinical-workup-test-option
+):is(:hover, :focus, :focus-visible, [aria-expanded="true"], .is-selected) {
+  background-color: rgba(255, 255, 255, .16) !important;
+  border-color: rgba(230, 207, 140, .58) !important;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item {
+  background: transparent !important;
+}
+
+html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item:is(:hover, .is-highlighted) {
+  background: rgba(255, 255, 255, .14) !important;
+}
+
+@media (max-width: 620px) {
+  html body[data-app-page="home"].find-my-test-page::before {
+    background:
+      linear-gradient(180deg, rgba(3, 17, 31, .28), rgba(3, 17, 31, .38) 52%, rgba(3, 17, 31, .50)),
+      url("../images/hero-lab-analyser.jpg") 72% center / cover no-repeat !important;
+  }
+}
+
 .stock-dashboard-field-help {
   display: block;
   margin-top: 6px;

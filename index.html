@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20261006d" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20261006e" />
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261005j" />
   <script type="application/ld+json">
     {
@@ -567,7 +567,7 @@
   <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-06.4";
+      const APP_VERSION = "2026-10-06.5";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -588,7 +588,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261006d", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261006e", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
