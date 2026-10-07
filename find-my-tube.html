@@ -42,7 +42,7 @@
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
   <link rel="stylesheet" href="assets/css/modern.css?v=20261006f" />
-  <link rel="stylesheet" href="assets/css/discovery.css?v=20261007a" />
+  <link rel="stylesheet" href="assets/css/discovery.css?v=20261007b" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -221,8 +221,6 @@
       <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite" aria-atomic="true">0 tests</span>
       <span class="selection-cart-expand" aria-hidden="true">↑</span>
     </span>
-    <span class="selection-cart-preview" hidden></span>
-    <span class="selection-cart-warning" hidden></span>
   </button>
 
   <section class="draw-modal" id="drawModal" hidden>
@@ -231,18 +229,20 @@
         <h3 id="drawModalTitle">Tube Plan</h3>
         <button type="button" class="draw-close-btn" id="closeDrawPlannerBtn" aria-label="Close Tube Plan" title="Close Tube Plan">&times;</button>
       </div>
-      <div class="draw-selection-actions">
-        <p class="draw-selection-count" id="drawSelectionCount">0 tests added</p>
-        <button type="button" class="draw-tool-btn" id="drawClearAllBtn" hidden>Clear all</button>
+      <div class="draw-planner-body" id="drawPlannerBody">
+        <div class="draw-selection-actions">
+          <button type="button" class="draw-tool-btn draw-tests-toggle" id="drawTestsToggleBtn" aria-controls="drawSelectedList" aria-expanded="false">Tests selected · <span id="drawSelectionCount">0 tests</span></button>
+          <button type="button" class="draw-tool-btn" id="drawClearAllBtn" hidden>Clear all</button>
+        </div>
+        <div class="draw-selected-list" id="drawSelectedList" hidden></div>
+        <div class="draw-result-card" id="drawResultCard" tabindex="-1">
+          <p class="draw-planner-count" id="drawPlannerCount"></p>
+          <div class="draw-planner-alerts" id="drawPlannerAlerts" hidden></div>
+          <div class="draw-groups" id="drawGroups"></div>
+          <p class="draw-planner-note" id="drawPlannerNote"></p>
+        </div>
+        <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add another test</button>
       </div>
-      <div class="draw-selected-list" id="drawSelectedList"></div>
-      <div class="draw-result-card" id="drawResultCard" tabindex="-1">
-        <p class="draw-planner-count" id="drawPlannerCount"></p>
-        <div class="draw-planner-alerts" id="drawPlannerAlerts" hidden></div>
-        <div class="draw-groups" id="drawGroups"></div>
-        <p class="draw-planner-note" id="drawPlannerNote"></p>
-      </div>
-      <button type="button" class="draw-tool-btn draw-return-btn" id="returnToSearchBtn">Add another test</button>
     </div>
   </section>
 
@@ -288,11 +288,11 @@
   <script src="assets/data/data.js?v=20260812a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261007a"></script>
+  <script src="assets/js/script.js?v=20261007b"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-07.1";
+      const APP_VERSION = "2026-10-07.2";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -313,7 +313,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261007a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261007b", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

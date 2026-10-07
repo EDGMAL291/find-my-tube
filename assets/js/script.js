@@ -6475,7 +6475,7 @@ function renderSelectedTestsCart() {
     removeBtn.addEventListener("click", () => {
       const testName = decodeURIComponent(removeBtn.getAttribute("data-remove-selected") || "");
       if (!testName) return;
-      removeSelectedTest(testName);
+      removeSelectedTest(testName, { rerenderCards: false });
       const nextRemove = drawSelectedList.querySelector("button[data-remove-selected]");
       (nextRemove || closeDrawPlannerBtn)?.focus({ preventScroll: true });
     });
@@ -6506,41 +6506,7 @@ function updateSelectionCartBar() {
     return;
   }
 
-  const { plan, guidanceNotes } = getResolvedDrawPlan(selectedTests);
-  const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
-  const countLabel = formatPlanCountLabel(totalTubes, plan);
-  const badgeCount = `${count} test${count === 1 ? "" : "s"} • ${countLabel}${plan.manual.length ? ` • ${plan.manual.length} to confirm` : ""}`;
-  const preview = selectionCartBar.querySelector(".selection-cart-preview");
-  if (preview) {
-    const collections = plan.items.map((item) => {
-      const alternatives = getPlanItemAlternativeGroups(item);
-      const group = alternatives[0] || item.key;
-      const variant = getPlanItemTubeVariant(item, selectedTests, alternatives.length ? alternatives : [group]);
-      return `<span class="selection-cart-collection">
-        ${getTubeVisualMarkup(group, " tube-icon-mini", { tubeVariant: variant })}
-        <span>${escapeHtml(item.label)} <strong>×${item.count}</strong></span>
-      </span>`;
-    });
-    plan.manual.forEach((name) => {
-      const test = selectedTests.find((entry) => entry.name === name);
-      collections.push(`<span class="selection-cart-collection"><span>${escapeHtml(test?.tubeColor || "Collection mapping not recorded")} — to confirm</span></span>`);
-    });
-    preview.innerHTML = collections.slice(0, 3).join("")
-      + (collections.length > 3 ? `<span class="selection-cart-more">+${collections.length - 3} collection types</span>` : "");
-    preview.hidden = !collections.length;
-  }
-  const warnings = selectionCartBar.querySelector(".selection-cart-warning");
-  const urgentAlerts = getDrawPlannerAlerts(selectedTests);
-  const warningText = [
-    ...urgentAlerts.map((alert) => `${alert.title}: ${alert.items.join(" ")}`),
-    ...(plan.manual.length ? ["Confirm collection requirements with the laboratory."] : []),
-    guidanceNotes[0] || (hasHighAttentionTest ? "Important collection guidance — review the full Tube Plan." : "")
-  ].filter(Boolean).join(" ");
-  if (warnings) {
-    warnings.textContent = warningText;
-    warnings.hidden = !warningText;
-  }
-
+  const badgeCount = `${count} test${count === 1 ? "" : "s"}`;
   selectionCartBar.hidden = false;
   selectionCartCount.textContent = badgeCount;
   const selectionCartLabel = selectionCartBar.querySelector(".selection-cart-label");
@@ -6548,7 +6514,7 @@ function updateSelectionCartBar() {
   selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
-    `Open Tube Plan: ${badgeCount}. ${warningText}`
+    `Open Tube Plan: ${badgeCount}`
   );
   selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
   document.body.classList.add("has-selection-cart");
@@ -7457,6 +7423,8 @@ function openDrawModal() {
   resetClearDrawSelectionConfirmation({ update: false });
   if (drawModalCard) {
     drawModalCard.scrollTop = 0;
+    const plannerBody = document.getElementById("drawPlannerBody");
+    if (plannerBody) plannerBody.scrollTop = 0;
     drawModalCard.classList.remove("is-scrolled");
   }
   drawModal.hidden = false;
@@ -9391,6 +9359,10 @@ function renderCards(filteredTests) {
     add.addEventListener('pointerdown', preserveSearchFocus);
     add.addEventListener('mousedown', preserveSearchFocus);
     add.addEventListener('click', () => {
+      // Ready for the next test, keeping result feedback and mobile focus in place.
+      if (searchInput) searchInput.value = "";
+      updateSearchClearButton();
+      refreshSearchPlaceholder();
       if (selectedTestNames.has(test.name)) return;
       const coverage = getAlreadyCoveredSelectionMessage(test.name);
       if (coverage) {
@@ -9598,6 +9570,12 @@ function bindEvents() {
       openDrawModal();
     });
   }
+  document.getElementById("drawTestsToggleBtn")?.addEventListener("click", (event) => {
+    const button = event.currentTarget;
+    const expanded = button.getAttribute("aria-expanded") !== "true";
+    button.setAttribute("aria-expanded", String(expanded));
+    if (drawSelectedList) drawSelectedList.hidden = !expanded;
+  });
   document.getElementById("drawClearAllBtn")?.addEventListener("click", () => {
     if (!selectedTestNames.size) return;
     if (!isClearDrawSelectionConfirming) {
