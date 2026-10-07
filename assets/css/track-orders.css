@@ -28,7 +28,7 @@ html body[data-app-page="track-orders"] .track-orders-row {
 html body[data-app-page="track-orders"] .track-orders-row.is-highlighted {
   border-color: #bbdbe9 !important;
 }
-html body[data-app-page="track-orders"] :is(.track-orders-cell, .stock-request-compact-title, .stock-request-compact-more) {
+html body[data-app-page="track-orders"] :is(.track-orders-cell, .stock-request-compact-title, .stock-request-compact-more, .stock-request-compact-empty) {
   color: #fffdf8 !important;
 }
 html body[data-app-page="track-orders"] .track-orders-header,
