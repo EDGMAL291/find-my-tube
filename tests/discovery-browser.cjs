@@ -42,7 +42,8 @@ async function exerciseTubePlanWorkflow(page, width) {
     const before = await page.locator('.discovery-card').count();
     if (width <= 620) await card.locator('.discovery-select').tap();
     else await card.locator('.discovery-select').click();
-    assert.equal(await search.inputValue(), query, 'Selection preserves query');
+    assert.equal(await search.inputValue(), '', 'Selection clears the field for the next test');
+    assert.equal(await page.locator('#searchClearBtn').isVisible(), false);
     assert.equal(await page.locator('.discovery-card').count(), before, 'Selection preserves results');
     assert.equal(await card.locator('.discovery-select').getAttribute('aria-pressed'), 'true');
     assert.match(await card.innerText(), /✓ In Tube Plan/);
@@ -52,10 +53,8 @@ async function exerciseTubePlanWorkflow(page, width) {
   async function verifyCount() {
     await page.locator('#selectionCartBar').waitFor({state:'visible'});
     const expected = await page.evaluate(() => {
-      const selected = getSelectedTests();
-      const {plan} = getResolvedDrawPlan(selected);
-      const count = plan.items.reduce((sum,item) => sum + item.count, 0);
-      return `${selected.length} test${selected.length === 1 ? '' : 's'} • ${formatPlanCountLabel(count,plan)}${plan.manual.length ? ` • ${plan.manual.length} to confirm` : ''}`;
+      const count = getSelectedTests().length;
+      return `${count} test${count === 1 ? '' : 's'}`;
     });
     const actual = await page.locator('#selectionCartCount').innerText();
     if (actual !== expected) {
@@ -68,13 +67,17 @@ async function exerciseTubePlanWorkflow(page, width) {
       })));
       await page.screenshot({path:path.join(screenshots, 'dock-failure.png')});
     }
-    assert.equal(actual, expected, 'Dock count uses resolver quantities');
+    assert.equal(actual, expected, 'Dock shows the selected test count');
+  }
+  async function resolvedCount() {
+    return page.evaluate(() => getResolvedDrawPlan(getSelectedTests()).plan.items.reduce((sum,item)=>sum+item.count,0));
   }
   await select('CRP', 'CRP');
   await select('FBC', 'FBC');
   await select('LFT', 'Liver Function Tests (LFT)');
   await verifyCount();
-  assert.equal(await page.locator('#selectionCartCount').innerText(), '3 tests • 2 tubes', 'LFT and CRP share gold');
+  assert.equal(await resolvedCount(), 2, 'LFT and CRP share gold');
+  assert.equal(await page.locator('#selectionCartBar img, #selectionCartBar svg').count(), 0, 'Collection artwork is reserved for the full planner');
   const theme = await page.locator('html').getAttribute('data-theme');
   await page.screenshot({path:path.join(screenshots, `workflow-${width}-${theme}.png`)});
   await select('INR', 'INR');
@@ -91,6 +94,21 @@ async function exerciseTubePlanWorkflow(page, width) {
   assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), names);
   await page.locator('#selectionCartBar').click();
   assert.equal(await page.locator('#selectionCartBar').getAttribute('aria-expanded'), 'true');
+  const selectedToggle = page.locator('#drawTestsToggleBtn');
+  if (await selectedToggle.getAttribute('aria-expanded') === 'true') await selectedToggle.click();
+  assert.equal(await page.locator('#drawSelectedList').isVisible(), false);
+  await selectedToggle.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await selectedToggle.getAttribute('aria-expanded'), 'true');
+  assert.equal(await page.locator('#drawSelectedList').isVisible(), true);
+  await selectedToggle.click();
+  assert.equal(await page.locator('#drawSelectedList').isVisible(), false);
+  await selectedToggle.click();
+  const fullCount = await page.evaluate(() => {
+    const selected=getSelectedTests(), {plan}=getResolvedDrawPlan(selected);
+    return `${selected.length} tests • ${formatPlanCountLabel(plan.items.reduce((sum,item)=>sum+item.count,0),plan)}`;
+  });
+  assert.equal(await page.locator('#drawPlannerCount').textContent(), fullCount);
   await page.locator('#closeDrawPlannerBtn').focus();
   await page.keyboard.press('Shift+Tab');
   assert.equal(await page.locator('#drawModal').evaluate(el => el.contains(document.activeElement)), true, 'Planner traps focus');
@@ -113,25 +131,28 @@ async function exerciseTubePlanWorkflow(page, width) {
   await select('HIV ELISA', 'HIV ELISA');
   await select('RPR', 'RPR (Syphilis Screen)');
   await select('CRP', 'CRP');
-  assert.equal(await page.locator('#selectionCartCount').innerText(), '3 tests • 3 tubes', 'Dedicated gold remains dedicated');
-  assert.match(await page.locator('.selection-cart-warning').innerText(), /own Gold\/Yellow/);
+  assert.equal(await resolvedCount(), 3, 'Dedicated gold remains dedicated');
+  await verifyCount();
+  assert.match(await page.locator('#drawPlannerNote').textContent(), /own Gold\/Yellow/);
   await page.evaluate(() => setSelectedTests(new Set(['OGTT (fasting, 1hr, 2hr)'])));
-  assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test • 3 tubes', 'OGTT multiple draws remain');
+  assert.equal(await resolvedCount(), 3, 'OGTT multiple draws remain');
+  await verifyCount();
   await page.evaluate(() => setSelectedTests(new Set(['FBC', 'HbA1c', 'ESR'])));
-  assert.equal(await page.locator('#selectionCartCount').innerText(), '3 tests • 2 tubes', 'Purple volume remains');
+  assert.equal(await resolvedCount(), 2, 'Purple volume remains');
+  await verifyCount();
   await page.evaluate(() => setSelectedTests(new Set(['Antenatal Screen (ANTINV)'])));
-  assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test • 6 tubes', 'Antenatal minimums remain');
+  assert.equal(await resolvedCount(), 6, 'Antenatal minimums remain');
+  await verifyCount();
   await page.evaluate(() => setSelectedTests(new Set(['Ammonia'])));
-  assert.match(await page.locator('.selection-cart-warning').innerText(), /courier|Separate plasma/);
+  assert.match(await page.locator('#drawPlannerAlerts').textContent(), /courier|Separate plasma/);
   // Unknown mappings remain recorded/manual, including in the compact plan.
   await page.evaluate(() => {
     const fixture = enrichTest({name:'Unmapped workflow fixture', tubeColor:'Recorded uncommon specimen', specimen:'Recorded local specimen'});
     enrichedTests.push(fixture);
     setSelectedTests(new Set([fixture.name]));
   });
-  assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test • 0 tubes • 1 to confirm');
-  assert.match(await page.locator('.selection-cart-preview').innerText(), /Recorded uncommon specimen/);
-  assert.match(await page.locator('.selection-cart-warning').innerText(), /laboratory/);
+  assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test');
+  assert.equal(await resolvedCount(), 0, 'Unknown mapping stays unresolved');
   await page.locator('#selectionCartBar').click();
   assert.match(await page.locator('#drawPlannerNote').innerText(), /Recorded uncommon specimen.*Confirm/);
   assert.equal(await page.locator('#drawGroups .tube-photo-visual-adult').count(), 0, 'Unknown specimen never becomes a guessed blood tube');
@@ -141,8 +162,8 @@ async function exerciseTubePlanWorkflow(page, width) {
     setSelectedTests(new Set(['Semen Analysis']));
   });
   await verifyCount();
-  assert.match(await page.locator('.selection-cart-preview').innerText(), /semen/i);
-  assert.match(await page.locator('#selectionCartCount').innerText(), /collection item/);
+  assert.match(await page.locator('#drawGroups').textContent(), /semen/i);
+  assert.match(await page.locator('#drawPlannerCount').textContent(), /collection item/);
   // Simulate the visual viewport shrinking and panning above a phone keyboard.
   if (width <= 620) {
     await search.fill('CRP');
@@ -270,13 +291,12 @@ async function exerciseTubePlanWorkflow(page, width) {
         await card.locator('.discovery-select').focus();
         await page.keyboard.press('Enter');
         assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'Repeated selection must not remove a test');
-        assert.equal(await page.locator('#searchInput').inputValue(), 'HIV', 'Adding must preserve search results');
+        assert.equal(await page.locator('#searchInput').inputValue(), '', 'Adding clears the search field');
         assert.equal(await page.locator('#selectionCartBar').isVisible(), true);
         assert.equal(await page.locator('#selectionCartBar .selection-cart-icon').count(), 0, 'Floating Tube Plan has no glyph');
         assert.equal((await page.locator('#selectionCartBar .selection-cart-label').innerText()).trim(), 'Tube Plan');
-        assert.equal((await page.locator('#selectionCartCount').innerText()).trim(), '1 test • 1 tube');
-        assert.match(await page.locator('.selection-cart-preview').innerText(), /Gold\/Yellow/);
-        assert.ok(await page.locator('.selection-cart-preview img, .selection-cart-preview svg').count() > 0);
+        assert.equal((await page.locator('#selectionCartCount').innerText()).trim(), '1 test');
+        assert.equal(await page.locator('#selectionCartBar img, #selectionCartBar svg').count(), 0);
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).borderTopStyle), 'solid');
         assert.equal(await page.locator('#drawModal').isVisible(), false, 'Adding does not force open planner');
         await card.locator('summary').click();
@@ -299,6 +319,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan results remain transparent over the photograph');
         assert.equal(await page.evaluate(() => document.body.classList.contains('draw-modal-open')), true);
         await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
+        assert.equal(await page.locator('#drawSelectedList').isVisible(), false);
+        await page.locator('#drawTestsToggleBtn').click();
         assert.match(await page.locator('#drawSelectedList').innerText(), /HIV ELISA/);
         assert.equal(await page.locator('#drawGroups .draw-group-test-list').count(), 0);
         const plannerTube = page.locator('#drawGroups .tube-photo-visual-adult').first();
@@ -318,8 +340,15 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(rows.length, 5);
         assert.ok(rows.every(row => row.height <= 62), 'Selected tests must be compact rows');
         await page.screenshot({ path:path.join(screenshots, `multi-plan-${width}-${theme}.png`) });
-        await page.locator('.draw-modal-card').evaluate(el => { el.scrollTop = 260; });
+        await page.locator('#drawPlannerBody').evaluate(el => { el.scrollTop = 260; });
         await page.waitForTimeout(200);
+        const scrollGeometry = await page.evaluate(() => ({
+          headerBottom:document.querySelector('.draw-selection-head').getBoundingClientRect().bottom,
+          bodyTop:document.querySelector('#drawPlannerBody').getBoundingClientRect().top,
+          scrolled:document.querySelector('#drawPlannerBody').scrollTop
+        }));
+        assert.ok(scrollGeometry.scrolled > 0, 'Collection content scrolls');
+        assert.ok(scrollGeometry.bodyTop >= scrollGeometry.headerBottom, 'Scrolling content stays below the pinned heading');
         const header = await page.locator('.draw-selection-head').evaluate(el => ({
           background:getComputedStyle(el).backgroundColor, image:getComputedStyle(el).backgroundImage,
           surface:getComputedStyle(el.closest('.draw-modal-card')).backgroundColor,
@@ -329,7 +358,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(header.image, 'none');
         assert.equal(header.titleOpacity, '1', 'Planner title stays visible');
         await page.screenshot({ path:path.join(screenshots, `scrolled-plan-${width}-${theme}.png`) });
-        await page.locator('.draw-modal-card').evaluate(el => { el.scrollTop = 0; });
+        await page.locator('#drawPlannerBody').evaluate(el => { el.scrollTop = 0; });
         await page.locator('[aria-label="Remove FBC from Tube Plan"]').click();
         assert.equal(await page.locator('.draw-selected-chip').count(), 4);
         await page.evaluate(() => {
