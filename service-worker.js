@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v334";
+const CACHE_NAME = "find-my-tube-v335";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"

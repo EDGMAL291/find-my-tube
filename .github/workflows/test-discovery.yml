@@ -56,4 +56,5 @@ jobs:
             /tmp/fmt-discovery-*/stock-inventory-*.png
             /tmp/fmt-discovery-*/stock-queue-*.png
             /tmp/fmt-discovery-*/order-cards-*.png
+            /tmp/fmt-discovery-*/track-orders-*.png
           if-no-files-found: ignore

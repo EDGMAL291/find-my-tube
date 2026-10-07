@@ -671,6 +671,16 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.doesNotMatch(await page.locator('#trackOrdersTable').innerText(), /Old pending|Old ready/i);
       assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Old pending/i);
       assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Archived/);
+      if (width === 360) {
+        for (const viewportWidth of [360, 390, 412, 430, 768, 1280]) {
+          await page.setViewportSize({width:viewportWidth, height:900});
+          await page.evaluate(() => window.scrollTo(0, 0));
+          await page.screenshot({path:path.join(screenshots, `track-orders-${viewportWidth}.png`)});
+          await page.locator("#trackOrdersListTitle").scrollIntoViewIfNeeded();
+          await page.screenshot({path:path.join(screenshots, `track-orders-rows-${viewportWidth}.png`)});
+        }
+        await page.setViewportSize({width, height:900});
+      }
       await page.goto(`${base}/stock-dashboard.html`);
       // Finish the signed-out auth restore before exposing screenshot fixtures.
       await page.waitForFunction(() => !stockDashboardSessionRestorePending);
