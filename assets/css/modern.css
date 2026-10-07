@@ -8773,56 +8773,6 @@ html[data-theme] body:is([data-app-page="find-my-tube"], .find-my-test-page) .dr
   }
 }
 
-/* Preserve the recognisable specimen-cap colours against the dark stock workspace. */
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card {
-  border-color: var(--tube-accent-border, var(--tool-line));
-  background:
-    linear-gradient(100deg, var(--tube-accent-bg, transparent), transparent 42%),
-    linear-gradient(145deg, rgba(7, 30, 50, 0.9), rgba(3, 17, 31, 0.76));
-}
-
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card::before {
-  width: 5px;
-  background: var(--tube-cap-color, var(--tube-accent-border, var(--tool-accent)));
-  box-shadow: 0 0 16px var(--tube-accent-border, transparent);
-  opacity: 1;
-}
-
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card:hover,
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card:focus-within,
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card.is-expanded {
-  border-color: var(--tube-cap-color, var(--tube-accent-border, var(--tool-accent)));
-  background:
-    linear-gradient(100deg, var(--tube-accent-bg, transparent), transparent 50%),
-    linear-gradient(145deg, rgba(11, 42, 66, 0.94), rgba(3, 17, 31, 0.84));
-}
-
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card .stock-tube-photo {
-  width: 30px;
-  height: 72px;
-  flex-basis: 30px;
-  filter:
-    saturate(1.55)
-    brightness(1.16)
-    contrast(1.08)
-    drop-shadow(0 0 7px var(--tube-accent-border, rgba(0, 0, 0, 0.34)))
-    drop-shadow(0 7px 7px rgba(0, 0, 0, 0.34));
-}
-
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card .stock-tube-title-row {
-  gap: 12px;
-}
-
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card .stock-order-item-kicker {
-  color: var(--tube-cap-color, var(--tool-muted));
-}
-
-html[data-theme] body[data-app-page="stock-order"] .stock-order-tube-card.is-expanded .stock-tube-photo {
-  width: 23px;
-  height: 48px;
-  flex-basis: 23px;
-}
-
 /* 2026-08-13 Lab Desk refinement: one restrained, uniform workspace system. */
 html[data-theme] body[data-app-page="home"] .home-lab-desk-panel {
   --lab-desk-accent: #e6cf8c;
@@ -12384,3 +12334,42 @@ html body[data-app-page="find-my-tube"] .tube-workspace-intro p:not(.tube-worksp
   max-width: 56ch; font-size: clamp(.825rem, 1.2vw, .9rem) !important;
   font-weight: 400; line-height: 1.5;
 }
+
+/* Order catalogue: quiet frosted surfaces; specimen colour belongs to the artwork. */
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card {
+  --tube-accent-bg: rgba(163, 205, 228, .10) !important;
+  --tube-accent-border: rgba(163, 205, 228, .38) !important;
+  box-shadow: none !important;
+  text-shadow: none;
+  transform: none !important;
+  transition: border-color 160ms ease;
+}
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card::before,
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card::after {
+  display: none !important;
+}
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card :is(
+  .stock-tube-photo, .stock-item-photo-paediatric, .tube-photo-visual, .tube-photo-visual img,
+  .stock-order-item-trigger, .stock-order-card-copy, .stock-order-card-action
+) {
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none;
+}
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card :is(
+  .stock-order-item-kicker, .stock-order-card-availability, .stock-tube-control-hint
+) { color: #c9d8e2; font-weight: 400; }
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card :is(
+  .stock-order-card-title, .stock-tube-control-label
+) { color: #fffdf8; font-weight: 500; }
+html[data-theme] body[data-app-page="stock-order"] .stock-order-card-action { color: #bbdbe9; }
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card:is(:hover, :focus-within, .is-expanded, .has-selection) {
+  border-color: rgba(163, 205, 228, .55) !important;
+}
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-trigger:focus-visible {
+  outline: 2px solid #bbdbe9; outline-offset: -4px;
+}
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card :is(
+  .stock-order-card-plus, .stock-order-card-selection, .stock-order-qty-btn,
+  .stock-tube-qty-readout, .stock-tube-mode-toggle .group-chip
+) { box-shadow: none !important; text-shadow: none; }

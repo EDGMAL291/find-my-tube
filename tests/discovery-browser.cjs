@@ -714,6 +714,12 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.match(stockBackdrop.image, /find-my-tube-lab-overview/, 'Order My Stock uses its home-slide photograph');
         assert.equal(stockBackdrop.position, 'fixed', 'Order My Stock photograph stays still while scrolling');
         assert.match(await page.locator('body').innerText(), /22 of 22 stock items/);
+        for (const width of [360, 390, 412, 430, 768, 1280]) {
+          await page.setViewportSize({width, height:900});
+          await page.locator('#stockOrderGrid').scrollIntoViewIfNeeded();
+          await page.screenshot({path:path.join(screenshots, `order-cards-${width}.png`)});
+        }
+        await page.setViewportSize({width:390, height:844});
         await page.locator('#stockCatalogSearch').fill('vacutainer');
         assert.deepEqual(
           await page.locator('.stock-order-item-card:visible').evaluateAll(cards => cards.map(card => card.dataset.stockItem).sort()),
