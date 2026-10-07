@@ -2767,6 +2767,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     sendJson(req, res, 200, {
       requests: rows,
+      activeRequests: includeArchived ? await dbListRequests(limit, { includeManual: true }) : rows,
       user: {
         userNumber: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
       }

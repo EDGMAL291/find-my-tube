@@ -3227,7 +3227,10 @@ async function loadStockDashboard(options = {}) {
     const statsPayload = await statsResponse.json();
     const requestsPayload = await requestsResponse.json();
     const inventoryPayload = await inventoryResponse.json();
-    const requests = requestsPayload.requests || [];
+    const requests = [...new Map([
+      ...(requestsPayload.requests || []),
+      ...(requestsPayload.activeRequests || [])
+    ].map(request => [request.id, request])).values()];
     const recentReceipts = Array.isArray(inventoryPayload?.recentReceipts) ? inventoryPayload.recentReceipts : [];
     const authGenerationChanged = authGenerationAtStart !== stockDashboardAuthGeneration;
     const sessionChanged = !stockDashboardSession
