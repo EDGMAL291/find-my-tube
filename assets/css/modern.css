@@ -12222,6 +12222,7 @@ html body[data-app-page] #siteMenuPanel .site-menu-title {
   width: var(--site-menu-title-width, calc(100% - 96px)); margin: 0;
   padding: 0; border: 0; letter-spacing: normal;
   font-size: var(--site-menu-title-size, 1.6rem); font-weight: 400 !important;
+  text-transform: none !important;
   text-align: center; line-height: 1.25;
 }
 html body[data-app-page] #siteMenuPanel .site-menu-list {
