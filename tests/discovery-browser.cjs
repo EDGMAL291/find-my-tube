@@ -126,6 +126,7 @@ async function exerciseTubePlanWorkflow(page, width) {
     const count = await selectedToggle.boundingBox();
     const clear = await page.locator('#drawClearAllBtn').boundingBox();
     assert.ok(Math.abs(count.y - clear.y) < 2, 'Count and clear-all share one row');
+    assert.ok(Math.abs(count.width - clear.width) < 1, 'Selected tests and clear-all share the available width equally');
     assert.ok(count.x + count.width <= clear.x + 1, 'Count and clear-all stay side by side');
     const inset = await page.locator('#drawModal .draw-selection-actions').evaluate(el => {
       const style = getComputedStyle(el);
