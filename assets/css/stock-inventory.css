@@ -136,6 +136,7 @@ html body[data-app-page="stock-dashboard"]::before {
   content: ""; display: block !important; position: fixed !important;
   inset: 0 !important; width: 100vw; height: 100lvh;
   z-index: -1; pointer-events: none; filter: none !important;
+  border-radius: 0 !important;
   background: linear-gradient(110deg, rgba(3, 24, 42, .84), rgba(74, 46, 24, .60)),
     url("../images/find-my-tube-lab-overview.jpg") center / cover no-repeat !important;
 }
@@ -161,4 +162,8 @@ html body[data-app-page="stock-dashboard"] #stockDashboardInventoryCard :is(
   .stock-dashboard-inventory-section-head > span
 ) {
   color: #fffdf8 !important;
+}
+html body[data-app-page="stock-dashboard"] #stockDashboardInventoryList .stock-dashboard-inventory-section-head > span {
+  background: rgba(255, 255, 255, .10);
+  border: 1px solid rgba(255, 255, 255, .22);
 }
