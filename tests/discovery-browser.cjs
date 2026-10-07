@@ -126,6 +126,7 @@ async function exerciseTubePlanWorkflow(page, width) {
     const count = await selectedToggle.boundingBox();
     const clear = await page.locator('#drawClearAllBtn').boundingBox();
     assert.ok(Math.abs(count.y - clear.y) < 2, 'Count and clear-all share one row');
+    assert.ok(Math.abs(count.width - clear.width) < 1, 'Selected tests and clear-all share the available width equally');
     assert.ok(count.x + count.width <= clear.x + 1, 'Count and clear-all stay side by side');
     const inset = await page.locator('#drawModal .draw-selection-actions').evaluate(el => {
       const style = getComputedStyle(el);
@@ -728,7 +729,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.match(await page.locator('body').innerText(), /22 of 22 stock items/);
         for (const width of [360, 390, 412, 430, 768, 1280]) {
           await page.setViewportSize({width, height:900});
-          await page.locator('.stock-order-item-card:visible').first().scrollIntoViewIfNeeded();
+          await page.locator('.stock-order-item-card:visible').first().evaluate(el => el.scrollIntoView({block:'start', behavior:'instant'}));
           await page.screenshot({path:path.join(screenshots, `order-cards-${width}.png`)});
         }
         await page.setViewportSize({width:390, height:844});
