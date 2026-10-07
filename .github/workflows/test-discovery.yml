@@ -54,4 +54,5 @@ jobs:
             /tmp/fmt-discovery-*/about-390.png
             /tmp/fmt-discovery-*/contact-390.png
             /tmp/fmt-discovery-*/stock-inventory-*.png
+            /tmp/fmt-discovery-*/stock-queue-*.png
           if-no-files-found: ignore

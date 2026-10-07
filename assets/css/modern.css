@@ -12361,3 +12361,26 @@ html[data-theme] body .tube-photo-visual img {
   width: 100%; height: 100%; max-width: 100%; max-height: 100%;
   object-fit: contain; object-position: center;
 }
+
+/* Navigation shares the page's content guides, with its own quieter photograph. */
+html body[data-app-page] #siteMenuPanel {
+  padding-left: 0 !important; padding-right: 0 !important;
+  background-image: linear-gradient(110deg, rgba(3, 20, 36, .76), rgba(3, 20, 36, .58)),
+    url("../images/menu-laboratory-blue-yellow.webp") !important;
+  background-position: center !important; background-size: cover !important;
+}
+html body[data-app-page] #siteMenuPanel::before,
+html body[data-app-page] #siteMenuPanel::after { display: none !important; }
+html body[data-app-page] #siteMenuPanel .site-menu-list {
+  width: var(--site-menu-content-width, calc(100% - 48px)); max-width: none;
+  margin: 0; margin-left: var(--site-menu-content-left, 24px);
+  padding-left: 0; padding-right: 0;
+}
+html body[data-app-page] :is(.site-menu-contact-link, .contact-sheet-action-icon, .home-help-actions a) svg.contact-real-icon {
+  width: 28px; height: 28px; fill: currentColor; stroke: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .35));
+}
+html body[data-app-page="find-my-tube"] .tube-workspace-intro p:not(.tube-workspace-kicker) {
+  max-width: 56ch; font-size: clamp(.825rem, 1.2vw, .9rem) !important;
+  font-weight: 400; line-height: 1.5;
+}
