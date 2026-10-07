@@ -9359,6 +9359,10 @@ function renderCards(filteredTests) {
     add.addEventListener('pointerdown', preserveSearchFocus);
     add.addEventListener('mousedown', preserveSearchFocus);
     add.addEventListener('click', () => {
+      // Ready for the next test, keeping result feedback and mobile focus in place.
+      if (searchInput) searchInput.value = "";
+      updateSearchClearButton();
+      refreshSearchPlaceholder();
       if (selectedTestNames.has(test.name)) return;
       const coverage = getAlreadyCoveredSelectionMessage(test.name);
       if (coverage) {
@@ -9366,10 +9370,6 @@ function renderCards(filteredTests) {
         return;
       }
       addTestsToPlan([test.name], { rerenderCards: false });
-      // Ready for the next test, keeping result feedback and mobile focus in place.
-      if (searchInput) searchInput.value = "";
-      updateSearchClearButton();
-      refreshSearchPlaceholder();
       // The dock's live count announces selection without a toast covering other results.
     });
     card.querySelector('.profile-tests-btn')?.addEventListener('click', () => openProfileModal(test.name));

@@ -83,8 +83,10 @@ async function exerciseTubePlanWorkflow(page, width) {
   await select('INR', 'INR');
   await verifyCount();
   const names = await page.evaluate(() => [...selectedTestNames]);
+  await search.fill('INR');
   await page.locator('[data-test-name="INR"] .discovery-select').click();
   assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), names);
+  assert.equal(await search.inputValue(), '', 'Repeat selection also clears the field');
   // Details is a distinct keyboard control and never changes plan membership.
   const details = page.locator('[data-test-name="INR"] .discovery-inspect');
   await details.focus();

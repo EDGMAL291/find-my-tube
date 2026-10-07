@@ -47,4 +47,6 @@ jobs:
             /tmp/fmt-discovery-*/workflow-*.png
             /tmp/fmt-discovery-*/keyboard-*.png
             /tmp/fmt-discovery-*/plan-360-light.png
+            /tmp/fmt-discovery-*/multi-plan-360-light.png
+            /tmp/fmt-discovery-*/scrolled-plan-360-light.png
           if-no-files-found: ignore
