@@ -38,3 +38,13 @@ jobs:
             /tmp/fmt-discovery-*/*.png
             /tmp/fmt-server.log
           if-no-files-found: ignore
+      - name: Tube Plan workflow review images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tube-plan-workflow-review
+          path: |
+            /tmp/fmt-discovery-*/workflow-*.png
+            /tmp/fmt-discovery-*/keyboard-*.png
+            /tmp/fmt-discovery-*/plan-360-light.png
+          if-no-files-found: ignore
