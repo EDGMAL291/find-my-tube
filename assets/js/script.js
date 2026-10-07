@@ -503,8 +503,9 @@ function syncSiteMenuClosePosition() {
   siteMenuPanel.style.setProperty("--site-menu-close-right", `${Math.max(0, window.innerWidth - rect.right)}px`);
   siteMenuPanel.style.setProperty("--site-menu-close-width", `${rect.width}px`);
   siteMenuPanel.style.setProperty("--site-menu-close-height", `${rect.height}px`);
-  const title = [...document.querySelectorAll(".header .brand-title, .header h1")]
-    .find(el => el.getClientRects().length && getComputedStyle(el).display !== "none");
+  const title = [...document.querySelectorAll(".header .brand-title")]
+    .find(el => el.getClientRects().length && getComputedStyle(el).display !== "none")
+    || document.querySelector(".header h1");
   if (title) {
     const box = title.getBoundingClientRect();
     const top = box.top >= 0 && box.bottom < window.innerHeight ? box.top : 16;

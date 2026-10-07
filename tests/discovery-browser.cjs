@@ -239,7 +239,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         }));
         assert.deepEqual(hamburger, { background:'rgba(0, 0, 0, 0)', border:'none', paths:3, middleOpacity:'1' });
         const menuToggleBox = await page.locator('#menuToggleBtn').boundingBox();
-        const brandTitle = await page.locator('.header h1').evaluate(el => ({
+        const brandTitle = await page.locator('.brand-home-btn').evaluate(el => ({
           top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
           size:getComputedStyle(el).fontSize
         }));
