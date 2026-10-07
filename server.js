@@ -8,11 +8,12 @@ const path = require("path");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const STOCK_CATALOG = require("./assets/js/stock-catalog-data.js");
+const ORDER_ARCHIVE = require("./assets/js/order-archive.js");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-09-30.1";
+const APP_RELEASE = "2026-10-07.1";
 const STOCK_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
@@ -790,7 +791,7 @@ function buildStockStats(records) {
   const totalRequests = requests.length;
   const totalLineItems = requests.reduce((sum, request) => sum + Number(request.lineItemCount || 0), 0);
   const totalUnitsRequested = requests.reduce((sum, request) => sum + Number(request.totalRequestedQuantity || 0), 0);
-  const openRequests = requests.filter((request) => !["collected", "completed", "cancelled", "no-stock"].includes(slugifyStatus(request.status))).length;
+  const openRequests = requests.filter((request) => !ORDER_ARCHIVE.isArchived(request) && slugifyStatus(request.status) !== "cancelled").length;
   const statusCounts = {};
   const wards = new Map();
   const items = new Map();
@@ -989,6 +990,8 @@ function mapRequestFromDb(row) {
   const statusHistory = normalizeStatusHistory(row?.status_history);
   const cancelledAt = sanitizeString(row?.cancelled_at, 40) || resolveCancelledAtFromHistory(statusHistory);
   return {
+    archived: ORDER_ARCHIVE.isArchived(row),
+    lastActivityAt: ORDER_ARCHIVE.lastActivity(row) === null ? null : new Date(ORDER_ARCHIVE.lastActivity(row)).toISOString(),
     id: sanitizeString(row?.id, 80),
     source: sanitizeString(row?.source, 60),
     submittedAt: sanitizeString(row?.submitted_at, 40),
@@ -1209,25 +1212,31 @@ async function dbListRequests(limit = 25, {
   includeCancelled = false,
   includeArchived = false
 } = {}) {
-  const rows = await dbSingle(
-    supabase
-      .from("stock_requests")
+  const nowMs = Date.now();
+  const results = [];
+  let offset = 0;
+  // Apply archive filtering before the result limit, so archived records do
+  // not hide older orders with recent activity further down the database list.
+  while (results.length < limit) {
+    const rows = await dbSingle(supabase.from("stock_requests")
       .select("*, stock_request_items(*)")
       .order("created_at", { ascending: false })
-      .limit(limit)
-  );
-
-  const nowMs = Date.now();
-  return (rows || [])
+      .order("id", { ascending: false })
+      .range(offset, offset + 99));
+    results.push(...(rows || [])
     .map(mapRequestFromDb)
     .filter((row) => includeManual || sanitizeString(row.source, 60) !== "lab-manual-entry")
     .filter((row) => {
       const status = slugifyStatus(row?.status);
       if (!includeCancelled && status === "cancelled") return false;
-      if (!includeArchived && (status === "completed" || status === "collected" || status === "no-stock")) return false;
+      if (!includeArchived && ORDER_ARCHIVE.isArchived(row, nowMs)) return false;
       if (!includeArchived && isArchivedCancelledRequest(row, nowMs)) return false;
       return true;
-    });
+    }));
+    if (!rows || rows.length < 100) break;
+    offset += 100;
+  }
+  return results.slice(0, limit);
 }
 
 async function dbGetRequestById(requestId) {
@@ -2758,6 +2767,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
 
     sendJson(req, res, 200, {
       requests: rows,
+      activeRequests: includeArchived ? await dbListRequests(limit, { includeManual: true }) : rows,
       user: {
         userNumber: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
       }
@@ -3327,3 +3337,4 @@ module.exports = {
   isAllowedStockStatusTransition,
   slugifyStatus
 };
+

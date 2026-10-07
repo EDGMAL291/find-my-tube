@@ -644,6 +644,35 @@ async function exerciseTubePlanWorkflow(page, width) {
       await deskPage.close();
     }
     console.log('PASS About and Collection Desk photographic, transparent and responsive surface checks');
+    // Inactivity moves even untouched pending orders into history on both views.
+    for (const width of [360, 1280]) {
+      const stale = new Date(Date.now() - 15*86400000).toISOString();
+      const fresh = new Date().toISOString();
+      const fixtures = [
+        {id:'STALE-PENDING', status:'pending', createdAt:stale, requestedBy:'Old pending', items:[]},
+        {id:'STALE-READY', status:'ready', createdAt:stale, updatedAt:stale, requestedBy:'Old ready', items:[]},
+        {id:'RECENT-ACTIVITY', status:'packed', createdAt:stale, updatedAt:fresh, requestedBy:'Recently updated', items:[]},
+        {id:'FRESH-PENDING', status:'pending', createdAt:fresh, requestedBy:'Fresh pending', items:[]}
+      ];
+      const page = await createTestPage(browser, {viewport:{width,height:900}});
+      await page.route('**/api/stock-requests?**', route=>route.fulfill({json:{requests:fixtures}}));
+      await page.goto(`${base}/track-orders.html`);
+      await page.locator('#trackOrdersTable').getByText(/^Fresh pending$/i).waitFor();
+      assert.match(await page.locator('#trackOrdersTable').innerText(), /Recently updated/i);
+      assert.doesNotMatch(await page.locator('#trackOrdersTable').innerText(), /Old pending|Old ready/i);
+      assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Old pending/i);
+      assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Archived/);
+      await page.goto(`${base}/stock-dashboard.html`);
+      const datasets = await page.evaluate(fixtures=>{
+        stockDashboardPrepareDatasets(fixtures);
+        renderStockDashboardRequests(fixtures);
+        return {active:stockDashboardDatasets.activeWorkQueue.map(r=>r.id),
+          archived:stockDashboardDatasets.archivedCompletedRequests.map(r=>r.id)};
+      }, fixtures);
+      assert.deepEqual(datasets.active, ['RECENT-ACTIVITY','FRESH-PENDING']);
+      assert.deepEqual(datasets.archived, ['STALE-PENDING','STALE-READY']);
+      await page.close();
+    }
     for (const route of ['index.html', 'order-stock.html', 'track-orders.html', 'stock-dashboard.html']) {
       const page = await createTestPage(browser, { viewport:{width:390,height:844}, reducedMotion:'reduce' });
       const errors = [];

@@ -106,9 +106,9 @@
 
   function getApiUrl() {
     if (typeof buildStockApiUrl === "function") {
-      return buildStockApiUrl("/api/stock-requests?limit=250&includeArchived=true");
+      return buildStockApiUrl("/api/stock-requests?limit=250&includeArchived=true&includeCancelled=true");
     }
-    return `${window.location.origin}/api/stock-requests?limit=250&includeArchived=true`;
+    return `${window.location.origin}/api/stock-requests?limit=250&includeArchived=true&includeCancelled=true`;
   }
 
   function getCurrentFilters() {
@@ -148,14 +148,14 @@
   function filteredOrders() {
     const activeOrders = trackOrders.filter((order) => {
       const normalizedStatus = normalizeStatus(order?.status);
-      return normalizedStatus !== "collected" && normalizedStatus !== "completed" && normalizedStatus !== "cancelled" && normalizedStatus !== "no-stock";
+      return !FMT_ORDER_ARCHIVE.isArchived(order) && normalizedStatus !== "cancelled";
     });
 
     return sortByNewestFirst(filterByInputs(activeOrders));
   }
 
   function filteredArchivedOrders() {
-    const archivedOrders = trackOrders.filter((order) => ["collected", "completed", "no-stock"].includes(normalizeStatus(order?.status)));
+    const archivedOrders = trackOrders.filter((order) => FMT_ORDER_ARCHIVE.isArchived(order));
     return sortByNewestFirst(filterByInputs(archivedOrders));
   }
 
@@ -182,7 +182,9 @@
     `;
 
     const body = rows.map((request) => {
-      const statusMeta = getStatusMeta(request?.status);
+      const statusMeta = FMT_ORDER_ARCHIVE.isInactive(request)
+        ? {label: 'Archived · ' + getStatusMeta(request?.status).label, stage: 'completed'}
+        : getStatusMeta(request?.status);
       const requestId = String(request?.id || "Request");
       const isHighlighted = highlightedRequestId && requestId.toLowerCase() === highlightedRequestId;
       const detailKey = typeof registerStockRequestForDetails === "function" ? registerStockRequestForDetails(request) : requestId;
@@ -216,7 +218,7 @@
     count.textContent = `${rows.length} active request${rows.length === 1 ? "" : "s"}`;
     archiveCount.textContent = `${archivedRows.length} archived`;
     table.innerHTML = buildRowsTable(rows, "No active requests found for these filters.");
-    archiveTable.innerHTML = buildRowsTable(archivedRows, "No completed orders in Archives yet.");
+    archiveTable.innerHTML = buildRowsTable(archivedRows, "No archived orders yet.");
 
     if (filters.ward) {
       meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (${getActiveCount(rows)} active). ${getLastRefreshText()}`.trim();
@@ -303,3 +305,4 @@
 
   loadOrders();
 })();
+

@@ -1130,9 +1130,9 @@ function stockDashboardPrepareDatasets(requests = [], recentReceipts = []) {
   const safeReceipts = Array.isArray(recentReceipts) ? recentReceipts : [];
   const activeWorkQueue = safeRequests.filter((request) => {
     const status = stockDashboardNormalizeStatus(request?.status);
-    return status !== "collected" && status !== "completed" && status !== "cancelled" && status !== "no-stock";
+    return !FMT_ORDER_ARCHIVE.isArchived(request) && status !== "cancelled";
   });
-  const archivedCompletedRequests = safeRequests.filter((request) => ["collected", "completed", "no-stock"].includes(stockDashboardNormalizeStatus(request?.status)));
+  const archivedCompletedRequests = safeRequests.filter((request) => FMT_ORDER_ARCHIVE.isArchived(request));
 
   stockDashboardDatasets.stockRequests = safeRequests;
   stockDashboardDatasets.receivedStock = safeReceipts;
@@ -3111,7 +3111,7 @@ function renderStockDashboardRequests(requests) {
   const activeRequests = Array.isArray(requests)
     ? requests.filter((request) => {
       const status = stockDashboardNormalizeStatus(request?.status);
-      return status !== "collected" && status !== "completed" && status !== "cancelled" && status !== "no-stock";
+      return !FMT_ORDER_ARCHIVE.isArchived(request) && status !== "cancelled";
     })
     : [];
 
@@ -3227,7 +3227,10 @@ async function loadStockDashboard(options = {}) {
     const statsPayload = await statsResponse.json();
     const requestsPayload = await requestsResponse.json();
     const inventoryPayload = await inventoryResponse.json();
-    const requests = requestsPayload.requests || [];
+    const requests = [...new Map([
+      ...(requestsPayload.requests || []),
+      ...(requestsPayload.activeRequests || [])
+    ].map(request => [request.id, request])).values()];
     const recentReceipts = Array.isArray(inventoryPayload?.recentReceipts) ? inventoryPayload.recentReceipts : [];
     const authGenerationChanged = authGenerationAtStart !== stockDashboardAuthGeneration;
     const sessionChanged = !stockDashboardSession
@@ -3807,3 +3810,4 @@ stockDashboardSetSummaryOpen(false);
 stockDashboardSetSessionRestorePending(true);
 stockDashboardLoadApiConfig();
 checkStockDashboardSession();
+
