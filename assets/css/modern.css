@@ -12270,6 +12270,7 @@ html[data-theme] body #siteMenuPanel {
 html[data-theme] body #siteMenuPanel .site-menu-title {
   position: fixed; top: var(--site-menu-title-top, 16px); left: var(--site-menu-title-left, 24px);
   width: var(--site-menu-title-width, calc(100% - 96px)); margin: 0;
+  padding: 0; border: 0; letter-spacing: normal;
   font-size: var(--site-menu-title-size, 1.6rem); font-weight: 400 !important;
   text-align: center; line-height: 1.25;
 }
@@ -12289,6 +12290,7 @@ html[data-theme] body .contact-sheet-action,
 html body[data-app-page="home"] .home-help-actions a {
   display: grid; place-items: center; flex: 0 0 48px; width: 48px; min-width: 48px;
   height: 48px; min-height: 48px; padding: 0; gap: 0;
+  grid-template-columns: 1fr;
   background: rgba(255,255,255,.10) !important; color: #fffdf8 !important;
   border: 1px solid rgba(255,255,255,.35) !important; border-radius: var(--fmt-card-radius);
   box-shadow: none !important; backdrop-filter: blur(8px);
