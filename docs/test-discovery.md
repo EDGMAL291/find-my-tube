@@ -42,3 +42,9 @@ Run `npm run check` and `npm test`. For browser tests, run `npx playwright insta
 
 The browser suite exercises 360, 390, 412, 430, 768, and 1280px widths in light/dark modes. It checks direct selection, cleared search fields, preserved results/focus, repeat taps, explicit removal and clear-all, Details, count-only dock, selected-list toggle, pinned-heading geometry, full resolved counts/artwork/warnings, full-planner opening, profile collapsing, HIV mappings/specimens, grouping, dedicated-tube and volume/OGTT/antenatal rules, catalogue-wide coverage, unknown/specimen-specific mappings, simulated keyboard resize/panning, accessible states/focus, overlap/overflow, and JavaScript errors. Simulated visual viewports guard regressions; physical iOS/Android keyboard review remains useful. Screenshots are written to a temporary directory for visual review. It does not submit stock orders or alter production data.
 
+
+## Navigation and support
+
+The full-screen menu replaces the header title at the same position and font size. Menu labels use normal weight. Its list scrolls independently beneath the title/close controls; opening it hides the compact planner and bottom navigation, preventing collection UI from appearing while scrolling. Closing restores the existing selection.
+
+About and Contact share the existing home laboratory photograph with cool shade and warm light, in both their pages and dialogs. Their navigation cross-links the two pages. The menu groups About and Contact, with monochrome WhatsApp/telephone icon links on frosted 48px targets. Icon links retain accessible names and the recorded telephone/WhatsApp destinations.

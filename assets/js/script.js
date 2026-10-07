@@ -503,6 +503,18 @@ function syncSiteMenuClosePosition() {
   siteMenuPanel.style.setProperty("--site-menu-close-right", `${Math.max(0, window.innerWidth - rect.right)}px`);
   siteMenuPanel.style.setProperty("--site-menu-close-width", `${rect.width}px`);
   siteMenuPanel.style.setProperty("--site-menu-close-height", `${rect.height}px`);
+  const title = [...document.querySelectorAll(".header .brand-title")]
+    .find(el => el.getClientRects().length && getComputedStyle(el).display !== "none")
+    || document.querySelector(".header h1");
+  if (title) {
+    const box = title.getBoundingClientRect();
+    const top = box.top >= 0 && box.bottom < window.innerHeight ? box.top : 16;
+    siteMenuPanel.style.setProperty("--site-menu-title-top", `${top}px`);
+    siteMenuPanel.style.setProperty("--site-menu-title-left", `${box.left}px`);
+    siteMenuPanel.style.setProperty("--site-menu-title-width", `${box.width}px`);
+    siteMenuPanel.style.setProperty("--site-menu-title-size", getComputedStyle(title).fontSize);
+    siteMenuPanel.style.setProperty("--site-menu-content-top", `${Math.max(76, top + box.height + 24)}px`);
+  }
 }
 
 // Sets site menu open state.
@@ -693,7 +705,7 @@ function enhanceSiteMenuStructure() {
     secondaryGroup.className = "site-menu-group";
     secondaryGroup.dataset.group = "secondary";
     secondaryGroup.setAttribute("role", "none");
-    secondaryGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Secondary</p>';
+    secondaryGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">About &amp; Contact</p>';
     secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
     siteMenuList.appendChild(secondaryGroup);
   }
@@ -703,17 +715,24 @@ function enhanceSiteMenuStructure() {
   contactGroup.dataset.group = "contact";
   contactGroup.setAttribute("role", "none");
   contactGroup.innerHTML = `
-    <p class="site-menu-group-title" role="presentation">Contact</p>
-    <a class="site-menu-contact-link" href="tel:0217996290" role="menuitem">
-      <span>Call laboratory</span>
-      <small>021 799 6290</small>
-    </a>
-    <a class="site-menu-contact-link" href="https://wa.me/27606286757?text=Hi%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20need%20help." target="_blank" rel="noopener noreferrer" role="menuitem">
-      <span>WhatsApp support</span>
-      <small>+27 60 628 6757</small>
-    </a>
+    <div class="site-menu-contact-actions">
+      <a class="site-menu-contact-link" href="tel:0217996290" role="menuitem" aria-label="Call laboratory on 021 799 6290" title="Call laboratory · 021 799 6290">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"></path></svg>
+      </a>
+      <a class="site-menu-contact-link" href="https://wa.me/27606286757?text=Hi%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20need%20help." target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="Message support on WhatsApp" title="WhatsApp support · +27 60 628 6757">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path><path d="M9.5 10.3c.2-.4.4-.4.6-.4h.4c.1 0 .3 0 .4.4l.7 1.5c.1.2.1.4 0 .5l-.4.5c-.1.1-.1.3 0 .4.3.5.9 1.1 1.6 1.5.2.1.3.1.4 0l.5-.4c.1-.1.3-.1.5 0l1.4.6c.4.2.4.3.4.5 0 .5-.3 1-.8 1.2-.5.2-1.3.2-2.6-.4-1-.5-2.1-1.5-2.8-2.7-.7-1.3-.6-2.1-.4-2.5Z"></path></svg>
+      </a>
+    </div>
   `;
-  siteMenuList.appendChild(contactGroup);
+  const aboutGroup = siteMenuList.querySelector('[data-group="secondary"]');
+  const contactPageLink = document.createElement("a");
+  contactPageLink.className = "site-menu-link";
+  contactPageLink.href = "./contact-feedback.html";
+  contactPageLink.setAttribute("role", "menuitem");
+  contactPageLink.innerHTML = '<span class="menu-action-label">Contact and feedback</span>';
+  if (aboutGroup) aboutGroup.appendChild(contactPageLink);
+  else contactGroup.prepend(contactPageLink);
+  (aboutGroup || siteMenuList).appendChild(contactGroup);
 
   siteMenuList.querySelectorAll(".site-menu-group-title, .site-menu-link, .site-menu-contact-link").forEach((item, index) => {
     item.style.setProperty("--menu-item-index", String(index));
