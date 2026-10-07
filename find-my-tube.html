@@ -42,7 +42,7 @@
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
   <link rel="stylesheet" href="assets/css/modern.css?v=20261006f" />
-  <link rel="stylesheet" href="assets/css/discovery.css?v=20261005j" />
+  <link rel="stylesheet" href="assets/css/discovery.css?v=20261007a" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -122,8 +122,8 @@
     <div class="surface-panel-backdrop" id="surfacePanelBackdrop" hidden></div>
 
     <section class="tube-workspace-intro" aria-labelledby="tubeWorkspaceTitle">
-      <h2 id="tubeWorkspaceTitle">Find the right tube, before collection.</h2>
-      <p>Search a test, profile, or clinical service to get the specimen and collection guidance you need.</p>
+      <h2 id="tubeWorkspaceTitle">Search. Select. Plan. Collect.</h2>
+      <p>Select tests or profiles as you search. Tube Plan combines their recorded collection requirements.</p>
     </section>
 
     <section class="search-box" id="tubeLookupPanel">
@@ -215,11 +215,14 @@
     </footer>
   </main>
 
-  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-label="Tube Plan: 0" hidden>
+  <button type="button" class="selection-cart-bar" id="selectionCartBar" aria-controls="drawModal" aria-haspopup="dialog" aria-expanded="false" aria-label="Tube Plan: 0" hidden>
     <span class="selection-cart-copy">
       <span class="selection-cart-label">Tube Plan</span>
-      <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite">0 tests</span>
+      <span class="selection-cart-badge" id="selectionCartCount" aria-live="polite" aria-atomic="true">0 tests</span>
+      <span class="selection-cart-expand" aria-hidden="true">↑</span>
     </span>
+    <span class="selection-cart-preview" hidden></span>
+    <span class="selection-cart-warning" hidden></span>
   </button>
 
   <section class="draw-modal" id="drawModal" hidden>
@@ -230,6 +233,7 @@
       </div>
       <div class="draw-selection-actions">
         <p class="draw-selection-count" id="drawSelectionCount">0 tests added</p>
+        <button type="button" class="draw-tool-btn" id="drawClearAllBtn" hidden>Clear all</button>
       </div>
       <div class="draw-selected-list" id="drawSelectedList"></div>
       <div class="draw-result-card" id="drawResultCard" tabindex="-1">
@@ -284,11 +288,11 @@
   <script src="assets/data/data.js?v=20260812a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261006d"></script>
-  <script src="assets/js/find-my-test.js?v=20260728b"></script>
+  <script src="assets/js/script.js?v=20261007a"></script>
+  <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-06.6";
+      const APP_VERSION = "2026-10-07.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -309,7 +313,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261006f", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261007a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

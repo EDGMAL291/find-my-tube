@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v323";
+const CACHE_NAME = "find-my-tube-v324";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -10,9 +10,9 @@ const CORE_ASSETS = [
   "./manifest.webmanifest?v=20260316b",
   "./assets/css/style.css?v=20260729a",
   "./assets/css/modern.css?v=20261006f",
-  "./assets/css/discovery.css?v=20261005j",
+  "./assets/css/discovery.css?v=20261007a",
   "./assets/js/stock-catalog-data.js?v=20261006d",
-  "./assets/js/script.js?v=20261006d",
+  "./assets/js/script.js?v=20261007a",
   "./assets/data/data.js?v=20260812a",
   "./favicon.svg",
   "./assets/images/find-my-tube-lab-overview.jpg"
@@ -109,3 +109,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
