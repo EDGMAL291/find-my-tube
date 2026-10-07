@@ -12295,6 +12295,9 @@ html body[data-app-page="home"] .home-help-actions a {
   border: 1px solid rgba(255,255,255,.35) !important; border-radius: var(--fmt-card-radius);
   box-shadow: none !important; backdrop-filter: blur(8px);
 }
+html[data-theme] body[data-app-page] .contact-sheet-actions .contact-sheet-action {
+  background: rgba(255,255,255,.10) !important; color: #fffdf8 !important;
+}
 html[data-theme] body .contact-sheet-action-icon {
   width: 28px; height: 28px; min-width: 0; padding: 0;
   background: transparent !important; color: inherit !important; border: 0 !important; box-shadow: none !important;
