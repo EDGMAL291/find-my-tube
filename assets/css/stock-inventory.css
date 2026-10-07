@@ -127,8 +127,8 @@ html[data-theme="dark"] #stockDashboardInventoryList .stock-item-title-row > [ar
 html body[data-app-page="stock-dashboard"] {
   isolation: isolate;
   background-color: #03111f !important;
-  background-image: linear-gradient(110deg, rgba(3, 24, 42, .84), rgba(74, 46, 24, .60)),
-    url("../images/find-my-tube-lab-overview.jpg") !important;
+  background-image: linear-gradient(110deg, rgba(3, 20, 36, .42), rgba(3, 20, 36, .32)),
+    url("../images/stock-dashboard-blue-yellow.webp") !important;
   background-position: center !important;
   background-size: cover !important;
 }
@@ -137,8 +137,8 @@ html body[data-app-page="stock-dashboard"]::before {
   inset: 0 !important; width: 100vw; height: 100lvh;
   z-index: -1; pointer-events: none; filter: none !important;
   border-radius: 0 !important;
-  background: linear-gradient(110deg, rgba(3, 24, 42, .84), rgba(74, 46, 24, .60)),
-    url("../images/find-my-tube-lab-overview.jpg") center / cover no-repeat !important;
+  background: linear-gradient(110deg, rgba(3, 20, 36, .42), rgba(3, 20, 36, .32)),
+    url("../images/stock-dashboard-blue-yellow.webp") center / cover no-repeat !important;
 }
 html body[data-app-page="stock-dashboard"] #stockDashboardInventoryCard {
   background: rgba(255, 255, 255, .10) !important;
@@ -166,4 +166,25 @@ html body[data-app-page="stock-dashboard"] #stockDashboardInventoryCard :is(
 html body[data-app-page="stock-dashboard"] #stockDashboardInventoryList .stock-dashboard-inventory-section-head > span {
   background: rgba(255, 255, 255, .10);
   border: 1px solid rgba(255, 255, 255, .22);
+}
+
+/* The work queue uses the same frosted treatment as available stock. */
+html body[data-app-page="stock-dashboard"] #stockDashboardRequestList .stock-dashboard-queue-row {
+  background: rgba(255, 255, 255, .10) !important;
+  border: 1px solid rgba(255, 255, 255, .22) !important;
+  border-radius: 0; box-shadow: none !important;
+  backdrop-filter: blur(8px) saturate(1.04);
+  -webkit-backdrop-filter: blur(8px) saturate(1.04);
+}
+html body[data-app-page="stock-dashboard"] #stockDashboardRequestList :is(
+  .stock-dashboard-queue, .stock-dashboard-queue-cell, .stock-dashboard-queue-actions
+) { background: transparent !important; }
+html body[data-app-page="stock-dashboard"] #stockDashboardRequestList :is(
+  .stock-dashboard-queue-cell, .stock-dashboard-queue-head,
+  .stock-request-compact-title, .stock-request-compact-more
+) { color: #fffdf8 !important; }
+html body[data-app-page="stock-dashboard"] #stockDashboardRequestList .stock-dashboard-queue-cell::before { color: #c9d8e2 !important; }
+html body[data-app-page="stock-dashboard"] #stockDashboardRequestList .stock-dashboard-queue-actions button {
+  background: rgba(255, 255, 255, .10) !important; color: #fffdf8 !important;
+  border: 1px solid rgba(255, 255, 255, .30) !important; box-shadow: none !important;
 }

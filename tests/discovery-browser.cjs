@@ -240,6 +240,11 @@ async function exerciseTubePlanWorkflow(page, width) {
           return {weight:style.fontWeight, lines:range.getClientRects().length, fits:el.scrollWidth<=el.clientWidth};
         });
         assert.deepEqual(heading, {weight:'400', lines:1, fits:true}, 'Workflow heading stays readable on one line');
+        const description = await page.locator('.tube-workspace-intro p').evaluate(el=>({
+          size:parseFloat(getComputedStyle(el).fontSize),
+          heading:parseFloat(getComputedStyle(document.querySelector('#tubeWorkspaceTitle')).fontSize)
+        }));
+        assert.ok(description.size <= description.heading*.82, 'Search explanation is visibly smaller than its heading');
         assert.equal(await page.locator('.brand-home-btn').evaluate(el=>getComputedStyle(el).fontWeight), '400');
         assert.equal(await page.locator('.tube-workspace-kicker, .group-hints > h3').count(), 0);
         assert.equal(await page.locator('.group-hints').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
@@ -251,6 +256,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         }));
         assert.deepEqual(hamburger, { background:'rgba(0, 0, 0, 0)', border:'none', paths:3, middleOpacity:'1' });
         const menuToggleBox = await page.locator('#menuToggleBtn').boundingBox();
+        const contentGuide = await page.locator('#tubeWorkspaceTitle').boundingBox();
         const brandTitle = await page.locator('.brand-home-btn').evaluate(el => ({
           top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
           size:getComputedStyle(el).fontSize
@@ -258,6 +264,9 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.locator('#menuToggleBtn').click();
         await page.waitForTimeout(250);
         const menuCloseBox = await page.locator('#siteMenuPanel .site-menu-close').boundingBox();
+        const menuContent = await page.locator('#siteMenuPanel .site-menu-list').boundingBox();
+        assert.ok(Math.abs(menuContent.x-contentGuide.x)<2, 'Menu uses the same left content guide as the page');
+        assert.ok(Math.abs(menuContent.y-contentGuide.y)<2, 'Menu starts at the page content level');
         const menuTitle = await page.locator('#siteMenuPanel .site-menu-title').evaluate(el => ({
           top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
           size:getComputedStyle(el).fontSize, weight:getComputedStyle(el).fontWeight
@@ -289,7 +298,7 @@ async function exerciseTubePlanWorkflow(page, width) {
           backgroundImage: getComputedStyle(el).backgroundImage,
           backdropFilter: getComputedStyle(el).backdropFilter
         }));
-        assert.match(menuVisual.backgroundImage, /hero-lab-tubes/);
+        assert.match(menuVisual.backgroundImage, /menu-laboratory-blue-yellow/);
         assert.equal(menuVisual.backdropFilter, 'none', 'Menu photograph must remain sharp');
         const menuBox = await page.locator('#siteMenuPanel').boundingBox();
         assert.equal(Math.round(menuBox.width), width);
@@ -671,6 +680,10 @@ async function exerciseTubePlanWorkflow(page, width) {
       }, fixtures);
       assert.deepEqual(datasets.active, ['RECENT-ACTIVITY','FRESH-PENDING']);
       assert.deepEqual(datasets.archived, ['STALE-PENDING','STALE-READY']);
+      await page.evaluate(() => { document.querySelector('#stockDashboardRequestsCard').hidden = false; });
+      assert.equal(await page.locator('.stock-dashboard-queue-row').first().evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Work queue rows use light frost');
+      await page.locator('#stockDashboardRequestsCard').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(screenshots, `stock-queue-${width}.png`)});
       await page.evaluate(() => {
         stockDashboardRenderInventory([
           {key:'yellowTubes', label:'Yellow (Gel) tubes', onHand:5000},
