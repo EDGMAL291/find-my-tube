@@ -1,0 +1,50 @@
+name: Test search and Tube Plan
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Browser regression suite
+        run: |
+          npm start > /tmp/fmt-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:3000/api/health; then break; fi
+            sleep 1
+          done
+          npm run test:browser
+      - name: Browser screenshots and server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-browser-results
+          path: |
+            /tmp/fmt-discovery-*/*.png
+            /tmp/fmt-server.log
+          if-no-files-found: ignore
+      - name: Tube Plan workflow review images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tube-plan-workflow-review
+          path: |
+            /tmp/fmt-discovery-*/workflow-*.png
+            /tmp/fmt-discovery-*/keyboard-*.png
+            /tmp/fmt-discovery-*/plan-360-light.png
+          if-no-files-found: ignore

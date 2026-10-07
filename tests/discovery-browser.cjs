@@ -33,12 +33,156 @@ async function createTestPage(browser, options = {}) {
   return page;
 }
 
+async function exerciseTubePlanWorkflow(page, width) {
+  await page.evaluate(() => setSelectedTests(new Set()));
+  const search = page.locator('#searchInput');
+  async function select(query, name) {
+    await search.fill(query);
+    const card = page.locator('[data-test-name=' + JSON.stringify(name) + ']');
+    const before = await page.locator('.discovery-card').count();
+    if (width <= 620) await card.locator('.discovery-select').tap();
+    else await card.locator('.discovery-select').click();
+    assert.equal(await search.inputValue(), query, 'Selection preserves query');
+    assert.equal(await page.locator('.discovery-card').count(), before, 'Selection preserves results');
+    assert.equal(await card.locator('.discovery-select').getAttribute('aria-pressed'), 'true');
+    assert.match(await card.innerText(), /✓ In Tube Plan/);
+    assert.equal(await page.locator('#drawModal').isVisible(), false, 'No forced modal');
+    if (width <= 620) assert.equal(await search.evaluate(el => el === document.activeElement), true, 'Tap preserves active search keyboard');
+  }
+  async function verifyCount() {
+    await page.locator('#selectionCartBar').waitFor({state:'visible'});
+    const expected = await page.evaluate(() => {
+      const selected = getSelectedTests();
+      const {plan} = getResolvedDrawPlan(selected);
+      const count = plan.items.reduce((sum,item) => sum + item.count, 0);
+      return `${selected.length} test${selected.length === 1 ? '' : 's'} • ${formatPlanCountLabel(count,plan)}${plan.manual.length ? ` • ${plan.manual.length} to confirm` : ''}`;
+    });
+    const actual = await page.locator('#selectionCartCount').innerText();
+    if (actual !== expected) {
+      console.log('Dock diagnostic', await page.evaluate(() => ({
+        classes: document.body.className,
+        elements: ['selectionCartBar','selectionCartCount'].map(id => {
+          const el = document.getElementById(id), css=getComputedStyle(el);
+          return {id, text:el.textContent, html:el.innerHTML, visibility:css.visibility, display:css.display, opacity:css.opacity, hidden:el.hidden, rect:el.getBoundingClientRect().toJSON()};
+        })
+      })));
+      await page.screenshot({path:path.join(screenshots, 'dock-failure.png')});
+    }
+    assert.equal(actual, expected, 'Dock count uses resolver quantities');
+  }
+  await select('CRP', 'CRP');
+  await select('FBC', 'FBC');
+  await select('LFT', 'Liver Function Tests (LFT)');
+  await verifyCount();
+  assert.equal(await page.locator('#selectionCartCount').innerText(), '3 tests • 2 tubes', 'LFT and CRP share gold');
+  const theme = await page.locator('html').getAttribute('data-theme');
+  await page.screenshot({path:path.join(screenshots, `workflow-${width}-${theme}.png`)});
+  await select('INR', 'INR');
+  await verifyCount();
+  const names = await page.evaluate(() => [...selectedTestNames]);
+  await page.locator('[data-test-name="INR"] .discovery-select').click();
+  assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), names);
+  // Details is a distinct keyboard control and never changes plan membership.
+  const details = page.locator('[data-test-name="INR"] .discovery-inspect');
+  await details.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await details.getAttribute('aria-expanded'), 'true');
+  assert.match(await page.locator('[data-test-name="INR"] .discovery-body').innerText(), /Specimen|Collection/);
+  assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), names);
+  await page.locator('#selectionCartBar').click();
+  assert.equal(await page.locator('#selectionCartBar').getAttribute('aria-expanded'), 'true');
+  await page.locator('#closeDrawPlannerBtn').focus();
+  await page.keyboard.press('Shift+Tab');
+  assert.equal(await page.locator('#drawModal').evaluate(el => el.contains(document.activeElement)), true, 'Planner traps focus');
+  await page.locator('[aria-label="Remove INR from Tube Plan"]').click();
+  assert.equal(await page.evaluate(() => selectedTestNames.has('INR')), false);
+  assert.equal(await page.locator('#drawModal').evaluate(el => el.contains(document.activeElement)), true, 'Removal retains usable focus');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#drawModal').isVisible(), false);
+  assert.equal(await page.locator('#selectionCartBar').getAttribute('aria-expanded'), 'false');
+  await verifyCount();
+  // Real profile input collapses component selections and retains resolver overrides.
+  await page.evaluate(() => {
+    const component = profileComponentsByName['Liver Function Tests (LFT)'].find(name => enrichedTests.some(t=>t.name===name));
+    setSelectedTests(new Set([component]));
+  });
+  await select('LFT', 'Liver Function Tests (LFT)');
+  assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), ['Liver Function Tests (LFT)']);
+  await verifyCount();
+  await page.evaluate(() => setSelectedTests(new Set()));
+  await select('HIV ELISA', 'HIV ELISA');
+  await select('RPR', 'RPR (Syphilis Screen)');
+  await select('CRP', 'CRP');
+  assert.equal(await page.locator('#selectionCartCount').innerText(), '3 tests • 3 tubes', 'Dedicated gold remains dedicated');
+  assert.match(await page.locator('.selection-cart-warning').innerText(), /own Gold\/Yellow/);
+  await page.evaluate(() => setSelectedTests(new Set(['OGTT (fasting, 1hr, 2hr)'])));
+  assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test • 3 tubes', 'OGTT multiple draws remain');
+  await page.evaluate(() => setSelectedTests(new Set(['FBC', 'HbA1c', 'ESR'])));
+  assert.equal(await page.locator('#selectionCartCount').innerText(), '3 tests • 2 tubes', 'Purple volume remains');
+  await page.evaluate(() => setSelectedTests(new Set(['Antenatal Screen (ANTINV)'])));
+  assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test • 6 tubes', 'Antenatal minimums remain');
+  await page.evaluate(() => setSelectedTests(new Set(['Ammonia'])));
+  assert.match(await page.locator('.selection-cart-warning').innerText(), /courier|Separate plasma/);
+  // Unknown mappings remain recorded/manual, including in the compact plan.
+  await page.evaluate(() => {
+    const fixture = enrichTest({name:'Unmapped workflow fixture', tubeColor:'Recorded uncommon specimen', specimen:'Recorded local specimen'});
+    enrichedTests.push(fixture);
+    setSelectedTests(new Set([fixture.name]));
+  });
+  assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test • 0 tubes • 1 to confirm');
+  assert.match(await page.locator('.selection-cart-preview').innerText(), /Recorded uncommon specimen/);
+  assert.match(await page.locator('.selection-cart-warning').innerText(), /laboratory/);
+  await page.locator('#selectionCartBar').click();
+  assert.match(await page.locator('#drawPlannerNote').innerText(), /Recorded uncommon specimen.*Confirm/);
+  assert.equal(await page.locator('#drawGroups .tube-photo-visual-adult').count(), 0, 'Unknown specimen never becomes a guessed blood tube');
+  await page.locator('#closeDrawPlannerBtn').click();
+  await page.evaluate(() => {
+    enrichedTests.splice(enrichedTests.findIndex(t=>t.name==='Unmapped workflow fixture'),1);
+    setSelectedTests(new Set(['Semen Analysis']));
+  });
+  await verifyCount();
+  assert.match(await page.locator('.selection-cart-preview').innerText(), /semen/i);
+  assert.match(await page.locator('#selectionCartCount').innerText(), /collection item/);
+  // Simulate the visual viewport shrinking and panning above a phone keyboard.
+  if (width <= 620) {
+    await search.fill('CRP');
+    await page.evaluate(() => {
+      Object.defineProperty(visualViewport, 'height', {configurable:true, get:()=>430});
+      Object.defineProperty(visualViewport, 'offsetTop', {configurable:true, get:()=>12});
+      visualViewport.dispatchEvent(new Event('resize'));
+    });
+    await select('CRP', 'CRP');
+    const geometry = await page.evaluate(() => {
+      const dock = document.querySelector('#selectionCartBar').getBoundingClientRect();
+      const search = document.querySelector('#tubeLookupPanel').getBoundingClientRect();
+      const results = document.querySelector('#cardsContainer');
+      return {dockBottom:dock.bottom, dockTop:dock.top, searchBottom:search.bottom, padding:parseFloat(getComputedStyle(results).paddingBottom), dockHeight:dock.height};
+    });
+    assert.ok(geometry.dockBottom <= 442, 'Plan stays above simulated keyboard');
+    assert.ok(geometry.dockTop > geometry.searchBottom, 'Plan does not cover search input');
+    assert.ok(geometry.padding >= geometry.dockHeight, 'Results reserve scrolling space for the dock');
+    await page.screenshot({path:path.join(screenshots, `keyboard-${width}-${theme}.png`)});
+    await page.evaluate(() => {
+      delete visualViewport.height; delete visualViewport.offsetTop;
+      visualViewport.dispatchEvent(new Event('resize'));
+    });
+  }
+  await page.locator('#selectionCartBar').click();
+  await page.locator('#drawClearAllBtn').click();
+  assert.ok(await page.evaluate(() => selectedTestNames.size > 0), 'Clear-all requires explicit confirmation');
+  await page.locator('#drawClearAllBtn').click();
+  assert.equal(await page.evaluate(() => selectedTestNames.size), 0);
+  await page.locator('#closeDrawPlannerBtn').click();
+  assert.equal(await page.locator('#selectionCartBar').isVisible(), false);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No workflow overflow');
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   try {
     for (const width of [360, 390, 412, 430, 768, 1280]) {
       for (const theme of ['light', 'dark']) {
-        const page = await createTestPage(browser, { viewport: { width, height: 900 }, reducedMotion: 'reduce' });
+        const page = await createTestPage(browser, { viewport: { width, height: 900 }, hasTouch: width <= 620, reducedMotion: 'reduce' });
         const errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}/find-my-tube.html`);
@@ -98,8 +242,13 @@ async function createTestPage(browser, options = {}) {
         assert.equal(await card.locator('.discovery-body').isVisible(), false);
         assert.equal(await page.locator('#drawModal').isVisible(), false);
         assert.equal(await page.locator('#selectionCartBar').isVisible(), false);
-        await card.locator('.discovery-open').focus();
+        await card.locator('.discovery-select').focus();
         await page.keyboard.press('Enter');
+        assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), ['HIV ELISA'], 'Primary result selects immediately');
+        assert.equal(await card.locator('.discovery-select').getAttribute('aria-pressed'), 'true');
+        assert.match(await card.innerText(), /✓ In Tube Plan/);
+        assert.equal(await card.locator('.discovery-body').isVisible(), false, 'Selection does not force details open');
+        await card.locator('.discovery-inspect').click();
         const surfaces = await page.evaluate(() => ({
           backdrop: getComputedStyle(document.body, '::before').backgroundImage,
           fixed: getComputedStyle(document.body, '::before').position,
@@ -117,14 +266,17 @@ async function createTestPage(browser, options = {}) {
         assert.equal(await card.locator('.discovery-body').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Expanded result shows the page photograph');
         assert.match(await card.innerText(), /Gold\/Yellow/);
         assert.match(await card.innerText(), /Serum/);
-        assert.equal(await page.evaluate(() => selectedTestNames.size), 0, 'Inspection must not add a test');
-        await card.locator('.discovery-add').focus();
+        assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'Details must not change selection');
+        await card.locator('.discovery-select').focus();
         await page.keyboard.press('Enter');
+        assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'Repeated selection must not remove a test');
         assert.equal(await page.locator('#searchInput').inputValue(), 'HIV', 'Adding must preserve search results');
         assert.equal(await page.locator('#selectionCartBar').isVisible(), true);
         assert.equal(await page.locator('#selectionCartBar .selection-cart-icon').count(), 0, 'Floating Tube Plan has no glyph');
         assert.equal((await page.locator('#selectionCartBar .selection-cart-label').innerText()).trim(), 'Tube Plan');
-        assert.equal((await page.locator('#selectionCartCount').innerText()).trim(), '1 test');
+        assert.equal((await page.locator('#selectionCartCount').innerText()).trim(), '1 test • 1 tube');
+        assert.match(await page.locator('.selection-cart-preview').innerText(), /Gold\/Yellow/);
+        assert.ok(await page.locator('.selection-cart-preview img, .selection-cart-preview svg').count() > 0);
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).borderTopStyle), 'solid');
         assert.equal(await page.locator('#drawModal').isVisible(), false, 'Adding does not force open planner');
         await card.locator('summary').click();
@@ -184,8 +336,12 @@ async function createTestPage(browser, options = {}) {
           selectedTestNames.clear(); selectedTestNames.add('HIV ELISA'); refreshSelectionUi({ rerenderCards: false });
         });
         await page.locator('#closeDrawPlannerBtn').click();
-        await card.locator('.discovery-add').click();
+        await card.locator('.discovery-select').click();
+        assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'Selected result cannot silently remove');
+        await page.locator('#selectionCartBar').click();
+        await page.locator('[aria-label="Remove HIV ELISA from Tube Plan"]').click();
         assert.equal(await page.evaluate(() => selectedTestNames.size), 0);
+        await page.locator('#closeDrawPlannerBtn').click();
         // Real local records and production planner functions; no external mappings.
         const audit = await page.evaluate(() => {
           const plan = names => getResolvedDrawPlan(enrichedTests.filter(t => names.includes(t.name)));
@@ -228,14 +384,15 @@ async function createTestPage(browser, options = {}) {
         assert.match(audit.paediatricMarkup, /tube-photo-visual-paediatric/);
         assert.match(audit.paediatricMarkup, /realistic-empty-paediatric-microtainer-purple-v1\.png/);
         // HIV viral-load specimen is visible, not merely present in data.
-        await page.locator('[data-test-name="HIV Viral Load"] .discovery-open').click();
+        await page.locator('[data-test-name="HIV Viral Load"] .discovery-inspect').click();
         assert.match(await page.locator('[data-test-name="HIV Viral Load"]').innerText(), /EDTA plasma/);
         await page.locator('#searchInput').fill('FBC');
         const fbcCard = page.locator('[data-test-name="FBC"]');
         await fbcCard.locator('.discovery-open').click();
-        assert.equal(await fbcCard.locator('.discovery-add').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Plan action is transparent');
+        await fbcCard.locator('.discovery-inspect').click();
+        assert.equal(await fbcCard.locator('.discovery-select').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Plan action is transparent');
         assert.equal(await fbcCard.locator('.profile-tests-btn').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile action is transparent');
-        await fbcCard.locator('.discovery-add').click();
+        await fbcCard.locator('.discovery-select').click();
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan bar is transparent');
         assert.deepEqual(await page.locator('#selectionCartBar').evaluate(el => ({
           style: getComputedStyle(el).borderTopStyle,
@@ -254,6 +411,7 @@ async function createTestPage(browser, options = {}) {
         assert.equal(await page.locator('#profileModalList').evaluate(el => getComputedStyle(el).borderTopWidth), '0px', 'Profile list has no nested outline');
         assert.ok(await page.locator('#profileModalList li').evaluateAll(items => items.every(el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)')), 'Profile rows have no grey tiles');
         await page.locator('#closeProfileModalBtn').click();
+        await exerciseTubePlanWorkflow(page, width);
         assert.deepEqual(errors, []);
         await page.close();
         console.log(`PASS ${width}px ${theme}: compact/expanded cards, HIV, add/remove, grouped planner, catalogue, overflow, runtime`);
@@ -279,8 +437,9 @@ async function createTestPage(browser, options = {}) {
     }
     await drugPage.locator('#searchInput').fill('valproac acid');
     await drugPage.locator('.discovery-open').click();
+    await drugPage.locator('.discovery-inspect').click();
     assert.match(await drugPage.locator('.discovery-body').innerText(), /Gold\/Yellow/);
-    await drugPage.locator('.discovery-add').click();
+    await drugPage.locator('.discovery-select').click();
     assert.deepEqual(await drugPage.evaluate(()=>[...selectedTestNames]), ['Sodium Valproate']);
     await drugPage.close();
     console.log(`PASS ${Object.keys(drugCases).length} drug alias, typo, peak/trough and local mapping checks`);

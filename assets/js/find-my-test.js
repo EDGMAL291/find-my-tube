@@ -1269,7 +1269,7 @@
     };
   }
 
-  // Suggested test checkboxes mirror Tube Plan so this panel and the main app always agree on selection state.
+  // Suggested test buttons feed the same Tube Plan; removal belongs to the full planner.
   function renderSuggestedTests() {
     const suggestedTests = state.output?.suggestedTests || [];
     const activePlanSelection = new Set(
@@ -1282,7 +1282,7 @@
       .map((item) => {
         const isChecked = activePlanSelection.has(item.name);
         const alreadyInPlan = activePlanSelection.has(item.name);
-        const stateLabel = alreadyInPlan ? "In Tube Plan" : "Tap to add to Tube Plan";
+        const stateLabel = alreadyInPlan ? "✓ In Tube Plan" : "Tap to add to Tube Plan";
 
         return `
           <button
@@ -1667,10 +1667,7 @@
         }
         setStatus(`${testName} added to Tube Plan.`);
       } else {
-        if (typeof app.removeTestsFromPlan === "function") {
-          app.removeTestsFromPlan([testName]);
-        }
-        setStatus(`${testName} removed from Tube Plan.`);
+        setStatus(`${testName} is already in Tube Plan. Remove it from the full planner if needed.`);
       }
 
       renderSuggestedTests();

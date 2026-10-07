@@ -244,8 +244,9 @@ const OGTT_MULTI_DRAW_TESTS = new Set([
   "OGTT Pregnancy (fasting, 1hr, 2hr)"
 ]);
 const selectedTestNames = new Set();
-// Inspecting a result is independent of adding it to a collection plan.
+// Result selection adds to Tube Plan; only the secondary Details control expands metadata.
 const expandedTestNames = new Set();
+let lastDrawModalTrigger = null;
 let activeSectionGroup = "";
 const activeBrowseGroupBySection = {
   chemistry: "",
@@ -6114,12 +6115,12 @@ function estimateDrawPlanForTests(testNames = [], { includeExistingSelection = f
 }
 
 // Add tests to plan.
-function addTestsToPlan(testNames = [], { replace = false, openDrawPlan: shouldOpenDrawPlan = false } = {}) {
+function addTestsToPlan(testNames = [], { replace = false, openDrawPlan: shouldOpenDrawPlan = false, rerenderCards = true } = {}) {
   const nextSelection = replace ? new Set() : new Set(selectedTestNames);
 
   testNames.forEach((testName) => nextSelection.add(testName));
   collapseProfileSelections(nextSelection);
-  setSelectedTests(nextSelection);
+  setSelectedTests(nextSelection, { rerenderCards });
 
   if (shouldOpenDrawPlan) {
     openDrawModal();
@@ -6363,6 +6364,13 @@ function updateDrawSelectionTools() {
         : "Clear all tests from current Tube Plan"
     );
   }
+  const plannerClearBtn = document.getElementById("drawClearAllBtn");
+  if (plannerClearBtn && quickToolsClearBtn) {
+    plannerClearBtn.hidden = !hasSelection;
+    plannerClearBtn.disabled = !hasSelection;
+    plannerClearBtn.textContent = quickToolsClearBtn.textContent;
+    plannerClearBtn.setAttribute("aria-label", quickToolsClearBtn.getAttribute("aria-label"));
+  }
 }
 
 // Resets clear draw selection confirmation.
@@ -6468,6 +6476,8 @@ function renderSelectedTestsCart() {
       const testName = decodeURIComponent(removeBtn.getAttribute("data-remove-selected") || "");
       if (!testName) return;
       removeSelectedTest(testName);
+      const nextRemove = drawSelectedList.querySelector("button[data-remove-selected]");
+      (nextRemove || closeDrawPlannerBtn)?.focus({ preventScroll: true });
     });
   });
 }
@@ -6492,13 +6502,44 @@ function updateSelectionCartBar() {
     document.body.classList.remove("selection-cart-inline");
     selectionCartBar.style.top = "auto";
     selectionCartBar.style.bottom = "";
+    document.documentElement.style.setProperty("--tube-plan-dock-height", "0px");
     return;
   }
 
-  const { plan } = getResolvedDrawPlan(selectedTests);
+  const { plan, guidanceNotes } = getResolvedDrawPlan(selectedTests);
   const totalTubes = plan.items.reduce((sum, item) => sum + item.count, 0);
   const countLabel = formatPlanCountLabel(totalTubes, plan);
-  const badgeCount = count > 99 ? "99+ tests" : `${count} test${count === 1 ? "" : "s"}`;
+  const badgeCount = `${count} test${count === 1 ? "" : "s"} • ${countLabel}${plan.manual.length ? ` • ${plan.manual.length} to confirm` : ""}`;
+  const preview = selectionCartBar.querySelector(".selection-cart-preview");
+  if (preview) {
+    const collections = plan.items.map((item) => {
+      const alternatives = getPlanItemAlternativeGroups(item);
+      const group = alternatives[0] || item.key;
+      const variant = getPlanItemTubeVariant(item, selectedTests, alternatives.length ? alternatives : [group]);
+      return `<span class="selection-cart-collection">
+        ${getTubeVisualMarkup(group, " tube-icon-mini", { tubeVariant: variant })}
+        <span>${escapeHtml(item.label)} <strong>×${item.count}</strong></span>
+      </span>`;
+    });
+    plan.manual.forEach((name) => {
+      const test = selectedTests.find((entry) => entry.name === name);
+      collections.push(`<span class="selection-cart-collection"><span>${escapeHtml(test?.tubeColor || "Collection mapping not recorded")} — to confirm</span></span>`);
+    });
+    preview.innerHTML = collections.slice(0, 3).join("")
+      + (collections.length > 3 ? `<span class="selection-cart-more">+${collections.length - 3} collection types</span>` : "");
+    preview.hidden = !collections.length;
+  }
+  const warnings = selectionCartBar.querySelector(".selection-cart-warning");
+  const urgentAlerts = getDrawPlannerAlerts(selectedTests);
+  const warningText = [
+    ...urgentAlerts.map((alert) => `${alert.title}: ${alert.items.join(" ")}`),
+    ...(plan.manual.length ? ["Confirm collection requirements with the laboratory."] : []),
+    guidanceNotes[0] || (hasHighAttentionTest ? "Important collection guidance — review the full Tube Plan." : "")
+  ].filter(Boolean).join(" ");
+  if (warnings) {
+    warnings.textContent = warningText;
+    warnings.hidden = !warningText;
+  }
 
   selectionCartBar.hidden = false;
   selectionCartCount.textContent = badgeCount;
@@ -6507,7 +6548,7 @@ function updateSelectionCartBar() {
   selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
-    `Tube Plan: ${count} added test${count === 1 ? "" : "s"}. ${countLabel} estimated.${hasHighAttentionTest ? " Important handling guidance included." : ""}`
+    `Open Tube Plan: ${badgeCount}. ${warningText}`
   );
   selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
   document.body.classList.add("has-selection-cart");
@@ -6518,28 +6559,30 @@ function updateSelectionCartBar() {
 function updateSelectionCartViewportPosition() {
   if (!selectionCartBar) return;
 
-  const isMobile = window.matchMedia("(max-width: 600px)").matches;
+  const isMobile = window.matchMedia("(max-width: 620px)").matches;
   const hasMobileBottomNav = shouldShowMobileBottomNav()
     && isMobileBottomNavViewport()
     && document.body.classList.contains("has-mobile-bottom-nav");
-  const baseOffset = hasMobileBottomNav
+  const focusedSearch = isMobile && document.body.classList.contains("is-mobile-search-active");
+  const baseOffset = hasMobileBottomNav && !focusedSearch
     ? 96
     : (isMobile ? 10 : 18);
   let keyboardOffset = 0;
 
   if (isMobile && window.visualViewport) {
-    const activeEl = document.activeElement;
-    const tag = String(activeEl?.tagName || "").toLowerCase();
-    const isEditable = tag === "input" || tag === "textarea" || activeEl?.isContentEditable;
     const viewportOverlap = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
 
-    if (isEditable && viewportOverlap > 80) {
+    if (viewportOverlap > 80) {
       keyboardOffset = viewportOverlap;
     }
   }
 
   selectionCartBar.style.top = "auto";
   selectionCartBar.style.bottom = `calc(env(safe-area-inset-bottom) + ${baseOffset + keyboardOffset}px)`;
+  if (isFindMyTubePage && cardsContainer) {
+    const dockHeight = selectionCartBar.hidden ? 0 : Math.ceil(selectionCartBar.getBoundingClientRect().height) + 18;
+    document.documentElement.style.setProperty("--tube-plan-dock-height", `${dockHeight}px`);
+  }
   document.body.classList.remove("selection-cart-inline");
 }
 
@@ -6571,6 +6614,25 @@ function refreshSelectionUi({ rerenderCards = true } = {}) {
   updateSelectionCartBar();
   updateDrawPlannerToggleState();
   if (rerenderCards) applyFilters();
+  else syncDiscoverySelectionState();
+}
+
+// The visible results reflect the canonical selection, including profile-covered components.
+function syncDiscoverySelectionState() {
+  cardsContainer?.querySelectorAll(".discovery-card").forEach((card) => {
+    const name = card.dataset.testName;
+    const covered = getSelectedProfilesContainingTest(name);
+    const inPlan = selectedTestNames.has(name) || covered.length > 0;
+    card.classList.toggle("card-selected", inPlan);
+    const action = card.querySelector(".discovery-select");
+    if (!action) return;
+    action.setAttribute("aria-pressed", String(inPlan));
+    action.setAttribute("aria-label", inPlan ? `${name}, in Tube Plan` : `Add ${name} to Tube Plan`);
+    card.querySelector(".discovery-selection-state").textContent = inPlan ? "✓ In Tube Plan" : "Select";
+    const coverage = card.querySelector(".discovery-coverage");
+    coverage.textContent = covered.length ? `Included in ${covered.join(", ")}` : "";
+    coverage.hidden = !covered.length;
+  });
 }
 
 // Gets selected test names list.
@@ -7391,12 +7453,14 @@ function initHomeDashboard() {
 // Opens draw modal.
 function openDrawModal() {
   if (!drawModal) return;
+  if (drawModal.hidden) lastDrawModalTrigger = document.activeElement;
   resetClearDrawSelectionConfirmation({ update: false });
   if (drawModalCard) {
     drawModalCard.scrollTop = 0;
     drawModalCard.classList.remove("is-scrolled");
   }
   drawModal.hidden = false;
+  selectionCartBar?.setAttribute("aria-expanded", "true");
   updateDrawPlannerToggleState();
   refreshSelectionUi({ rerenderCards: false });
   if (closeDrawPlannerBtn) {
@@ -7408,13 +7472,21 @@ function openDrawModal() {
 }
 
 // Closes draw modal.
-function closeDrawModal() {
+function closeDrawModal({ restoreFocus = true } = {}) {
   if (!drawModal) return;
   resetClearDrawSelectionConfirmation({ update: false });
   drawModalCard?.classList.remove("is-scrolled");
   drawModal.hidden = true;
+  selectionCartBar?.setAttribute("aria-expanded", "false");
   updateDrawPlannerToggleState();
   syncModalOpenClass();
+  updateSelectionCartViewportPosition();
+  if (restoreFocus) {
+    const target = lastDrawModalTrigger?.isConnected && !lastDrawModalTrigger.hidden
+      ? lastDrawModalTrigger : searchInput;
+    target?.focus({ preventScroll: true });
+  }
+  lastDrawModalTrigger = null;
 }
 
 // Opens profile modal.
@@ -8127,7 +8199,8 @@ function renderDrawResult() {
     ...getDrawPlannerAlerts(selectedTests)
   ];
   drawResultCard.hidden = false;
-  drawPlannerCount.textContent = `${selectedTests.length} test${selectedTests.length > 1 ? "s" : ""}`;
+  const collectionCount = plan.items.reduce((sum, item) => sum + item.count, 0);
+  drawPlannerCount.textContent = `${selectedTests.length} test${selectedTests.length > 1 ? "s" : ""} • ${formatPlanCountLabel(collectionCount, plan)}${plan.manual.length ? ` • ${plan.manual.length} to confirm` : ""}`;
   drawPlannerAlerts.hidden = plannerAlerts.length === 0;
   drawPlannerAlerts.innerHTML = plannerAlerts
     .map((alert) => `
@@ -8139,7 +8212,23 @@ function renderDrawResult() {
       </${alert.tone === "urgent" ? "article" : "details"}>
     `)
     .join("");
+  // Carry existing collection metadata into the collection workflow, without new mappings.
+  drawPlannerAlerts.innerHTML += selectedTests.map((test) => {
+    const fields = [
+      ["Specimen", test.specimen || test.specimenGuide],
+      ["Collection notes", test.notes],
+      ["Collection preparation", test.criticalPrep],
+      ["Handling", test.handling],
+      ["Profile components", (profileComponentsByName[test.name] || []).join(", ")]
+    ].filter(([, value]) => String(value || "").trim());
+    if (!fields.length) return "";
+    return `<details class="draw-planner-alert draw-test-guidance">
+      <summary>${escapeHtml(test.name)} collection details</summary>
+      <dl>${fields.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>
+    </details>`;
+  }).join("");
 
+  drawPlannerAlerts.hidden = !drawPlannerAlerts.innerHTML.trim();
   drawGroups.innerHTML = plan.items
     .map((item) => {
       const orderOfDrawStep = orderOfDrawStepByItem.get(item) || 0;
@@ -9274,48 +9363,47 @@ function renderCards(filteredTests) {
         + '<div><strong>' + escapeHtml(group) + '</strong><span>' + escapeHtml(getTubeAdditiveLabel(group)) + '</span></div></div>').join('')
       : '<p class="discovery-collection-note">' + escapeHtml(useful(test.tubeColor) || "Collection mapping not recorded. Confirm with the laboratory.") + '</p>';
     card.innerHTML =
-      '<button class="discovery-open" type="button" aria-expanded="' + isExpanded + '" aria-controls="' + detailId + '">'
-      + '<span><span class="discovery-name">' + escapeHtml(test.name) + '</span><span class="discovery-meta">' + escapeHtml(test.section?.label || "Laboratory test") + (isSelected ? ' · In Tube Plan' : '') + '</span></span>'
-      + '<span class="discovery-chevron" aria-hidden="true">' + (isExpanded ? '−' : '+') + '</span></button>'
+      '<div class="discovery-result-head"><button class="discovery-open discovery-select" type="button" aria-pressed="' + isSelected + '">'
+      + '<span><span class="discovery-name">' + escapeHtml(test.name) + '</span><span class="discovery-meta">' + escapeHtml(test.section?.label || "Laboratory test") + '</span>'
+      + '<span class="discovery-coverage" hidden></span></span>'
+      + '<span class="discovery-selection-state">' + (isSelected ? '✓ In Tube Plan' : 'Select') + '</span></button>'
+      + '<button class="discovery-inspect" type="button" aria-label="Details for ' + escapeHtml(test.name) + '" aria-expanded="' + isExpanded + '" aria-controls="' + detailId + '">Details</button></div>'
       + '<div class="discovery-body" id="' + detailId + '"' + (isExpanded ? '' : ' hidden') + '>'
       + '<div class="discovery-tubes">' + tubes + '</div>'
       + (specimen ? '<p class="discovery-specimen"><span>Specimen</span>' + escapeHtml(specimen) + '</p>' : '')
       + (instruction ? '<p class="discovery-instruction">' + escapeHtml(instruction) + '</p>' : '')
-      + '<button type="button" class="discovery-add" aria-pressed="' + isSelected + '">' + (isSelected ? 'Remove from Tube Plan' : 'Add to Tube Plan') + '</button>'
       + (detailFields.length ? '<details class="discovery-details"><summary>More details</summary><dl>' + detailFields.map(([label,value]) => '<div><dt>' + escapeHtml(label) + '</dt><dd>' + escapeHtml(useful(value)) + '</dd></div>').join('') + '</dl></details>' : '')
       + ((profileComponentsByName[test.name] || []).length ? '<button type="button" class="profile-tests-btn">Tests in this profile</button>' : '')
       + '</div>';
-    const open = card.querySelector('.discovery-open');
+    const open = card.querySelector('.discovery-inspect');
     open.addEventListener('click', () => {
       const expanded = !expandedTestNames.has(test.name);
       if (expanded) expandedTestNames.add(test.name); else expandedTestNames.delete(test.name);
       card.classList.toggle('is-inspecting', expanded);
       card.querySelector('.discovery-body').hidden = !expanded;
       open.setAttribute('aria-expanded', String(expanded));
-      card.querySelector('.discovery-chevron').textContent = expanded ? '−' : '+';
     });
-    const add = card.querySelector('.discovery-add');
+    const add = card.querySelector('.discovery-select');
+    // Keep an active mobile search/keyboard in place when tapping a result.
+    const preserveSearchFocus = (event) => {
+      if (isMobileTubeSearchViewport() && document.activeElement === searchInput) event.preventDefault();
+    };
+    add.addEventListener('pointerdown', preserveSearchFocus);
+    add.addEventListener('mousedown', preserveSearchFocus);
     add.addEventListener('click', () => {
-      const wasSelected = selectedTestNames.has(test.name);
-      toggleSelectedTest(test.name, {rerenderCards:false});
-      const selected = selectedTestNames.has(test.name);
-      if (selected === wasSelected) return; // Keep the existing profile-coverage explanation.
-      // A profile can replace several selected component tests. Sync every visible card.
-      cardsContainer.querySelectorAll('.discovery-card').forEach((visibleCard) => {
-        const name = visibleCard.dataset.testName;
-        const inPlan = selectedTestNames.has(name);
-        const record = enrichedTests.find((entry) => entry.name === name);
-        visibleCard.classList.toggle('card-selected', inPlan);
-        const action = visibleCard.querySelector('.discovery-add');
-        action.textContent = inPlan ? 'Remove from Tube Plan' : 'Add to Tube Plan';
-        action.setAttribute('aria-pressed', String(inPlan));
-        visibleCard.querySelector('.discovery-meta').textContent = (record?.section?.label || 'Laboratory test') + (inPlan ? ' · In Tube Plan' : '');
-      });
-      showSelectionNotice(selected ? test.name + ' added to Tube Plan.' : test.name + ' removed from Tube Plan.');
+      if (selectedTestNames.has(test.name)) return;
+      const coverage = getAlreadyCoveredSelectionMessage(test.name);
+      if (coverage) {
+        showSelectionNotice(coverage);
+        return;
+      }
+      addTestsToPlan([test.name], { rerenderCards: false });
+      // The dock's live count announces selection without a toast covering other results.
     });
     card.querySelector('.profile-tests-btn')?.addEventListener('click', () => openProfileModal(test.name));
     cardsContainer.appendChild(card);
   });
+  syncDiscoverySelectionState();
 }
 
 // Applies filters.
@@ -9510,6 +9598,15 @@ function bindEvents() {
       openDrawModal();
     });
   }
+  document.getElementById("drawClearAllBtn")?.addEventListener("click", () => {
+    if (!selectedTestNames.size) return;
+    if (!isClearDrawSelectionConfirming) {
+      requestClearDrawSelectionConfirmation();
+      return;
+    }
+    setSelectedTests(new Set());
+    closeDrawPlannerBtn?.focus({ preventScroll: true });
+  });
 
   if (closeDrawPlannerBtn) {
     closeDrawPlannerBtn.addEventListener("click", (event) => {
@@ -9533,7 +9630,7 @@ function bindEvents() {
 
   if (returnToSearchBtn) {
     returnToSearchBtn.addEventListener("click", () => {
-      closeDrawModal();
+      closeDrawModal({ restoreFocus: false });
 
       if (isFindMyTestPage) {
         const findMyTestTarget = clinicalWorkupResults && !clinicalWorkupResults.hidden
@@ -9671,6 +9768,19 @@ function bindEvents() {
   }
 
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Tab" && drawModal && !drawModal.hidden) {
+      const focusable = Array.from(drawModal.querySelectorAll("button:not([disabled]), [tabindex='0'], summary"))
+        .filter((element) => element.getClientRects().length);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
     if (event.key !== "Escape") return;
     if (mobileBottomMenuOpen) {
       setMobileBottomMenuOpen(false);

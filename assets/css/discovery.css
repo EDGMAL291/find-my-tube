@@ -1,4 +1,4 @@
-/* Test discovery and collection planning. Local laboratory mappings live in data.js. */
+/* Search selects into the canonical Tube Plan. Local laboratory mappings live in data.js. */
 :root {
   --clinical-surface: #fff;
   --clinical-page: #f3f5f6;
@@ -97,6 +97,16 @@ html[data-theme] body #cardsContainer .discovery-card.card-selected { border-col
 .discovery-name { display: block; font-size: 1rem; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
 .discovery-meta { display: block; margin-top: 4px; font-size: .78rem; color: rgba(255, 253, 248, .78); line-height: 1.4; }
 .discovery-chevron { font-size: 1.4rem; color: #8bd6d3; flex-shrink: 0; }
+.discovery-result-head { display: flex; align-items: stretch; min-width: 0; }
+.discovery-result-head .discovery-select { flex: 1; min-width: 0; width: auto; gap: 12px; padding: 14px 16px; }
+.discovery-selection-state { flex: 0 0 auto; font-size: .72rem; font-weight: 650; color: #a7dedc; white-space: nowrap; }
+.discovery-coverage { display: block; font-size: .75rem; line-height: 1.4; margin-top: 4px; color: #a7dedc; }
+.discovery-coverage[hidden] { display: none; }
+.discovery-inspect {
+  align-self: center; flex: 0 0 auto; min-width: 60px; min-height: 44px; padding: 8px;
+  margin-right: 8px; border: 0; border-left: 1px solid rgba(255,255,255,.24);
+  background: transparent; color: #fffdf8; font: inherit; font-size: .78rem; cursor: pointer;
+}
 .discovery-body { padding: 0 20px 20px; border-top: 1px solid rgba(255, 255, 255, .34); }
 .discovery-body[hidden] { display: none !important; }
 .discovery-tubes { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; padding: 18px 0 12px; }
@@ -255,4 +265,66 @@ html[data-theme] body[data-app-page="find-my-tube"] #closeProfileModalBtn { widt
 @media (prefers-reduced-motion: no-preference) {
   .discovery-body:not([hidden]) { animation: discovery-enter 140ms ease-out; }
   @keyframes discovery-enter { from { opacity: .4; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+}
+
+/* A small resolved plan stays above the keyboard; full guidance lives in the dialog. */
+html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar {
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  width: min(460px, calc(100vw - 32px)); min-height: 64px; max-height: 210px;
+  padding: 12px 14px !important; overflow: hidden;
+  background-image: linear-gradient(rgba(3,17,31,.96), rgba(3,17,31,.96)) !important;
+  backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;
+  transition: none; text-shadow: none;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar .selection-cart-copy {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar #selectionCartCount {
+  font-size: .75rem; white-space: normal; text-align: left;
+}
+.selection-cart-expand { margin-left: auto; }
+.selection-cart-preview { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.selection-cart-collection { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.selection-cart-collection > span:last-child { font-size: .7rem; line-height: 1.3; overflow-wrap: anywhere; }
+.selection-cart-more { font-size: .68rem; flex: 0 1 70px; }
+html[data-theme] body #selectionCartBar :is(.tube-photo-visual-adult, .collection-illustration) {
+  width: 18px; height: 40px; flex: 0 0 18px;
+}
+html[data-theme] body #selectionCartBar :is(.tube-photo-visual-paediatric, .collection-illustration-paediatric) {
+  width: 18px; height: 32px; flex: 0 0 18px;
+}
+.selection-cart-warning {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: .72rem; line-height: 1.35; text-align: left; color: #fffdf8;
+  border-top: 1px solid rgba(255,255,255,.2); padding-top: 6px;
+}
+.selection-cart-preview[hidden], .selection-cart-warning[hidden] { display: none; }
+html[data-theme] body[data-app-page="find-my-tube"].has-selection-cart #cardsContainer {
+  padding-bottom: calc(var(--tube-plan-dock-height, 160px) + 20px);
+}
+html[data-theme] body[data-app-page="find-my-tube"] .draw-selection-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+html[data-theme] body[data-app-page="find-my-tube"] .draw-selection-count {
+  flex: 1; width: auto; margin: 0; text-align: left;
+}
+html[data-theme] body[data-app-page="find-my-tube"] #drawClearAllBtn {
+  flex: 0 0 auto; width: auto; min-height: 44px; padding: 8px 12px;
+  background: transparent !important; color: #fffdf8 !important; font-size: .8rem;
+}
+.draw-test-guidance dl { margin: 8px 0 0; }
+.draw-test-guidance dt { font-weight: 650; font-size: .75rem; margin-top: 12px; }
+.draw-test-guidance dd { margin: 4px 0 0; font-size: .85rem; line-height: 1.5; overflow-wrap: anywhere; }
+html[data-theme] body[data-app-page="find-my-tube"].draw-modal-open #selectionCartBar {
+  display: none !important;
+}
+@media (max-width: 620px) {
+  html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar {
+    left: 12px; right: 12px; width: auto; padding: 10px 12px !important;
+  }
+  .discovery-result-head .discovery-select { gap: 6px; padding: 12px; min-height: 72px; }
+  .discovery-name { font-size: .93rem; }
+  .discovery-selection-state { font-size: .65rem; }
+  .discovery-result-head .discovery-select[aria-pressed="true"] { flex-wrap: wrap; }
+  .discovery-inspect { min-width: 56px; margin-right: 4px; }
 }
