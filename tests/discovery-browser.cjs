@@ -268,6 +268,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         const menuContent = await page.locator('#siteMenuPanel .site-menu-list').boundingBox();
         assert.ok(Math.abs(menuContent.x-contentGuide.x)<2, 'Menu uses the same left content guide as the page');
         assert.ok(Math.abs(menuContent.y-contentGuide.y)<2, 'Menu starts at the page content level');
+        const homeLabel = await page.locator('#siteMenuPanel [data-menu-action="home"] .menu-action-label').boundingBox();
+        assert.ok(Math.abs(homeLabel.y-contentGuide.y)<2, 'Home label aligns with the content heading top');
         const menuTitle = await page.locator('#siteMenuPanel .site-menu-title').evaluate(el => ({
           top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
           size:getComputedStyle(el).fontSize, weight:getComputedStyle(el).fontWeight

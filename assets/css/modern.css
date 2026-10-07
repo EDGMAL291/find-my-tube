@@ -12374,3 +12374,9 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card :is(
   .stock-order-card-plus, .stock-order-card-selection, .stock-order-qty-btn,
   .stock-tube-qty-readout, .stock-tube-mode-toggle .group-chip
 ) { box-shadow: none !important; text-shadow: none; }
+
+/* The first menu label follows the content heading's top guide. */
+html[data-theme] body #siteMenuPanel .site-menu-link[data-menu-action="home"] {
+  display: flex; align-items: flex-start; justify-content: flex-start;
+  padding-top: 0; padding-bottom: 12px;
+}
