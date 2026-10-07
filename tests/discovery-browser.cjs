@@ -671,6 +671,15 @@ async function exerciseTubePlanWorkflow(page, width) {
       }, fixtures);
       assert.deepEqual(datasets.active, ['RECENT-ACTIVITY','FRESH-PENDING']);
       assert.deepEqual(datasets.archived, ['STALE-PENDING','STALE-READY']);
+      await page.evaluate(() => {
+        stockDashboardRenderInventory([
+          {key:'yellowTubes', label:'Yellow (Gel) tubes', onHand:5000},
+          {key:'purpleTubes', label:'Purple (EDTA) tubes', onHand:5000}
+        ]);
+        document.querySelector('#stockDashboardInventoryCard').hidden = false;
+      });
+      await page.locator('#stockDashboardInventoryCard').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(screenshots, `stock-inventory-${width}.png`)});
       await page.close();
     }
     for (const route of ['index.html', 'order-stock.html', 'track-orders.html', 'stock-dashboard.html']) {
