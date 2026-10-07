@@ -272,8 +272,9 @@ html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar {
   display: flex; flex-direction: column; align-items: stretch; gap: 8px;
   width: min(460px, calc(100vw - 32px)); min-height: 64px; max-height: 210px;
   padding: 12px 14px !important; overflow: hidden;
-  background-image: linear-gradient(rgba(3,17,31,.96), rgba(3,17,31,.96)) !important;
-  backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;
+  background: rgba(255,255,255,.10) !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
   transition: none; text-shadow: none;
 }
 html[data-theme] body[data-app-page="find-my-tube"] #selectionCartBar .selection-cart-copy {
@@ -303,7 +304,8 @@ html[data-theme] body[data-app-page="find-my-tube"].has-selection-cart #cardsCon
   padding-bottom: calc(var(--tube-plan-dock-height, 160px) + 20px);
 }
 html[data-theme] body[data-app-page="find-my-tube"] .draw-selection-actions {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; flex-direction: row; flex-wrap: nowrap;
+  align-items: center; justify-content: space-between; gap: 8px;
 }
 html[data-theme] body[data-app-page="find-my-tube"] .draw-selection-count {
   flex: 1; width: auto; margin: 0; text-align: left;
@@ -327,7 +329,8 @@ html[data-theme] body[data-app-page="find-my-tube"] #drawPlannerBody {
 }
 html[data-theme] body[data-app-page="find-my-tube"] #drawSelectedList[hidden] { display: none !important; }
 html[data-theme] body[data-app-page="find-my-tube"] #drawTestsToggleBtn {
-  flex: 1; width: auto; margin: 0; text-align: left; background: transparent !important;
+  flex: 1; min-width: 0; width: auto; margin: 0; padding: 8px 10px;
+  text-align: left; white-space: nowrap; background: transparent !important;
   color: #fffdf8 !important; font-size: .8rem; min-height: 44px;
 }
 html[data-theme] body[data-app-page="find-my-tube"].draw-modal-open #selectionCartBar {
