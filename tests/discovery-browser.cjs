@@ -441,7 +441,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await fbcCard.locator('.discovery-select').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Plan action is transparent');
         assert.equal(await fbcCard.locator('.profile-tests-btn').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile action is transparent');
         await fbcCard.locator('.discovery-select').click();
-        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan bar is transparent');
+        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan bar keeps its frosted background');
         assert.deepEqual(await page.locator('#selectionCartBar').evaluate(el => ({
           style: getComputedStyle(el).borderTopStyle,
           width: getComputedStyle(el).borderTopWidth
