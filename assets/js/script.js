@@ -7480,6 +7480,7 @@ function closeDrawModal({ restoreFocus = true } = {}) {
   selectionCartBar?.setAttribute("aria-expanded", "false");
   updateDrawPlannerToggleState();
   syncModalOpenClass();
+  updateSelectionCartViewportPosition();
   if (restoreFocus) {
     const target = lastDrawModalTrigger?.isConnected && !lastDrawModalTrigger.hidden
       ? lastDrawModalTrigger : searchInput;
