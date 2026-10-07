@@ -1130,9 +1130,9 @@ function stockDashboardPrepareDatasets(requests = [], recentReceipts = []) {
   const safeReceipts = Array.isArray(recentReceipts) ? recentReceipts : [];
   const activeWorkQueue = safeRequests.filter((request) => {
     const status = stockDashboardNormalizeStatus(request?.status);
-    return status !== "collected" && status !== "completed" && status !== "cancelled" && status !== "no-stock";
+    return !FMT_ORDER_ARCHIVE.isArchived(request) && status !== "cancelled";
   });
-  const archivedCompletedRequests = safeRequests.filter((request) => ["collected", "completed", "no-stock"].includes(stockDashboardNormalizeStatus(request?.status)));
+  const archivedCompletedRequests = safeRequests.filter((request) => FMT_ORDER_ARCHIVE.isArchived(request));
 
   stockDashboardDatasets.stockRequests = safeRequests;
   stockDashboardDatasets.receivedStock = safeReceipts;
@@ -3111,7 +3111,7 @@ function renderStockDashboardRequests(requests) {
   const activeRequests = Array.isArray(requests)
     ? requests.filter((request) => {
       const status = stockDashboardNormalizeStatus(request?.status);
-      return status !== "collected" && status !== "completed" && status !== "cancelled" && status !== "no-stock";
+      return !FMT_ORDER_ARCHIVE.isArchived(request) && status !== "cancelled";
     })
     : [];
 
@@ -3807,3 +3807,4 @@ stockDashboardSetSummaryOpen(false);
 stockDashboardSetSessionRestorePending(true);
 stockDashboardLoadApiConfig();
 checkStockDashboardSession();
+
