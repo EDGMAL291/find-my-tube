@@ -6395,9 +6395,7 @@ function requestClearDrawSelectionConfirmation() {
 function renderDrawSelectionSummary() {
   if (!drawSelectionCount) return;
   const count = selectedTestNames.size;
-  drawSelectionCount.textContent = count
-    ? `${count} test${count !== 1 ? "s" : ""} added`
-    : "No tests added yet";
+  drawSelectionCount.textContent = `${count} test${count !== 1 ? "s" : ""} selected`;
   updateDrawSelectionTools();
 }
 

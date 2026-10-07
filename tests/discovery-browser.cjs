@@ -99,6 +99,7 @@ async function exerciseTubePlanWorkflow(page, width) {
   const selectedToggle = page.locator('#drawTestsToggleBtn');
   if (await selectedToggle.getAttribute('aria-expanded') === 'true') await selectedToggle.click();
   assert.equal(await page.locator('#drawSelectedList').isVisible(), false);
+  assert.equal(await selectedToggle.getAttribute('aria-controls'), 'drawSelectedList');
   await selectedToggle.focus();
   await page.keyboard.press('Enter');
   assert.equal(await selectedToggle.getAttribute('aria-expanded'), 'true');
@@ -111,6 +112,14 @@ async function exerciseTubePlanWorkflow(page, width) {
     return `${selected.length} tests • ${formatPlanCountLabel(plan.items.reduce((sum,item)=>sum+item.count,0),plan)}`;
   });
   assert.equal(await page.locator('#drawPlannerCount').textContent(), fullCount);
+  assert.match(await selectedToggle.innerText(), /^4 tests selected$/);
+  async function verifyActionsRow() {
+    const count = await selectedToggle.boundingBox();
+    const clear = await page.locator('#drawClearAllBtn').boundingBox();
+    assert.ok(Math.abs(count.y - clear.y) < 2, 'Count and clear-all share one row');
+    assert.ok(count.x + count.width <= clear.x + 1, 'Count and clear-all stay side by side');
+  }
+  await verifyActionsRow();
   await page.locator('#closeDrawPlannerBtn').focus();
   await page.keyboard.press('Shift+Tab');
   assert.equal(await page.locator('#drawModal').evaluate(el => el.contains(document.activeElement)), true, 'Planner traps focus');
@@ -193,6 +202,7 @@ async function exerciseTubePlanWorkflow(page, width) {
   await page.locator('#selectionCartBar').click();
   await page.locator('#drawClearAllBtn').click();
   assert.ok(await page.evaluate(() => selectedTestNames.size > 0), 'Clear-all requires explicit confirmation');
+  await verifyActionsRow();
   await page.locator('#drawClearAllBtn').click();
   assert.equal(await page.evaluate(() => selectedTestNames.size), 0);
   await page.locator('#closeDrawPlannerBtn').click();
@@ -300,6 +310,13 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal((await page.locator('#selectionCartCount').innerText()).trim(), '1 test');
         assert.equal(await page.locator('#selectionCartBar img, #selectionCartBar svg').count(), 0);
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).borderTopStyle), 'solid');
+        const dockFrost = await page.locator('#selectionCartBar').evaluate(el => ({
+          background:getComputedStyle(el).backgroundColor, image:getComputedStyle(el).backgroundImage,
+          filter:getComputedStyle(el).backdropFilter
+        }));
+        assert.equal(dockFrost.background, 'rgba(255, 255, 255, 0.1)', 'Compact planner has translucent frost');
+        assert.equal(dockFrost.image, 'none', 'No opaque gradient hides the photograph');
+        assert.match(dockFrost.filter, /blur\(8px\)/);
         assert.equal(await page.locator('#drawModal').isVisible(), false, 'Adding does not force open planner');
         await card.locator('summary').click();
         assert.equal(await card.locator('details').getAttribute('open'), '');
@@ -424,7 +441,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await fbcCard.locator('.discovery-select').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Plan action is transparent');
         assert.equal(await fbcCard.locator('.profile-tests-btn').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile action is transparent');
         await fbcCard.locator('.discovery-select').click();
-        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan bar is transparent');
+        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan bar keeps its frosted background');
         assert.deepEqual(await page.locator('#selectionCartBar').evaluate(el => ({
           style: getComputedStyle(el).borderTopStyle,
           width: getComputedStyle(el).borderTopWidth
