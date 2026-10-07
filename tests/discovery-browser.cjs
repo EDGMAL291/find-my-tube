@@ -672,6 +672,8 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Old pending/i);
       assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Archived/);
       await page.goto(`${base}/stock-dashboard.html`);
+      // Finish the signed-out auth restore before exposing screenshot fixtures.
+      await page.waitForFunction(() => !stockDashboardSessionRestorePending);
       const datasets = await page.evaluate(fixtures=>{
         stockDashboardPrepareDatasets(fixtures);
         renderStockDashboardRequests(fixtures);
