@@ -12337,11 +12337,11 @@ html body:is([data-app-page="home"], [data-app-page="find-my-tube"]) :is(
   .header h1, .brand-title, .header-menu-label, .home-hero-content h2,
   .home-hero-heading-link, .home-action-title, .home-action-label,
   .lab-desk-section-title, .home-help-card h2, .home-tip-card h2,
-  .tube-workspace-intro h2, .group-chip, .discovery-name,
+  .tube-workspace-intro h2, .group-chip, .group-chip-label, .discovery-name,
   .discovery-selection-state, .discovery-inspect, .section-context-label,
   .selection-cart-label, #selectionCartCount, .site-footer-title
 ) { font-weight: 400 !important; }
-html body[data-app-page="find-my-tube"] .tube-workspace-intro h2 {
+html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro h2 {
   max-width: none; font-size: clamp(1.05rem, 4.1vw, 1.65rem) !important;
   line-height: 1.25; letter-spacing: normal; white-space: nowrap;
 }
