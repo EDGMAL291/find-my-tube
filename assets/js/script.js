@@ -6559,7 +6559,7 @@ function updateSelectionCartBar() {
 function updateSelectionCartViewportPosition() {
   if (!selectionCartBar) return;
 
-  const isMobile = window.matchMedia("(max-width: 600px)").matches;
+  const isMobile = window.matchMedia("(max-width: 620px)").matches;
   const hasMobileBottomNav = shouldShowMobileBottomNav()
     && isMobileBottomNavViewport()
     && document.body.classList.contains("has-mobile-bottom-nav");
@@ -8228,6 +8228,7 @@ function renderDrawResult() {
     </details>`;
   }).join("");
 
+  drawPlannerAlerts.hidden = !drawPlannerAlerts.innerHTML.trim();
   drawGroups.innerHTML = plan.items
     .map((item) => {
       const orderOfDrawStep = orderOfDrawStepByItem.get(item) || 0;

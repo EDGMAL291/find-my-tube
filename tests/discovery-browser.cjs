@@ -75,6 +75,8 @@ async function exerciseTubePlanWorkflow(page, width) {
   await select('LFT', 'Liver Function Tests (LFT)');
   await verifyCount();
   assert.equal(await page.locator('#selectionCartCount').innerText(), '3 tests • 2 tubes', 'LFT and CRP share gold');
+  const theme = await page.locator('html').getAttribute('data-theme');
+  await page.screenshot({path:path.join(screenshots, `workflow-${width}-${theme}.png`)});
   await select('INR', 'INR');
   await verifyCount();
   const names = await page.evaluate(() => [...selectedTestNames]);
@@ -159,6 +161,7 @@ async function exerciseTubePlanWorkflow(page, width) {
     assert.ok(geometry.dockBottom <= 442, 'Plan stays above simulated keyboard');
     assert.ok(geometry.dockTop > geometry.searchBottom, 'Plan does not cover search input');
     assert.ok(geometry.padding >= geometry.dockHeight, 'Results reserve scrolling space for the dock');
+    await page.screenshot({path:path.join(screenshots, `keyboard-${width}-${theme}.png`)});
     await page.evaluate(() => {
       delete visualViewport.height; delete visualViewport.offsetTop;
       visualViewport.dispatchEvent(new Event('resize'));
