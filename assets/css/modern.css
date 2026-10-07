@@ -12330,3 +12330,22 @@ html body[data-app-page] :is(#aboutInfoModal .about-info-modal-card, #contactFee
   -webkit-backdrop-filter: blur(8px) saturate(1.04) !important; color: #fffdf8 !important;
 }
 html body[data-app-page] :is(#aboutInfoModal, #contactFeedbackModal) :is(h3,p,a) { color: #fffdf8 !important; }
+
+/* Lighter public-page typography keeps the search workflow easy to scan.
+   Clinical emphasis inside detailed guidance retains its existing styling. */
+html body:is([data-app-page="home"], [data-app-page="find-my-tube"]) :is(
+  .header h1, .brand-title, .header-menu-label, .home-hero-content h2,
+  .home-hero-heading-link, .home-action-title, .home-action-label,
+  .lab-desk-section-title, .home-help-card h2, .home-tip-card h2,
+  .tube-workspace-intro h2, .group-chip, .discovery-name,
+  .discovery-selection-state, .discovery-inspect, .section-context-label,
+  .selection-cart-label, #selectionCartCount, .site-footer-title
+) { font-weight: 400 !important; }
+html body[data-app-page="find-my-tube"] .tube-workspace-intro h2 {
+  max-width: none; font-size: clamp(1.05rem, 4.1vw, 1.65rem) !important;
+  line-height: 1.25; letter-spacing: normal; white-space: nowrap;
+}
+/* A small inset separates the selected-count and clear controls from the shell. */
+html body[data-app-page] #drawModal .draw-selection-actions {
+  margin: 2px;
+}

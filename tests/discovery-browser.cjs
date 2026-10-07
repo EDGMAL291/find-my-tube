@@ -127,6 +127,11 @@ async function exerciseTubePlanWorkflow(page, width) {
     const clear = await page.locator('#drawClearAllBtn').boundingBox();
     assert.ok(Math.abs(count.y - clear.y) < 2, 'Count and clear-all share one row');
     assert.ok(count.x + count.width <= clear.x + 1, 'Count and clear-all stay side by side');
+    const inset = await page.locator('#drawModal .draw-selection-actions').evaluate(el => {
+      const style = getComputedStyle(el);
+      return [style.marginTop, style.marginRight, style.marginBottom, style.marginLeft];
+    });
+    assert.deepEqual(inset, ['2px', '2px', '2px', '2px'], 'Planner controls have a small inset');
   }
   await verifyActionsRow();
   await page.locator('#closeDrawPlannerBtn').focus();
@@ -229,6 +234,13 @@ async function exerciseTubePlanWorkflow(page, width) {
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}/find-my-tube.html`);
         await page.evaluate(theme => applyTheme(theme), theme);
+        const heading = await page.locator('#tubeWorkspaceTitle').evaluate(el => {
+          const style=getComputedStyle(el), range=document.createRange();
+          range.selectNodeContents(el);
+          return {weight:style.fontWeight, lines:range.getClientRects().length, fits:el.scrollWidth<=el.clientWidth};
+        });
+        assert.deepEqual(heading, {weight:'400', lines:1, fits:true}, 'Workflow heading stays readable on one line');
+        assert.equal(await page.locator('.brand-home-btn').evaluate(el=>getComputedStyle(el).fontWeight), '400');
         assert.equal(await page.locator('.tube-workspace-kicker, .group-hints > h3').count(), 0);
         assert.equal(await page.locator('.group-hints').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
         const hamburger = await page.locator('#menuToggleBtn').evaluate(el => ({
