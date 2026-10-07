@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20261006f" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20261007d" />
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261007c" />
   <script type="application/ld+json">
     {
@@ -313,8 +313,8 @@
           <h2 id="homeHelpTitle" class="lab-desk-section-title"><span class="lab-desk-heading-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-contact"></use></svg></span><span>Contact the lab</span></h2>
         </div>
         <div class="home-help-actions">
-          <a href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-chat"></use></svg><span>WhatsApp Feedback</span></a>
-          <a href="tel:0217996290"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-phone"></use></svg><span>Call Laboratory</span></a>
+          <a href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20" target="_blank" rel="noopener noreferrer" aria-label="Message feedback on WhatsApp"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path><path d="M9 9c0 3 3 6 6 6l1-2-2-1-1 1-2-2 1-1-1-2Z"></path></svg><span>WhatsApp Feedback</span></a>
+          <a href="tel:0217996290" aria-label="Call laboratory"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-phone"></use></svg><span>Call Laboratory</span></a>
         </div>
       </section>
       </aside>
@@ -562,12 +562,12 @@
   <script src="assets/data/data.js?v=20260812a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261007c"></script>
+  <script src="assets/js/script.js?v=20261007d"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-07.3";
+      const APP_VERSION = "2026-10-07.4";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -588,7 +588,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261007c", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261007d", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

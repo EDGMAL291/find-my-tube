@@ -12261,3 +12261,67 @@ html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item:is(:h
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Navigation replaces the title and scrolls independently of the working page. */
+html[data-theme] body #siteMenuPanel {
+  padding-top: var(--site-menu-content-top, 76px) !important;
+  overflow: hidden !important;
+}
+html[data-theme] body #siteMenuPanel .site-menu-title {
+  position: fixed; top: var(--site-menu-title-top, 16px); left: var(--site-menu-title-left, 24px);
+  width: var(--site-menu-title-width, calc(100% - 96px)); margin: 0;
+  font-size: var(--site-menu-title-size, 1.6rem); font-weight: 400 !important;
+  text-align: center; line-height: 1.25;
+}
+html[data-theme] body #siteMenuPanel .site-menu-list {
+  max-height: calc(100dvh - var(--site-menu-content-top, 76px) - 32px);
+  overflow-y: auto; overscroll-behavior: contain; padding: 0 4px 8px;
+}
+html[data-theme] body #siteMenuPanel :is(.site-menu-group-title, .site-menu-link, .menu-action-label) { font-weight: 400 !important; }
+html[data-theme] body.fullscreen-menu-open :is(#selectionCartBar, .mobile-bottom-nav) {
+  display: none !important;
+}
+html[data-theme] body #siteMenuPanel .site-menu-contact-actions,
+html[data-theme] body .contact-sheet-actions,
+html body[data-app-page="home"] .home-help-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+html[data-theme] body #siteMenuPanel .site-menu-contact-link,
+html[data-theme] body .contact-sheet-action,
+html body[data-app-page="home"] .home-help-actions a {
+  display: grid; place-items: center; flex: 0 0 48px; width: 48px; min-width: 48px;
+  height: 48px; min-height: 48px; padding: 0; gap: 0;
+  background: rgba(255,255,255,.10) !important; color: #fffdf8 !important;
+  border: 1px solid rgba(255,255,255,.35) !important; border-radius: var(--fmt-card-radius);
+  box-shadow: none !important; backdrop-filter: blur(8px);
+}
+html[data-theme] body .contact-sheet-action-icon {
+  width: 28px; height: 28px; min-width: 0; padding: 0;
+  background: transparent !important; color: inherit !important; border: 0 !important; box-shadow: none !important;
+}
+html[data-theme] body :is(.site-menu-contact-link, .contact-sheet-action-icon, .home-help-actions a) svg {
+  width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+html[data-theme] body .contact-sheet-action :is(.contact-sheet-action-text, .contact-sheet-action-copy),
+html body[data-app-page="home"] .home-help-actions a > span { display: none; }
+html[data-theme] body :is(.contact-sheet-action, .home-help-actions a):focus-visible {
+  outline: 2px solid #a7dedc; outline-offset: 3px;
+}
+/* About and Contact share the home laboratory scene, with cool shade and warm light. */
+:root { --support-scene: linear-gradient(110deg, rgba(3,24,42,.82), rgba(74,46,24,.48)), url("../images/find-my-tube-lab-overview.jpg"); }
+html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]),
+html body[data-app-page]:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"])::before,
+html[data-theme] body :is(#aboutInfoModal, #contactFeedbackModal) {
+  background-image: var(--support-scene) !important; background-color: #03111f !important;
+  background-position: center !important; background-size: cover !important; background-repeat: no-repeat !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]) { background-attachment: fixed !important; }
+html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]) :is(.header, .container) { background: transparent !important; }
+html[data-theme] body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]) :is(h1,h2,p,a) { color: #fffdf8 !important; }
+html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]) :is(.support-home-link,.support-nav,.stock-order-request-card,.footer-card),
+html[data-theme] body :is(#aboutInfoModal .about-info-modal-card, #contactFeedbackModal .contact-sheet-card) {
+  background: rgba(255,255,255,.10) !important; border-color: rgba(255,255,255,.22) !important;
+  box-shadow: none !important; backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important; color: #fffdf8 !important;
+}
+html[data-theme] body :is(#aboutInfoModal, #contactFeedbackModal) :is(h3,p,a) { color: #fffdf8 !important; }

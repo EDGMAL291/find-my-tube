@@ -49,4 +49,8 @@ jobs:
             /tmp/fmt-discovery-*/plan-360-light.png
             /tmp/fmt-discovery-*/multi-plan-360-light.png
             /tmp/fmt-discovery-*/scrolled-plan-360-light.png
+            /tmp/fmt-discovery-*/menu-360-light.png
+            /tmp/fmt-discovery-*/menu-1280-light.png
+            /tmp/fmt-discovery-*/about-390.png
+            /tmp/fmt-discovery-*/contact-390.png
           if-no-files-found: ignore

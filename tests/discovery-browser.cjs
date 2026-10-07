@@ -80,6 +80,15 @@ async function exerciseTubePlanWorkflow(page, width) {
   assert.equal(await page.locator('#selectionCartBar img, #selectionCartBar svg').count(), 0, 'Collection artwork is reserved for the full planner');
   const theme = await page.locator('html').getAttribute('data-theme');
   await page.screenshot({path:path.join(screenshots, `workflow-${width}-${theme}.png`)});
+  await search.evaluate(el=>el.blur());
+  await page.waitForFunction(()=>!document.body.classList.contains('is-mobile-search-active'));
+  await page.locator('#menuToggleBtn').click();
+  assert.equal(await page.locator('#selectionCartBar').isVisible(),false,'Menu hides the planner banner');
+  await page.locator('#siteMenuPanel .site-menu-list').evaluate(el=>{el.scrollTop=el.scrollHeight;});
+  assert.equal(await page.locator('#selectionCartBar').isVisible(),false,'Menu scrolling cannot reveal the planner banner');
+  await page.keyboard.press('Escape');
+  await page.locator('#siteMenuPanel').waitFor({state:'hidden'});
+  await verifyCount();
   await select('INR', 'INR');
   await verifyCount();
   const names = await page.evaluate(() => [...selectedTestNames]);
@@ -230,9 +239,21 @@ async function exerciseTubePlanWorkflow(page, width) {
         }));
         assert.deepEqual(hamburger, { background:'rgba(0, 0, 0, 0)', border:'none', paths:3, middleOpacity:'1' });
         const menuToggleBox = await page.locator('#menuToggleBtn').boundingBox();
+        const brandTitle = await page.locator('.header h1').evaluate(el => ({
+          top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
+          size:getComputedStyle(el).fontSize
+        }));
         await page.locator('#menuToggleBtn').click();
         await page.waitForTimeout(250);
         const menuCloseBox = await page.locator('#siteMenuPanel .site-menu-close').boundingBox();
+        const menuTitle = await page.locator('#siteMenuPanel .site-menu-title').evaluate(el => ({
+          top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
+          size:getComputedStyle(el).fontSize, weight:getComputedStyle(el).fontWeight
+        }));
+        assert.ok(Math.abs(menuTitle.top-brandTitle.top)<1 && Math.abs(menuTitle.center-brandTitle.center)<1, 'Menu replaces the page title position');
+        assert.equal(menuTitle.size,brandTitle.size,'Menu retains title font size');
+        assert.equal(menuTitle.weight,'400');
+        assert.ok((await page.locator('#siteMenuPanel .menu-action-label').evaluateAll(items=>items.map(el=>getComputedStyle(el).fontWeight))).every(weight=>weight==='400'), 'Menu labels are not bold');
         assert.ok(Math.abs(menuCloseBox.x - menuToggleBox.x) < 1, 'Menu close aligns horizontally with hamburger');
         assert.ok(Math.abs(menuCloseBox.y - menuToggleBox.y) < 1, 'Menu close aligns vertically with hamburger');
         assert.ok(Math.abs(menuCloseBox.width - menuToggleBox.width) < 1 && Math.abs(menuCloseBox.height - menuToggleBox.height) < 1, 'Menu close preserves the hamburger hit target');
@@ -248,6 +269,10 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.locator('#siteMenuPanel .site-menu-link').first().evaluate(el => getComputedStyle(el, '::after').display), 'none', 'Menu has no trailing arrows');
         assert.equal(await page.locator('#siteMenuPanel a[href="tel:0217996290"]').count(), 1, 'Laboratory number is present');
         assert.equal(await page.locator('#siteMenuPanel a[href^="https://wa.me/27606286757"]').count(), 1, 'WhatsApp support link is present');
+        assert.equal(await page.getByRole('menuitem',{name:'Message support on WhatsApp'}).locator('svg').count(),1);
+        assert.equal(await page.getByRole('menuitem',{name:'Call laboratory on 021 799 6290'}).locator('svg').count(),1);
+        assert.equal(await page.locator('#siteMenuPanel [data-group="secondary"] a[href="./contact-feedback.html"]').count(),1,'About and Contact are grouped');
+        await page.screenshot({path:path.join(screenshots, `menu-${width}-${theme}.png`)});
         const menuVisual = await page.locator('#siteMenuPanel').evaluate(el => ({
           backgroundImage: getComputedStyle(el).backgroundImage,
           backdropFilter: getComputedStyle(el).backdropFilter
@@ -557,6 +582,23 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.ok(await aboutPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `About overflow at ${width}`);
       await aboutPage.screenshot({path:path.join(screenshots, `about-${width}.png`), fullPage:true});
       await aboutPage.close();
+      const contactPage = await createTestPage(browser,{viewport:{width,height:844},reducedMotion:'reduce'});
+      const contactErrors=[];
+      contactPage.on('pageerror',e=>contactErrors.push(e.message));
+      await contactPage.goto(`${base}/contact-feedback.html`);
+      assert.equal(await contactPage.evaluate(()=>getComputedStyle(document.body,'::before').backgroundImage), aboutVisual.background, 'About and Contact share the warm/cool home photograph');
+      assert.equal(await contactPage.locator('.support-nav a[href="./about.html"]').count(),1);
+      for(const label of ['Message on WhatsApp','Call Laboratory']) {
+        const link=contactPage.getByRole('link',{name:label,exact:true});
+        assert.equal(await link.locator('svg').isVisible(),true);
+        const box=await link.boundingBox();
+        assert.ok(box.width>=44 && box.height>=44,'Contact icons keep large touch targets');
+        assert.equal(await link.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(255, 255, 255, 0.1)');
+      }
+      assert.ok(await contactPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Contact has no horizontal overflow');
+      assert.deepEqual(contactErrors,[]);
+      await contactPage.screenshot({path:path.join(screenshots,`contact-${width}.png`),fullPage:true});
+      await contactPage.close();
 
       const deskPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
       await deskPage.goto(`${base}/index.html?tool=collection-desk`);
