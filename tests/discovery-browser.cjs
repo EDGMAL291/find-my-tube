@@ -40,7 +40,8 @@ async function exerciseTubePlanWorkflow(page, width) {
     await search.fill(query);
     const card = page.locator('[data-test-name=' + JSON.stringify(name) + ']');
     const before = await page.locator('.discovery-card').count();
-    await card.locator('.discovery-select').click();
+    if (width <= 620) await card.locator('.discovery-select').tap();
+    else await card.locator('.discovery-select').click();
     assert.equal(await search.inputValue(), query, 'Selection preserves query');
     assert.equal(await page.locator('.discovery-card').count(), before, 'Selection preserves results');
     assert.equal(await card.locator('.discovery-select').getAttribute('aria-pressed'), 'true');
@@ -56,7 +57,18 @@ async function exerciseTubePlanWorkflow(page, width) {
       const count = plan.items.reduce((sum,item) => sum + item.count, 0);
       return `${selected.length} test${selected.length === 1 ? '' : 's'} • ${formatPlanCountLabel(count,plan)}${plan.manual.length ? ` • ${plan.manual.length} to confirm` : ''}`;
     });
-    assert.equal(await page.locator('#selectionCartCount').innerText(), expected, 'Dock count uses resolver quantities');
+    const actual = await page.locator('#selectionCartCount').innerText();
+    if (actual !== expected) {
+      console.log('Dock diagnostic', await page.evaluate(() => ({
+        classes: document.body.className,
+        elements: ['selectionCartBar','selectionCartCount'].map(id => {
+          const el = document.getElementById(id), css=getComputedStyle(el);
+          return {id, text:el.textContent, html:el.innerHTML, visibility:css.visibility, display:css.display, opacity:css.opacity, hidden:el.hidden, rect:el.getBoundingClientRect().toJSON()};
+        })
+      })));
+      await page.screenshot({path:path.join(screenshots, 'dock-failure.png')});
+    }
+    assert.equal(actual, expected, 'Dock count uses resolver quantities');
   }
   await select('CRP', 'CRP');
   await select('FBC', 'FBC');
@@ -116,6 +128,7 @@ async function exerciseTubePlanWorkflow(page, width) {
     setSelectedTests(new Set([fixture.name]));
   });
   assert.equal(await page.locator('#selectionCartCount').innerText(), '1 test • 0 tubes • 1 to confirm');
+  assert.match(await page.locator('.selection-cart-preview').innerText(), /Recorded uncommon specimen/);
   assert.match(await page.locator('.selection-cart-warning').innerText(), /laboratory/);
   await page.locator('#selectionCartBar').click();
   assert.match(await page.locator('#drawPlannerNote').innerText(), /Recorded uncommon specimen.*Confirm/);
@@ -166,7 +179,7 @@ async function exerciseTubePlanWorkflow(page, width) {
   try {
     for (const width of [360, 390, 412, 430, 768, 1280]) {
       for (const theme of ['light', 'dark']) {
-        const page = await createTestPage(browser, { viewport: { width, height: 900 }, reducedMotion: 'reduce' });
+        const page = await createTestPage(browser, { viewport: { width, height: 900 }, hasTouch: width <= 620, reducedMotion: 'reduce' });
         const errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}/find-my-tube.html`);
