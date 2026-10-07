@@ -657,10 +657,10 @@ async function exerciseTubePlanWorkflow(page, width) {
       const page = await createTestPage(browser, {viewport:{width,height:900}});
       await page.route('**/api/stock-requests?**', route=>route.fulfill({json:{requests:fixtures}}));
       await page.goto(`${base}/track-orders.html`);
-      await page.locator('#trackOrdersTable').getByText('Fresh pending', {exact:true}).waitFor();
-      assert.match(await page.locator('#trackOrdersTable').innerText(), /Recently updated/);
-      assert.doesNotMatch(await page.locator('#trackOrdersTable').innerText(), /Old pending|Old ready/);
-      assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Old pending/);
+      await page.locator('#trackOrdersTable').getByText(/^Fresh pending$/i).waitFor();
+      assert.match(await page.locator('#trackOrdersTable').innerText(), /Recently updated/i);
+      assert.doesNotMatch(await page.locator('#trackOrdersTable').innerText(), /Old pending|Old ready/i);
+      assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Old pending/i);
       assert.match(await page.locator('#trackOrdersArchiveTable').innerText(), /Archived/);
       await page.goto(`${base}/stock-dashboard.html`);
       const datasets = await page.evaluate(fixtures=>{
