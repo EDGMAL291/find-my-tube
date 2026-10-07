@@ -383,6 +383,16 @@ async function exerciseTubePlanWorkflow(page, width) {
         const tubeSize = await plannerTube.boundingBox();
         assert.ok(Math.abs(tubeSize.width - 25.2) < 1 && Math.abs(tubeSize.height - 57.6) < 1, 'Planner tube is 40% smaller');
         assert.match(await plannerTube.locator('img').getAttribute('src'), /realistic-empty-tube-yellow-v4\.png$/, 'Planner uses realistic tube photography');
+        await plannerTube.locator('img').evaluate(img => img.decode());
+        const artworkFits = await plannerTube.evaluate(el => {
+          const slot=el.getBoundingClientRect(), img=el.querySelector('img').getBoundingClientRect();
+          const card=el.closest('.draw-group-card').getBoundingClientRect();
+          return img.top>=slot.top-1 && img.bottom<=slot.bottom+1 &&
+            img.left>=slot.left-1 && img.right<=slot.right+1 &&
+            img.top>=card.top && img.bottom<=card.bottom &&
+            getComputedStyle(el.querySelector('img')).objectFit==='contain';
+        });
+        assert.equal(artworkFits, true, 'Whole yellow tube fits its artwork slot and collection card');
         assert.match(await plannerTube.getAttribute('aria-label'), /Gold\/Yellow collection tube/);
         assert.match(await page.locator('#drawGroups').innerText(), /Gold\/Yellow/);
         assert.match(await page.locator('#drawPlannerNote').innerText(), /own Gold\/Yellow tube/);
