@@ -303,6 +303,9 @@ html[data-theme] body[data-app-page="find-my-tube"].has-selection-cart #cardsCon
   padding-bottom: calc(var(--tube-plan-dock-height, 160px) + 20px);
 }
 .draw-selection-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.draw-test-guidance dl { margin: 8px 0 0; }
+.draw-test-guidance dt { font-weight: 650; font-size: .75rem; margin-top: 12px; }
+.draw-test-guidance dd { margin: 4px 0 0; font-size: .85rem; line-height: 1.5; overflow-wrap: anywhere; }
 html[data-theme] body[data-app-page="find-my-tube"].draw-modal-open #selectionCartBar {
   visibility: hidden !important; pointer-events: none !important;
 }

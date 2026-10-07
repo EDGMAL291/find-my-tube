@@ -49,6 +49,7 @@ async function exerciseTubePlanWorkflow(page, width) {
     if (width <= 620) assert.equal(await search.evaluate(el => el === document.activeElement), true, 'Tap preserves active search keyboard');
   }
   async function verifyCount() {
+    await page.locator('#selectionCartBar').waitFor({state:'visible'});
     const expected = await page.evaluate(() => {
       const selected = getSelectedTests();
       const {plan} = getResolvedDrawPlan(selected);

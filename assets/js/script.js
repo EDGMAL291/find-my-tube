@@ -6531,11 +6531,11 @@ function updateSelectionCartBar() {
   }
   const warnings = selectionCartBar.querySelector(".selection-cart-warning");
   const urgentAlerts = getDrawPlannerAlerts(selectedTests);
-  const warningText = plan.manual.length
-    ? "Confirm collection requirements with the laboratory."
-    : urgentAlerts.length
-      ? `${urgentAlerts[0].title}: ${urgentAlerts[0].items.join(" ")}`
-      : guidanceNotes[0] || (hasHighAttentionTest ? "Important collection guidance — review the full Tube Plan." : "");
+  const warningText = [
+    ...urgentAlerts.map((alert) => `${alert.title}: ${alert.items.join(" ")}`),
+    ...(plan.manual.length ? ["Confirm collection requirements with the laboratory."] : []),
+    guidanceNotes[0] || (hasHighAttentionTest ? "Important collection guidance — review the full Tube Plan." : "")
+  ].filter(Boolean).join(" ");
   if (warnings) {
     warnings.textContent = warningText;
     warnings.hidden = !warningText;
@@ -8211,6 +8211,21 @@ function renderDrawResult() {
       </${alert.tone === "urgent" ? "article" : "details"}>
     `)
     .join("");
+  // Carry existing collection metadata into the collection workflow, without new mappings.
+  drawPlannerAlerts.innerHTML += selectedTests.map((test) => {
+    const fields = [
+      ["Specimen", test.specimen || test.specimenGuide],
+      ["Collection notes", test.notes],
+      ["Collection preparation", test.criticalPrep],
+      ["Handling", test.handling],
+      ["Profile components", (profileComponentsByName[test.name] || []).join(", ")]
+    ].filter(([, value]) => String(value || "").trim());
+    if (!fields.length) return "";
+    return `<details class="draw-planner-alert draw-test-guidance">
+      <summary>${escapeHtml(test.name)} collection details</summary>
+      <dl>${fields.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>
+    </details>`;
+  }).join("");
 
   drawGroups.innerHTML = plan.items
     .map((item) => {
