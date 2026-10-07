@@ -122,3 +122,43 @@ html[data-theme="dark"] #stockDashboardInventoryList .stock-item-title-row > [ar
   #stockDashboardInventoryList .stock-item-title-row > span:last-child { font-size: 13px; }
   #stockDashboardInventoryList .stock-dashboard-stock-cell strong { font-size: 20px; }
 }
+
+/* Keep the laboratory scene visible through the inventory in every theme. */
+html body[data-app-page="stock-dashboard"] {
+  isolation: isolate;
+  background-color: #03111f !important;
+  background-image: linear-gradient(110deg, rgba(3, 24, 42, .84), rgba(74, 46, 24, .60)),
+    url("../images/find-my-tube-lab-overview.jpg") !important;
+  background-position: center !important;
+  background-size: cover !important;
+}
+html body[data-app-page="stock-dashboard"]::before {
+  content: ""; display: block !important; position: fixed !important;
+  inset: 0 !important; width: 100vw; height: 100lvh;
+  z-index: -1; pointer-events: none; filter: none !important;
+  background: linear-gradient(110deg, rgba(3, 24, 42, .84), rgba(74, 46, 24, .60)),
+    url("../images/find-my-tube-lab-overview.jpg") center / cover no-repeat !important;
+}
+html body[data-app-page="stock-dashboard"] #stockDashboardInventoryCard {
+  background: rgba(255, 255, 255, .10) !important;
+}
+html body[data-app-page="stock-dashboard"] #stockDashboardInventoryList .stock-dashboard-list-row {
+  background: rgba(255, 255, 255, .10) !important;
+  border-color: rgba(255, 255, 255, .22); border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: blur(8px) saturate(1.04);
+  -webkit-backdrop-filter: blur(8px) saturate(1.04);
+}
+html body[data-app-page="stock-dashboard"] #stockDashboardInventoryList :is(
+  .stock-item-glyph, .stock-item-title-row > [aria-hidden="true"]
+) {
+  background: transparent !important;
+  border: 0; box-shadow: none;
+}
+html body[data-app-page="stock-dashboard"] #stockDashboardInventoryCard :is(
+  h3, h4, .stock-order-kicker, .stock-dashboard-status, .stock-dashboard-empty,
+  .stock-item-title-row > span:last-child, .stock-dashboard-stock-cell strong,
+  .stock-dashboard-inventory-section-head > span
+) {
+  color: #fffdf8 !important;
+}

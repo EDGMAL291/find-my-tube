@@ -53,4 +53,5 @@ jobs:
             /tmp/fmt-discovery-*/menu-1280-light.png
             /tmp/fmt-discovery-*/about-390.png
             /tmp/fmt-discovery-*/contact-390.png
+            /tmp/fmt-discovery-*/stock-inventory-*.png
           if-no-files-found: ignore
