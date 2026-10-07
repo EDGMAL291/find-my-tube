@@ -706,7 +706,6 @@ function enhanceSiteMenuStructure() {
   mainGroup.className = "site-menu-group";
   mainGroup.dataset.group = "main";
   mainGroup.setAttribute("role", "none");
-  mainGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Main Navigation</p>';
   mainButtons.forEach((button) => mainGroup.appendChild(button));
   siteMenuList.appendChild(mainGroup);
 
@@ -715,7 +714,6 @@ function enhanceSiteMenuStructure() {
     stockGroup.className = "site-menu-group";
     stockGroup.dataset.group = "stock";
     stockGroup.setAttribute("role", "none");
-    stockGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">Stock Control</p>';
     stockButtons.forEach((button) => stockGroup.appendChild(button));
     siteMenuList.appendChild(stockGroup);
   }
