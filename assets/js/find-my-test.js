@@ -1282,7 +1282,7 @@
       .map((item) => {
         const isChecked = activePlanSelection.has(item.name);
         const alreadyInPlan = activePlanSelection.has(item.name);
-        const stateLabel = alreadyInPlan ? "✓ In Tube Plan" : "Tap to add to Tube Plan";
+        const stateLabel = alreadyInPlan ? "Tap to remove from Tube Plan" : "Tap to add to Tube Plan";
 
         return `
           <button

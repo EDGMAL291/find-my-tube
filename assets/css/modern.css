@@ -3876,10 +3876,6 @@ body[data-app-page="tube-plan-page"] {
   --support-image: url("../images/hero-lab-tubes.jpg");
 }
 
-body[data-app-page="contact-feedback-page"] {
-  --support-image: url("../images/hero-lab-collection.jpg");
-}
-
 body[data-app-page$="-page"]:not(.find-my-test-page)::before,
 body[data-app-page$="-page"]:not(.find-my-test-page)::after {
   display: none;
@@ -4795,7 +4791,7 @@ body[data-app-page="find-my-tube"] {
   --tool-accent-soft: rgba(216, 196, 223, 0.12);
   background-image:
     linear-gradient(90deg, rgba(3, 17, 31, 0.94) 0%, rgba(3, 17, 31, 0.8) 55%, rgba(3, 17, 31, 0.46) 100%),
-    url("../images/hero-lab-tubes.jpg");
+    url("../images/hero-lab-tubes-sunrays-v2.jpg");
 }
 
 body[data-app-page="stock-order"] {
@@ -6651,7 +6647,7 @@ body[data-app-page="find-my-tube"] {
       rgba(3, 17, 31, 0.46) 62%,
       rgba(3, 17, 31, 0.12) 100%
     ),
-    url("../images/hero-lab-tubes.jpg");
+    url("../images/hero-lab-tubes-sunrays-v2.jpg");
 }
 
 html[data-theme] body[data-app-page="find-my-tube"] .tube-workspace-intro {
@@ -11729,7 +11725,7 @@ html[data-theme] body #siteMenuPanel {
   background-color: #071822 !important;
   background-image:
     linear-gradient(90deg, rgba(2,15,34,.9) 0%, rgba(2,15,34,.7) 46%, rgba(2,15,34,.45) 100%),
-    url("../images/hero-lab-tubes.jpg") !important;
+    url("../images/hero-lab-tubes-sunrays-v2.jpg") !important;
   background-position: center !important;
   background-size: cover !important;
   background-repeat: no-repeat !important;
@@ -11801,7 +11797,7 @@ html[data-theme] body #siteMenuPanel.is-open :is(.site-menu-group-title, .site-m
   html[data-theme] body #siteMenuPanel {
     background-image:
       linear-gradient(180deg, rgba(2,15,34,.35) 0%, rgba(2,15,34,.73) 44%, rgba(2,15,34,.92) 100%),
-      url("../images/hero-lab-tubes.jpg") !important;
+      url("../images/hero-lab-tubes-sunrays-v2.jpg") !important;
     background-position: 74% center !important;
   }
 }
@@ -11809,6 +11805,164 @@ html[data-theme] body #siteMenuPanel.is-open :is(.site-menu-group-title, .site-m
   html[data-theme] body #siteMenuPanel { transition: none !important; }
   html[data-theme] body #siteMenuPanel :is(.site-menu-group-title, .site-menu-link, .site-menu-contact-link) {
     animation: none !important; opacity: 1; transform: none;
+  }
+}
+
+/* Compact navigation keeps full-height actions while fitting the complete menu in one view. */
+html[data-theme] body #siteMenuPanel .site-menu-secondary {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+
+html[data-theme] body #siteMenuPanel .site-menu-secondary > .site-menu-link {
+  min-width: 0;
+}
+
+html[data-theme] body #siteMenuPanel .site-menu-contact-actions {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 56px);
+  align-items: stretch;
+}
+
+html[data-theme] body #siteMenuPanel .site-menu-contact-icon {
+  display: grid;
+  min-width: 56px;
+  min-height: 64px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
+  color: #fff;
+  text-decoration: none;
+}
+
+html[data-theme] body #siteMenuPanel .site-menu-contact-icon svg,
+.mobile-bottom-menu-contact-icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+html[data-theme] body #siteMenuPanel .site-menu-contact-icon-whatsapp,
+.mobile-bottom-menu-contact-icon-whatsapp {
+  color: #8de1b2;
+}
+
+html[data-theme] body #siteMenuPanel .site-menu-contact-icon:is(:hover, :focus-visible) {
+  background: rgba(255, 255, 255, .1);
+}
+
+html[data-theme] body :is([data-app-page="find-my-tube"], .find-my-test-page) .tube-option-quantity {
+  color: rgba(255, 253, 248, .76);
+  font-size: .72rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+@media (max-width: 719px) {
+  html[data-theme] body #siteMenuPanel .site-menu-list {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  html[data-theme] body #siteMenuPanel .site-menu-group:not(.site-menu-secondary) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-theme] body #siteMenuPanel .site-menu-group-title {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 860px) {
+  .mobile-bottom-menu-sheet {
+    background-color: #071822;
+    background-image:
+      linear-gradient(180deg, rgba(2, 15, 34, .5) 0%, rgba(2, 15, 34, .78) 48%, rgba(2, 15, 34, .94) 100%),
+      url("../images/hero-lab-tubes-sunrays-v2.jpg");
+    background-position: center, 72% center;
+    background-size: cover, cover;
+    background-repeat: no-repeat;
+    color: #fffdf8;
+  }
+
+  .mobile-bottom-menu-head,
+  .mobile-bottom-menu-title,
+  .mobile-bottom-menu-kicker,
+  .mobile-bottom-menu-subtitle,
+  .mobile-bottom-menu-group-title,
+  .mobile-bottom-menu-item {
+    color: #fffdf8;
+  }
+
+  .mobile-bottom-menu-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    overflow: hidden;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 84px);
+  }
+
+  .mobile-bottom-menu-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 9px;
+    background: rgba(3, 17, 31, .5);
+    border-color: rgba(255, 255, 255, .18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .mobile-bottom-menu-group-title,
+  .mobile-bottom-menu-more-row {
+    grid-column: 1 / -1;
+  }
+
+  .mobile-bottom-menu-item {
+    min-height: 66px;
+    border-color: rgba(255, 255, 255, .2);
+    background: rgba(3, 17, 31, .58);
+    box-shadow: none;
+  }
+
+  .mobile-bottom-menu-more-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 58px 58px;
+    gap: 8px;
+  }
+
+  .mobile-bottom-menu-more-row .mobile-bottom-menu-item {
+    min-width: 0;
+  }
+
+  .mobile-bottom-menu-contact-icon {
+    display: grid;
+    min-width: 58px;
+    min-height: 66px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 17px;
+    background: rgba(3, 17, 31, .58);
+    color: #fffdf8;
+  }
+}
+
+@media (max-height: 720px) and (max-width: 860px) {
+  .mobile-bottom-menu-sheet {
+    gap: 8px;
+    padding-top: calc(env(safe-area-inset-top) + 10px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 88px);
+  }
+
+  .mobile-bottom-menu-subtitle {
+    display: none;
+  }
+
+  .mobile-bottom-menu-list {
+    gap: 8px;
   }
 }
 
@@ -11862,7 +12016,7 @@ html body[data-app-page] :is(
 
 /* Static reference pages use the same visible photographic canvas as the working tools. */
 html body:is(
-  [data-app-page="about-page"], [data-app-page="contact-feedback-page"],
+  [data-app-page="about-page"],
   [data-app-page="disclaimer-page"], [data-app-page="privacy-policy-page"],
   [data-app-page="terms-of-use-page"], [data-app-page="tube-plan-page"]
 ) {

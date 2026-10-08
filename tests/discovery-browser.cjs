@@ -216,10 +216,7 @@ async function exerciseTubePlanWorkflow(page, width) {
   }
   await page.locator('#selectionCartBar').click();
   await page.locator('#drawClearAllBtn').click();
-  assert.ok(await page.evaluate(() => selectedTestNames.size > 0), 'Clear-all requires explicit confirmation');
-  await verifyActionsRow();
-  await page.locator('#drawClearAllBtn').click();
-  assert.equal(await page.evaluate(() => selectedTestNames.size), 0);
+  assert.equal(await page.evaluate(() => selectedTestNames.size), 0, 'Clear all immediately removes every selected test');
   await page.locator('#closeDrawPlannerBtn').click();
   assert.equal(await page.locator('#selectionCartBar').isVisible(), false);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No workflow overflow');
@@ -293,9 +290,14 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.locator('#siteMenuPanel .site-menu-link').first().evaluate(el => getComputedStyle(el, '::after').display), 'none', 'Menu has no trailing arrows');
         assert.equal(await page.locator('#siteMenuPanel a[href="tel:0217996290"]').count(), 1, 'Laboratory number is present');
         assert.equal(await page.locator('#siteMenuPanel a[href^="https://wa.me/27606286757"]').count(), 1, 'WhatsApp support link is present');
-        assert.equal(await page.getByRole('menuitem',{name:'Message support on WhatsApp'}).locator('svg').count(),1);
+        assert.equal(await page.getByRole('menuitem',{name:'Message laboratory on WhatsApp'}).locator('svg').count(),1);
         assert.equal(await page.getByRole('menuitem',{name:'Call laboratory on 021 799 6290'}).locator('svg').count(),1);
-        assert.equal(await page.locator('#siteMenuPanel [data-group="secondary"] a[href="./contact-feedback.html"]').count(),1,'About and Contact are grouped');
+        assert.equal(await page.locator('#siteMenuPanel a[href="./contact-feedback.html"]').count(),0,'Retired Contact and feedback page is absent');
+        assert.deepEqual(
+          await page.locator('#siteMenuPanel [data-group="secondary"] > *').evaluateAll(items => items.map(item => item.matches('[data-menu-action="about"]') ? 'about' : item.className)),
+          ['about', 'site-menu-contact-actions'],
+          'About is followed directly by phone and WhatsApp actions'
+        );
         await page.screenshot({path:path.join(screenshots, `menu-${width}-${theme}.png`)});
         const menuVisual = await page.locator('#siteMenuPanel').evaluate(el => ({
           backgroundImage: getComputedStyle(el).backgroundImage,
@@ -307,6 +309,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(Math.round(menuBox.width), width);
         assert.equal(Math.round(menuBox.height), 900);
         assert.equal(Math.round(menuBox.y), 0);
+        assert.equal(await page.locator('#siteMenuPanel').evaluate(el => el.scrollHeight <= el.clientHeight), true, `Menu should fit without scrolling at ${width}`);
         await page.locator('.site-menu-close').focus();
         await page.keyboard.press('Shift+Tab');
         assert.ok(await page.locator('#siteMenuPanel').evaluate(el => el.contains(document.activeElement)), 'Menu traps keyboard focus');
@@ -407,6 +410,9 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(artworkFits, true, 'Whole yellow tube fits its artwork slot and collection card');
         assert.match(await plannerTube.getAttribute('aria-label'), /Gold\/Yellow collection tube/);
         assert.match(await page.locator('#drawGroups').innerText(), /Gold\/Yellow/);
+        assert.ok(await page.locator('#drawGroups .draw-order-step').evaluateAll(items => items.every(item => /^(Collection order:|Collected separately)/.test(item.textContent.trim()))), 'Planner uses explicit collection-order wording');
+        assert.doesNotMatch(await page.locator('#drawGroups').innerText(), /\bDraw\s+\d+/i, 'Planner must not present sequence numbers as draw quantities');
+        assert.ok(await page.locator('#drawGroups .draw-group-count-badge, #drawGroups .tube-option-quantity').evaluateAll(items => items.every(item => /^Quantity:\s*\d+/.test(item.textContent.trim()))), 'Planner labels tube quantities explicitly');
         assert.match(await page.locator('#drawPlannerNote').innerText(), /own Gold\/Yellow tube/);
         await page.screenshot({ path:path.join(screenshots, `plan-${width}-${theme}.png`) });
         assert.equal((await page.locator('#closeDrawPlannerBtn').innerText()).trim(), '×');
@@ -590,6 +596,16 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.equal(await testPage.locator('#clinicalWorkupResults').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Find My Test results use 10% frost');
       const optionSurfaces = await testPage.locator('.clinical-workup-test-option').evaluateAll(items => items.map(item => getComputedStyle(item).backgroundColor));
       assert.ok(optionSurfaces.every(color => color === 'rgba(255, 255, 255, 0.1)'), `Suggested tests use 10% frost at ${width}: ${JSON.stringify(optionSurfaces)}`);
+      const firstOption = testPage.locator('.clinical-workup-test-option').first();
+      await firstOption.click();
+      assert.match(await firstOption.innerText(), /Tap to remove from Tube Plan/, `Selected test remains an actionable toggle at ${width}`);
+      assert.equal((await testPage.locator('#selectionCartBar .selection-cart-label').innerText()).trim(), 'Selected tests');
+      await testPage.locator('#selectionCartBar').click();
+      assert.equal(await testPage.locator('#drawModal').isVisible(), true, `Selected tests opens at ${width}`);
+      await testPage.locator('#closeDrawPlannerBtn').click();
+      await testPage.locator('#clinicalWorkupResetBtn').click();
+      assert.equal(await testPage.locator('#clinicalWorkupResults').isVisible(), false, `Clear all hides suggestions at ${width}`);
+      assert.equal(await testPage.locator('#selectionCartBar').isVisible(), false, `Clear all removes selected tests at ${width}`);
       await testPage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       assert.equal(await testPage.evaluate(() => getComputedStyle(document.body, '::before').position), 'fixed', 'Find My Test photograph remains fixed after scrolling');
       assert.ok(await testPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Find My Test overflow at ${width}`);
@@ -617,21 +633,8 @@ async function exerciseTubePlanWorkflow(page, width) {
       await aboutPage.screenshot({path:path.join(screenshots, `about-${width}.png`), fullPage:true});
       await aboutPage.close();
       const contactPage = await createTestPage(browser,{viewport:{width,height:844},reducedMotion:'reduce'});
-      const contactErrors=[];
-      contactPage.on('pageerror',e=>contactErrors.push(e.message));
-      await contactPage.goto(`${base}/contact-feedback.html`);
-      assert.equal(await contactPage.evaluate(()=>getComputedStyle(document.body,'::before').backgroundImage), aboutVisual.background, 'About and Contact share the warm/cool home photograph');
-      assert.equal(await contactPage.locator('.support-nav a[href="./about.html"]').count(),1);
-      for(const label of ['Message on WhatsApp','Call Laboratory']) {
-        const link=contactPage.getByRole('link',{name:label,exact:true});
-        assert.equal(await link.locator('svg').isVisible(),true);
-        const box=await link.boundingBox();
-        assert.ok(box.width>=44 && box.height>=44,'Contact icons keep large touch targets');
-        assert.equal(await link.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(255, 255, 255, 0.1)');
-      }
-      assert.ok(await contactPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Contact has no horizontal overflow');
-      assert.deepEqual(contactErrors,[]);
-      await contactPage.screenshot({path:path.join(screenshots,`contact-${width}.png`),fullPage:true});
+      const contactResponse = await contactPage.goto(`${base}/contact-feedback.html`);
+      assert.equal(contactResponse.status(), 404, 'Retired Contact and feedback page stays unavailable');
       await contactPage.close();
 
       const deskPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
