@@ -75,3 +75,18 @@ test("Find My Test controls and collection sequence use unambiguous wording", ()
   assert.match(script, /Quantity: \$\{item\.count\}/);
   assert.equal(script.includes("Draw ${orderOfDrawStep}"), false);
 });
+
+test("workflow pages expose consistent frosted cards and input glass", () => {
+  const modern = fs.readFileSync(path.join(root, "assets/css/modern.css"), "utf8");
+  const track = fs.readFileSync(path.join(root, "assets/css/track-orders.css"), "utf8");
+  const dashboard = fs.readFileSync(path.join(root, "assets/css/stock-inventory.css"), "utf8");
+  assert.match(modern, /--fmt-work-frost: rgba\(255, 255, 255, \.14\)/);
+  assert.match(modern, /--fmt-work-frost-field: rgba\(3, 17, 31, \.52\)/);
+  assert.match(modern, /body\.find-my-test-page \.clinical-workup-group/);
+  assert.match(modern, /body\[data-app-page="stock-order"\] :is\(/);
+  assert.match(track, /body\[data-app-page="track-orders"\] \.stock-order-request-card/);
+  assert.match(dashboard, /body\[data-app-page="stock-dashboard"\] :is\(/);
+  [modern, track, dashboard].forEach((css) => {
+    assert.match(css, /backdrop-filter: blur\((?:12|16)px\)/);
+  });
+});

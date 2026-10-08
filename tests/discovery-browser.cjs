@@ -579,23 +579,32 @@ async function exerciseTubePlanWorkflow(page, width) {
         position:getComputedStyle(document.body, '::before').position,
         panel:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundColor,
         panelImage:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundImage,
-        input:getComputedStyle(document.querySelector('#clinicalSymptomsInput')).backgroundColor
+        group:getComputedStyle(document.querySelector('.clinical-workup-group')).backgroundColor,
+        groupFilter:getComputedStyle(document.querySelector('.clinical-workup-group')).backdropFilter,
+        input:getComputedStyle(document.querySelector('#clinicalSymptomsInput')).backgroundColor,
+        inputFilter:getComputedStyle(document.querySelector('#clinicalSymptomsInput')).backdropFilter
       }));
       assert.match(initialVisual.background, /find-my-tube-lab-overview/, `Find My Test home-slide photograph missing at ${width}`);
       assert.equal(initialVisual.position, 'fixed', 'Find My Test photograph must stay still while scrolling');
-      assert.equal(initialVisual.panel, 'rgba(255, 255, 255, 0.1)', 'Find My Test form uses 10% frost');
+      assert.equal(initialVisual.panel, 'rgba(3, 17, 31, 0.24)', 'Find My Test form keeps a quiet translucent shell');
       assert.equal(initialVisual.panelImage, 'none', 'Find My Test form does not cover the photograph');
-      assert.equal(initialVisual.input, 'rgba(255, 255, 255, 0.1)', 'Find My Test fields use 10% frost');
+      assert.equal(initialVisual.group, 'rgba(255, 255, 255, 0.14)', 'Find My Test sections use visible card frost');
+      assert.match(initialVisual.groupFilter, /blur\(16px\)/, 'Find My Test section frost visibly blurs the scene');
+      assert.equal(initialVisual.input, 'rgba(3, 17, 31, 0.52)', 'Find My Test fields use readable dark input glass');
+      assert.match(initialVisual.inputFilter, /blur\(12px\)/, 'Find My Test input glass visibly blurs the scene');
       await testPage.locator('#clinicalSymptomsInput').fill('fever');
+      await testPage.locator('#clinicalSymptomsInput').focus();
+      await testPage.waitForTimeout(30);
+      assert.equal(await testPage.locator('#clinicalSymptomsInput').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(3, 17, 31, 0.66)', 'Focused Find My Test input strengthens its frost');
       await testPage.locator('#clinicalConcernInput').fill('infection');
       await testPage.locator('#clinicalWorkupSubmitBtn').click();
       await testPage.mouse.move(0, 0);
       await testPage.waitForTimeout(250);
       assert.equal(await testPage.locator('#clinicalWorkupResults').isVisible(), true);
       assert.ok(await testPage.locator('.clinical-workup-test-option').count() > 0, 'Find My Test returns suggestions');
-      assert.equal(await testPage.locator('#clinicalWorkupResults').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Find My Test results use 10% frost');
+      assert.equal(await testPage.locator('#clinicalWorkupResults').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.14)', 'Find My Test results use visible frost');
       const optionSurfaces = await testPage.locator('.clinical-workup-test-option').evaluateAll(items => items.map(item => getComputedStyle(item).backgroundColor));
-      assert.ok(optionSurfaces.every(color => color === 'rgba(255, 255, 255, 0.1)'), `Suggested tests use 10% frost at ${width}: ${JSON.stringify(optionSurfaces)}`);
+      assert.ok(optionSurfaces.every(color => color === 'rgba(255, 255, 255, 0.14)'), `Suggested tests use visible frost at ${width}: ${JSON.stringify(optionSurfaces)}`);
       const firstOption = testPage.locator('.clinical-workup-test-option').first();
       await firstOption.click();
       assert.match(await firstOption.innerText(), /Tap to remove from Tube Plan/, `Selected test remains an actionable toggle at ${width}`);
@@ -613,7 +622,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       await testPage.screenshot({path:path.join(screenshots, `find-my-test-${width}.png`), fullPage:true});
       await testPage.close();
     }
-    console.log('PASS Find My Test sharp photograph, 10% frost, results and responsive checks');
+    console.log('PASS Find My Test sharp photograph, frosted groups and inputs, results and responsive checks');
     for (const width of [360, 390, 412, 430, 1280]) {
       const aboutPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
       await aboutPage.goto(`${base}/about.html`);
@@ -699,7 +708,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.deepEqual(datasets.active, ['RECENT-ACTIVITY','FRESH-PENDING']);
       assert.deepEqual(datasets.archived, ['STALE-PENDING','STALE-READY']);
       await page.evaluate(() => { document.querySelector('#stockDashboardRequestsCard').hidden = false; });
-      assert.equal(await page.locator('.stock-dashboard-queue-row').first().evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Work queue rows use light frost');
+      assert.equal(await page.locator('.stock-dashboard-queue-row').first().evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.14)', 'Work queue rows use visible frost');
       await page.locator('#stockDashboardRequestsCard').scrollIntoViewIfNeeded();
       await page.screenshot({path:path.join(screenshots, `stock-queue-${width}.png`)});
       await page.evaluate(() => {
@@ -722,8 +731,18 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.deepEqual(errors, [], `${route} runtime errors`);
       const radii = await page.locator('.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).borderRadius));
       assert.ok(radii.every(radius=>radius==='0px'), `${route} inconsistent card corners: ${radii}`);
-      const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).backgroundColor));
-      assert.ok(frost.every(color=>color === 'rgba(255, 255, 255, 0.1)'), `${route} inconsistent card frost: ${frost}`);
+      if(route === 'order-stock.html') {
+        const stockFrost = await page.locator('.stock-order-form,.stock-catalog-toolbar,.stock-order-item-card:visible,.stock-order-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).backgroundColor));
+        assert.ok(stockFrost.every(color=>color === 'rgba(255, 255, 255, 0.14)'), `Order Stock card frost is inconsistent: ${stockFrost}`);
+        assert.equal(await page.locator('#stockOrderRequesterNameInput').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(3, 17, 31, 0.52)', 'Order Stock inputs use dark glass');
+      }
+      if(route === 'track-orders.html') {
+        assert.equal(await page.locator('.stock-order-request-card').first().evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.14)', 'Track Orders cards use visible frost');
+        assert.equal(await page.locator('#trackOrdersWardInput').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(3, 17, 31, 0.52)', 'Track Orders filters use dark glass');
+      }
+      if(route === 'stock-dashboard.html') {
+        assert.equal(await page.locator('.stock-dashboard-session-card').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.14)', 'Dashboard session card uses visible frost');
+      }
       if(route === 'order-stock.html') {
         const stockBackdrop = await page.evaluate(() => ({
           image:getComputedStyle(document.body, '::before').backgroundImage,
