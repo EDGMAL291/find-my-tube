@@ -800,7 +800,16 @@ async function exerciseTubePlanWorkflow(page, width) {
           await page.locator('.stock-order-item-card:visible').evaluateAll(cards => cards.map(card => card.dataset.stockItem).sort()),
           ['vacutainer-needle-black', 'vacutainer-needle-green']
         );
-        assert.equal(await page.locator('.stock-item-glyph-needle:visible').count(), 2);
+        const needlePhotos = page.locator('.stock-item-photo-needle:visible');
+        assert.equal(await needlePhotos.count(), 2, 'Both Vacutainer needle cards use product cutouts');
+        assert.deepEqual(
+          (await needlePhotos.evaluateAll(images => images.map(image => image.getAttribute('src')))).sort(),
+          [
+            'assets/images/stock-supplies/vacutainer-multisample-needle-black-v1.webp',
+            'assets/images/stock-supplies/vacutainer-multisample-needle-green-v1.webp'
+          ],
+          'Black and green Vacutainer needles use matching colour-specific images'
+        );
       }
       if(route === 'track-orders.html') {
         assert.match(await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage), /track-orders-workflow-warm-cold-v1/, 'Track Orders uses its warm/cold logistics photograph');

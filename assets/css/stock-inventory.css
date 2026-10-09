@@ -77,6 +77,10 @@ html[data-theme] #stockDashboardInventoryList .stock-item-glyph img {
   height: 100%;
   object-fit: contain;
 }
+html[data-theme] #stockDashboardInventoryList .stock-item-photo-needle {
+  object-fit: contain;
+  padding: 5px;
+}
 html[data-theme] #stockDashboardInventoryList .stock-item-glyph svg {
   width: 32px;
   height: 54px;

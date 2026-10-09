@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20261009c" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20261009d" />
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261009o" />
   <style>
     #stockOrderSummaryItems {
@@ -311,7 +311,7 @@
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261009a"></script>
+  <script src="assets/js/script.js?v=20261009b"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -1292,7 +1292,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261009c", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261009d", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

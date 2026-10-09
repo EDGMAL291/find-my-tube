@@ -1384,9 +1384,9 @@ const stockBloodCultureBottleMetaById = Object.freeze({
   })
 });
 
-const stockVacutainerNeedleMetaById = Object.freeze({
-  "vacutainer-needle-green": Object.freeze({ accentColor: "#18a66f" }),
-  "vacutainer-needle-black": Object.freeze({ accentColor: "#20262d" })
+const stockVacutainerNeedleImageById = Object.freeze({
+  "vacutainer-needle-green": "assets/images/stock-supplies/vacutainer-multisample-needle-green-v1.webp",
+  "vacutainer-needle-black": "assets/images/stock-supplies/vacutainer-multisample-needle-black-v1.webp"
 });
 
 const paediatricMicrotainerImageById = Object.freeze({
@@ -1578,9 +1578,16 @@ function getStockItemGlyphMarkup(item, options = {}) {
     return `<img class="stock-item-photo-paediatric${isCompact ? " stock-item-photo-paediatric-compact" : ""}" src="${paediatricTubeImage}" alt="" width="320" height="720" loading="lazy" decoding="async" aria-hidden="true">`;
   }
 
-  const meta = getBloodCultureBottleMetadata(item);
   const glyphClassName = String(options.glyphClassName || "").trim();
   const classSuffix = glyphClassName ? ` ${glyphClassName}` : "";
+  const needleImage = stockVacutainerNeedleImageById[String(item?.id || "").trim()];
+
+  if (needleImage) {
+    const isCompact = glyphClassName.includes("compact");
+    return `<img class="stock-item-photo-needle${isCompact ? " stock-item-photo-needle-compact" : ""}" src="${needleImage}" alt="" width="836" height="470" loading="lazy" decoding="async" aria-hidden="true">`;
+  }
+
+  const meta = getBloodCultureBottleMetadata(item);
 
   if (meta) {
     const safeAccentColor = escapeHtml(meta.accentColor || "#2563eb");
@@ -1589,21 +1596,6 @@ function getStockItemGlyphMarkup(item, options = {}) {
     return `
       <span class="stock-item-glyph stock-item-glyph-blood-culture${classSuffix}" style="--stock-item-glyph-color:${safeAccentColor};--stock-item-glyph-bg:${safeAccentSoft};" aria-hidden="true">
         ${getBloodCultureBottleGlyphSvg()}
-      </span>
-    `;
-  }
-
-  const needleMeta = stockVacutainerNeedleMetaById[String(item?.id || "").trim()];
-  if (needleMeta) {
-    const safeAccentColor = escapeHtml(needleMeta.accentColor);
-    return `
-      <span class="stock-item-glyph stock-item-glyph-supply stock-item-glyph-needle${classSuffix}" style="--stock-needle-color:${safeAccentColor};" aria-hidden="true">
-        <svg viewBox="0 0 32 32" fill="none" focusable="false">
-          <path class="stock-needle-metal" d="M16 2v11M16 21v8" />
-          <path class="stock-needle-tip" d="m16 2 1.6 3.2H16" />
-          <rect class="stock-needle-hub" x="10.5" y="12.5" width="11" height="9" rx="2" />
-          <path class="stock-needle-hub-detail" d="M12.5 16h7M13 19h6" />
-        </svg>
       </span>
     `;
   }
