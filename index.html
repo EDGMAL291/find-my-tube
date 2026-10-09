@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20261008a" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20261007o" />
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261007n" />
   <script type="application/ld+json">
     {
@@ -178,6 +178,15 @@
         <symbol id="lab-icon-flask" viewBox="0 0 24 24">
           <path d="M8 4h8M9 4v6.5a4 4 0 0 1-.8 2.4l-1.6 2.2A3 3 0 0 0 9 20h6a3 3 0 0 0 2.4-4.9l-1.6-2.2a4 4 0 0 1-.8-2.4V4M8.2 15h7.6"></path>
         </symbol>
+        <symbol id="lab-icon-contact" viewBox="0 0 24 24">
+          <path d="M5 5h14v10H9l-4 4zM9 9h6m-6 3h4"></path>
+        </symbol>
+        <symbol id="lab-icon-chat" viewBox="0 0 24 24">
+          <path d="M5 5h14v11H9l-4 4zM8.5 10.5h.01m3.49 0h.01m3.49 0h.01"></path>
+        </symbol>
+        <symbol id="lab-icon-phone" viewBox="0 0 24 24">
+          <path d="M8 4 5.5 6.5c.8 5.7 6.3 11.2 12 12L20 16l-4-3-2 2c-2.1-.8-4.2-2.9-5-5l2-2z"></path>
+        </symbol>
         <symbol id="lab-icon-arrow" viewBox="0 0 24 24">
           <path d="M5 12h14m-4-4 4 4-4 4"></path>
         </symbol>
@@ -299,6 +308,15 @@
         <p class="home-tip-text" id="homeTipText">Fill citrate tubes to the line to prevent clotting errors.</p>
       </section>
 
+      <section class="home-dashboard-section home-help-card" aria-labelledby="homeHelpTitle">
+        <div class="home-dashboard-head">
+          <h2 id="homeHelpTitle" class="lab-desk-section-title"><span class="lab-desk-heading-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-contact"></use></svg></span><span>Contact the lab</span></h2>
+        </div>
+        <div class="home-help-actions">
+          <a href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20" target="_blank" rel="noopener noreferrer" aria-label="Message feedback on WhatsApp"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path><path d="M9 9c0 3 3 6 6 6l1-2-2-1-1 1-2-2 1-1-1-2Z"></path></svg><span>WhatsApp Feedback</span></a>
+          <a href="tel:0217996290" aria-label="Call laboratory"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-phone"></use></svg><span>Call Laboratory</span></a>
+        </div>
+      </section>
       </aside>
 
     </section>
@@ -397,7 +415,7 @@
 
           <div class="clinical-workup-actions">
             <button type="submit" class="clinical-workup-submit-btn" id="clinicalWorkupSubmitBtn">Find My Test</button>
-            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">Clear all</button>
+            <button type="button" class="clinical-workup-reset-btn" id="clinicalWorkupResetBtn">Clear</button>
           </div>
 
           <p class="clinical-workup-note">
@@ -416,7 +434,7 @@
         </div>
         <div class="clinical-workup-results-actions">
           <button type="button" class="clinical-workup-results-add-all-btn" id="addAllClinicalWorkupResultsBtn">Add all to Tube Plan</button>
-          <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear suggestions</button>
+          <button type="button" class="clinical-workup-results-clear-btn" id="clearClinicalWorkupResultsBtn">Clear results</button>
         </div>
       </div>
       <p class="clinical-workup-results-copy" id="clinicalWorkupResultsCopy"></p>
@@ -475,6 +493,49 @@
     </div>
   </section>
 
+  <section class="contact-sheet-modal" id="contactFeedbackModal" hidden>
+    <div class="contact-sheet-card" role="dialog" aria-modal="true" aria-labelledby="contactFeedbackTitle">
+      <div class="contact-sheet-head">
+        <h3 id="contactFeedbackTitle">Contact Us</h3>
+        <button type="button" class="contact-sheet-close-btn" id="closeContactFeedbackBtn" aria-label="Close contact panel">&times;</button>
+      </div>
+      <div class="contact-sheet-actions">
+        <a
+          href="https://wa.me/27606286757?text=Hi%20Dave%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20I%20have%20some%20feedback%3A%20"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="contact-sheet-action contact-sheet-action-whatsapp"
+          id="contactFeedbackWhatsappBtn"
+          aria-label="Message on WhatsApp"
+        >
+          <span class="contact-sheet-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path>
+              <path d="M9.5 10.3c.2-.4.4-.4.6-.4h.4c.1 0 .3 0 .4.4l.7 1.5c.1.2.1.4 0 .5l-.4.5c-.1.1-.1.3 0 .4.3.5.9 1.1 1.6 1.5.2.1.3.1.4 0l.5-.4c.1-.1.3-.1.5 0l1.4.6c.4.2.4.3.4.5 0 .5-.3 1-.8 1.2-.5.2-1.3.2-2.6-.4-1-.5-2.1-1.5-2.8-2.7-.7-1.3-.6-2.1-.4-2.5Z"></path>
+            </svg>
+          </span>
+          <span class="contact-sheet-action-text">Message on WhatsApp</span>
+        </a>
+        <a
+          href="tel:0217996290"
+          class="contact-sheet-action contact-sheet-action-call"
+          id="contactFeedbackCallBtn"
+          aria-label="Call Laboratory"
+        >
+          <span class="contact-sheet-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"></path>
+            </svg>
+          </span>
+          <span class="contact-sheet-action-copy">
+            <span class="contact-sheet-action-title">Call Laboratory</span>
+            <span class="contact-sheet-action-subtitle">021 799 6290</span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section class="profile-modal" id="profileModal" hidden>
     <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
       <div class="profile-modal-head">
@@ -501,12 +562,12 @@
   <script src="assets/data/data.js?v=20260812a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261008a"></script>
-  <script src="assets/js/find-my-test.js?v=20261008a"></script>
+  <script src="assets/js/script.js?v=20261007k"></script>
+  <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-08.1";
+      const APP_VERSION = "2026-10-07.15";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -527,7 +588,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261008a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261007o", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
@@ -574,3 +635,4 @@
   </script>
 </body>
 </html>
+

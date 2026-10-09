@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v339";
+const CACHE_NAME = "find-my-tube-v338";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -9,14 +9,13 @@ const CORE_ASSETS = [
   "./find-my-tube.html",
   "./manifest.webmanifest?v=20260316b",
   "./assets/css/style.css?v=20260729a",
-  "./assets/css/modern.css?v=20261008a",
+  "./assets/css/modern.css?v=20261007o",
   "./assets/css/discovery.css?v=20261007n",
   "./assets/js/stock-catalog-data.js?v=20261006d",
-  "./assets/js/script.js?v=20261008a",
+  "./assets/js/script.js?v=20261007k",
   "./assets/data/data.js?v=20260812a",
   "./favicon.svg",
-  "./assets/images/find-my-tube-lab-overview.jpg",
-  "./assets/images/hero-lab-tubes-sunrays-v2.jpg"
+  "./assets/images/find-my-tube-lab-overview.jpg"
 ];
 
 // Page-specific scripts, reference pages, icons, and photography are cached by
@@ -110,3 +109,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+

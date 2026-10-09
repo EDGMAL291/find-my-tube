@@ -48,30 +48,3 @@ test("service worker registrations share the current cache-busting URL", () => {
   });
   assert.equal(new Set(registrations).size, 1, `Service worker registration versions differ: ${registrations.join(", ")}`);
 });
-
-test("contact and feedback page is retired in favour of compact menu actions", () => {
-  assert.equal(fs.existsSync(path.join(root, "contact-feedback.html")), false);
-  const server = fs.readFileSync(path.join(root, "server.js"), "utf8");
-  const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
-  const script = fs.readFileSync(path.join(root, "assets/js/script.js"), "utf8");
-  const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
-  assert.equal(server.includes('"contact-feedback.html"'), false);
-  assert.equal(sitemap.includes("contact-feedback.html"), false);
-  assert.equal(home.includes("home-help-card"), false);
-  assert.equal(home.includes("WhatsApp Feedback"), false);
-  assert.match(script, /site-menu-secondary/);
-  assert.match(script, /Call laboratory on 021 799 6290/);
-  assert.match(script, /Message laboratory on WhatsApp/);
-});
-
-test("Find My Test controls and collection sequence use unambiguous wording", () => {
-  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-  const findMyTest = fs.readFileSync(path.join(root, "assets/js/find-my-test.js"), "utf8");
-  const script = fs.readFileSync(path.join(root, "assets/js/script.js"), "utf8");
-  assert.match(html, /id="clinicalWorkupResetBtn">Clear all</);
-  assert.match(html, /id="clearClinicalWorkupResultsBtn">Clear suggestions</);
-  assert.match(findMyTest, /Tap to remove from Tube Plan/);
-  assert.match(script, /Collection order: \$\{ordinalWords\[index\]\}/);
-  assert.match(script, /Quantity: \$\{item\.count\}/);
-  assert.equal(script.includes("Draw ${orderOfDrawStep}"), false);
-});

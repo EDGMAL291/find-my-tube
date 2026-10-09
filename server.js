@@ -101,6 +101,7 @@ const PUBLIC_ROOT_FILES = new Set([
   "track-orders.html",
   "stock-dashboard.html",
   "about.html",
+  "contact-feedback.html",
   "privacy-policy.html",
   "terms-of-use.html",
   "disclaimer.html",

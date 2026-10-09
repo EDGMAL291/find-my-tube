@@ -200,6 +200,8 @@ const legalModal = document.getElementById("legalModal");
 const legalModalTitle = document.getElementById("legalModalTitle");
 const legalModalBody = document.getElementById("legalModalBody");
 const closeLegalModalBtn = document.getElementById("closeLegalModalBtn");
+const contactFeedbackModal = document.getElementById("contactFeedbackModal");
+const closeContactFeedbackBtn = document.getElementById("closeContactFeedbackBtn");
 const legalDocButtons = document.querySelectorAll("[data-legal-doc]");
 const SEARCH_PLACEHOLDER_BASE = "Search test or profile";
 const SEARCH_PLACEHOLDER_HINT = `${SEARCH_PLACEHOLDER_BASE} (e.g. CRP or LFT)`;
@@ -251,6 +253,8 @@ const activeBrowseGroupBySection = {
   haematology: "",
   immunology: ""
 };
+let isClearDrawSelectionConfirming = false;
+let clearDrawSelectionConfirmTimeoutId = 0;
 let selectionNoticeTimeoutId = 0;
 let isThemePanelOpen = false;
 let isSiteMenuOpen = false;
@@ -264,6 +268,7 @@ const AUTO_EXPAND_CRITICAL_NOTE_TESTS = new Set(["Ammonia", "Blood Bank / Transf
 const selectedClinicalChipIds = new Set();
 let hasDismissedRackHint = false;
 let lastLegalModalTrigger = null;
+let lastContactFeedbackTrigger = null;
 let aboutInfoModal = null;
 let closeAboutInfoModalBtn = null;
 let aboutInfoLegalButtons = [];
@@ -715,26 +720,37 @@ function enhanceSiteMenuStructure() {
 
   if (secondaryButtons.length) {
     const secondaryGroup = document.createElement("div");
-    secondaryGroup.className = "site-menu-group site-menu-secondary";
+    secondaryGroup.className = "site-menu-group";
     secondaryGroup.dataset.group = "secondary";
     secondaryGroup.setAttribute("role", "none");
+    secondaryGroup.innerHTML = '<p class="site-menu-group-title" role="presentation">About &amp; Contact</p>';
     secondaryButtons.forEach((button) => secondaryGroup.appendChild(button));
-
-    const contactActions = document.createElement("div");
-    contactActions.className = "site-menu-contact-actions";
-    contactActions.setAttribute("role", "group");
-    contactActions.setAttribute("aria-label", "Contact the laboratory");
-    contactActions.innerHTML = `
-      <a class="site-menu-contact-link site-menu-contact-icon" href="tel:0217996290" role="menuitem" aria-label="Call laboratory on 021 799 6290" title="Call laboratory">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"></path></svg>
-      </a>
-      <a class="site-menu-contact-link site-menu-contact-icon site-menu-contact-icon-whatsapp" href="https://wa.me/27606286757?text=Hi%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20need%20help." target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="Message laboratory on WhatsApp" title="WhatsApp laboratory">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path><path d="M9.5 10.3c.2-.4.4-.4.6-.4h.4c.1 0 .3 0 .4.4l.7 1.5c.1.2.1.4 0 .5l-.4.5c-.1.1-.1.3 0 .4.3.5.9 1.1 1.6 1.5.2.1.3.1.4 0l.5-.4c.1-.1.3-.1.5 0l1.4.6c.4.2.4.3.4.5 0 .5-.3 1-.8 1.2-.5.2-1.3.2-2.6-.4-1-.5-2.1-1.5-2.8-2.7-.7-1.3-.6-2.1-.4-2.5Z"></path></svg>
-      </a>
-    `;
-    secondaryGroup.appendChild(contactActions);
     siteMenuList.appendChild(secondaryGroup);
   }
+
+  const contactGroup = document.createElement("div");
+  contactGroup.className = "site-menu-group site-menu-contact";
+  contactGroup.dataset.group = "contact";
+  contactGroup.setAttribute("role", "none");
+  contactGroup.innerHTML = `
+    <div class="site-menu-contact-actions">
+      <a class="site-menu-contact-link" href="tel:0217996290" role="menuitem" aria-label="Call laboratory on 021 799 6290" title="Call laboratory · 021 799 6290">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"></path></svg>
+      </a>
+      <a class="site-menu-contact-link" href="https://wa.me/27606286757?text=Hi%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20need%20help." target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="Message support on WhatsApp" title="WhatsApp support · +27 60 628 6757">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path><path d="M9.5 10.3c.2-.4.4-.4.6-.4h.4c.1 0 .3 0 .4.4l.7 1.5c.1.2.1.4 0 .5l-.4.5c-.1.1-.1.3 0 .4.3.5.9 1.1 1.6 1.5.2.1.3.1.4 0l.5-.4c.1-.1.3-.1.5 0l1.4.6c.4.2.4.3.4.5 0 .5-.3 1-.8 1.2-.5.2-1.3.2-2.6-.4-1-.5-2.1-1.5-2.8-2.7-.7-1.3-.6-2.1-.4-2.5Z"></path></svg>
+      </a>
+    </div>
+  `;
+  const aboutGroup = siteMenuList.querySelector('[data-group="secondary"]');
+  const contactPageLink = document.createElement("a");
+  contactPageLink.className = "site-menu-link";
+  contactPageLink.href = "./contact-feedback.html";
+  contactPageLink.setAttribute("role", "menuitem");
+  contactPageLink.innerHTML = '<span class="menu-action-label">Contact and feedback</span>';
+  if (aboutGroup) aboutGroup.appendChild(contactPageLink);
+  else contactGroup.prepend(contactPageLink);
+  (aboutGroup || siteMenuList).appendChild(contactGroup);
 
   siteMenuList.querySelectorAll(".site-menu-group-title, .site-menu-link, .site-menu-contact-link").forEach((item, index) => {
     item.style.setProperty("--menu-item-index", String(index));
@@ -2933,6 +2949,7 @@ function openAboutSection(trigger = null) {
   closeDrawModal();
   closeProfileModal();
   closeSectionBrowseModal();
+  closeContactFeedbackModal({ restoreFocus: false });
   closeLegalModal({ restoreFocus: false });
   openAboutInfoModal(trigger);
 }
@@ -6365,13 +6382,24 @@ function collapseProfileSelections(selectionSet) {
 // Updates draw selection tools.
 function updateDrawSelectionTools() {
   const hasSelection = selectedTestNames.size > 0;
+  if (!hasSelection) {
+    window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
+    isClearDrawSelectionConfirming = false;
+  }
 
   if (quickToolsClearBtn) {
     quickToolsClearBtn.hidden = !hasSelection;
     quickToolsClearBtn.disabled = !hasSelection;
-    quickToolsClearBtn.classList.remove("confirming");
-    quickToolsClearBtn.textContent = "Clear all";
-    quickToolsClearBtn.setAttribute("aria-label", "Clear all tests from current Tube Plan");
+    quickToolsClearBtn.classList.toggle("confirming", hasSelection && isClearDrawSelectionConfirming);
+    quickToolsClearBtn.textContent = hasSelection && isClearDrawSelectionConfirming
+      ? "Confirm clear"
+      : "Clear all";
+    quickToolsClearBtn.setAttribute(
+      "aria-label",
+      hasSelection && isClearDrawSelectionConfirming
+        ? "Confirm clearing all tests from current Tube Plan"
+        : "Clear all tests from current Tube Plan"
+    );
   }
   const plannerClearBtn = document.getElementById("drawClearAllBtn");
   if (plannerClearBtn && quickToolsClearBtn) {
@@ -6384,7 +6412,20 @@ function updateDrawSelectionTools() {
 
 // Resets clear draw selection confirmation.
 function resetClearDrawSelectionConfirmation({ update = true } = {}) {
+  window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
+  isClearDrawSelectionConfirming = false;
   if (update) updateDrawSelectionTools();
+}
+
+// Requests clear draw selection confirmation.
+function requestClearDrawSelectionConfirmation() {
+  if (!selectedTestNames.size) return;
+  window.clearTimeout(clearDrawSelectionConfirmTimeoutId);
+  isClearDrawSelectionConfirming = true;
+  updateDrawSelectionTools();
+  clearDrawSelectionConfirmTimeoutId = window.setTimeout(() => {
+    resetClearDrawSelectionConfirmation();
+  }, 3200);
 }
 
 // Renders draw selection summary.
@@ -6485,10 +6526,9 @@ function updateSelectionCartBar() {
   const hasHighAttentionTest = selectedTests.some((test) => AUTO_EXPAND_CRITICAL_NOTE_TESTS.has(test.name));
   if (!count) {
     selectionCartCount.textContent = "0 tests";
-    const planActionLabel = isFindMyTestPage ? "Selected tests" : "Tube Plan";
-    const emptyPlanLabel = `${planActionLabel}: 0`;
+    const emptyPlanLabel = "Tube Plan: 0";
     const emptyCartLabel = selectionCartBar.querySelector(".selection-cart-label");
-    if (emptyCartLabel) emptyCartLabel.textContent = planActionLabel;
+    if (emptyCartLabel) emptyCartLabel.textContent = "Tube Plan";
     selectionCartBar.setAttribute("aria-label", emptyPlanLabel);
     selectionCartBar.title = emptyPlanLabel;
     selectionCartBar.hidden = true;
@@ -6504,15 +6544,14 @@ function updateSelectionCartBar() {
   const badgeCount = `${count} test${count === 1 ? "" : "s"}`;
   selectionCartBar.hidden = false;
   selectionCartCount.textContent = badgeCount;
-  const planActionLabel = isFindMyTestPage ? "Selected tests" : "Tube Plan";
   const selectionCartLabel = selectionCartBar.querySelector(".selection-cart-label");
-  if (selectionCartLabel) selectionCartLabel.textContent = planActionLabel;
+  if (selectionCartLabel) selectionCartLabel.textContent = "Tube Plan";
   selectionCartBar.classList.toggle("requires-attention", hasHighAttentionTest);
   selectionCartBar.setAttribute(
     "aria-label",
-    `Open ${planActionLabel}: ${badgeCount}`
+    `Open Tube Plan: ${badgeCount}`
   );
-  selectionCartBar.title = `Open ${planActionLabel.toLowerCase()}: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
+  selectionCartBar.title = `Open Tube Plan: ${count} added test${count !== 1 ? "s" : ""}${hasHighAttentionTest ? " with important handling guidance" : ""}`;
   document.body.classList.add("has-selection-cart");
   updateSelectionCartViewportPosition();
 }
@@ -6903,6 +6942,11 @@ function handleSiteNavigationAction(action, trigger = null) {
     return;
   }
 
+  if (action === "contact-feedback") {
+    openContactFeedbackModal(trigger);
+    return;
+  }
+
   if (["privacy", "terms", "disclaimer"].includes(action)) {
     openLegalModal(action, trigger);
   }
@@ -7050,17 +7094,9 @@ function initMobileBottomNav() {
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="track-orders">Track Orders</button>
       </section>
       <section class="mobile-bottom-menu-group" data-group="secondary">
-        <p class="mobile-bottom-menu-group-title">More</p>
+        <p class="mobile-bottom-menu-group-title">Secondary</p>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="settings">Settings</button>
-        <div class="mobile-bottom-menu-more-row">
-          <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="about">About</button>
-          <a class="mobile-bottom-menu-contact-icon" href="tel:0217996290" aria-label="Call laboratory on 021 799 6290" title="Call laboratory">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"></path></svg>
-          </a>
-          <a class="mobile-bottom-menu-contact-icon mobile-bottom-menu-contact-icon-whatsapp" href="https://wa.me/27606286757?text=Hi%2C%20I%E2%80%99m%20using%20Find%20My%20Tube%20and%20need%20help." target="_blank" rel="noopener noreferrer" aria-label="Message laboratory on WhatsApp" title="WhatsApp laboratory">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"></path><path d="M9.5 10.3c.2-.4.4-.4.6-.4h.4c.1 0 .3 0 .4.4l.7 1.5c.1.2.1.4 0 .5l-.4.5c-.1.1-.1.3 0 .4.3.5.9 1.1 1.6 1.5.2.1.3.1.4 0l.5-.4c.1-.1.3-.1.5 0l1.4.6c.4.2.4.3.4.5 0 .5-.3 1-.8 1.2-.5.2-1.3.2-2.6-.4-1-.5-2.1-1.5-2.8-2.7-.7-1.3-.6-2.1-.4-2.5Z"></path></svg>
-          </a>
-        </div>
+        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="about">About</button>
       </section>
     </div>
   `;
@@ -7510,6 +7546,35 @@ function closeLegalModal({ restoreFocus = true } = {}) {
   lastLegalModalTrigger = null;
 }
 
+function openContactFeedbackModal(trigger = null) {
+  if (!contactFeedbackModal) return;
+  closeAboutInfoModal({ restoreFocus: false });
+  closeLegalModal({ restoreFocus: false });
+  lastContactFeedbackTrigger = trigger || document.activeElement;
+  contactFeedbackModal.hidden = false;
+  syncModalOpenClass();
+
+  if (closeContactFeedbackBtn) {
+    window.requestAnimationFrame(() => {
+      closeContactFeedbackBtn.focus({ preventScroll: true });
+    });
+  }
+}
+
+function closeContactFeedbackModal({ restoreFocus = true } = {}) {
+  if (!contactFeedbackModal) return;
+  contactFeedbackModal.hidden = true;
+  syncModalOpenClass();
+
+  const focusTarget = lastContactFeedbackTrigger;
+  if (restoreFocus && focusTarget && typeof focusTarget.focus === "function") {
+    window.requestAnimationFrame(() => {
+      focusTarget.focus({ preventScroll: true });
+    });
+  }
+  lastContactFeedbackTrigger = null;
+}
+
 function ensureAboutInfoModal() {
   if (aboutInfoModal) return;
 
@@ -7578,8 +7643,9 @@ function syncModalOpenClass() {
   const profileOpen = Boolean(profileModal && !profileModal.hidden);
   const legalOpen = Boolean(legalModal && !legalModal.hidden);
   const sectionBrowseOpen = Boolean(sectionBrowseModal && !sectionBrowseModal.hidden);
+  const contactFeedbackOpen = Boolean(contactFeedbackModal && !contactFeedbackModal.hidden);
   const aboutInfoOpen = Boolean(aboutInfoModal && !aboutInfoModal.hidden);
-  document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen || sectionBrowseOpen || aboutInfoOpen);
+  document.body.classList.toggle("modal-open", drawOpen || profileOpen || legalOpen || sectionBrowseOpen || contactFeedbackOpen || aboutInfoOpen);
   document.body.classList.toggle("draw-modal-open", drawOpen);
   document.body.classList.toggle("profile-modal-open", profileOpen);
   updateBackToTopVisibility();
@@ -8096,21 +8162,11 @@ function getDrawOrderPlannerAlert(plan) {
     tone: "order",
     title: "Venous order of draw",
     items: [
-      `Collect in the order shown from top to bottom: ${sequence}. Unneeded tube types are skipped.`,
+      `Draw top to bottom: ${sequence}. Unneeded tube types are skipped.`,
       "This sequence reduces additive carryover between tubes; it does not replace local collection policy.",
       "Capillary or microcollection order differs. Confirm butterfly discard-tube needs, specialised tubes, and local exceptions with the laboratory SOP."
     ]
   };
-}
-
-function getCollectionSequenceLabel(index, total) {
-  const ordinalWords = [
-    "First", "Second", "Third", "Fourth", "Fifth", "Sixth",
-    "Seventh", "Eighth", "Ninth", "Tenth", "Eleventh", "Twelfth"
-  ];
-  if (index >= 0 && index < ordinalWords.length) return `Collection order: ${ordinalWords[index]}`;
-  if (index === total - 1) return "Collection order: Last";
-  return "Collection order: Next";
 }
 
 // Renders draw result.
@@ -8179,9 +8235,6 @@ function renderDrawResult() {
   drawGroups.innerHTML = plan.items
     .map((item) => {
       const orderOfDrawStep = orderOfDrawStepByItem.get(item) || 0;
-      const collectionSequenceLabel = orderOfDrawStep
-        ? getCollectionSequenceLabel(orderOfDrawStep - 1, orderOfDrawItems.length)
-        : "Collected separately";
       const alternativeGroups = getPlanItemAlternativeGroups(item);
       const primaryGroup = alternativeGroups[0] || item.key;
       const planTubeVariant = getPlanItemTubeVariant(
@@ -8200,8 +8253,7 @@ function renderDrawResult() {
                 <span class="tube-option alternative">
                   ${getTubeVisualMarkup(group, "", { tubeVariant: planTubeVariant })}
                   <span class="tube-option-copy">
-                    <span class="tube-option-label">${group}</span>
-                    <span class="tube-option-quantity">Quantity: ${item.count}</span>
+                    <span class="tube-option-label">${item.count} x ${group}</span>
                     ${getTubeAdditiveLabel(group) ? `<span class="tube-option-additive">${getTubeAdditiveLabel(group)}</span>` : ""}
                   </span>
                 </span>
@@ -8213,13 +8265,13 @@ function renderDrawResult() {
           <div class="draw-group-main">
             ${getTubeVisualMarkup(item.key, "", { tubeVariant: planTubeVariant })}
             <h3>${item.label}</h3>
-            <span class="draw-group-count-badge" aria-label="Tube quantity: ${item.count}">Quantity: ${item.count}</span>
+            <span class="draw-group-count-badge">${item.count}x</span>
           </div>
         `;
 
       return `
         <article class="draw-group-card draw-group-card-${planToneClass}" style="--plan-tube-accent: ${planAccent};">
-          <span class="draw-order-step${orderOfDrawStep ? "" : " draw-order-step-separate"}">${collectionSequenceLabel}</span>
+          ${orderOfDrawStep ? `<span class="draw-order-step">Draw ${orderOfDrawStep}</span>` : `<span class="draw-order-step draw-order-step-separate">Separate specimen</span>`}
           <div class="draw-group-top">
             ${headMarkup}
           </div>
@@ -9561,6 +9613,10 @@ function bindEvents() {
   });
   document.getElementById("drawClearAllBtn")?.addEventListener("click", () => {
     if (!selectedTestNames.size) return;
+    if (!isClearDrawSelectionConfirming) {
+      requestClearDrawSelectionConfirmation();
+      return;
+    }
     setSelectedTests(new Set());
     closeDrawPlannerBtn?.focus({ preventScroll: true });
   });
@@ -9576,6 +9632,10 @@ function bindEvents() {
   if (quickToolsClearBtn) {
     quickToolsClearBtn.addEventListener("click", () => {
       if (!selectedTestNames.size) return;
+      if (!isClearDrawSelectionConfirming) {
+        requestClearDrawSelectionConfirmation();
+        return;
+      }
       resetClearDrawSelectionConfirmation({ update: false });
       setSelectedTests(new Set());
     });
@@ -9694,6 +9754,21 @@ function bindEvents() {
     });
   }
 
+  if (closeContactFeedbackBtn) {
+    closeContactFeedbackBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeContactFeedbackModal();
+    });
+  }
+
+  if (contactFeedbackModal) {
+    contactFeedbackModal.addEventListener("click", (event) => {
+      if (event.target !== contactFeedbackModal) return;
+      closeContactFeedbackModal();
+    });
+  }
+
   if (surfacePanelBackdrop) {
     surfacePanelBackdrop.addEventListener("click", () => {
       if (isThemePanelOpen) {
@@ -9734,6 +9809,10 @@ function bindEvents() {
     }
     if (aboutInfoModal && !aboutInfoModal.hidden) {
       closeAboutInfoModal();
+      return;
+    }
+    if (contactFeedbackModal && !contactFeedbackModal.hidden) {
+      closeContactFeedbackModal();
       return;
     }
     if (profileModal && !profileModal.hidden) {
