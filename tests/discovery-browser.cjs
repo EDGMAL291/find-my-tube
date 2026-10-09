@@ -384,7 +384,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.waitForTimeout(250);
         assert.equal(await page.locator('#siteMenuPanel').isVisible(), false);
         const pageBackdrop = await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage);
-        assert.match(pageBackdrop, /find-my-tube-lab-overview/);
+        assert.match(pageBackdrop, /find-my-tube-workflow-warm-cold-v1/);
         assert.equal(await page.locator('#tubeLookupPanel').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Search shell shows the page photograph');
         assert.equal(await page.locator('.group-chip-icon:visible').count(), 0, 'Department navigation has no decorative glyphs');
         await page.screenshot({ path:path.join(screenshots, `browse-${width}-${theme}.png`) });
@@ -453,7 +453,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.locator('#selectionCartBar').click();
         assert.equal(await page.locator('#drawModal').isVisible(), true);
         await page.waitForFunction(() => document.querySelector('.draw-modal-card').getBoundingClientRect().top >= 0 && getComputedStyle(document.querySelector('#drawModal')).opacity === '1');
-        assert.match(await page.locator('#drawModal').evaluate(el => getComputedStyle(el).backgroundImage), /find-my-tube-lab-overview/);
+        assert.match(await page.locator('#drawModal').evaluate(el => getComputedStyle(el).backgroundImage), /find-my-tube-workflow-warm-cold-v1/);
         assert.equal(await page.locator('.draw-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan enclosing card uses 10% frost');
         assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan results use 10% frost');
         await assertVisibleCardsUseTenPercentFrost(page, `Tube Plan ${width}px ${theme}`);
@@ -648,7 +648,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         panelImage:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundImage,
         input:getComputedStyle(document.querySelector('#clinicalSymptomsInput')).backgroundColor
       }));
-      assert.match(initialVisual.background, /find-my-tube-lab-overview/, `Find My Test home-slide photograph missing at ${width}`);
+      assert.match(initialVisual.background, /find-my-test-workflow-warm-cold-v1/, `Find My Test warm/cold photograph missing at ${width}`);
       assert.equal(initialVisual.position, 'fixed', 'Find My Test photograph must stay still while scrolling');
       assert.equal(initialVisual.panel, 'rgba(255, 255, 255, 0.1)', 'Find My Test form uses 10% frost');
       assert.equal(initialVisual.panelImage, 'none', 'Find My Test form does not cover the photograph');
@@ -682,7 +682,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         card:getComputedStyle(document.querySelector('.stock-order-request-card')).backgroundColor,
         nav:getComputedStyle(document.querySelector('.support-nav')).backgroundColor
       }));
-      assert.match(aboutVisual.background, /find-my-tube-lab-overview/, `About photograph missing at ${width}`);
+      assert.match(aboutVisual.background, /reference-workflow-warm-cold-v1/, `About warm/cold photograph missing at ${width}`);
       assert.equal(aboutVisual.position, 'fixed');
       assert.equal(aboutVisual.header, 'rgba(0, 0, 0, 0)', 'About header must not cover the photograph');
       assert.equal(aboutVisual.card, 'rgba(255, 255, 255, 0.1)', 'About content uses 10% frost');
@@ -786,7 +786,7 @@ async function exerciseTubePlanWorkflow(page, width) {
           image:getComputedStyle(document.body, '::before').backgroundImage,
           position:getComputedStyle(document.body, '::before').position
         }));
-        assert.match(stockBackdrop.image, /find-my-tube-lab-overview/, 'Order My Stock uses its home-slide photograph');
+        assert.match(stockBackdrop.image, /order-stock-workflow-warm-cold-v1/, 'Order My Stock uses its warm/cold supply photograph');
         assert.equal(stockBackdrop.position, 'fixed', 'Order My Stock photograph stays still while scrolling');
         assert.match(await page.locator('body').innerText(), /22 of 22 stock items/);
         for (const width of [360, 390, 412, 430, 768, 1280]) {
@@ -801,6 +801,12 @@ async function exerciseTubePlanWorkflow(page, width) {
           ['vacutainer-needle-black', 'vacutainer-needle-green']
         );
         assert.equal(await page.locator('.stock-item-glyph-needle:visible').count(), 2);
+      }
+      if(route === 'track-orders.html') {
+        assert.match(await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage), /track-orders-workflow-warm-cold-v1/, 'Track Orders uses its warm/cold logistics photograph');
+      }
+      if(route === 'stock-dashboard.html') {
+        assert.match(await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage), /stock-dashboard-workflow-warm-cold-v1/, 'Stock Dashboard uses its warm/cold inventory photograph');
       }
       await page.screenshot({path:path.join(screenshots, route.replace('.html','.png'))});
       await page.close();

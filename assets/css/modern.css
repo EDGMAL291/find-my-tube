@@ -3862,22 +3862,22 @@ body[data-app-page="stock-dashboard"] .site-footer {
 
 /* Editorial supporting pages */
 body[data-app-page$="-page"]:not(.find-my-test-page) {
-  --support-image: url("../images/find-my-tube-lab-overview.jpg");
+  --support-image: url("../images/reference-workflow-warm-cold-v1.webp");
   min-height: 100svh;
   color: var(--fmt-ink);
   background: var(--fmt-canvas);
 }
 
 body[data-app-page="find-my-test-page"]:not(.find-my-test-page) {
-  --support-image: url("../images/hero-lab-analyser.jpg");
+  --support-image: url("../images/find-my-test-workflow-warm-cold-v1.webp");
 }
 
 body[data-app-page="tube-plan-page"] {
-  --support-image: url("../images/hero-lab-tubes.jpg");
+  --support-image: url("../images/find-my-tube-workflow-warm-cold-v1.webp");
 }
 
 body[data-app-page="contact-feedback-page"] {
-  --support-image: url("../images/hero-lab-collection.jpg");
+  --support-image: url("../images/reference-workflow-warm-cold-v1.webp");
 }
 
 body[data-app-page$="-page"]:not(.find-my-test-page)::before,
@@ -11864,14 +11864,31 @@ html body[data-app-page] :is(
 html body:is(
   [data-app-page="about-page"], [data-app-page="contact-feedback-page"],
   [data-app-page="disclaimer-page"], [data-app-page="privacy-policy-page"],
-  [data-app-page="terms-of-use-page"], [data-app-page="tube-plan-page"]
+  [data-app-page="terms-of-use-page"]
 ) {
   background-color: #03111f !important;
   background-image:
     linear-gradient(110deg, rgba(3,17,31,.74), rgba(3,17,31,.48)),
-    url("../images/find-my-tube-lab-overview.jpg") !important;
+    url("../images/reference-workflow-warm-cold-v1.webp") !important;
   background-position: center !important; background-size: cover !important;
   background-repeat: no-repeat !important; background-attachment: fixed !important;
+}
+
+html body[data-app-page="find-my-test-page"] {
+  background:
+    linear-gradient(110deg, rgba(3,17,31,.74), rgba(3,17,31,.48)),
+    url("../images/find-my-test-workflow-warm-cold-v1.webp") center / cover fixed no-repeat !important;
+}
+
+html body[data-app-page="tube-plan-page"] {
+  background:
+    linear-gradient(110deg, rgba(3,17,31,.74), rgba(3,17,31,.48)),
+    url("../images/find-my-tube-workflow-warm-cold-v1.webp") center / cover fixed no-repeat !important;
+}
+
+html body:is([data-app-page="find-my-test-page"], [data-app-page="tube-plan-page"]) :is(.header, .container) {
+  background: transparent !important;
+  background-image: none !important;
 }
 
 /* Tube Plan is a full photographic workspace, not an opaque card over the page. */
@@ -11879,7 +11896,7 @@ html[data-theme] body #drawModal {
   background-color: #03111f !important;
   background-image:
     linear-gradient(110deg, rgba(3, 17, 31, .76), rgba(3, 17, 31, .52)),
-    url("../images/find-my-tube-lab-overview.jpg") !important;
+    url("../images/find-my-tube-workflow-warm-cold-v1.webp") !important;
   background-position: center !important;
   background-size: cover !important;
   background-repeat: no-repeat !important;
@@ -11915,13 +11932,13 @@ html body[data-app-page="about-page"] {
   min-height: 100lvh;
   background:
     linear-gradient(110deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38)),
-    url("../images/find-my-tube-lab-overview.jpg") center / cover fixed no-repeat !important;
+    url("../images/reference-workflow-warm-cold-v1.webp") center / cover fixed no-repeat !important;
 }
 
 html body[data-app-page][data-app-page="about-page"]::before {
   background:
     linear-gradient(110deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38)),
-    url("../images/find-my-tube-lab-overview.jpg") center / cover no-repeat !important;
+    url("../images/reference-workflow-warm-cold-v1.webp") center / cover no-repeat !important;
 }
 
 html body[data-app-page="about-page"] :is(.header, .container) {
@@ -12080,7 +12097,7 @@ html body[data-app-page="home"].find-my-test-page::before {
   display: block !important;
   background:
     linear-gradient(90deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38) 58%, rgba(3, 17, 31, .12)),
-    url("../images/find-my-tube-lab-overview.jpg") 8% center / cover no-repeat !important;
+    url("../images/find-my-test-workflow-warm-cold-v1.webp") center / cover no-repeat !important;
   border: 0 !important;
   border-radius: 0 !important;
   opacity: 1 !important;
@@ -12109,7 +12126,7 @@ html body[data-app-page][data-app-page="stock-order"]::before {
   display: block !important;
   background:
     linear-gradient(90deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .40) 58%, rgba(3, 17, 31, .14)),
-    url("../images/find-my-tube-lab-overview.jpg") 92% center / cover no-repeat !important;
+    url("../images/order-stock-workflow-warm-cold-v1.webp") center / cover no-repeat !important;
   border: 0 !important;
   border-radius: 0 !important;
   opacity: 1 !important;
@@ -12183,13 +12200,13 @@ html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item:is(:h
   html body[data-app-page="home"].find-my-test-page::before {
     background:
       linear-gradient(180deg, rgba(3, 17, 31, .38), rgba(3, 17, 31, .48) 52%, rgba(3, 17, 31, .62)),
-      url("../images/find-my-tube-lab-overview.jpg") 8% center / cover no-repeat !important;
+      url("../images/find-my-test-workflow-warm-cold-v1.webp") 64% center / cover no-repeat !important;
   }
 
   html body[data-app-page][data-app-page="stock-order"]::before {
     background:
       linear-gradient(180deg, rgba(38, 26, 14, .30), rgba(3, 17, 31, .46) 52%, rgba(3, 17, 31, .64)),
-      url("../images/find-my-tube-lab-overview.jpg") 82% center / cover no-repeat !important;
+      url("../images/order-stock-workflow-warm-cold-v1.webp") 68% center / cover no-repeat !important;
   }
 }
 
@@ -12263,7 +12280,7 @@ html body[data-app-page] :is(.contact-sheet-action, .home-help-actions a):focus-
   outline: 2px solid #a7dedc; outline-offset: 3px;
 }
 /* About and Contact share the home laboratory scene, with cool shade and warm light. */
-:root { --support-scene: linear-gradient(110deg, rgba(3,24,42,.82), rgba(74,46,24,.48)), url("../images/find-my-tube-lab-overview.jpg"); }
+:root { --support-scene: linear-gradient(110deg, rgba(3,24,42,.82), rgba(74,46,24,.48)), url("../images/reference-workflow-warm-cold-v1.webp"); }
 html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]),
 html body[data-app-page]:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"])::before,
 html body[data-app-page] :is(#aboutInfoModal, #contactFeedbackModal) {

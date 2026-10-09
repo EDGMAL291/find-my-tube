@@ -41,8 +41,8 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20261009b" />
-  <link rel="stylesheet" href="assets/css/discovery.css?v=20261007n" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20261009c" />
+  <link rel="stylesheet" href="assets/css/discovery.css?v=20261009o" />
   <style>
     #stockOrderSummaryItems {
       display: block;
@@ -1292,7 +1292,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261009b", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261009c", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

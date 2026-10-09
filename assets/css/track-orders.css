@@ -3,7 +3,7 @@ html body[data-app-page="track-orders"] {
   isolation: isolate;
   background-color: #03111f !important;
   background-image: linear-gradient(110deg, rgba(3, 20, 36, .55), rgba(3, 20, 36, .40)),
-    url("../images/track-orders-dispatch-blue-yellow.webp") !important;
+    url("../images/track-orders-workflow-warm-cold-v1.webp") !important;
   background-position: center !important;
   background-size: cover !important;
 }
@@ -13,7 +13,7 @@ html body[data-app-page="track-orders"]::before {
   z-index: -1; pointer-events: none; filter: none !important;
   border-radius: 0 !important;
   background: linear-gradient(110deg, rgba(3, 20, 36, .55), rgba(3, 20, 36, .40)),
-    url("../images/track-orders-dispatch-blue-yellow.webp") center / cover no-repeat !important;
+    url("../images/track-orders-workflow-warm-cold-v1.webp") center / cover no-repeat !important;
 }
 html body[data-app-page="track-orders"] :is(.container, .header, .stock-order-panel, .track-orders-header) {
   background: transparent !important; box-shadow: none !important;
