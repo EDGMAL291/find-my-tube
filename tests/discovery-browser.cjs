@@ -295,7 +295,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.locator('#siteMenuPanel a[href^="https://wa.me/27606286757"]').count(), 1, 'WhatsApp support link is present');
         assert.equal(await page.getByRole('menuitem',{name:'Message support on WhatsApp'}).locator('svg').count(),1);
         assert.equal(await page.getByRole('menuitem',{name:'Call laboratory on 021 799 6290'}).locator('svg').count(),1);
-        assert.equal(await page.locator('#siteMenuPanel [data-group="secondary"] a[href="./contact-feedback.html"]').count(),1,'About and Contact are grouped');
+        assert.equal(await page.locator('#siteMenuPanel a[href="./contact-feedback.html"]').count(),0,'Removed Contact and Feedback page is not linked');
         await page.screenshot({path:path.join(screenshots, `menu-${width}-${theme}.png`)});
         const menuVisual = await page.locator('#siteMenuPanel').evaluate(el => ({
           backgroundImage: getComputedStyle(el).backgroundImage,
@@ -616,23 +616,6 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.ok(await aboutPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `About overflow at ${width}`);
       await aboutPage.screenshot({path:path.join(screenshots, `about-${width}.png`), fullPage:true});
       await aboutPage.close();
-      const contactPage = await createTestPage(browser,{viewport:{width,height:844},reducedMotion:'reduce'});
-      const contactErrors=[];
-      contactPage.on('pageerror',e=>contactErrors.push(e.message));
-      await contactPage.goto(`${base}/contact-feedback.html`);
-      assert.equal(await contactPage.evaluate(()=>getComputedStyle(document.body,'::before').backgroundImage), aboutVisual.background, 'About and Contact share the warm/cool home photograph');
-      assert.equal(await contactPage.locator('.support-nav a[href="./about.html"]').count(),1);
-      for(const label of ['Message on WhatsApp','Call Laboratory']) {
-        const link=contactPage.getByRole('link',{name:label,exact:true});
-        assert.equal(await link.locator('svg').isVisible(),true);
-        const box=await link.boundingBox();
-        assert.ok(box.width>=44 && box.height>=44,'Contact icons keep large touch targets');
-        assert.equal(await link.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(255, 255, 255, 0.1)');
-      }
-      assert.ok(await contactPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Contact has no horizontal overflow');
-      assert.deepEqual(contactErrors,[]);
-      await contactPage.screenshot({path:path.join(screenshots,`contact-${width}.png`),fullPage:true});
-      await contactPage.close();
 
       const deskPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
       await deskPage.goto(`${base}/index.html?tool=collection-desk`);

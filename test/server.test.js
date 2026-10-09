@@ -76,6 +76,7 @@ test("order status transitions preserve the clinical work queue", () => {
 test("static file resolver exposes only public app files and assets", () => {
   assert.equal(path.basename(getStaticFilePath("/index.html")), "index.html");
   assert.equal(path.basename(getStaticFilePath("/assets/css/modern.css")), "modern.css");
+  assert.equal(getStaticFilePath("/contact-feedback.html"), "");
   assert.equal(getStaticFilePath("/server.js"), "");
   assert.equal(getStaticFilePath("/.git/config"), "");
   assert.equal(getStaticFilePath("/supabase/migrations/20260419_stock_dashboard.sql"), "");

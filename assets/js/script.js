@@ -743,13 +743,6 @@ function enhanceSiteMenuStructure() {
     </div>
   `;
   const aboutGroup = siteMenuList.querySelector('[data-group="secondary"]');
-  const contactPageLink = document.createElement("a");
-  contactPageLink.className = "site-menu-link";
-  contactPageLink.href = "./contact-feedback.html";
-  contactPageLink.setAttribute("role", "menuitem");
-  contactPageLink.innerHTML = '<span class="menu-action-label">Contact and feedback</span>';
-  if (aboutGroup) aboutGroup.appendChild(contactPageLink);
-  else contactGroup.prepend(contactPageLink);
   (aboutGroup || siteMenuList).appendChild(contactGroup);
 
   siteMenuList.querySelectorAll(".site-menu-group-title, .site-menu-link, .site-menu-contact-link").forEach((item, index) => {
