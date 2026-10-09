@@ -9,6 +9,49 @@ const screenshots = fs.mkdtempSync(path.join(os.tmpdir(), 'fmt-discovery-'));
 const isRemoteBase = !['127.0.0.1', 'localhost', '0.0.0.0'].includes(new URL(base).hostname);
 let remoteAppVersion = '';
 
+const FROSTED_CARD_SELECTOR = [
+  '.card', '.fmt-card', '.action-card',
+  '.clinical-workup-panel', '.clinical-workup-group', '.clinical-workup-results',
+  '.clinical-workup-rule-card', '.clinical-workup-empty-state', '.clinical-workup-test-card',
+  '.clinical-workup-test-option', '.clinical-workup-autocomplete', '.contact-sheet-card',
+  '.discovery-card', '.draw-group-card', '.draw-modal-card', '.draw-result-card',
+  '.find-my-test-launch-card', '.footer-card', '.home-brief-card', '.home-card',
+  '.home-collection-checklist-card', '.home-feature-card', '.home-help-card',
+  '.home-order-status-card', '.home-reference-card', '.home-tip-card',
+  '.home-action-tile', '.home-dashboard-section', '.home-status-item', '.legal-modal-card',
+  '.no-results-handoff-card', '.profile-modal-card', '.section-browse-modal-card',
+  '.stock-dashboard-card', '.stock-dashboard-login-modal-card',
+  '.stock-dashboard-notification-card', '.stock-dashboard-request-card',
+  '.stock-dashboard-session-card', '.stock-dashboard-user-admin-card',
+  '.stock-dashboard-list-row', '.stock-dashboard-queue-row', '.stock-order-card',
+  '.stock-order-item-card', '.stock-order-paediatric-tube-card', '.stock-order-preview-card',
+  '.stock-order-request-card', '.stock-order-selected-card', '.stock-order-tracking-card',
+  '.stock-order-tube-card', '.stock-request-compact-card', '.stock-request-detail-card',
+  '.stock-order-form', '.stock-catalog-toolbar', '.stock-order-grid',
+  '.track-orders-archive-card', '.track-orders-row', '.tube-card', '.tube-tinted-card',
+  '.support-home-link', '.support-nav'
+].join(',');
+
+async function assertVisibleCardsUseTenPercentFrost(page, context) {
+  const surfaces = await page.locator(FROSTED_CARD_SELECTOR).evaluateAll((elements) => elements
+    .filter((element) => element.getClientRects().length)
+    .map((element) => {
+      const css = getComputedStyle(element);
+      return {
+        selector: element.id ? `#${element.id}` : `.${[...element.classList].join('.')}`,
+        background: css.backgroundColor,
+        image: css.backgroundImage,
+        filter: css.backdropFilter
+      };
+    }));
+  assert.ok(surfaces.length > 0, `${context} should expose at least one card surface`);
+  surfaces.forEach((surface) => {
+    assert.equal(surface.background, 'rgba(255, 255, 255, 0.1)', `${context} ${surface.selector} must use 10% frost`);
+    assert.equal(surface.image, 'none', `${context} ${surface.selector} must keep its background transparent`);
+    assert.match(surface.filter, /blur\(8px\)/, `${context} ${surface.selector} must blur the scene behind it`);
+  });
+}
+
 async function createTestPage(browser, options = {}) {
   const page = await browser.newPage(options);
   if (isRemoteBase) {
@@ -228,6 +271,19 @@ async function exerciseTubePlanWorkflow(page, width) {
 (async () => {
   const browser = await chromium.launch({ headless: true });
   try {
+    for (const viewport of [{width:360,height:640},{width:390,height:844}]) {
+      const compactMenuPage = await createTestPage(browser, {viewport, hasTouch:true, reducedMotion:'reduce'});
+      await compactMenuPage.goto(`${base}/find-my-tube.html`);
+      await compactMenuPage.locator('#menuToggleBtn').click();
+      const menuFit = await compactMenuPage.locator('#siteMenuPanel .site-menu-list').evaluate((list) => ({
+        clientHeight:list.clientHeight,
+        scrollHeight:list.scrollHeight,
+        rowHeights:[...list.querySelectorAll('.site-menu-link, .site-menu-contact-link')].map((item) => item.getBoundingClientRect().height)
+      }));
+      assert.ok(menuFit.scrollHeight <= menuFit.clientHeight + 1, `Menu must fit without scrolling at ${viewport.width}x${viewport.height}: ${JSON.stringify(menuFit)}`);
+      assert.ok(menuFit.rowHeights.every((height) => height >= 48), `Menu touch targets stay at least 48px at ${viewport.width}x${viewport.height}`);
+      await compactMenuPage.close();
+    }
     for (const width of [360, 390, 412, 430, 768, 1280]) {
       for (const theme of ['light', 'dark']) {
         const page = await createTestPage(browser, { viewport: { width, height: 900 }, hasTouch: width <= 620, reducedMotion: 'reduce' });
@@ -295,6 +351,20 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.locator('#siteMenuPanel a[href^="https://wa.me/27606286757"]').count(), 1, 'WhatsApp support link is present');
         assert.equal(await page.getByRole('menuitem',{name:'Message support on WhatsApp'}).locator('svg').count(),1);
         assert.equal(await page.getByRole('menuitem',{name:'Call laboratory on 021 799 6290'}).locator('svg').count(),1);
+        const phoneIconVisual = await page.getByRole('menuitem',{name:'Call laboratory on 021 799 6290'}).locator('svg').evaluate(el => ({
+          fill:getComputedStyle(el).fill,
+          stroke:getComputedStyle(el).stroke,
+          strokeWidth:getComputedStyle(el).strokeWidth
+        }));
+        const whatsappIconVisual = await page.getByRole('menuitem',{name:'Message support on WhatsApp'}).locator('svg').evaluate(el => ({
+          fill:getComputedStyle(el).fill,
+          stroke:getComputedStyle(el).stroke
+        }));
+        assert.equal(phoneIconVisual.fill, 'none', 'Phone icon uses a light outline rather than a heavy fill');
+        assert.notEqual(phoneIconVisual.stroke, 'none');
+        assert.equal(phoneIconVisual.strokeWidth, '0.8px');
+        assert.notEqual(whatsappIconVisual.fill, 'none', 'WhatsApp keeps its familiar filled silhouette');
+        assert.equal(whatsappIconVisual.stroke, 'none');
         assert.equal(await page.locator('#siteMenuPanel a[href="./contact-feedback.html"]').count(),0,'Removed Contact and Feedback page is not linked');
         await page.screenshot({path:path.join(screenshots, `menu-${width}-${theme}.png`)});
         const menuVisual = await page.locator('#siteMenuPanel').evaluate(el => ({
@@ -321,6 +391,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.locator('#searchInput').fill('HIV');
         const card = page.locator('[data-test-name="HIV ELISA"]');
         assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Result card uses 10% frost');
+        await assertVisibleCardsUseTenPercentFrost(page, `Find My Tube ${width}px ${theme}`);
         assert.equal(await card.locator('.discovery-body').isVisible(), false);
         assert.equal(await page.locator('#drawModal').isVisible(), false);
         assert.equal(await page.locator('#selectionCartBar').isVisible(), false);
@@ -383,8 +454,9 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.locator('#drawModal').isVisible(), true);
         await page.waitForFunction(() => document.querySelector('.draw-modal-card').getBoundingClientRect().top >= 0 && getComputedStyle(document.querySelector('#drawModal')).opacity === '1');
         assert.match(await page.locator('#drawModal').evaluate(el => getComputedStyle(el).backgroundImage), /find-my-tube-lab-overview/);
-        assert.equal(await page.locator('.draw-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan has no opaque enclosing card');
-        assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan results remain transparent over the photograph');
+        assert.equal(await page.locator('.draw-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan enclosing card uses 10% frost');
+        assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan results use 10% frost');
+        await assertVisibleCardsUseTenPercentFrost(page, `Tube Plan ${width}px ${theme}`);
         assert.equal(await page.evaluate(() => document.body.classList.contains('draw-modal-open')), true);
         await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
         assert.equal(await page.locator('#drawSelectedList').isVisible(), false);
@@ -510,7 +582,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.waitForFunction(() => getComputedStyle(document.querySelector('.container')).opacity === '0');
         assert.equal((await page.locator('#closeProfileModalBtn').innerText()).trim(), '×');
         assert.equal((await page.locator('#profileModal .profile-modal-brand').innerText()).trim(), 'FIND MY TUBE');
-        assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile contents have no enclosing card');
+        assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Profile contents use 10% frost');
+        await assertVisibleCardsUseTenPercentFrost(page, `Profile modal ${width}px ${theme}`);
         assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).borderTopStyle), 'none');
         assert.equal(await page.locator('.container').evaluate(el => getComputedStyle(el).opacity), '0', 'Underlying workspace is removed while profile contents are open');
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'Floating plan does not compete with profile contents');
@@ -590,6 +663,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.equal(await testPage.locator('#clinicalWorkupResults').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Find My Test results use 10% frost');
       const optionSurfaces = await testPage.locator('.clinical-workup-test-option').evaluateAll(items => items.map(item => getComputedStyle(item).backgroundColor));
       assert.ok(optionSurfaces.every(color => color === 'rgba(255, 255, 255, 0.1)'), `Suggested tests use 10% frost at ${width}: ${JSON.stringify(optionSurfaces)}`);
+      await assertVisibleCardsUseTenPercentFrost(testPage, `Find My Test ${width}px`);
       await testPage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       assert.equal(await testPage.evaluate(() => getComputedStyle(document.body, '::before').position), 'fixed', 'Find My Test photograph remains fixed after scrolling');
       assert.ok(await testPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Find My Test overflow at ${width}`);
@@ -613,6 +687,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.equal(aboutVisual.header, 'rgba(0, 0, 0, 0)', 'About header must not cover the photograph');
       assert.equal(aboutVisual.card, 'rgba(255, 255, 255, 0.1)', 'About content uses 10% frost');
       assert.equal(aboutVisual.nav, 'rgba(255, 255, 255, 0.1)', 'About navigation uses 10% frost');
+      await assertVisibleCardsUseTenPercentFrost(aboutPage, `About ${width}px`);
       assert.ok(await aboutPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `About overflow at ${width}`);
       await aboutPage.screenshot({path:path.join(screenshots, `about-${width}.png`), fullPage:true});
       await aboutPage.close();
@@ -634,6 +709,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.equal(deskVisual.panelImage, 'none');
       assert.equal(deskVisual.card, 'rgba(255, 255, 255, 0.1)', 'Collection Desk cards use 10% frost');
       assert.equal(deskVisual.action, 'rgba(255, 255, 255, 0.1)', 'Collection Desk actions use 10% frost');
+      await assertVisibleCardsUseTenPercentFrost(deskPage, `Collection Desk ${width}px`);
       assert.ok(await deskPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Collection Desk overflow at ${width}`);
       await deskPage.screenshot({path:path.join(screenshots, `collection-desk-${width}.png`), fullPage:true});
       await deskPage.close();
@@ -704,6 +780,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.ok(radii.every(radius=>radius==='0px'), `${route} inconsistent card corners: ${radii}`);
       const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).backgroundColor));
       assert.ok(frost.every(color=>color === 'rgba(255, 255, 255, 0.1)'), `${route} inconsistent card frost: ${frost}`);
+      if(route !== 'index.html') await assertVisibleCardsUseTenPercentFrost(page, route);
       if(route === 'order-stock.html') {
         const stockBackdrop = await page.evaluate(() => ({
           image:getComputedStyle(document.body, '::before').backgroundImage,

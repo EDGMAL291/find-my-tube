@@ -48,3 +48,22 @@ test("service worker registrations share the current cache-busting URL", () => {
   });
   assert.equal(new Set(registrations).size, 1, `Service worker registration versions differ: ${registrations.join(", ")}`);
 });
+
+test("all card surfaces use the canonical ten-percent frost", () => {
+  const modern = fs.readFileSync(path.join(root, "assets/css/modern.css"), "utf8");
+  assert.match(modern, /--fmt-card-frost-background: rgba\(255, 255, 255, \.10\)/);
+  assert.match(modern, /--fmt-card-frost-filter: blur\(8px\) saturate\(1\.04\)/);
+  [
+    ".discovery-card",
+    ".draw-modal-card",
+    ".draw-result-card",
+    ".profile-modal-card",
+    ".clinical-workup-test-card",
+    ".home-collection-checklist-card",
+    ".stock-order-item-card",
+    ".stock-order-request-card",
+    ".stock-dashboard-session-card",
+    ".track-orders-row",
+    ".footer-card"
+  ].forEach((selector) => assert.ok(modern.includes(selector), `${selector} should use the canonical card frost`));
+});
