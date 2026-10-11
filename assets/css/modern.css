@@ -12408,6 +12408,18 @@ html[data-theme] body #siteMenuPanel .site-menu-link[data-menu-action="home"] {
 }
 
 html[data-theme] body[data-app-page][data-app-page] :is(
+  .stock-catalog-search,
+  .about-info-modal-card,
+  .about-panel,
+  .clinical-choice-sheet,
+  .collection-guide-panel,
+  .quick-tools-panel,
+  .theme-switcher-panel,
+  .stock-dashboard-receipt-summary,
+  .stock-dashboard-stats-panel,
+  .stock-order-summary-item,
+  .card-summary-field,
+  .critical-prep-field,
   .card,
   .fmt-card,
   .action-card,
@@ -12538,4 +12550,111 @@ html[data-theme] body[data-app-page] #siteMenuPanel .site-menu-group-title {
   html[data-theme] body[data-app-page] #siteMenuPanel .site-menu-group-title {
     display: none;
   }
+}
+
+/* Form surfaces share the card frost in every workflow and interaction state.
+   Exclude native action, toggle and range inputs: their shapes convey state.
+   The search ID gives this shared rule precedence over legacy page ID rules. */
+html[data-theme] body[data-app-page][data-app-page] :is(
+  #searchInput,
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+  select,
+  textarea,
+  .clinical-choice-trigger
+) {
+  background-color: var(--fmt-card-frost-background) !important;
+  background-image: none !important;
+  backdrop-filter: var(--fmt-card-frost-filter) !important;
+  -webkit-backdrop-filter: var(--fmt-card-frost-filter) !important;
+  color: #fffdf8 !important;
+  border-color: rgba(255, 255, 255, .32);
+  caret-color: #fffdf8;
+}
+
+html[data-theme] body[data-app-page] :is(input, textarea)::placeholder {
+  color: rgba(255, 253, 248, .72) !important;
+  opacity: 1;
+}
+
+html[data-theme] body[data-app-page] :is(input, select, textarea, .clinical-choice-trigger):focus-visible {
+  outline: 2px solid #bbdbe9 !important;
+  outline-offset: 2px;
+}
+
+/* Native popup menus do not composite the page backdrop. */
+html[data-theme] body[data-app-page] select :is(option, optgroup) {
+  background-color: #102b3c;
+  color: #fffdf8;
+}
+
+/* Product cutouts sit directly on the shared frosted card, never on blue tiles. */
+html[data-theme] body[data-app-page] :is(
+  .tube-photo-visual, .stock-item-photo-paediatric, .stock-item-photo-supply,
+  .stock-item-photo-needle, .stock-tube-photo, .stock-item-glyph,
+  .stock-item-title-row, .stock-tube-title-row
+) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+html[data-theme] body .stock-item-photo-supply {
+  display: block;
+  width: 64px;
+  height: 80px;
+  flex: 0 0 64px;
+  object-fit: contain;
+  object-position: center;
+}
+html[data-theme] body .stock-item-photo-supply-paediatric {
+  width: 56px;
+  height: 68px;
+  flex-basis: 56px;
+}
+html[data-theme] body .stock-item-photo-supply-compact,
+html[data-theme] body[data-app-page="stock-order"] .is-expanded .stock-item-photo-supply {
+  width: 42px;
+  height: 46px;
+  flex-basis: 42px;
+}
+html[data-theme] body[data-app-page="stock-order"] .stock-item-photo-paediatric {
+  width: 58px;
+  height: 76px;
+  flex-basis: 58px;
+}
+html[data-theme] body[data-app-page="stock-order"] .is-expanded .stock-item-photo-paediatric,
+html[data-theme] body[data-app-page="stock-order"] .stock-item-photo-paediatric-compact {
+  width: 36px;
+  height: 46px;
+  flex-basis: 36px;
+}
+
+/* Stock selectors stay transparent in default, selected and expanded states.
+   Outlines and pressed state distinguish selection without opaque blue fills. */
+html[data-theme] body[data-app-page="stock-order"][data-app-page] :is(
+  .stock-order-item-trigger, .stock-catalog-filter, .stock-tube-mode-toggle .group-chip,
+  .stock-order-qty-btn, .stock-tube-qty-readout, .stock-order-card-plus,
+  .stock-order-card-selection, .stock-order-item-controls
+),
+html[data-theme] body[data-app-page="stock-order"][data-app-page] :is(
+  #stockOrderRequesterSelect, #stockOrderRepeatReasonSelect,
+  .stock-order-qty-input, .stock-order-selected-input
+) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html[data-theme] body[data-app-page="stock-order"] :is(
+  .stock-catalog-filter.is-active, .stock-tube-mode-toggle .group-chip.active
+) {
+  border-color: #e6cf8c !important;
+  color: #fffdf8 !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+html[data-theme] body[data-app-page="stock-order"] :is(
+  .stock-catalog-filter, .stock-tube-mode-toggle .group-chip, .stock-order-qty-btn
+):hover {
+  border-color: #bbdbe9 !important;
 }

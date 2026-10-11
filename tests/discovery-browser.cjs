@@ -11,6 +11,13 @@ let remoteAppVersion = '';
 
 const FROSTED_CARD_SELECTOR = [
   '.card', '.fmt-card', '.action-card',
+  '.stock-catalog-search',
+  '.about-info-modal-card', '.about-panel', '.clinical-choice-sheet',
+  '.collection-guide-panel', '.quick-tools-panel', '.theme-switcher-panel',
+  '.stock-dashboard-receipt-summary', '.stock-dashboard-stats-panel',
+  '.stock-order-summary-item', '.card-summary-field', '.critical-prep-field',
+  'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=button]):not([type=submit]):not([type=reset]):not([type=image])',
+  'select', 'textarea', '.clinical-choice-trigger',
   '.clinical-workup-panel', '.clinical-workup-group', '.clinical-workup-results',
   '.clinical-workup-rule-card', '.clinical-workup-empty-state', '.clinical-workup-test-card',
   '.clinical-workup-test-option', '.clinical-workup-autocomplete', '.contact-sheet-card',
@@ -39,6 +46,7 @@ async function assertVisibleCardsUseTenPercentFrost(page, context) {
       const css = getComputedStyle(element);
       return {
         selector: element.id ? `#${element.id}` : `.${[...element.classList].join('.')}`,
+        transparentSelector: document.body.dataset.appPage === "stock-order" && element.matches("#stockOrderRequesterSelect, #stockOrderRepeatReasonSelect, .stock-order-qty-input, .stock-order-selected-input"),
         background: css.backgroundColor,
         image: css.backgroundImage,
         filter: css.backdropFilter
@@ -46,7 +54,7 @@ async function assertVisibleCardsUseTenPercentFrost(page, context) {
     }));
   assert.ok(surfaces.length > 0, `${context} should expose at least one card surface`);
   surfaces.forEach((surface) => {
-    assert.equal(surface.background, 'rgba(255, 255, 255, 0.1)', `${context} ${surface.selector} must use 10% frost`);
+    assert.equal(surface.background, surface.transparentSelector ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0.1)', `${context} ${surface.selector} must use 10% frost`);
     assert.equal(surface.image, 'none', `${context} ${surface.selector} must keep its background transparent`);
     assert.match(surface.filter, /blur\(8px\)/, `${context} ${surface.selector} must blur the scene behind it`);
   });
@@ -561,7 +569,7 @@ async function exerciseTubePlanWorkflow(page, width) {
             : markup.includes('<svg') && !markup.includes('<img')
         )), 'Tube groups use photography while non-tube collections keep accessible silhouettes');
         assert.match(audit.paediatricMarkup, /tube-photo-visual-paediatric/);
-        assert.match(audit.paediatricMarkup, /realistic-empty-paediatric-microtainer-purple-v1\.png/);
+        assert.match(audit.paediatricMarkup, /paediatric-purple-cutout-v2\.webp/);
         // HIV viral-load specimen is visible, not merely present in data.
         await page.locator('[data-test-name="HIV Viral Load"] .discovery-inspect').click();
         assert.match(await page.locator('[data-test-name="HIV Viral Load"]').innerText(), /EDTA plasma/);

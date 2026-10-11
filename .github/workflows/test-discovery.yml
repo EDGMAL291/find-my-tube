@@ -35,6 +35,7 @@ jobs:
         with:
           name: discovery-browser-results
           path: |
+            /tmp/fmt-stock-*/*.png
             /tmp/fmt-discovery-*/*.png
             /tmp/fmt-server.log
           if-no-files-found: ignore

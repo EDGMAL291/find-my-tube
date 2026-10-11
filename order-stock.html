@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20261009d" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20261011b" />
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261009o" />
   <style>
     #stockOrderSummaryItems {
@@ -311,7 +311,7 @@
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261009b"></script>
+  <script src="assets/js/script.js?v=20261011a"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -326,14 +326,14 @@
         { key: "tan", helper: "Tan tubes.", trayMax: 1 }
       ];
       const tubeImageByKey = {
-        yellow: "assets/images/stock-tubes/realistic-empty-tube-yellow-v3.png",
-        grey: "assets/images/stock-tubes/realistic-empty-tube-grey-v3.png",
-        purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v3.png",
-        green: "assets/images/stock-tubes/realistic-empty-tube-green-v3.png",
-        blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v3.png",
-        pearl: "assets/images/stock-tubes/realistic-empty-tube-pearl-v3.png",
-        tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v3.png",
-        pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v3.png"
+        yellow: "assets/images/stock-tubes/realistic-empty-tube-yellow-v4.png",
+        grey: "assets/images/stock-tubes/realistic-empty-tube-grey-v4.png",
+        purple: "assets/images/stock-tubes/realistic-empty-tube-purple-v4.png",
+        green: "assets/images/stock-tubes/realistic-empty-tube-green-v4.png",
+        blue: "assets/images/stock-tubes/realistic-empty-tube-blue-v4.png",
+        pearl: "assets/images/stock-tubes/realistic-empty-tube-pearl-v4.png",
+        tan: "assets/images/stock-tubes/realistic-empty-tube-tan-v4.png",
+        pink: "assets/images/stock-tubes/realistic-empty-tube-pink-v4.png"
       };
       const tubeAccentByKey = {
         yellow: { solid: "#f4c430", bg: "rgba(244, 196, 48, 0.2)", border: "rgba(244, 196, 48, 0.72)" },
@@ -1271,7 +1271,7 @@
   <script src="assets/js/order-stock-catalog.js?v=20261006d"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-09.2";
+      const APP_VERSION = "2026-10-11.2";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1292,7 +1292,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261009d", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261011b", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

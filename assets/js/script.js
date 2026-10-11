@@ -1389,10 +1389,23 @@ const stockVacutainerNeedleImageById = Object.freeze({
   "vacutainer-needle-black": "assets/images/stock-supplies/vacutainer-multisample-needle-black-v1.webp"
 });
 
+// Shared transparent product cutouts keep catalogue, summaries and inventory consistent.
+const stockSupplyImageById = Object.freeze({
+  "specimen-jars": "assets/images/stock-supplies/specimen-jars-cutout-v2.webp",
+  "lab-bags": "assets/images/stock-supplies/lab-bags-cutout-v2.webp",
+  "blood-gas-syringes": "assets/images/stock-supplies/blood-gas-syringes-cutout-v2.webp",
+  "swabs-transport-media": "assets/images/stock-supplies/swabs-transport-media-cutout-v2.webp",
+  "blood-culture-bottle-aerobic": "assets/images/stock-supplies/blood-culture-bottle-aerobic-cutout-v2.webp",
+  "blood-culture-bottle-anaerobic": "assets/images/stock-supplies/blood-culture-bottle-anaerobic-cutout-v2.webp",
+  "blood-culture-bottle-paediatric-aerobic": "assets/images/stock-supplies/blood-culture-bottle-paediatric-aerobic-cutout-v2.webp",
+  "blood-culture-bottle-mycobacterial-tb": "assets/images/stock-supplies/blood-culture-bottle-mycobacterial-tb-cutout-v2.webp",
+  "blood-culture-bottle-fungal-mycology": "assets/images/stock-supplies/blood-culture-bottle-fungal-mycology-cutout-v2.webp"
+});
+
 const paediatricMicrotainerImageById = Object.freeze({
-  "paediatric-yellow-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-yellow-v1.png",
-  "paediatric-purple-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-purple-v1.png",
-  "paediatric-grey-microtainer": "assets/images/stock-tubes/realistic-empty-paediatric-microtainer-grey-v1.png"
+  "paediatric-yellow-microtainer": "assets/images/stock-supplies/paediatric-yellow-cutout-v2.webp",
+  "paediatric-purple-microtainer": "assets/images/stock-supplies/paediatric-purple-cutout-v2.webp",
+  "paediatric-grey-microtainer": "assets/images/stock-supplies/paediatric-grey-cutout-v2.webp"
 });
 
 const paediatricMicrotainerImageByGroup = Object.freeze({
@@ -1585,6 +1598,13 @@ function getStockItemGlyphMarkup(item, options = {}) {
   if (needleImage) {
     const isCompact = glyphClassName.includes("compact");
     return `<img class="stock-item-photo-needle${isCompact ? " stock-item-photo-needle-compact" : ""}" src="${needleImage}" alt="" width="836" height="470" loading="lazy" decoding="async" aria-hidden="true">`;
+  }
+
+  const supplyImage = stockSupplyImageById[String(item?.id || "").trim()];
+  if (supplyImage) {
+    const isCompact = glyphClassName.includes("compact");
+    const isPaediatric = item.id === "blood-culture-bottle-paediatric-aerobic";
+    return `<img class="stock-item-photo-supply${isCompact ? " stock-item-photo-supply-compact" : ""}${isPaediatric ? " stock-item-photo-supply-paediatric" : ""}" src="${supplyImage}" alt="" width="342" height="512" loading="lazy" decoding="async" aria-hidden="true">`;
   }
 
   const meta = getBloodCultureBottleMetadata(item);
