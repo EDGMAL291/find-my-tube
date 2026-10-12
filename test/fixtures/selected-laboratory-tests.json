@@ -1,0 +1,192 @@
+[
+  {
+    "name": "G6PD Enzyme Activity",
+    "tubeColor": "Purple / Lavender EDTA",
+    "specimen": "EDTA whole blood",
+    "group": "Purple",
+    "aliases": [
+      "G6PD",
+      "G6PD activity",
+      "Glucose-6-phosphate dehydrogenase activity",
+      "Glucose 6 phosphate dehydrogenase"
+    ]
+  },
+  {
+    "name": "Pyruvate Kinase Activity",
+    "tubeColor": "Yellow ACD",
+    "specimen": "ACD whole blood",
+    "group": "Yellow ACD",
+    "aliases": [
+      "PK activity",
+      "PK enzyme activity",
+      "Red cell pyruvate kinase",
+      "Pyruvate kinase enzyme activity"
+    ]
+  },
+  {
+    "name": "Platelet Aggregation Studies (LTA)",
+    "tubeColor": "Light Blue — Sodium Citrate",
+    "specimen": "Citrated whole blood",
+    "group": "Blue",
+    "aliases": [
+      "LTA",
+      "Platelet aggregation",
+      "Platelet aggregometry",
+      "Light transmission aggregometry",
+      "Platelet function aggregation"
+    ]
+  },
+  {
+    "name": "Factor VIII Activity",
+    "tubeColor": "Light Blue — Sodium Citrate",
+    "specimen": "Platelet-poor citrate plasma",
+    "group": "Blue",
+    "aliases": [
+      "Factor 8 activity",
+      "FVIII activity",
+      "F VIII activity",
+      "Factor VIII assay"
+    ]
+  },
+  {
+    "name": "Factor IX Activity",
+    "tubeColor": "Light Blue — Sodium Citrate",
+    "specimen": "Platelet-poor citrate plasma",
+    "group": "Blue",
+    "aliases": [
+      "Factor 9 activity",
+      "FIX activity",
+      "F IX activity",
+      "Factor IX assay"
+    ]
+  },
+  {
+    "name": "Factor XIII Activity",
+    "tubeColor": "Light Blue — Sodium Citrate",
+    "specimen": "Platelet-poor citrate plasma",
+    "group": "Blue",
+    "aliases": [
+      "Factor 13 activity",
+      "FXIII activity",
+      "F XIII activity",
+      "Factor XIII assay"
+    ]
+  },
+  {
+    "name": "JAK2 V617F Mutation",
+    "tubeColor": "Purple / Lavender EDTA",
+    "specimen": "Anticoagulated EDTA whole blood",
+    "group": "Purple",
+    "aliases": [
+      "JAK2",
+      "JAK2 V617F",
+      "JAK 2 V617F",
+      "Janus kinase 2 V617F"
+    ]
+  },
+  {
+    "name": "Serum Osmolality",
+    "tubeColor": "Gold / Yellow SST — Serum",
+    "specimen": "Serum",
+    "group": "Gold/Yellow",
+    "aliases": [
+      "Serum osm",
+      "Serum osmol",
+      "Blood osmolality",
+      "Measured serum osmolality"
+    ]
+  },
+  {
+    "name": "Urine Osmolality",
+    "tubeColor": "Plain Urine Container",
+    "specimen": "Urine",
+    "group": "Plain Urine Container",
+    "aliases": [
+      "Urine osm",
+      "Urinary osmolality",
+      "Urine osmol",
+      "Measured urine osmolality"
+    ]
+  },
+  {
+    "name": "Beta-hydroxybutyrate (Blood Ketones)",
+    "tubeColor": "Gold / Yellow SST — Serum",
+    "specimen": "Serum or receiving-assay validated plasma",
+    "group": "Gold/Yellow",
+    "aliases": [
+      "Beta hydroxybutyrate",
+      "Beta-hydroxybutyrate",
+      "BHB",
+      "B-OHB",
+      "BOHB",
+      "Blood ketones",
+      "3-hydroxybutyrate"
+    ]
+  },
+  {
+    "name": "Plasma Free Metanephrines",
+    "tubeColor": "Purple / Lavender EDTA",
+    "specimen": "EDTA plasma",
+    "group": "Purple",
+    "aliases": [
+      "Plasma metanephrines",
+      "Free plasma metanephrines",
+      "Plasma free metanephrine",
+      "Plasma fractionated metanephrines"
+    ]
+  },
+  {
+    "name": "Insulin-like Growth Factor 1 (IGF-1)",
+    "tubeColor": "Gold / Yellow SST — Serum",
+    "specimen": "Serum",
+    "group": "Gold/Yellow",
+    "aliases": [
+      "IGF-1",
+      "IGF1",
+      "IGF 1",
+      "Somatomedin C",
+      "Insulin like growth factor 1"
+    ]
+  },
+  {
+    "name": "Cryptococcal Antigen (Serum)",
+    "tubeColor": "Gold / Yellow SST — Serum",
+    "specimen": "Serum",
+    "group": "Gold/Yellow",
+    "aliases": [
+      "Serum CrAg",
+      "CrAg serum",
+      "Serum cryptococcal antigen",
+      "Cryptococcal Ag serum"
+    ]
+  },
+  {
+    "name": "Urine TB-LAM Antigen",
+    "tubeColor": "Sterile Urine Container",
+    "specimen": "Urine",
+    "group": "Urine Container",
+    "aliases": [
+      "TB-LAM",
+      "TB LAM",
+      "Urine LAM",
+      "LF-LAM",
+      "Lipoarabinomannan urine antigen",
+      "Urine TB antigen"
+    ]
+  },
+  {
+    "name": "IA-2 Antibodies",
+    "tubeColor": "Gold / Yellow SST — Serum",
+    "specimen": "Serum",
+    "group": "Gold/Yellow",
+    "aliases": [
+      "IA2 antibodies",
+      "IA 2 antibodies",
+      "IA-2 antibody",
+      "Anti-IA2",
+      "Anti IA-2",
+      "Islet antigen 2 antibodies",
+      "ICA512 antibodies"
+    ]
+  }
+]

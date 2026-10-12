@@ -3736,6 +3736,106 @@ const drugSearchAliases = {
 };
 
 const aliasByName = {
+  "G6PD Enzyme Activity": [
+    "G6PD",
+    "G6PD activity",
+    "Glucose-6-phosphate dehydrogenase activity",
+    "Glucose 6 phosphate dehydrogenase"
+  ],
+  "Pyruvate Kinase Activity": [
+    "PK activity",
+    "PK enzyme activity",
+    "Red cell pyruvate kinase",
+    "Pyruvate kinase enzyme activity"
+  ],
+  "Platelet Aggregation Studies (LTA)": [
+    "LTA",
+    "Platelet aggregation",
+    "Platelet aggregometry",
+    "Light transmission aggregometry",
+    "Platelet function aggregation"
+  ],
+  "Factor VIII Activity": [
+    "Factor 8 activity",
+    "FVIII activity",
+    "F VIII activity",
+    "Factor VIII assay"
+  ],
+  "Factor IX Activity": [
+    "Factor 9 activity",
+    "FIX activity",
+    "F IX activity",
+    "Factor IX assay"
+  ],
+  "Factor XIII Activity": [
+    "Factor 13 activity",
+    "FXIII activity",
+    "F XIII activity",
+    "Factor XIII assay"
+  ],
+  "JAK2 V617F Mutation": [
+    "JAK2",
+    "JAK2 V617F",
+    "JAK 2 V617F",
+    "Janus kinase 2 V617F"
+  ],
+  "Serum Osmolality": [
+    "Serum osm",
+    "Serum osmol",
+    "Blood osmolality",
+    "Measured serum osmolality"
+  ],
+  "Urine Osmolality": [
+    "Urine osm",
+    "Urinary osmolality",
+    "Urine osmol",
+    "Measured urine osmolality"
+  ],
+  "Beta-hydroxybutyrate (Blood Ketones)": [
+    "Beta hydroxybutyrate",
+    "Beta-hydroxybutyrate",
+    "BHB",
+    "B-OHB",
+    "BOHB",
+    "Blood ketones",
+    "3-hydroxybutyrate"
+  ],
+  "Plasma Free Metanephrines": [
+    "Plasma metanephrines",
+    "Free plasma metanephrines",
+    "Plasma free metanephrine",
+    "Plasma fractionated metanephrines"
+  ],
+  "Insulin-like Growth Factor 1 (IGF-1)": [
+    "IGF-1",
+    "IGF1",
+    "IGF 1",
+    "Somatomedin C",
+    "Insulin like growth factor 1"
+  ],
+  "Cryptococcal Antigen (Serum)": [
+    "Serum CrAg",
+    "CrAg serum",
+    "Serum cryptococcal antigen",
+    "Cryptococcal Ag serum"
+  ],
+  "Urine TB-LAM Antigen": [
+    "TB-LAM",
+    "TB LAM",
+    "Urine LAM",
+    "LF-LAM",
+    "Lipoarabinomannan urine antigen",
+    "Urine TB antigen"
+  ],
+  "IA-2 Antibodies": [
+    "IA2 antibodies",
+    "IA 2 antibodies",
+    "IA-2 antibody",
+    "Anti-IA2",
+    "Anti IA-2",
+    "Islet antigen 2 antibodies",
+    "ICA512 antibodies"
+  ],
   ...drugSearchAliases,
   "U&E": ["U+E", "UE", "Renal profile", "Kidney function", "U and E"],
   "CMP": ["CMP profile", "Bone profile", "Calcium magnesium phosphate profile"],
@@ -4421,6 +4521,142 @@ const aliasByName = {
 };
 
 const clinicalProfileByName = {
+  "G6PD Enzyme Activity": {
+    use: "Measures red-cell G6PD enzyme activity in suspected deficiency and haemolysis workup; a normal result after haemolysis or transfusion may not exclude deficiency.",
+    keywords: [
+      "g6pd deficiency",
+      "red cell enzyme",
+      "haemolysis",
+      "hemolysis"
+    ]
+  },
+  "Pyruvate Kinase Activity": {
+    use: "Measures red-cell pyruvate kinase activity when investigating suspected enzyme deficiency and non-immune haemolysis; interpret with other findings.",
+    keywords: [
+      "pyruvate kinase deficiency",
+      "red cell enzyme",
+      "haemolytic anaemia",
+      "hemolytic anemia"
+    ]
+  },
+  "Platelet Aggregation Studies (LTA)": {
+    use: "Assesses platelet aggregation in selected suspected platelet function disorders; results require specialist interpretation and can be affected by medication and specimen handling.",
+    keywords: [
+      "platelet function",
+      "bleeding disorder",
+      "platelet dysfunction"
+    ]
+  },
+  "Factor VIII Activity": {
+    use: "Measures factor VIII activity in suspected haemophilia A, other factor VIII abnormalities and appropriate monitoring; interpret with clinical and other coagulation findings.",
+    keywords: [
+      "factor viii",
+      "haemophilia a",
+      "hemophilia a",
+      "coagulation factor"
+    ]
+  },
+  "Factor IX Activity": {
+    use: "Measures factor IX activity in suspected haemophilia B and appropriate monitoring; interpret with clinical and other coagulation findings.",
+    keywords: [
+      "factor ix",
+      "haemophilia b",
+      "hemophilia b",
+      "coagulation factor"
+    ]
+  },
+  "Factor XIII Activity": {
+    use: "Measures factor XIII activity in selected unexplained bleeding or suspected factor XIII deficiency; interpret with the clinical pattern and specialist advice.",
+    keywords: [
+      "factor xiii",
+      "bleeding disorder",
+      "coagulation factor"
+    ]
+  },
+  "JAK2 V617F Mutation": {
+    use: "Supports investigation of suspected myeloproliferative neoplasms such as polycythaemia vera, essential thrombocythaemia and primary myelofibrosis; interpret with the full diagnostic workup.",
+    keywords: [
+      "myeloproliferative neoplasm",
+      "mpn",
+      "polycythaemia vera",
+      "polycythemia vera",
+      "essential thrombocythaemia"
+    ]
+  },
+  "Serum Osmolality": {
+    use: "Measures serum solute concentration to support evaluation of water-balance disorders and selected osmolar-gap investigations; interpret with electrolytes and clinical context.",
+    keywords: [
+      "osmolality",
+      "water balance",
+      "osmolar gap",
+      "hyponatraemia",
+      "hyponatremia"
+    ]
+  },
+  "Urine Osmolality": {
+    use: "Measures urine solute concentration to support assessment of renal concentrating ability and water-balance disorders.",
+    keywords: [
+      "urine concentrating ability",
+      "polyuria",
+      "water balance",
+      "urine osmolality"
+    ]
+  },
+  "Beta-hydroxybutyrate (Blood Ketones)": {
+    use: "Measures the predominant circulating ketone in ketoacidosis and supports assessment or monitoring with acid-base and clinical findings; a result alone does not diagnose ketoacidosis.",
+    keywords: [
+      "ketoacidosis",
+      "dka",
+      "ketonaemia",
+      "ketonemia",
+      "blood ketones"
+    ]
+  },
+  "Plasma Free Metanephrines": {
+    use: "Supports biochemical investigation of suspected pheochromocytoma or paraganglioma; preparation, medications and the degree of elevation affect interpretation.",
+    keywords: [
+      "pheochromocytoma",
+      "phaeochromocytoma",
+      "paraganglioma",
+      "plasma metanephrines"
+    ]
+  },
+  "Insulin-like Growth Factor 1 (IGF-1)": {
+    use: "Supports investigation and monitoring of growth hormone excess or deficiency alongside clinical and endocrine assessment; interpret using age-appropriate assay reference ranges.",
+    keywords: [
+      "growth hormone axis",
+      "acromegaly",
+      "growth hormone deficiency",
+      "somatomedin"
+    ]
+  },
+  "Cryptococcal Antigen (Serum)": {
+    use: "Supports evaluation of cryptococcal infection and guideline-directed screening in eligible people with advanced HIV; interpret with clinical findings and relevant further investigation.",
+    keywords: [
+      "serum crag",
+      "cryptococcal infection",
+      "cryptococcal antigen",
+      "advanced hiv"
+    ]
+  },
+  "Urine TB-LAM Antigen": {
+    use: "Adjunctive TB diagnostic support for eligible people living with HIV under current local/WHO guidance; not for general-population screening or exclusion of TB.",
+    keywords: [
+      "tb lam",
+      "lipoarabinomannan",
+      "hiv associated tuberculosis",
+      "urine tb antigen"
+    ]
+  },
+  "IA-2 Antibodies": {
+    use: "Supports evaluation of autoimmune diabetes through islet antigen-2 antibodies, alongside clinical findings and other appropriate diabetes-associated autoantibodies.",
+    keywords: [
+      "autoimmune diabetes",
+      "islet autoantibody",
+      "type 1 diabetes",
+      "ica512"
+    ]
+  },
   "CSF Profile": {
     use: "Combined CSF profile including microbiology, cell count, chemistry, and cytology for lumbar puncture workup.",
     keywords: ["csf", "lumbar puncture", "meningitis", "encephalitis", "antimicrobials"]
@@ -4918,6 +5154,8 @@ const tubeGroupPatternEntries = [
   { key: "Purple", pattern: /\bpurple\b|\blavender\b/ },
   { key: "Pink", pattern: /\bpink\b/ },
   { key: "Blue", pattern: /\blight blue\b|\bblue\b|citrate/ },
+  { key: "Yellow ACD", pattern: /\b(?:yellow\s+)?acd\b|acid citrate dextrose/ },
+  { key: "Plain Urine Container", pattern: /\bplain urine container\b/ },
   { key: "Gold/Yellow", pattern: /\bgold\b|\byellow\b|sst|serum separator/ },
   { key: "Pearl/White", pattern: /\bpear\b|\bpearl\b|\bwhite\b|\bppt\b|plasma preparation tube/ },
   { key: "Green", pattern: /\bgreen\b|heparin/ },
@@ -4931,9 +5169,14 @@ const tubeGroupPatternEntries = [
 // Gets tube groups.
 function getTubeGroups(tubeColorValue) {
   const text = String(tubeColorValue || "").toLowerCase();
+  // Mask additive/container phrases so colour words cannot create a second mapping.
+  const serumText = text.replace(/\byellow\s*(?:\(\s*acd\s*\)|acd\b)|\b(?:yellow\s+)?acid citrate dextrose\b/g, (match) => " ".repeat(match.length));
+  const citrateText = text.replace(/acid citrate dextrose/g, (match) => " ".repeat(match.length));
+  const urineText = text.replace(/\bplain urine container\b/g, (match) => " ".repeat(match.length));
   const orderedMatches = tubeGroupPatternEntries
     .map((entry) => {
-      const matchIndex = text.search(entry.pattern);
+      const matchText = entry.key === "Gold/Yellow" ? serumText : entry.key === "Blue" ? citrateText : entry.key === "Urine Container" ? urineText : text;
+      const matchIndex = matchText.search(entry.pattern);
       return matchIndex === -1
         ? null
         : { key: entry.key, index: matchIndex };
@@ -4959,6 +5202,8 @@ function getTubeSwatchColor(tubeGroup) {
     Pink: "#ec4899",
     Blue: "#89CFF0",
     "Gold/Yellow": "#facc15",
+    "Yellow ACD": "#facc15",
+    "Plain Urine Container": "#f8d66d",
     "Pearl/White": "#e5e7eb",
     Green: "#22c55e",
     Gray: "#9ca3af",
@@ -4981,6 +5226,8 @@ function getTubeToneClass(tubeGroup) {
     Pink: "pink",
     Blue: "blue",
     "Gold/Yellow": "gold-yellow",
+    "Yellow ACD": "gold-yellow",
+    "Plain Urine Container": "urine-yellow",
     "Pearl/White": "pearl-white",
     Green: "green",
     Gray: "gray",
@@ -5004,6 +5251,8 @@ function getTubeAdditiveLabel(tubeGroup) {
     Pink: "EDTA",
     Blue: "Sodium citrate",
     "Gold/Yellow": "SST",
+    "Yellow ACD": "Acid citrate dextrose (ACD)",
+    "Plain Urine Container": "Plain urine container",
     "Pearl/White": "EDTA with gel",
     Green: "Heparin",
     Gray: "Fluoride / oxalate",
@@ -5054,6 +5303,7 @@ const NON_TUBE_COLLECTION_GROUPS = new Set([
   "Specimen Jar",
   "Swab Transport Medium",
   "Urine Container",
+  "Plain Urine Container",
   "24hr Urine Container",
   "Blood Culture Bottles",
   "Semen Container"
@@ -7692,11 +7942,12 @@ function canonicalDrawRuleName(value) {
 }
 
 // Add plan tube group.
-function addPlanTubeGroup(grouped, group, testName) {
+function addPlanTubeGroup(grouped, group, testName, detail = "") {
   if (!grouped.has(group)) {
     grouped.set(group, { key: group, label: group, count: 1, tests: new Set() });
   }
   grouped.get(group).tests.add(testName);
+  appendPlanItemDetail(grouped.get(group), detail);
 }
 
 // Gets alternative tube support counts.
@@ -7745,12 +7996,24 @@ function getDefaultPlanItems(selectedTests) {
   const grouped = new Map();
   const manual = [];
   const alternativeTests = [];
-  const dedicatedAlternativeItems = [];
+  const separateCollectionItems = [];
 
   selectedTests.forEach((test) => {
     const groups = getTubeGroups(test.tubeColor);
     if (!groups.length) {
       manual.push(test.name);
+      return;
+    }
+
+    if (test.separateCollection && groups.length === 1) {
+      const [group] = groups;
+      separateCollectionItems.push({
+        key: group,
+        label: `${group} — ${test.collectionLabel || test.name}`,
+        count: 1,
+        tests: [test.name],
+        detail: test.collectionPlanNote || test.criticalPrep
+      });
       return;
     }
 
@@ -7760,7 +8023,7 @@ function getDefaultPlanItems(selectedTests) {
     }
 
     groups.forEach((group) => {
-      addPlanTubeGroup(grouped, group, test.name);
+      addPlanTubeGroup(grouped, group, test.name, test.collectionPlanNote);
     });
   });
 
@@ -7785,7 +8048,7 @@ function getDefaultPlanItems(selectedTests) {
     addPlanTubeGroup(grouped, chosenGroup, test.name);
   });
 
-  const items = [...grouped.values(), ...dedicatedAlternativeItems]
+  const items = [...grouped.values(), ...separateCollectionItems]
     .map((item) => ({ ...item, tests: [...item.tests] }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
@@ -7959,7 +8222,7 @@ function applyAntenatalProfileMinimums(plan, selectedTests) {
 function applyPurpleVolumeRule(plan, selectedTests) {
   const purpleTests = selectedTests.filter((test) => {
     const tubeGroups = getTubeGroups(test.tubeColor);
-    return tubeGroups.includes("Purple");
+    return tubeGroups.includes("Purple") && !test.separateCollection;
   });
   const requiredPurpleCount = Math.ceil(purpleTests.length / 2);
   if (requiredPurpleCount <= 1) return "";
@@ -8310,7 +8573,7 @@ function renderDrawResult() {
 
       return `
         <article class="draw-group-card draw-group-card-${planToneClass}" style="--plan-tube-accent: ${planAccent};">
-          ${orderOfDrawStep ? `<span class="draw-order-step">${formatDrawStepLabel(orderOfDrawStep)}</span>` : `<span class="draw-order-step draw-order-step-separate">Separate specimen</span>`}
+          ${orderOfDrawStep ? `<span class="draw-order-step">${formatDrawStepLabel(orderOfDrawStep)}</span>` : `<span class="draw-order-step draw-order-step-separate">${primaryGroup === "Yellow ACD" ? "Confirm draw order" : "Separate specimen"}</span>`}
           <div class="draw-group-top">
             ${headMarkup}
           </div>
@@ -8466,6 +8729,9 @@ function getTestGrouping(testOrName) {
   const name = testName.toLowerCase();
   const microSubsection = getMicroSubsection(test);
 
+  if (testName === "Urine TB-LAM Antigen") return { sectionId: "micro_virology", subsection: "Urine Antigen" };
+  if (testName === "Plasma Free Metanephrines") return { sectionId: "chemistry", subsection: "Thyroid / Reproductive / Adrenal" };
+
   if (name.includes("cytology")) {
     return { sectionId: "cytology", subsection: "Cytology" };
   }
@@ -8491,6 +8757,7 @@ function getTestGrouping(testOrName) {
   }
 
   if (
+    name.includes("osmolality") ||
     name.includes("creatinine clearance") ||
     (name.includes("protein") && name.includes("creatinine ratio")) ||
     (name.includes("albumin") && name.includes("creatinine ratio")) ||
@@ -8560,7 +8827,7 @@ function getTestGrouping(testOrName) {
     return { sectionId: "metabolic_genetic", subsection: "Molecular Biology" };
   }
 
-  if (name.includes("pcr")) {
+  if (name.includes("pcr") || name.includes("jak2 v617f")) {
     return { sectionId: "metabolic_genetic", subsection: "Molecular Biology" };
   }
 
@@ -8645,6 +8912,7 @@ function getTestGrouping(testOrName) {
   ) return { sectionId: "immunology", subsection: "Allergy Profile" };
 
   if (
+    name.includes("ia-2 antibodies") ||
     name.includes("autoimmune") ||
     name.includes("arthritis profile") ||
     name.includes("ana") ||
@@ -8719,6 +8987,8 @@ function getTestGrouping(testOrName) {
   }
 
   if (
+    /^factor (viii|ix|xiii) activity$/.test(name) ||
+    name.includes("platelet aggregation") ||
     name.includes("coagulation studies") ||
     name.includes("coagulation profile") ||
     name.includes("clotting profile") ||
@@ -8735,6 +9005,8 @@ function getTestGrouping(testOrName) {
   ) return { sectionId: "haematology", subsection: "Coagulation" };
 
   if (
+    name.includes("g6pd enzyme activity") ||
+    name.includes("pyruvate kinase activity") ||
     name.includes("fbc") ||
     name.includes("haptoglobin") ||
     name.includes("retic") ||
@@ -8761,6 +9033,7 @@ function getTestGrouping(testOrName) {
   ) return { sectionId: "haematology", subsection: "General" };
 
   if (
+    name.includes("insulin-like growth factor 1") ||
     name.includes("menopausal screen profile") ||
     name.includes("menopause profile") ||
     name.includes("menopausal profile") ||
@@ -9878,7 +10151,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20261012n",
+    assetVersion: "20261012o",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

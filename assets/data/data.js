@@ -2838,5 +2838,150 @@ const tests = [
     turnaroundTime: "1-3 days",
     notes: "Erythropoietin level.",
     borderColor: "yellow"
+  },
+  {
+    name: "G6PD Enzyme Activity",
+    tubeColor: "Purple / Lavender EDTA",
+    specimen: "EDTA whole blood",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Red-cell enzyme activity. Haemolysis with reticulocytosis and recent transfusion can produce misleading or false-normal activity results; interpret with clinical context.",
+    criticalPrep: "Confirm receiving-laboratory EDTA or ACD acceptance and transport requirements before collection. Record recent haemolysis and transfusion history.",
+    borderColor: "purple"
+  },
+  {
+    name: "Pyruvate Kinase Activity",
+    tubeColor: "Yellow ACD",
+    specimen: "ACD whole blood",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Red-cell pyruvate kinase enzyme activity. Yellow ACD is an anticoagulant whole-blood tube, not a Gold/Yellow SST serum tube.",
+    criticalPrep: "Confirm receiving-laboratory ACD formulation or EDTA acceptance, recent transfusion effects and transport requirements before collection. Do not substitute a serum gel tube; confirm local draw order for ACD.",
+    borderColor: "#facc15",
+    collectionPlanNote: "ACD whole blood, not SST serum. Confirm ACD formulation/acceptance, transport and local draw order before collection."
+  },
+  {
+    name: "Platelet Aggregation Studies (LTA)",
+    tubeColor: "Light Blue — Sodium Citrate",
+    specimen: "Citrated whole blood",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Light transmission aggregometry evaluates platelet function. Requires prior arrangement and rapid delivery; transport at room temperature and do not refrigerate.",
+    criticalPrep: "Arrange with the receiving laboratory before collection. Confirm citrate tube fill, required tube number, medication review and delivery window. Send as whole blood; do not apply coagulation referral-plasma processing. Do not stop medicines without clinician advice.",
+    borderColor: "#89CFF0",
+    separateCollection: true,
+    collectionLabel: "LTA whole blood",
+    collectionPlanNote: "Citrated whole blood for LTA: arrange rapid room-temperature delivery. Do not refrigerate. Keep separate from citrate requests requiring processed or frozen plasma; confirm required tube number and fill with the receiving laboratory."
+  },
+  {
+    name: "Factor VIII Activity",
+    tubeColor: "Light Blue — Sodium Citrate",
+    specimen: "Platelet-poor citrate plasma",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Coagulation factor VIII activity assay used in bleeding-disorder investigation and monitoring when clinically indicated.",
+    criticalPrep: "Fill the citrate tube correctly. Confirm required tube number and volume, double-spin platelet-poor plasma preparation and frozen referral-plasma requirements with the receiving laboratory; follow its processing and transport protocol. Review anticoagulant and treatment interference with the laboratory.",
+    borderColor: "#89CFF0",
+    collectionPlanNote: "Platelet-poor citrate plasma: confirm citrate fill, required tube number and volume, processing and frozen referral-plasma requirements with the receiving laboratory."
+  },
+  {
+    name: "Factor IX Activity",
+    tubeColor: "Light Blue — Sodium Citrate",
+    specimen: "Platelet-poor citrate plasma",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Coagulation factor IX activity assay used in bleeding-disorder investigation and monitoring when clinically indicated.",
+    criticalPrep: "Fill the citrate tube correctly. Confirm required tube number and volume, double-spin platelet-poor plasma preparation and frozen referral-plasma requirements with the receiving laboratory; follow its processing and transport protocol. Review anticoagulant and treatment interference with the laboratory.",
+    borderColor: "#89CFF0",
+    collectionPlanNote: "Platelet-poor citrate plasma: confirm citrate fill, required tube number and volume, processing and frozen referral-plasma requirements with the receiving laboratory."
+  },
+  {
+    name: "Factor XIII Activity",
+    tubeColor: "Light Blue — Sodium Citrate",
+    specimen: "Platelet-poor citrate plasma",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Specialised coagulation factor XIII activity assay. Routine PT and aPTT can be normal in factor XIII deficiency.",
+    criticalPrep: "Confirm required citrate tube fill, tube number and volume, platelet-poor plasma processing and frozen referral-plasma requirements before collection. Follow the receiving laboratory processing and transport protocol; review treatment interference with the laboratory.",
+    borderColor: "#89CFF0",
+    collectionPlanNote: "Platelet-poor citrate plasma: confirm citrate fill, required tube number and volume, processing and frozen referral-plasma requirements with the receiving laboratory."
+  },
+  {
+    name: "JAK2 V617F Mutation",
+    tubeColor: "Purple / Lavender EDTA",
+    specimen: "Anticoagulated EDTA whole blood",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Molecular testing for the JAK2 V617F variant in suspected myeloproliferative neoplasms. A negative result does not exclude a myeloproliferative neoplasm.",
+    criticalPrep: "Confirm EDTA whole-blood acceptance and transport requirements with the receiving molecular laboratory before collection.",
+    borderColor: "purple"
+  },
+  {
+    name: "Serum Osmolality",
+    tubeColor: "Gold / Yellow SST — Serum",
+    specimen: "Serum",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Measured serum osmolality supports assessment of water balance and selected electrolyte or osmolar-gap investigations.",
+    criticalPrep: "Confirm receiving-assay acceptance of serum gel/SST tubes and collection and handling requirements.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Urine Osmolality",
+    tubeColor: "Plain Urine Container",
+    specimen: "Urine",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Measured urine osmolality assesses urine concentrating ability; interpret alongside serum findings and the clinical context.",
+    criticalPrep: "Use a plain urine container. Confirm collection type, timing, specimen amount and handling requirements with the receiving laboratory.",
+    borderColor: "#f8d66d"
+  },
+  {
+    name: "Beta-hydroxybutyrate (Blood Ketones)",
+    tubeColor: "Gold / Yellow SST — Serum",
+    specimen: "Serum or receiving-assay validated plasma",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Quantitative beta-hydroxybutyrate supports ketoacidosis assessment. Serum SST acceptance and any plasma alternative are assay-specific; urine ketone testing is a different test.",
+    criticalPrep: "Confirm that the receiving assay accepts serum gel/SST and confirm any validated plasma alternative and handling requirements. Interpret with acid-base findings and clinical status; urgent suspected ketoacidosis needs clinical assessment.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Plasma Free Metanephrines",
+    tubeColor: "Purple / Lavender EDTA",
+    specimen: "EDTA plasma",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Plasma free metanephrines are distinct from 24-hour urine metanephrines. Patient preparation and rapid plasma handling are essential to limit misleading elevations.",
+    criticalPrep: "Arrange collection with the receiving laboratory. Confirm EDTA acceptance, resting posture and rest period, fasting if required, stress/exercise and medication effects, rapid plasma separation and transport/storage requirements. Do not stop medicines without prescriber advice.",
+    borderColor: "purple",
+    separateCollection: true,
+    collectionLabel: "Metanephrines plasma",
+    collectionPlanNote: "EDTA plasma for free metanephrines: use a separate collection from whole-blood requests and confirm patient preparation, rapid separation and transport/storage with the receiving laboratory."
+  },
+  {
+    name: "Insulin-like Growth Factor 1 (IGF-1)",
+    tubeColor: "Gold / Yellow SST — Serum",
+    specimen: "Serum",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Growth hormone axis investigation. Interpret using the receiving assay age-appropriate reference ranges and clinical context.",
+    criticalPrep: "Confirm receiving-assay serum gel/SST acceptance and collection and handling requirements; reference ranges depend on age and assay.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Cryptococcal Antigen (Serum)",
+    tubeColor: "Gold / Yellow SST — Serum",
+    specimen: "Serum",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Specimen-specific serum cryptococcal antigen entry, separate from CSF cryptococcal antigen. A positive serum result alone does not establish cryptococcal meningitis.",
+    criticalPrep: "Confirm serum gel/SST acceptance and handling requirements with the receiving laboratory. Consider clinical assessment and guideline-directed CSF investigation when indicated.",
+    borderColor: "yellow"
+  },
+  {
+    name: "Urine TB-LAM Antigen",
+    tubeColor: "Sterile Urine Container",
+    specimen: "Urine",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Urine lipoarabinomannan testing supports TB diagnosis in eligible people living with HIV under local/WHO guidance. It is not a general TB screen; a negative result does not exclude TB.",
+    criticalPrep: "Confirm eligibility under current local/WHO guidance and the validated assay with the clinical team. Use a sterile urine container and confirm collection and handling requirements; interpret with other TB investigations.",
+    borderColor: "#f8d66d"
+  },
+  {
+    name: "IA-2 Antibodies",
+    tubeColor: "Gold / Yellow SST — Serum",
+    specimen: "Serum",
+    turnaroundTime: "Confirm with receiving laboratory",
+    notes: "Islet antigen-2 autoantibody testing supports investigation of autoimmune diabetes. Distinct from anti-GAD antibodies; an antibody result alone does not determine diabetes type.",
+    criticalPrep: "Confirm receiving-assay serum gel/SST acceptance and collection and handling requirements. Interpret alongside clinical findings and other diabetes-associated antibodies when indicated.",
+    borderColor: "yellow"
   }
 ];
