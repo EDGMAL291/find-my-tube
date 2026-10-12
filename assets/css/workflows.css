@@ -140,3 +140,15 @@ html body[data-app-page="home"] .clinical-choice-trigger-chevron {
 @media (max-width: 860px) {
   #clinicalWorkupForm .clinical-hint-wrap { font-size: .84rem; }
 }
+
+/* Both actions share the same text centre line and touch target. */
+#clinicalWorkupForm :is(#clinicalWorkupSubmitBtn, #clinicalWorkupResetBtn) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  line-height: 1.2;
+  padding: 10px 12px;
+  margin-top: 0;
+  margin-bottom: 0;
+}

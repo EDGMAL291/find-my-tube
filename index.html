@@ -98,7 +98,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261012j" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012l" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012m" />
 </head>
 <body data-app-page="home">
   <main class="container">
@@ -384,7 +384,7 @@
             <fieldset class="clinical-workup-group clinical-workup-group-picture">
               <legend>Clinical picture</legend>
               <div class="clinical-workup-field clinical-workup-field-wide">
-                <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
+                <label class="clinical-workup-field-label sr-only" for="clinicalSymptomsInput">Symptoms</label>
                 <div class="clinical-hint-wrap">
                 <textarea
                   id="clinicalSymptomsInput"
@@ -396,7 +396,7 @@
               </div>
 
               <div class="clinical-workup-field clinical-workup-field-wide">
-                <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
+                <label class="clinical-workup-field-label sr-only" for="clinicalSignsInput">Signs</label>
                 <div class="clinical-hint-wrap">
                 <textarea
                   id="clinicalSignsInput"
@@ -408,7 +408,7 @@
               </div>
 
               <div class="clinical-workup-field clinical-workup-field-wide clinical-workup-concern-field">
-                <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
+                <label class="clinical-workup-field-label sr-only" for="clinicalConcernInput">Clinical concern</label>
                 <div class="clinical-hint-wrap">
                 <textarea
                   id="clinicalConcernInput"
@@ -575,7 +575,7 @@
   <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-12.12";
+      const APP_VERSION = "2026-10-12.13";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -596,7 +596,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261012l", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261012m", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
