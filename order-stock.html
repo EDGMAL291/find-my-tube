@@ -73,6 +73,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261012j" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012k" />
 </head>
 <body data-app-page="stock-order">
   <main class="container">
@@ -142,14 +143,12 @@
 
     <section class="stock-order-panel" id="stockOrderPanel" aria-labelledby="stockOrderTitle">
       <div class="stock-order-head">
-        <p class="stock-order-kicker">Laboratory supplies</p>
         <h2 id="stockOrderTitle">Order My Stock</h2>
-        <p class="stock-order-head-copy" id="stockOrderFormHelp">Choose what your ward needs, review the request, then submit it once.</p>
       </div>
 
-      <form class="stock-order-form" id="stockOrderForm" aria-describedby="stockOrderFormHelp">
+      <form class="stock-order-form" id="stockOrderForm">
         <label class="stock-order-field">
-          <span class="stock-order-field-label">Requested by</span>
+          <span class="sr-only">Requested by</span>
           <input
             type="text"
             id="stockOrderRequesterNameInput"
@@ -162,14 +161,20 @@
         </label>
 
         <label class="stock-order-field">
-          <span class="stock-order-field-label">Ward / unit</span>
-          <select id="stockOrderRequesterSelect" aria-required="true" required>
+          <span class="sr-only">Ward / unit</span>
+          <select id="stockOrderRequesterSelect" aria-label="Ward or unit" aria-required="true" required>
             <option value="">Select clinic, sickbay, or ward</option>
           </select>
         </label>
 
         <label class="stock-order-field stock-order-field-wide">
-          <span class="stock-order-field-label">Optional note</span>
+          <span class="sr-only">Extension or speed dial</span>
+          <input type="tel" id="stockOrderExtensionInput" placeholder="Extension or speed dial (optional)" aria-label="Extension or speed dial" aria-describedby="stockOrderExtensionHelp" maxlength="24" pattern="[0-9+*#\(\) \-]+" autocomplete="tel-extension" />
+          <span class="sr-only" id="stockOrderExtensionHelp">Saved privately for lab staff to contact you about this order.</span>
+        </label>
+
+        <label class="stock-order-field stock-order-field-wide">
+          <span class="sr-only">Optional note</span>
           <textarea
             id="stockOrderNoteInput"
             rows="1"
@@ -179,11 +184,7 @@
         </label>
       </form>
 
-      <section class="stock-catalog-toolbar" aria-labelledby="stockCatalogTitle">
-        <div class="stock-catalog-heading">
-          <p class="stock-order-kicker">Catalogue</p>
-          <h3 id="stockCatalogTitle">Find stock quickly</h3>
-        </div>
+      <section class="stock-catalog-toolbar" aria-label="Stock catalogue">
         <label class="stock-catalog-search" for="stockCatalogSearch">
           <span class="sr-only">Search stock catalogue</span>
           <svg class="icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
@@ -312,7 +313,7 @@
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260417c"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261012h"></script>
+  <script src="assets/js/script.js?v=20261012k"></script>
   <script>
     (() => {
       if (document.body?.dataset?.appPage !== "stock-order") return;
@@ -1272,7 +1273,7 @@
   <script src="assets/js/order-stock-catalog.js?v=20261006d"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-12.10";
+      const APP_VERSION = "2026-10-12.11";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -1293,7 +1294,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261012j", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261012k", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

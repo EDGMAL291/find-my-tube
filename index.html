@@ -98,6 +98,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261012j" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012k" />
 </head>
 <body data-app-page="home">
   <main class="container">
@@ -209,7 +210,6 @@
         </article>
         <article class="home-hero-slide home-hero-slide-clipboard" data-hero-slide data-hero-tone="gold" aria-hidden="true">
           <div class="home-hero-content">
-            <p class="home-hero-eyebrow">Clinical decision support</p>
             <h2><a class="home-hero-heading-link" href="./index.html?tool=find-my-test" data-menu-action="find-my-test">Find My Test</a></h2>
             <p class="home-hero-copy">Start with the clinical picture and build a practical test plan in seconds.</p>
             <a class="home-hero-primary" href="./index.html?tool=find-my-test" data-menu-action="find-my-test"><span class="home-hero-label">Find My Test</span><span class="home-hero-arrow" aria-hidden="true">→</span></a>
@@ -324,9 +324,8 @@
 
     <section class="clinical-workspace-intro" aria-labelledby="clinicalWorkspaceTitle">
       <div>
-        <p class="clinical-workspace-kicker">Clinical decision support</p>
         <h2 id="clinicalWorkspaceTitle">Find My Test</h2>
-        <p>Enter the clinical picture to build a focused Tube Plan.</p>
+        <p>Describe concerns. Plan tests.</p>
       </div>
     </section>
 
@@ -336,7 +335,7 @@
           <h2 id="clinicalWorkupTitle" class="sr-only">Find My Test form</h2>
           <div class="clinical-workup-form-grid">
             <fieldset class="clinical-workup-group clinical-workup-group-patient">
-              <legend><span class="clinical-workup-step" aria-hidden="true">01</span><span>Patient details</span></legend>
+              <legend class="sr-only">Clinical context</legend>
               <label class="clinical-workup-field clinical-workup-context-field clinical-workup-context-age">
                 <span class="sr-only">Age in years</span>
                 <div class="clinical-workup-age-control">
@@ -385,7 +384,7 @@
             <fieldset class="clinical-workup-group clinical-workup-group-picture">
               <legend><span class="clinical-workup-step" aria-hidden="true">02</span><span>Clinical picture</span></legend>
               <div class="clinical-workup-field clinical-workup-field-wide">
-                <label class="clinical-workup-field-label sr-only" for="clinicalSymptomsInput">Symptoms</label>
+                <label class="clinical-workup-field-label" for="clinicalSymptomsInput">Symptoms</label>
                 <textarea
                   id="clinicalSymptomsInput"
                   rows="3"
@@ -394,7 +393,7 @@
               </div>
 
               <div class="clinical-workup-field clinical-workup-field-wide">
-                <label class="clinical-workup-field-label sr-only" for="clinicalSignsInput">Signs</label>
+                <label class="clinical-workup-field-label" for="clinicalSignsInput">Signs</label>
                 <textarea
                   id="clinicalSignsInput"
                   rows="3"
@@ -403,7 +402,7 @@
               </div>
 
               <div class="clinical-workup-field clinical-workup-field-wide clinical-workup-concern-field">
-                <label class="clinical-workup-field-label sr-only" for="clinicalConcernInput">Clinical concern</label>
+                <label class="clinical-workup-field-label" for="clinicalConcernInput">Clinical concern</label>
                 <textarea
                   id="clinicalConcernInput"
                   rows="4"
@@ -465,7 +464,6 @@
     <div class="clinical-choice-sheet" role="dialog" aria-modal="true" aria-labelledby="clinicalChoiceTitle">
       <div class="clinical-choice-head">
         <div>
-          <p class="clinical-choice-kicker">Patient details</p>
           <h3 id="clinicalChoiceTitle">Choose an option</h3>
         </div>
         <button type="button" class="clinical-choice-close" id="clinicalChoiceCloseBtn" aria-label="Close options">Close</button>
@@ -563,12 +561,12 @@
   <script src="assets/data/data.js?v=20261012a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261012h"></script>
+  <script src="assets/js/script.js?v=20261012k"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-12.10";
+      const APP_VERSION = "2026-10-12.11";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -589,7 +587,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261012j", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261012k", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

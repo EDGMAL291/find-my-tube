@@ -1,0 +1,99 @@
+/* Stock ordering and clinical inputs: quiet surfaces, clear actions. */
+html body[data-app-page="stock-order"] #stockOrderGrid {
+  --fmt-card-frost-background: rgba(255, 255, 255, .06);
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html body[data-app-page="stock-order"] :is(.stock-catalog-filter, .stock-tube-mode-toggle .group-chip) {
+  text-decoration: none !important;
+}
+html body[data-app-page="stock-order"] .stock-catalog-filter[aria-pressed="true"] {
+  color: #e6cf8c !important;
+  font-weight: 700;
+}
+html body[data-app-page="home"] .clinical-workup-field-label {
+  display: block;
+  font-weight: 700;
+  color: #fffdf8;
+  margin-bottom: 6px;
+}
+html body[data-app-page="home"] .clinical-workup-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  width: 100%;
+  gap: 12px;
+  padding-right: 0;
+}
+html body[data-app-page="home"] .clinical-workup-actions button {
+  flex: 0 1 auto;
+  width: auto;
+}
+html body[data-app-page="home"] #clinicalWorkupResetBtn {
+  margin-left: auto;
+}
+html body[data-app-page="home"] #clinicalChoiceModal {
+  background-color: #03111f;
+  background-image: var(--fmt-scene-tone), url("../images/clinical-sex-context-v1.webp");
+  background-position: center;
+  background-size: cover;
+}
+html body[data-app-page="home"] #clinicalChoiceModal[data-choice-type="pregnancy"] {
+  background-image: var(--fmt-scene-tone), url("../images/clinical-pregnancy-context-v1.webp");
+}
+html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-backdrop {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-sheet {
+  background: rgba(255, 255, 255, .06) !important;
+  backdrop-filter: blur(8px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
+}
+
+html body[data-app-page="home"] .clinical-workup-actions {
+  flex-wrap: nowrap;
+  flex-direction: row;
+}
+html body[data-app-page="home"] #clinicalWorkupSubmitBtn {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto !important;
+}
+html body[data-app-page="home"] #clinicalWorkupResetBtn {
+  flex: 0 0 auto;
+  width: auto !important;
+}
+/* Use the same accessible photographic choices on desktop and mobile. */
+html body[data-app-page="home"] select.clinical-choice-native {
+  display: none !important;
+}
+html body[data-app-page="home"] .clinical-choice-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .32);
+  border-radius: 0;
+  font: inherit;
+  text-align: left;
+}
+html body[data-app-page="home"] .clinical-choice-trigger-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html body[data-app-page="home"] .clinical-choice-trigger-chevron {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+}

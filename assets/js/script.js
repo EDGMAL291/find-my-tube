@@ -153,6 +153,7 @@ const stockOrderForm = document.getElementById("stockOrderForm");
 const stockOrderRequesterNameInput = document.getElementById("stockOrderRequesterNameInput");
 const stockOrderRequesterSelect = document.getElementById("stockOrderRequesterSelect");
 const stockOrderNoteInput = document.getElementById("stockOrderNoteInput");
+const stockOrderExtensionInput = document.getElementById("stockOrderExtensionInput");
 const stockOrderGrid = document.getElementById("stockOrderGrid");
 const stockOrderStatusBadge = document.getElementById("stockOrderStatusBadge");
 const stockOrderRequestMeta = document.getElementById("stockOrderRequestMeta");
@@ -422,6 +423,7 @@ const STOCK_ORDER_DUPLICATE_CHECK_URL = buildStockApiUrl("/api/stock-requests?li
 const STOCK_ORDER_INVENTORY_URL = buildStockApiUrl("/api/stock-inventory");
 const STOCK_LOW_STOCK_DEFAULT_THRESHOLD = 5;
 const stockOrderInventoryByKey = new Map();
+let stockOrderCanViewInventory = false;
 let stockOrderRecentRequestsForChecks = [];
 
 function stockRequestsNeedConfiguredBackend() {
@@ -1399,10 +1401,10 @@ const stockSupplyImageById = Object.freeze({
   "blood-gas-syringes": "assets/images/stock-supplies/blood-gas-syringes-cutout-v2.webp",
   "swabs-transport-media": "assets/images/stock-supplies/swabs-transport-media-cutout-v2.webp",
   "blood-culture-bottle-aerobic": "assets/images/stock-supplies/blood-culture-bottle-aerobic-cutout-v2.webp",
-  "blood-culture-bottle-anaerobic": "assets/images/stock-supplies/blood-culture-bottle-anaerobic-cutout-v2.webp",
-  "blood-culture-bottle-paediatric-aerobic": "assets/images/stock-supplies/blood-culture-bottle-paediatric-aerobic-cutout-v2.webp",
-  "blood-culture-bottle-mycobacterial-tb": "assets/images/stock-supplies/blood-culture-bottle-mycobacterial-tb-cutout-v2.webp",
-  "blood-culture-bottle-fungal-mycology": "assets/images/stock-supplies/blood-culture-bottle-fungal-mycology-cutout-v2.webp"
+  "blood-culture-bottle-anaerobic": "assets/images/stock-supplies/blood-culture-bottle-anaerobic-cutout-v3.webp",
+  "blood-culture-bottle-paediatric-aerobic": "assets/images/stock-supplies/blood-culture-bottle-paediatric-aerobic-cutout-v3.webp",
+  "blood-culture-bottle-mycobacterial-tb": "assets/images/stock-supplies/blood-culture-bottle-mycobacterial-tb-cutout-v3.webp",
+  "blood-culture-bottle-fungal-mycology": "assets/images/stock-supplies/blood-culture-bottle-fungal-mycology-cutout-v3.webp"
 });
 
 const paediatricMicrotainerImageById = Object.freeze({
@@ -1718,7 +1720,7 @@ function getStockStatusForItem(item) {
     label: getStockStatusLabel(status),
     tone: getStockStatusTone(status),
     lowStockThreshold: threshold,
-    isKnown: Boolean(balance)
+    isKnown: stockOrderCanViewInventory && Boolean(balance)
   };
 }
 
@@ -1982,6 +1984,7 @@ function showStockRequestDetails(requestOrKey) {
         <div><span>Date submitted</span><strong>${escapeHtml(submittedAt)}</strong></div>
         <div><span>Status</span><strong>${escapeHtml(statusLabel)}</strong>${repeatOverrideBadge}</div>
       </div>
+      ${request.contactExtension ? `<div class="stock-request-detail-notes"><span>Extension / speed dial</span><p>${escapeHtml(request.contactExtension)}</p></div>` : ""}
       ${request.notes ? `<div class="stock-request-detail-notes"><span>Notes</span><p>${escapeHtml(request.notes)}</p></div>` : ""}
       <div class="stock-request-detail-items">
         <h4>Items ordered</h4>
@@ -2018,10 +2021,16 @@ async function loadStockOrderInventory() {
   if (!stockOrderGrid) return;
 
   try {
-    const response = await fetch(STOCK_ORDER_INVENTORY_URL, { cache: "no-store" });
+    let sessionToken = "";
+    try { sessionToken = sessionStorage.getItem("fmt-stock-lab-session-token") || ""; } catch {}
+    const response = await fetch(STOCK_ORDER_INVENTORY_URL, {
+      cache: "no-store", credentials: "include",
+      headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}
+    });
     if (!response.ok) throw new Error(`Inventory fetch failed with status ${response.status}`);
     const payload = await response.json().catch(() => ({}));
-    const rows = Array.isArray(payload?.summary) ? payload.summary : [];
+    stockOrderCanViewInventory = payload.inventoryVisibility === "staff";
+    const rows = stockOrderCanViewInventory && Array.isArray(payload?.summary) ? payload.summary : [];
     stockOrderInventoryByKey.clear();
     rows.forEach((row) => {
       const key = String(row?.key || "").trim();
@@ -2037,6 +2046,8 @@ async function loadStockOrderInventory() {
       });
     });
   } catch (error) {
+    stockOrderCanViewInventory = false;
+    stockOrderInventoryByKey.clear();
     console.warn("Stock inventory status unavailable", error);
   } finally {
     renderStockOrderItems();
@@ -2201,6 +2212,7 @@ function buildStockOrderPayload() {
     submittedAt: new Date().toISOString(),
     requestedBy: requesterName,
     wardUnit: requesterWard,
+    contactExtension: String(stockOrderExtensionInput?.value || "").trim(),
     notes: finalNotes,
     repeatOverrideReason,
     repeatOverrideItems: repeatAnalysis.recentWarnings.map((warning) => getStockItemTextName(warning.matchedItem || warning.item)),
@@ -5969,6 +5981,7 @@ function openClinicalChoiceModal(select, trigger) {
   clinicalChoiceCloseTimeoutId = 0;
   activeClinicalChoiceSelect = select;
   activeClinicalChoiceTrigger = trigger;
+  clinicalChoiceModal.dataset.choiceType = select.id === "clinicalPregnancySelect" ? "pregnancy" : "sex";
   clinicalChoiceTitle.textContent = getClinicalChoiceConfig(select).title;
   clinicalChoiceOptions.innerHTML = "";
 
@@ -6044,16 +6057,7 @@ function restoreNativeClinicalChoiceSelect(select) {
 }
 
 function syncClinicalChoiceEnhancement() {
-  const selects = [clinicalSexSelect, clinicalPregnancySelect].filter(Boolean);
-  if (window.matchMedia("(max-width: 620px)").matches) {
-    selects.forEach(enhanceClinicalChoiceSelect);
-    return;
-  }
-
-  if (clinicalChoiceModal && !clinicalChoiceModal.hidden) {
-    closeClinicalChoiceModal({ restoreFocus: false });
-  }
-  selects.forEach(restoreNativeClinicalChoiceSelect);
+  [clinicalSexSelect, clinicalPregnancySelect].filter(Boolean).forEach(enhanceClinicalChoiceSelect);
 }
 
 function initClinicalChoiceFields() {

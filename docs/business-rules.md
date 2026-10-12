@@ -11,3 +11,6 @@
 - Admins manage users and destructive maintenance; Medical Technologists can operate the work queue and received-stock workflow.
 
 - Packed is a legacy alias for Ready: a packed order is available for collection. Existing history is retained. Apply `supabase/migrations/20261012_merge_packed_into_ready.sql` to merge the database workflow too. Until then the API promotes legacy packed records to Ready through the atomic RPC before collecting them; inventory checks and history remain intact.
+
+- Extension/speed dial is optional private order metadata. It is validated, stored separately from notes/request text and omitted from public tracking. Authenticated lab order details can display it. Apply `supabase/migrations/20261012_private_order_contact.sql` for storage.
+- Exact in-house inventory is available only through a valid lab session. Signed-out catalogue requests receive no balance rows. Nurse registration and owner-specific reporting require the separate permission design in `docs/nurse-account-design.md`.

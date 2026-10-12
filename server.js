@@ -13,7 +13,7 @@ const ORDER_ARCHIVE = require("./assets/js/order-archive.js");
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-10-07.1";
+const APP_RELEASE = "2026-10-12.11";
 const STOCK_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
@@ -538,6 +538,7 @@ function sanitizeStockRequestPayload(payload) {
     submittedAt: sanitizeString(payload?.submittedAt, 40) || new Date().toISOString(),
     requestedBy: sanitizeString(payload?.requestedBy, 120),
     wardUnit: sanitizeString(payload?.wardUnit, 120),
+    contactExtension: sanitizeString(payload?.contactExtension, 24),
     notes: sanitizeMultilineString(notes, 700),
     requestText: sanitizeMultilineString(requestText, 4200),
     repeatOverrideReason,
@@ -996,6 +997,7 @@ function mapRequestFromDb(row) {
     submittedAt: sanitizeString(row?.submitted_at, 40),
     requestedBy: sanitizeString(row?.requester_name, 120),
     wardUnit: sanitizeString(row?.ward_or_unit, 120),
+    contactExtension: sanitizeString(row?.contact_extension, 24),
     notes: sanitizeMultilineString(row?.notes, 500),
     requestText: sanitizeMultilineString(row?.request_text, 4000),
     lineItemCount: Math.max(0, Number(row?.line_item_count) || items.length),
@@ -1016,6 +1018,16 @@ function mapRequestFromDb(row) {
     statusHistory,
     items
   };
+}
+
+function toPublicStockRequest(request) {
+  const { contactExtension: _privateContact, ...publicRequest } = request;
+  return publicRequest;
+}
+
+function validateContactExtension(value) {
+  const contact = String(value || "").trim();
+  return !contact || (contact.length <= 24 && /^[0-9+*#() -]+$/.test(contact));
 }
 
 function mapReceiptFromDb(row) {
@@ -1256,6 +1268,7 @@ async function dbInsertRequest(payload, sessionUser = null) {
     id: requestId,
     source: payload.source,
     requester_name: payload.requestedBy,
+    ...(payload.contactExtension ? { contact_extension: payload.contactExtension } : {}),
     ward_or_unit: payload.wardUnit,
     notes: payload.notes,
     request_text: payload.requestText,
@@ -2180,6 +2193,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
+  if (req.method === "GET" && pathname === "/api/stock-inventory" && !getSessionToken(req)) {
+    sendJson(req, res, 200, { summary: [], inventoryVisibility: "private" });
+    return;
+  }
+
   if (!HAS_SUPABASE) {
     sendJson(req, res, 503, {
       ok: false,
@@ -2756,14 +2774,17 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       includeCancelled,
       includeArchived
     });
-    sendJson(req, res, 200, { requests: rows });
+    sendJson(req, res, 200, { requests: rows.map(toPublicStockRequest) });
     return;
   }
 
   if (req.method === "GET" && pathname === "/api/stock-inventory") {
+    const session = await requireLabSession(req, res);
+    if (!session) return;
     const summary = await dbListPublicInventorySummary();
     sendJson(req, res, 200, {
       summary,
+      inventoryVisibility: "staff",
       lowStockDefaultThreshold: STOCK_LOW_STOCK_DEFAULT_THRESHOLD
     });
     return;
@@ -3124,6 +3145,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       return;
     }
 
+    if (!validateContactExtension(payload?.contactExtension)) {
+      sendJson(req, res, 400, { ok: false, error: "Enter an extension or speed dial using up to 24 digits, spaces, +, *, #, parentheses or hyphens." });
+      return;
+    }
+
     const repeatCheck = await dbCheckRepeatStockRequest(cleanPayload);
     if (repeatCheck.activeBlock) {
       const activeRequest = repeatCheck.activeBlock.request || {};
@@ -3181,6 +3207,10 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         errorDetails: error?.details || "",
         errorHint: error?.hint || ""
       });
+      if (cleanPayload.contactExtension && /contact_extension/i.test(getErrorMessage(error))) {
+        sendJson(req, res, 503, { ok: false, code: "contact_storage_unavailable", error: "Contact details cannot be saved yet. Please contact the lab or leave the optional extension blank." });
+        return;
+      }
       throw error;
     }
 
@@ -3354,5 +3384,7 @@ module.exports = {
   isAllowedStockStatusTransition,
   slugifyStatus,
   performAtomicStockTransition,
-  normalizeStatusHistory
+  normalizeStatusHistory,
+  toPublicStockRequest,
+  validateContactExtension
 };

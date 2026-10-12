@@ -170,7 +170,7 @@
         ? getStockRequestCompactItemsMarkup(request, 3)
         : '<p class="stock-request-compact-empty">No items listed</p>';
       return `
-        <div class="track-orders-row${isHighlighted ? " is-highlighted" : ""}" role="row">
+        <div class="track-orders-row${isHighlighted ? " is-highlighted" : ""}" role="row" data-stage="${escapeHtml(statusMeta.stage)}">
           <span class="track-orders-cell" data-label="Requested by">${escapeHtml(getDisplayRequesterName(request?.requestedBy) || "Unknown requester")}</span>
           <span class="track-orders-cell" data-label="Ward / Unit">${escapeHtml(request?.wardUnit || "Ward not set")}</span>
           <span class="track-orders-cell" data-label="Date">${escapeHtml(formatDateOnly(request?.createdAt || request?.submittedAt))}</span>

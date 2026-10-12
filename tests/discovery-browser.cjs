@@ -46,6 +46,9 @@ async function assertVisibleCardsUseTenPercentFrost(page, context) {
       const css = getComputedStyle(element);
       return {
         selector: element.id ? `#${element.id}` : `.${[...element.classList].join('.')}`,
+        stockGrid: element.id === "stockOrderGrid",
+        stockCard: element.closest("#stockOrderGrid") !== null,
+        choiceSheet: element.matches(".clinical-choice-sheet"),
         transparentSelector: document.body.dataset.appPage === "stock-order" && element.matches("#stockOrderRequesterSelect, #stockOrderRepeatReasonSelect, .stock-order-qty-input, .stock-order-selected-input"),
         background: css.backgroundColor,
         image: css.backgroundImage,
@@ -54,9 +57,9 @@ async function assertVisibleCardsUseTenPercentFrost(page, context) {
     }));
   assert.ok(surfaces.length > 0, `${context} should expose at least one card surface`);
   surfaces.forEach((surface) => {
-    assert.equal(surface.background, surface.transparentSelector ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0.1)', `${context} ${surface.selector} must use 10% frost`);
+    assert.equal(surface.background, surface.transparentSelector || surface.stockGrid ? 'rgba(0, 0, 0, 0)' : surface.stockCard || surface.choiceSheet ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.1)', `${context} ${surface.selector} must use its intended frost`);
     assert.equal(surface.image, 'none', `${context} ${surface.selector} must keep its background transparent`);
-    assert.match(surface.filter, /blur\(8px\)/, `${context} ${surface.selector} must blur the scene behind it`);
+    if (!surface.stockGrid) assert.match(surface.filter, /blur\(8px\)/, `${context} ${surface.selector} must blur the scene behind it`);
   });
 }
 
@@ -787,8 +790,8 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.deepEqual(errors, [], `${route} runtime errors`);
       const radii = await page.locator('.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).borderRadius));
       assert.ok(radii.every(radius=>radius==='0px'), `${route} inconsistent card corners: ${radii}`);
-      const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).backgroundColor));
-      assert.ok(frost.every(color=>color === 'rgba(255, 255, 255, 0.1)'), `${route} inconsistent card frost: ${frost}`);
+      const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>({color:getComputedStyle(el).backgroundColor, expected:el.id === 'stockOrderGrid' ? 'rgba(0, 0, 0, 0)' : el.closest('#stockOrderGrid') ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.1)'})));
+      assert.ok(frost.every(surface=>surface.color === surface.expected), `${route} inconsistent card frost: ${JSON.stringify(frost)}`);
       if(route !== 'index.html') await assertVisibleCardsUseTenPercentFrost(page, route);
       if(route === 'order-stock.html') {
         const stockBackdrop = await page.evaluate(() => ({

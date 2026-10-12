@@ -93,3 +93,20 @@ html body[data-app-page="track-orders"] .track-orders-row {
     display: none;
   }
 }
+
+/* Labels carry the status too, so colour is never the only indicator. */
+html body[data-app-page="track-orders"] .track-orders-row[data-stage="pending"] {
+  border-color: #e6bd62 !important;
+}
+html body[data-app-page="track-orders"] .track-orders-row[data-stage="ready"] {
+  border-color: #80d5b6 !important;
+}
+html body[data-app-page="track-orders"] .track-orders-row[data-stage="completed"] {
+  border-color: #8cb9e8 !important;
+}
+html body[data-app-page="track-orders"] .track-orders-row[data-stage="no-stock"] {
+  border-color: #ed9986 !important;
+}
+html body[data-app-page="track-orders"] .track-orders-row[data-stage="cancelled"] {
+  border-color: #b4bac5 !important;
+}

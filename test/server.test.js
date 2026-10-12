@@ -3,11 +3,14 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 
 const {
+  server,
   getStaticFilePath,
   isAllowedOrigin,
   slugifyStatus,
   performAtomicStockTransition,
   normalizeStatusHistory,
+  toPublicStockRequest,
+  validateContactExtension,
   isAllowedStockStatusTransition,
   sanitizeStockRequestPayload,
   sanitizeStockReceiptPayload,
@@ -134,4 +137,32 @@ test("atomic transition compatibility preserves shortages and promotion failures
 test("reading legacy status history retains the recorded Packed event", () => {
   const history = [{ status: "packed", updatedAt: "2026-10-08T10:02:00Z", updatedBy: "12345" }];
   assert.deepEqual(normalizeStatusHistory(history), history);
+});
+
+
+test("public order projection excludes private contact numbers", () => {
+  const request = { id: "order-one", contactExtension: "1234", requestedBy: "Test Nurse", wardUnit: "ICU", status: "ready" };
+  const publicRequest = toPublicStockRequest(request);
+  assert.equal(Object.hasOwn(publicRequest, "contactExtension"), false);
+  assert.equal(request.contactExtension, "1234", "staff records retain the private field");
+  assert.equal(publicRequest.status, "ready");
+});
+
+test("extensions support phone and speed dial characters while rejecting invalid input", () => {
+  for (const contact of ["", "1234", "+27 (21) 799-6290", "*123#"]) assert.equal(validateContactExtension(contact), true);
+  for (const contact of ["1234<script>", "x".repeat(25), "1234@example.com"]) assert.equal(validateContactExtension(contact), false);
+  const payload = sanitizeStockRequestPayload({ contactExtension: " 1234 " });
+  assert.equal(payload.contactExtension, "1234");
+});
+
+
+test("signed-out inventory requests return no balances without requiring database access", async () => {
+  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/stock-inventory`);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { summary: [], inventoryVisibility: "private" });
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+  }
 });
