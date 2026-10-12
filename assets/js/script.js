@@ -3741,6 +3741,14 @@ const aliasByName = {
     "FBC diff",
     "CBC diff"
   ],
+  "Anti-GAD Antibody": [
+    "Anti GAD", "Anti-GAD test", "GAD antibody", "GAD antibodies",
+    "GAD65", "Glutamic acid decarboxylase antibody"
+  ],
+  "Von Willebrand Screen": [
+    "Von Willebrand test", "Von Willebrand", "von willebran",
+    "VWF", "von Willebrand factor"
+  ],
   "Coeliac Disease Screen (Anti-tTG IgA)": [
     "Coeliac",
     "Celiac",

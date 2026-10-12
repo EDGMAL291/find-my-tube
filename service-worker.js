@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v344";
+const CACHE_NAME = "find-my-tube-v345";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -12,8 +12,8 @@ const CORE_ASSETS = [
   "./assets/css/modern.css?v=20261011b",
   "./assets/css/discovery.css?v=20261009o",
   "./assets/js/stock-catalog-data.js?v=20261006d",
-  "./assets/js/script.js?v=20261011a",
-  "./assets/data/data.js?v=20260812a",
+  "./assets/js/script.js?v=20261012a",
+  "./assets/data/data.js?v=20261012a",
   "./favicon.svg",
   "./assets/images/find-my-tube-workflow-warm-cold-v1.webp"
 ];

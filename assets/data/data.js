@@ -1102,6 +1102,14 @@ const tests = [
     borderColor: "yellow"
   },
   {
+    name: "Anti-GAD Antibody",
+    tubeColor: "Yellow (Gold)",
+    specimen: "Serum",
+    turnaroundTime: "Confirm with laboratory",
+    notes: "Glutamic acid decarboxylase antibody test. Confirm local laboratory collection and processing requirements.",
+    borderColor: "yellow"
+  },
+  {
     name: "Anti-Thyroglobulin Antibody",
     tubeColor: "Gold",
     specimen: "Serum",

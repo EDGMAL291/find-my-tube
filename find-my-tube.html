@@ -285,14 +285,14 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260812a"></script>
+  <script src="assets/data/data.js?v=20261012a"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261011a"></script>
+  <script src="assets/js/script.js?v=20261012a"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-11.2";
+      const APP_VERSION = "2026-10-12.1";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -313,7 +313,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261011b", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261012a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
