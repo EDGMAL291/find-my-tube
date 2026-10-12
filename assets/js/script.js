@@ -497,7 +497,10 @@ function setThemePanelOpen(isOpen) {
 
 // Familiar contact silhouettes from Bootstrap Icons (MIT; see docs/bootstrap-icons-LICENSE.txt).
 function refreshContactIcons() {
-  const icons = { phone: "<svg class=\"contact-real-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\" focusable=\"false\">\n  <path fill-rule=\"evenodd\" d=\"M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z\"/>\n</svg>", whatsapp: "<svg class=\"contact-real-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\" focusable=\"false\">\n  <path d=\"M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232\"/>\n</svg>" };
+  const icons = {
+    phone: `<svg class="contact-real-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"/></svg>`,
+    whatsapp: `<svg class="contact-real-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"/><path d="M9 9c0 3 3 6 6 6l1-2-2-1-1 1-2-2 1-1-1-2Z"/></svg>`
+  };
   document.querySelectorAll(".site-menu-contact-link, .contact-sheet-action, .home-help-actions a").forEach(link => {
     const current = link.querySelector("svg");
     if (!current) return;
@@ -1327,7 +1330,7 @@ function normalizeStockRequestStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "completed";
   if (safeStatus === "received" || safeStatus === "submitted") return "pending";
-  if (safeStatus === "processing" || safeStatus === "in-progress") return "packed";
+  if (safeStatus === "packed" || safeStatus === "processing" || safeStatus === "in-progress") return "ready";
   if (safeStatus === "no_stock" || safeStatus === "no stock" || safeStatus === "out-of-stock" || safeStatus === "out of stock") return "no-stock";
   return safeStatus || "pending";
 }
@@ -1335,7 +1338,7 @@ function normalizeStockRequestStatus(status) {
 function formatStockRequestStatusLabel(status) {
   const normalizedStatus = normalizeStockRequestStatus(status);
   if (normalizedStatus === "pending") return "Pending";
-  if (normalizedStatus === "packed") return "Packed";
+  if (normalizedStatus === "packed") return "Ready";
   if (normalizedStatus === "ready") return "Ready";
   if (normalizedStatus === "collected") return "Collected";
   if (normalizedStatus === "completed") return "Completed";
@@ -1385,7 +1388,7 @@ const stockBloodCultureBottleMetaById = Object.freeze({
 });
 
 const stockVacutainerNeedleImageById = Object.freeze({
-  "vacutainer-needle-green": "assets/images/stock-supplies/vacutainer-multisample-needle-green-v1.webp",
+  "vacutainer-needle-green": "assets/images/stock-supplies/vacutainer-eclipse-needle-green-v2.webp",
   "vacutainer-needle-black": "assets/images/stock-supplies/vacutainer-multisample-needle-black-v1.webp"
 });
 
@@ -1494,6 +1497,8 @@ function getStockTubeGroup(item) {
   const safeLabel = String(item?.label || "").trim().toLowerCase();
   const safeSheetKey = String(item?.sheetColumnKey || "").trim().toLowerCase();
 
+  if (/needle/.test(`${safeId} ${safeLabel}`)) return "";
+
   if (
     safeId.startsWith("yellow-")
     || safeId.includes("paediatric-yellow")
@@ -1584,6 +1589,16 @@ function formatRequesterName(value) {
   return [rank, initials, surname].filter(Boolean).join(" ").trim();
 }
 
+function getStockVacutainerNeedleImage(item) {
+  const image = stockVacutainerNeedleImageById[String(item?.id || "").trim()];
+  if (image) return image;
+  const description = `${item?.id || ""} ${item?.label || ""} ${item?.variantLabel || ""}`.toLowerCase();
+  if (!/needle/.test(description)) return "";
+  if (/green/.test(description)) return stockVacutainerNeedleImageById["vacutainer-needle-green"];
+  if (/black/.test(description)) return stockVacutainerNeedleImageById["vacutainer-needle-black"];
+  return "";
+}
+
 function getStockItemGlyphMarkup(item, options = {}) {
   const paediatricTubeImage = getPaediatricMicrotainerImageForItem(item);
   if (paediatricTubeImage) {
@@ -1593,7 +1608,7 @@ function getStockItemGlyphMarkup(item, options = {}) {
 
   const glyphClassName = String(options.glyphClassName || "").trim();
   const classSuffix = glyphClassName ? ` ${glyphClassName}` : "";
-  const needleImage = stockVacutainerNeedleImageById[String(item?.id || "").trim()];
+  const needleImage = getStockVacutainerNeedleImage(item);
 
   if (needleImage) {
     const isCompact = glyphClassName.includes("compact");
@@ -1737,7 +1752,7 @@ const stockRequestDetailsByKey = new Map();
 function getStockRequestStatusLabel(status) {
   const normalizedStatus = normalizeStockRequestStatus(status);
   if (normalizedStatus === "pending") return "Pending";
-  if (normalizedStatus === "packed") return "Packed";
+  if (normalizedStatus === "packed") return "Ready";
   if (normalizedStatus === "ready") return "Ready";
   if (normalizedStatus === "collected") return "Collected";
   if (normalizedStatus === "completed") return "Completed";
@@ -2234,7 +2249,7 @@ function getStockOrderStatusLabel() {
   if (stockOrderStatusMode === "submitted") {
     const submittedStatus = normalizeStockRequestStatus(submittedStockOrderRecord?.status);
     if (submittedStatus === "pending") return "Pending";
-    if (submittedStatus === "packed") return "Packed";
+    if (submittedStatus === "packed") return "Ready";
     if (submittedStatus === "ready") return "Ready";
     if (submittedStatus === "collected") return "Collected";
     if (submittedStatus === "completed") return "Completed";
@@ -7399,9 +7414,9 @@ async function loadHomeDashboardStockSnapshot() {
       const statusLabel = normalizedStatus === "pending"
         ? "Pending"
         : normalizedStatus === "processing" || normalizedStatus === "in-progress"
-          ? "Packed"
+          ? "Ready"
           : normalizedStatus === "packed"
-          ? "Packed"
+          ? "Ready"
           : normalizedStatus === "ready"
           ? "Ready"
           : normalizedStatus === "collected"

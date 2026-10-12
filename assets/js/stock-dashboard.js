@@ -80,11 +80,10 @@ const stockDashboardTopWards = document.getElementById("stockDashboardTopWards")
 const stockDashboardTopItems = document.getElementById("stockDashboardTopItems");
 const stockDashboardRequestList = document.getElementById("stockDashboardRequestList");
 
-const STOCK_DASHBOARD_STATUS_ORDER = ["pending", "packed", "ready", "collected", "completed", "cancelled", "no-stock"];
+const STOCK_DASHBOARD_STATUS_ORDER = ["pending", "ready", "collected", "completed", "cancelled", "no-stock"];
 const STOCK_DASHBOARD_STATUS_TRANSITIONS = Object.freeze({
-  pending: ["packed", "ready", "cancelled", "no-stock"],
-  packed: ["pending", "ready", "cancelled", "no-stock"],
-  ready: ["packed", "collected", "completed", "cancelled", "no-stock"]
+  pending: ["ready", "cancelled", "no-stock"],
+  ready: ["collected", "completed", "cancelled", "no-stock"]
 });
 const STOCK_DASHBOARD_LEGACY_TOKEN_KEY = "fmt-stock-lab-token";
 const STOCK_DASHBOARD_SESSION_TOKEN_KEY = "fmt-stock-lab-session-token";
@@ -287,7 +286,7 @@ function stockDashboardEscapeHtml(value) {
 function stockDashboardFormatStatus(status) {
   const safeStatus = String(status || "pending").trim().toLowerCase();
   if (safeStatus === "submitted" || safeStatus === "received" || safeStatus === "pending") return "Pending";
-  if (safeStatus === "packed" || safeStatus === "processing" || safeStatus === "in-progress") return "Packed";
+  if (safeStatus === "packed" || safeStatus === "processing" || safeStatus === "in-progress") return "Ready";
   if (safeStatus === "ready") return "Ready";
   if (safeStatus === "collected") return "Collected";
   if (safeStatus === "completed" || safeStatus === "sent") return "Completed";
@@ -385,7 +384,7 @@ function stockDashboardNormalizeStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "completed";
   if (safeStatus === "received" || safeStatus === "submitted") return "pending";
-  if (safeStatus === "processing" || safeStatus === "in-progress") return "packed";
+  if (safeStatus === "packed" || safeStatus === "processing" || safeStatus === "in-progress") return "ready";
   if (safeStatus === "no_stock" || safeStatus === "no stock" || safeStatus === "out-of-stock" || safeStatus === "out of stock") return "no-stock";
   return safeStatus || "pending";
 }
@@ -393,7 +392,7 @@ function stockDashboardNormalizeStatus(status) {
 function stockDashboardGetQueueStatusMeta(status) {
   const safeStatus = stockDashboardNormalizeStatus(status);
   if (safeStatus === "pending") return { label: "Pending", stage: "pending" };
-  if (safeStatus === "packed") return { label: "Packed", stage: "processing" };
+  if (safeStatus === "packed") return { label: "Ready", stage: "ready" };
   if (safeStatus === "ready") return { label: "Ready", stage: "ready" };
   if (safeStatus === "collected") return { label: "Collected", stage: "completed" };
   if (safeStatus === "completed") return { label: "Completed", stage: "completed" };

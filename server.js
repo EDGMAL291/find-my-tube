@@ -45,9 +45,8 @@ const CONFIGURED_ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "")
 const ALLOWED_ORIGINS = new Set([...DEFAULT_ALLOWED_ORIGINS, ...CONFIGURED_ALLOWED_ORIGINS]);
 const RATE_LIMIT_BUCKETS = new Map();
 const STOCK_STATUS_TRANSITIONS = Object.freeze({
-  pending: new Set(["packed", "ready", "cancelled", "no-stock"]),
-  packed: new Set(["pending", "ready", "cancelled", "no-stock"]),
-  ready: new Set(["packed", "collected", "completed", "cancelled", "no-stock"]),
+  pending: new Set(["ready", "cancelled", "no-stock"]),
+  ready: new Set(["collected", "completed", "cancelled", "no-stock"]),
   collected: new Set(),
   completed: new Set(),
   cancelled: new Set(),
@@ -84,6 +83,7 @@ const MIME_TYPES = {
   ".json": "application/json; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
   ".png": "image/png",
+  ".webp": "image/webp",
   ".svg": "image/svg+xml",
   ".txt": "text/plain; charset=utf-8",
   ".webmanifest": "application/manifest+json; charset=utf-8",
@@ -358,7 +358,7 @@ function slugifyStatus(status) {
   const safeStatus = String(status || "").trim().toLowerCase();
   if (safeStatus === "sent") return "completed";
   if (safeStatus === "submitted" || safeStatus === "received") return "pending";
-  if (safeStatus === "processing" || safeStatus === "in-progress") return "packed";
+  if (safeStatus === "packed" || safeStatus === "processing" || safeStatus === "in-progress") return "ready";
   if (safeStatus === "no_stock" || safeStatus === "no stock" || safeStatus === "out-of-stock" || safeStatus === "out of stock") return "no-stock";
   return VALID_REQUEST_STATUSES.has(safeStatus) ? safeStatus : "pending";
 }
@@ -366,7 +366,7 @@ function slugifyStatus(status) {
 function formatStatusLabel(status) {
   const safeStatus = slugifyStatus(status);
   if (safeStatus === "pending") return "Pending";
-  if (safeStatus === "packed") return "Packed";
+  if (safeStatus === "packed") return "Ready";
   if (safeStatus === "ready") return "Ready";
   if (safeStatus === "collected") return "Collected";
   if (safeStatus === "completed") return "Completed";
@@ -885,7 +885,7 @@ function normalizeStatusHistory(statusHistory = []) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) return entry;
     return {
       ...entry,
-      status: slugifyStatus(entry.status)
+      status: sanitizeString(entry.status, 40)
     };
   });
 }
@@ -1746,13 +1746,31 @@ function isMissingAtomicStockTransitionFunction(error) {
     || (message.includes("transition_stock_request_status") && message.includes("function"));
 }
 
+// Older database functions require Packed -> Ready before collection.
+// Every step still goes through the row-locking RPC and its inventory checks.
+async function performAtomicStockTransition(rpc, args) {
+  let result = await rpc(args);
+  const previous = String(result.data?.previousStatus || "").toLowerCase();
+  if (!result.error && result.data?.error === "invalid-transition"
+    && ["packed", "processing", "in-progress"].includes(previous)
+    && ["collected", "completed"].includes(args.p_next_status)) {
+    const promoted = await rpc({ ...args, p_next_status: "ready" });
+    if (promoted.error || promoted.data?.ok !== true) return promoted;
+    result = await rpc(args);
+  }
+  return result;
+}
+
 async function dbTryAtomicStockTransition(requestId, nextStatus, sessionUser) {
-  const { data, error } = await supabase.rpc("transition_stock_request_status", {
-    p_request_id: requestId,
-    p_next_status: nextStatus,
-    p_actor_user_id: sessionUser?.id || null,
-    p_actor_number: normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || ""
-  });
+  const { data, error } = await performAtomicStockTransition(
+    args => supabase.rpc("transition_stock_request_status", args),
+    {
+      p_request_id: requestId,
+      p_next_status: nextStatus,
+      p_actor_user_id: sessionUser?.id || null,
+      p_actor_number: normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || ""
+    }
+  );
   if (error) {
     if (isMissingAtomicStockTransitionFunction(error)) return null;
     throw new Error(error.message || "Atomic stock transition failed");
@@ -3225,7 +3243,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       sendJson(req, res, 400, { ok: false, error: "Invalid request status" });
       return;
     }
-    const nextStatus = rawStatus;
+    const nextStatus = slugifyStatus(rawStatus);
     const requestId = sanitizeString(match[1], 80);
     const updatedResult = await dbUpdateRequestStatus(requestId, nextStatus, session.user);
 
@@ -3334,5 +3352,7 @@ module.exports = {
   getStaticFilePath,
   isAllowedOrigin,
   isAllowedStockStatusTransition,
-  slugifyStatus
+  slugifyStatus,
+  performAtomicStockTransition,
+  normalizeStatusHistory
 };

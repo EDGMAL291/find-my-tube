@@ -41,9 +41,9 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20261011b" />
-  <link rel="stylesheet" href="assets/css/discovery.css?v=20261009o" />
-  <link rel="stylesheet" href="assets/css/track-orders.css?v=20261009m" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20261012i" />
+  <link rel="stylesheet" href="assets/css/discovery.css?v=20261012b" />
+  <link rel="stylesheet" href="assets/css/track-orders.css?v=20261012f" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -61,6 +61,7 @@
         }
     }
   </script>
+  <link rel="stylesheet" href="assets/css/scenes.css?v=20261012j" />
 </head>
 <body data-app-page="track-orders">
   <main class="container">
@@ -124,41 +125,20 @@
     <section class="stock-order-panel" aria-labelledby="trackOrdersTitle">
       <div class="stock-order-head">
         <div>
-          <p class="stock-order-kicker">Track Orders</p>
-          <h2 id="trackOrdersTitle">Track Orders</h2>
-          <p class="stock-order-head-copy">Follow active requests from submission to collection.</p>
+          <h2 id="trackOrdersTitle">Track my order</h2>
         </div>
       </div>
 
-      <section class="stock-order-request-card" aria-labelledby="trackOrdersFiltersTitle">
-        <div class="stock-order-request-head">
-          <div>
-            <p class="stock-order-kicker">Filters</p>
-            <h3 id="trackOrdersFiltersTitle">Search by ward or name</h3>
-          </div>
-          <p class="stock-order-request-meta" id="trackOrdersMeta" role="status" aria-live="polite">Loading requests...</p>
-        </div>
-
-        <div class="track-orders-status-path" aria-label="Order status path">
-          <span data-stage="pending">Pending</span>
-          <span aria-hidden="true">→</span>
-          <span data-stage="packed">Packed</span>
-          <span aria-hidden="true">→</span>
-          <span data-stage="ready">Ready</span>
-          <span aria-hidden="true">→</span>
-          <span data-stage="collected">Collected</span>
-        </div>
-        <p class="track-orders-status-help">Ready means your order can be collected. Completed and cancelled requests move to Archives.</p>
-
+      <section class="stock-order-request-card" aria-label="Find your order">
         <form class="stock-order-form" id="trackOrdersFiltersForm" autocomplete="off">
           <label class="stock-order-field stock-order-field-wide">
-            <span class="stock-order-field-label">Ward / Unit</span>
-            <input type="text" id="trackOrdersWardInput" placeholder="Type ward/unit (e.g. ICU, Medical ICU)" />
+            <span class="stock-order-field-label">Name</span>
+            <input type="text" id="trackOrdersRequestedByInput" placeholder="Name or user number" />
           </label>
 
           <label class="stock-order-field stock-order-field-wide">
-            <span class="stock-order-field-label">Requested by / user number</span>
-            <input type="text" id="trackOrdersRequestedByInput" placeholder="Name or user number" />
+            <span class="stock-order-field-label">Ward</span>
+            <input type="text" id="trackOrdersWardInput" placeholder="Ward or unit" />
           </label>
 
           <div class="stock-order-request-actions track-orders-filter-actions stock-order-field stock-order-field-wide">
@@ -166,6 +146,7 @@
             <button type="button" class="quick-tool-clear-btn" id="trackOrdersClearFiltersBtn">Clear filters</button>
           </div>
         </form>
+        <p class="stock-order-request-meta" id="trackOrdersMeta" role="status" aria-live="polite" hidden></p>
       </section>
 
       <section class="stock-order-request-card" aria-labelledby="trackOrdersListTitle">
@@ -214,8 +195,8 @@
   <script src="assets/data/data.js?v=20260505a"></script>
   <script src="assets/js/app-config.js?v=20260420d"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261012a"></script>
+  <script src="assets/js/script.js?v=20261012h"></script>
   <script src="assets/js/order-archive.js?v=20261007a"></script>
-  <script src="assets/js/track-orders.js?v=20261007a"></script>
+  <script src="assets/js/track-orders.js?v=20261012e"></script>
 </body>
 </html>

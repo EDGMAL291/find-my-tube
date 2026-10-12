@@ -33,3 +33,63 @@ html body[data-app-page="track-orders"] :is(.track-orders-cell, .stock-request-c
 }
 html body[data-app-page="track-orders"] .track-orders-header,
 html body[data-app-page="track-orders"] .track-orders-cell::before { color: #c9d8e2 !important; }
+
+/* Keep headings, filter controls and order content on the same left edge. */
+html body[data-app-page="track-orders"] :is(.stock-order-panel, .stock-order-request-card, .stock-order-form, .stock-order-request-meta, .track-orders-header, .track-orders-cell, input, button) {
+  text-align: left;
+}
+html body[data-app-page="track-orders"] .stock-order-request-head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+html body[data-app-page="track-orders"] :is(.track-orders-filter-actions, .stock-request-compact-head, .stock-request-compact-meta) {
+  justify-content: flex-start;
+}
+html body[data-app-page="track-orders"] .stock-order-form {
+  padding: 0;
+  border: 0;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+html body[data-app-page="track-orders"] :is(.track-orders-status-badge, .stock-dashboard-empty, .site-footer-title) {
+  text-align: left;
+}
+html body[data-app-page="track-orders"] .track-orders-status-badge {
+  justify-self: start;
+  width: max-content;
+  max-width: 100%;
+}
+
+/* Compact request cards pair identity fields without truncating long values. */
+html body[data-app-page="track-orders"] .track-orders-row {
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  html body[data-app-page="track-orders"] .track-orders-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px 16px;
+  }
+  html body[data-app-page="track-orders"] .track-orders-header {
+    display: none;
+  }
+  html body[data-app-page="track-orders"] .track-orders-cell {
+    display: grid;
+    gap: 4px;
+  }
+  html body[data-app-page="track-orders"] .track-orders-cell::before {
+    display: block;
+    content: attr(data-label);
+    font-size: .65rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  html body[data-app-page="track-orders"] .track-orders-items-cell {
+    grid-column: 1 / -1;
+  }
+  html body[data-app-page="track-orders"] .track-orders-items-cell::before {
+    display: none;
+  }
+}

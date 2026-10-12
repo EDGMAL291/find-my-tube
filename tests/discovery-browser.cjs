@@ -370,9 +370,10 @@ async function exerciseTubePlanWorkflow(page, width) {
         }));
         assert.equal(phoneIconVisual.fill, 'none', 'Phone icon uses a light outline rather than a heavy fill');
         assert.notEqual(phoneIconVisual.stroke, 'none');
-        assert.equal(phoneIconVisual.strokeWidth, '0.8px');
-        assert.notEqual(whatsappIconVisual.fill, 'none', 'WhatsApp keeps its familiar filled silhouette');
-        assert.equal(whatsappIconVisual.stroke, 'none');
+        assert.equal(phoneIconVisual.strokeWidth, '1.25px');
+        assert.equal(whatsappIconVisual.fill, 'none', 'WhatsApp uses the same light outline as the call icon');
+        assert.notEqual(whatsappIconVisual.stroke, 'none');
+        assert.ok((await page.locator('#siteMenuPanel .site-menu-contact-link').evaluateAll(links => links.map(link => getComputedStyle(link).borderTopWidth))).every(width => width === '0px'), 'Contact icons have no surrounding border');
         assert.equal(await page.locator('#siteMenuPanel a[href="./contact-feedback.html"]').count(),0,'Removed Contact and Feedback page is not linked');
         await page.screenshot({path:path.join(screenshots, `menu-${width}-${theme}.png`)});
         const menuVisual = await page.locator('#siteMenuPanel').evaluate(el => ({
@@ -813,8 +814,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.deepEqual(
           (await needlePhotos.evaluateAll(images => images.map(image => image.getAttribute('src')))).sort(),
           [
-            'assets/images/stock-supplies/vacutainer-multisample-needle-black-v1.webp',
-            'assets/images/stock-supplies/vacutainer-multisample-needle-green-v1.webp'
+            'assets/images/stock-supplies/vacutainer-eclipse-needle-green-v2.webp',
+            'assets/images/stock-supplies/vacutainer-multisample-needle-black-v1.webp'
           ],
           'Black and green Vacutainer needles use matching colour-specific images'
         );

@@ -5,6 +5,9 @@ const path = require("node:path");
 const {
   getStaticFilePath,
   isAllowedOrigin,
+  slugifyStatus,
+  performAtomicStockTransition,
+  normalizeStatusHistory,
   isAllowedStockStatusTransition,
   sanitizeStockRequestPayload,
   sanitizeStockReceiptPayload,
@@ -67,7 +70,13 @@ test("green and black Vacutainer needles are canonical orderable stock items", (
 });
 
 test("order status transitions preserve the clinical work queue", () => {
+  assert.equal(slugifyStatus("packed"), "ready");
+  assert.equal(slugifyStatus("processing"), "ready");
+  assert.equal(isAllowedStockStatusTransition("pending", "ready"), true);
   assert.equal(isAllowedStockStatusTransition("pending", "packed"), true);
+  assert.equal(isAllowedStockStatusTransition("packed", "collected"), true);
+  assert.equal(isAllowedStockStatusTransition("packed", "completed"), true);
+  assert.equal(isAllowedStockStatusTransition("packed", "pending"), false);
   assert.equal(isAllowedStockStatusTransition("pending", "completed"), false);
   assert.equal(isAllowedStockStatusTransition("ready", "collected"), true);
   assert.equal(isAllowedStockStatusTransition("completed", "pending"), false);
@@ -87,4 +96,42 @@ test("CORS allowlist accepts production and local development only", () => {
   assert.equal(isAllowedOrigin("https://findmytube.co.za"), true);
   assert.equal(isAllowedOrigin("http://127.0.0.1:3000"), true);
   assert.equal(isAllowedOrigin("https://malicious.example"), false);
+});
+
+
+test("legacy packed collection uses Ready before the atomic collection RPC", async () => {
+  const calls = [];
+  const result = await performAtomicStockTransition(async args => {
+    calls.push(args.p_next_status);
+    if (calls.length === 1) return { data: { ok: false, error: "invalid-transition", previousStatus: "packed" } };
+    return { data: { ok: true } };
+  }, { p_request_id: "legacy-order", p_next_status: "collected" });
+  assert.deepEqual(calls, ["collected", "ready", "collected"]);
+  assert.equal(result.data.ok, true);
+});
+
+test("atomic transition compatibility preserves shortages and promotion failures", async () => {
+  for (const failure of [
+    { data: { ok: false, error: "insufficient-stock" } },
+    { error: { message: "Database unavailable" } }
+  ]) {
+    let calls = 0;
+    const result = await performAtomicStockTransition(async () => { calls += 1; return failure; }, { p_next_status: "collected" });
+    assert.equal(calls, 1);
+    assert.equal(result, failure);
+  }
+  let calls = 0;
+  const denied = { data: { ok: false, error: "invalid-transition", previousStatus: "cancelled" } };
+  const result = await performAtomicStockTransition(async () => {
+    calls += 1;
+    return calls === 1 ? { data: { error: "invalid-transition", previousStatus: "packed" } } : denied;
+  }, { p_next_status: "collected" });
+  assert.equal(calls, 2);
+  assert.equal(result, denied);
+});
+
+
+test("reading legacy status history retains the recorded Packed event", () => {
+  const history = [{ status: "packed", updatedAt: "2026-10-08T10:02:00Z", updatedBy: "12345" }];
+  assert.deepEqual(normalizeStatusHistory(history), history);
 });

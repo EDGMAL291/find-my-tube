@@ -12658,3 +12658,98 @@ html[data-theme] body[data-app-page="stock-order"] :is(
 ):hover {
   border-color: #bbdbe9 !important;
 }
+
+/* Contact shortcuts use light line icons with an unobstructed tap target. */
+html body[data-app-page] #siteMenuPanel .site-menu-contact-link,
+html body[data-app-page] .contact-sheet-actions .contact-sheet-action,
+html body[data-app-page="home"] .home-help-actions a {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html body[data-app-page] :is(.site-menu-contact-link, .contact-sheet-action-icon, .home-help-actions a) svg.contact-real-icon {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: none;
+}
+
+/* Menu dividers mark groups rather than individual destinations. */
+html[data-theme] body[data-app-page] #siteMenuPanel .site-menu-link {
+  border: 0 !important;
+}
+html[data-theme] body[data-app-page] #siteMenuPanel .site-menu-group + .site-menu-group {
+  border-top: 1px solid rgba(255, 255, 255, .18);
+  padding-top: 16px;
+}
+
+/* Order details have their own laboratory scene and one clean content layer. */
+html[data-theme] body[data-app-page] #stockRequestDetailsModal .stock-request-detail-card {
+  background-color: #03111f !important;
+  background-image: linear-gradient(110deg, rgba(3, 17, 31, .72), rgba(3, 17, 31, .58)), url("../images/order-details-dispatch-v1.webp") !important;
+  background-position: center;
+  background-size: cover;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  text-align: left;
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal .stock-request-detail-body,
+html[data-theme] body[data-app-page] #stockRequestDetailsModal :is(.stock-request-detail-grid > div, .stock-request-detail-notes, .stock-request-detail-item) {
+  background: transparent !important;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal .stock-request-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal :is(.stock-request-detail-grid > div, .stock-request-detail-notes, .stock-request-detail-item) {
+  min-width: 0;
+  border-radius: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal :is(strong, h3, h4) {
+  color: #fffdf8;
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal :is(.stock-request-detail-grid span, .stock-request-detail-notes, .stock-request-detail-item span, .stock-request-detail-admin) {
+  color: #c9d8e2;
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal .stock-request-detail-head > div {
+  min-width: 0;
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal .stock-request-detail-head h3 {
+  overflow-wrap: anywhere;
+}
+html[data-theme] body[data-app-page] #stockRequestDetailsModal .profile-modal-close-btn {
+  flex-shrink: 0;
+}
+
+/* Received stock uses the same neutral frost as the dashboard cards. */
+html[data-theme] body[data-app-page="stock-dashboard"] #stockDashboardReceiptCard :is(
+  .stock-dashboard-receipt-item-row,
+  .stock-dashboard-receipt-quantity-control,
+  .stock-dashboard-receipt-quantity-btn,
+  .stock-dashboard-receipt-unit-pill
+) {
+  background: var(--fmt-card-frost-background) !important;
+  backdrop-filter: var(--fmt-card-frost-filter) !important;
+  -webkit-backdrop-filter: var(--fmt-card-frost-filter) !important;
+  border-color: rgba(255, 255, 255, .22);
+  border-radius: var(--fmt-card-radius);
+  color: #fffdf8;
+  box-shadow: none;
+}
+
+@media (max-width: 719px) and (max-height: 700px) {
+  html[data-theme] body[data-app-page] #siteMenuPanel .site-menu-group + .site-menu-group {
+    padding-top: 4px;
+  }
+}

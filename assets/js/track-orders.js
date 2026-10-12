@@ -19,7 +19,6 @@
   let trackOrders = [];
   let pollTimer = 0;
   let wardFetchDebounceTimer = 0;
-  let lastRefreshIso = "";
 
   function escapeHtml(value) {
     return String(value || "")
@@ -64,7 +63,7 @@
   function normalizeStatus(status) {
     const safe = String(status || "").trim().toLowerCase();
     if (safe === "sent") return "completed";
-    if (safe === "packed" || safe === "in-progress" || safe === "processing") return "packed";
+    if (safe === "packed" || safe === "in-progress" || safe === "processing") return "ready";
     if (safe === "received" || safe === "submitted") return "pending";
     if (safe === "no_stock" || safe === "no stock" || safe === "out-of-stock" || safe === "out of stock") return "no-stock";
     return safe || "pending";
@@ -73,7 +72,7 @@
   function getStatusMeta(status) {
     const safe = normalizeStatus(status);
     if (safe === "pending") return { key: "pending", label: "Pending", stage: "pending" };
-    if (safe === "packed") return { key: "packed", label: "Packed", stage: "processing" };
+    if (safe === "packed") return { key: "packed", label: "Ready", stage: "ready" };
     if (safe === "ready") return { key: "ready", label: "Ready", stage: "ready" };
     if (safe === "collected") return { key: "collected", label: "Collected", stage: "completed" };
     if (safe === "completed") return { key: "completed", label: "Completed", stage: "completed" };
@@ -84,15 +83,6 @@
       label: safe.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
       stage: "pending"
     };
-  }
-
-  function formatDateTime(value) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Unknown time";
-    return new Intl.DateTimeFormat("en-ZA", {
-      dateStyle: "medium",
-      timeStyle: "short"
-    }).format(date);
   }
 
   function formatDateOnly(value) {
@@ -116,11 +106,6 @@
       requestedBy: String(requestedByInput.value || "").trim().toLowerCase(),
       ward: String(wardInput.value || "").trim().toLowerCase()
     };
-  }
-
-  function getLastRefreshText() {
-    if (!lastRefreshIso) return "";
-    return `Last refresh: ${formatDateTime(lastRefreshIso)}.`;
   }
 
   function sortByNewestFirst(rows = []) {
@@ -157,13 +142,6 @@
   function filteredArchivedOrders() {
     const archivedOrders = trackOrders.filter((order) => FMT_ORDER_ARCHIVE.isArchived(order));
     return sortByNewestFirst(filterByInputs(archivedOrders));
-  }
-
-  function getActiveCount(rows) {
-    return rows.filter((row) => {
-      const status = normalizeStatus(row?.status);
-      return status !== "collected" && status !== "completed" && status !== "cancelled" && status !== "no-stock";
-    }).length;
   }
 
   function buildRowsTable(rows, emptyText) {
@@ -213,22 +191,20 @@
   function renderRows() {
     const rows = filteredOrders();
     const archivedRows = filteredArchivedOrders();
-    const filters = getCurrentFilters();
-
     count.textContent = `${rows.length} active request${rows.length === 1 ? "" : "s"}`;
     archiveCount.textContent = `${archivedRows.length} archived`;
     table.innerHTML = buildRowsTable(rows, "No active requests found for these filters.");
     archiveTable.innerHTML = buildRowsTable(archivedRows, "No archived orders yet.");
 
-    if (filters.ward) {
-      meta.textContent = `Showing requests for ${String(wardInput.value || "").trim()} (${getActiveCount(rows)} active). ${getLastRefreshText()}`.trim();
-    }
+    meta.textContent = "";
+    meta.hidden = true;
   }
 
   async function loadOrders({ silent = false } = {}) {
     table.setAttribute("aria-busy", "true");
     archiveTable.setAttribute("aria-busy", "true");
     if (!silent) {
+      meta.hidden = false;
       meta.textContent = "Loading requests...";
       table.innerHTML = '<div class="stock-loading-skeleton" aria-hidden="true"><span></span><span></span><span></span></div>';
       archiveTable.innerHTML = '<div class="stock-loading-skeleton" aria-hidden="true"><span></span><span></span></div>';
@@ -243,13 +219,10 @@
 
       const payload = await response.json().catch(() => ({}));
       trackOrders = Array.isArray(payload?.requests) ? payload.requests : [];
-      lastRefreshIso = new Date().toISOString();
       renderRows();
 
-      if (!String(wardInput.value || "").trim()) {
-        meta.textContent = `Live updates every 30 seconds. ${getLastRefreshText()}`.trim();
-      }
     } catch (error) {
+      meta.hidden = false;
       table.innerHTML = '<p class="stock-dashboard-empty">Tracking is unavailable right now. Please refresh and try again.</p>';
       meta.textContent = error instanceof Error ? error.message : "Tracking is unavailable right now.";
     } finally {

@@ -1,0 +1,55 @@
+/* One photographic colour treatment across pages, menus and detail views. */
+:root {
+  --fmt-scene-tone: linear-gradient(110deg, rgba(3, 24, 42, .76), rgba(7, 31, 46, .48) 52%, rgba(91, 53, 24, .48));
+  --fmt-scene-image: url("../images/reference-workflow-warm-cold-v1.webp");
+}
+body[data-app-page="home"],
+body[data-app-page="find-my-test-page"] {
+  --fmt-scene-image: url("../images/find-my-test-workflow-warm-cold-v1.webp");
+}
+body[data-app-page="find-my-tube"],
+body[data-app-page="tube-plan-page"] {
+  --fmt-scene-image: url("../images/find-my-tube-workflow-warm-cold-v1.webp");
+}
+body[data-app-page="stock-order"] {
+  --fmt-scene-image: url("../images/order-stock-workflow-warm-cold-v1.webp");
+}
+body[data-app-page="track-orders"] {
+  --fmt-scene-image: url("../images/track-orders-workflow-warm-cold-v1.webp");
+}
+body[data-app-page="stock-dashboard"] {
+  --fmt-scene-image: url("../images/stock-dashboard-workflow-warm-cold-v1.webp");
+}
+html body[data-app-page][data-app-page][data-app-page][data-app-page],
+html body[data-app-page][data-app-page][data-app-page][data-app-page]::before {
+  background-image: var(--fmt-scene-tone), var(--fmt-scene-image) !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+html body[data-app-page="home"] .home-hero-slide::before {
+  background-image: var(--fmt-scene-tone), var(--hero-image) !important;
+}
+html body[data-app-page$="-page"]:is([data-app-page="disclaimer-page"], [data-app-page="privacy-policy-page"], [data-app-page="terms-of-use-page"]) .header {
+  background-image: var(--fmt-scene-tone), var(--fmt-scene-image) !important;
+}
+html body[data-app-page][data-app-page] #siteMenuPanel {
+  background-image: var(--fmt-scene-tone), url("../images/menu-laboratory-blue-yellow.webp") !important;
+}
+html body[data-app-page][data-app-page] #drawModal {
+  background-image: var(--fmt-scene-tone), url("../images/find-my-tube-workflow-warm-cold-v1.webp") !important;
+}
+html body[data-app-page][data-app-page] :is(#aboutInfoModal, #contactFeedbackModal) {
+  background-image: var(--fmt-scene-tone), url("../images/reference-workflow-warm-cold-v1.webp") !important;
+}
+html body[data-app-page="home"] .home-lab-desk-backdrop {
+  background-image: var(--fmt-scene-tone), url("../images/hero-lab-collection.jpg") !important;
+}
+html body[data-app-page][data-app-page] #stockRequestDetailsModal .stock-request-detail-card {
+  background-image: var(--fmt-scene-tone), url("../images/order-details-dispatch-v1.webp") !important;
+}
+
+/* The scene overlay already provides contrast; avoid a second blue wash. */
+html body[data-app-page="home"] .home-hero-slide::after {
+  background: none;
+}
