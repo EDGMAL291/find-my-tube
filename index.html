@@ -98,7 +98,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261012j" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012n" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012p" />
 </head>
 <body data-app-page="home">
   <main class="container">
@@ -570,12 +570,12 @@
   <script src="assets/data/data.js?v=20261012o"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261012o"></script>
+  <script src="assets/js/script.js?v=20261012p"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-12.15";
+      const APP_VERSION = "2026-10-12.16";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -596,7 +596,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261012o", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261012p", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

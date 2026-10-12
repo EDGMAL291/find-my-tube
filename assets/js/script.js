@@ -420,10 +420,7 @@ const STOCK_ORDER_SUBMIT_URL = typeof window !== "undefined"
   : "";
 const STOCK_ORDER_TRACKING_URL = buildStockApiUrl("/api/stock-requests?limit=2");
 const STOCK_ORDER_DUPLICATE_CHECK_URL = buildStockApiUrl("/api/stock-requests?limit=100&includeArchived=true&includeCancelled=true");
-const STOCK_ORDER_INVENTORY_URL = buildStockApiUrl("/api/stock-inventory");
 const STOCK_LOW_STOCK_DEFAULT_THRESHOLD = 5;
-const stockOrderInventoryByKey = new Map();
-let stockOrderCanViewInventory = false;
 let stockOrderRecentRequestsForChecks = [];
 
 function stockRequestsNeedConfiguredBackend() {
@@ -500,8 +497,8 @@ function setThemePanelOpen(isOpen) {
 // Familiar contact silhouettes from Bootstrap Icons (MIT; see docs/bootstrap-icons-LICENSE.txt).
 function refreshContactIcons() {
   const icons = {
-    phone: `<svg class="contact-real-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 4.5c.3-.4.8-.6 1.3-.4l2.2.9c.6.2.9.9.7 1.5l-.6 2a1.4 1.4 0 0 1-1 .9l-1 .2c.7 1.5 1.9 2.8 3.4 3.4l.2-1a1.4 1.4 0 0 1 .9-1l2-.6c.6-.2 1.3.1 1.5.7l.9 2.2c.2.5 0 1-.4 1.3l-1.1 1.1c-.6.6-1.4.8-2.2.6-2.2-.6-4.4-2.2-6-3.8-1.6-1.6-3.2-3.8-3.8-6-.2-.8 0-1.6.6-2.2l1.1-1.1Z"/></svg>`,
-    whatsapp: `<svg class="contact-real-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4a7.6 7.6 0 0 0-6.7 11.2L4.5 19l4-.8A7.6 7.6 0 1 0 12 4Z"/><path d="M9 9c0 3 3 6 6 6l1-2-2-1-1 1-2-2 1-1-1-2Z"/></svg>`
+    phone: `<svg class="contact-real-icon" viewBox="0 0 16 16" data-contact-icon="phone" aria-hidden="true" focusable="false"><path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58zM1.884.511a1.745 1.745 0 0 1 2.612.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z"/></svg>`,
+    whatsapp: `<svg class="contact-real-icon" viewBox="0 0 16 16" data-contact-icon="whatsapp" aria-hidden="true" focusable="false"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/></svg>`
   };
   document.querySelectorAll(".site-menu-contact-link, .contact-sheet-action, .home-help-actions a").forEach(link => {
     const current = link.querySelector("svg");
@@ -1707,20 +1704,11 @@ function getStockStatusTone(status) {
   return "success";
 }
 
+// Public ordering never loads or exposes dashboard balances.
 function getStockStatusForItem(item) {
-  const key = getStockInventoryKeyForItem(item);
-  const balance = key ? stockOrderInventoryByKey.get(key) : null;
-  const threshold = Math.max(1, Number(balance?.lowStockThreshold || getStockLowStockThreshold(item)) || STOCK_LOW_STOCK_DEFAULT_THRESHOLD);
-  const onHand = Math.max(0, Number(balance?.onHand) || 0);
-  const status = getStockStatusFromBalance(onHand, threshold);
   return {
-    key,
-    onHand,
-    status,
-    label: getStockStatusLabel(status),
-    tone: getStockStatusTone(status),
-    lowStockThreshold: threshold,
-    isKnown: stockOrderCanViewInventory && Boolean(balance)
+    key: getStockInventoryKeyForItem(item),
+    isKnown: false
   };
 }
 
@@ -1905,6 +1893,8 @@ function getStockRequestCompactItemsMarkup(request, maxItems = 3) {
 }
 
 function getStockRequestItemStatus(item) {
+  if (document.body.dataset.appPage !== "stock-dashboard"
+    || typeof stockDashboardSession === "undefined" || !stockDashboardSession) return null;
   if (item?.stockStatus || item?.stockStatusLabel) {
     const status = String(item.stockStatus || "").trim() || "in-stock";
     return {
@@ -2015,50 +2005,6 @@ function handleStockRequestDetailsClick(event) {
   const button = target?.closest("[data-stock-request-view]");
   if (!(button instanceof HTMLElement)) return;
   showStockRequestDetails(button.getAttribute("data-stock-request-view") || "");
-}
-
-async function loadStockOrderInventory() {
-  if (!stockOrderGrid) return;
-
-  try {
-    let sessionToken = "";
-    try { sessionToken = sessionStorage.getItem("fmt-stock-lab-session-token") || ""; } catch {}
-    const response = await fetch(STOCK_ORDER_INVENTORY_URL, {
-      cache: "no-store", credentials: "include",
-      headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}
-    });
-    if (!response.ok) throw new Error(`Inventory fetch failed with status ${response.status}`);
-    const payload = await response.json().catch(() => ({}));
-    stockOrderCanViewInventory = payload.inventoryVisibility === "staff";
-    const rows = stockOrderCanViewInventory && Array.isArray(payload?.summary) ? payload.summary : [];
-    stockOrderInventoryByKey.clear();
-    rows.forEach((row) => {
-      const key = String(row?.key || "").trim();
-      if (!key) return;
-      stockOrderInventoryByKey.set(key, {
-        key,
-        label: String(row?.label || ""),
-        onHand: Math.max(0, Number(row?.onHand) || 0),
-        status: String(row?.status || ""),
-        statusLabel: String(row?.statusLabel || ""),
-        lowStockThreshold: Math.max(1, Number(row?.lowStockThreshold) || STOCK_LOW_STOCK_DEFAULT_THRESHOLD),
-        updatedAt: String(row?.updatedAt || "")
-      });
-    });
-  } catch (error) {
-    stockOrderCanViewInventory = false;
-    stockOrderInventoryByKey.clear();
-    console.warn("Stock inventory status unavailable", error);
-  } finally {
-    renderStockOrderItems();
-    updateStockOrderPreview();
-    if (typeof window !== "undefined" && typeof window.applyUnifiedTubeUi === "function") {
-      window.applyUnifiedTubeUi();
-    }
-    if (typeof window !== "undefined" && typeof window.syncUnifiedTubeInputs === "function") {
-      window.syncUnifiedTubeInputs();
-    }
-  }
 }
 
 // Renders the stock tracking list on the order page.
@@ -2231,11 +2177,7 @@ function buildStockOrderPayload() {
       inventoryUnits: getStockInventoryUnits(item),
       sheetColumnKey: item.sheetColumnKey || "",
       sheetTrayColumnKey: item.sheetTrayColumnKey || "",
-      sheetSingleColumnKey: item.sheetSingleColumnKey || "",
-      stockStatus: getStockStatusForItem(item).status,
-      stockStatusLabel: getStockStatusForItem(item).label,
-      stockOnHand: getStockStatusForItem(item).onHand,
-      lowStockThreshold: getStockStatusForItem(item).lowStockThreshold
+      sheetSingleColumnKey: item.sheetSingleColumnKey || ""
     }))
   };
 }
@@ -2281,15 +2223,7 @@ function getStockOrderItemsSummary(selectedItems = getSelectedStockConsumables()
   if (!selectedItems.length) return "No items selected";
 
   return selectedItems
-    .map((item) => {
-      const status = getStockStatusForItem(item);
-      const suffix = status.status === "no-stock"
-        ? " - No Stock"
-        : status.status === "low-stock"
-          ? " - Low stock"
-          : "";
-      return `${getStockDisplayLabel(item)} x ${formatStockQuantity(item)}${suffix}`;
-    })
+    .map((item) => `${getStockDisplayLabel(item)} x ${formatStockQuantity(item)}`)
     .join("\n");
 }
 
@@ -2345,11 +2279,7 @@ function buildStockOrderRequestText() {
     lines.push("");
     lines.push("Items:");
     selectedItems.forEach((item) => {
-      const status = getStockStatusForItem(item);
-      lines.push(`- ${getStockDisplayLabel(item)}: ${formatStockQuantity(item)} (${status.label}, ${status.onHand} on hand)`);
-      if (status.status === "no-stock") {
-        lines.push("  Request only - no stock available.");
-      }
+      lines.push(`- ${getStockDisplayLabel(item)}: ${formatStockQuantity(item)}`);
     });
   }
 
@@ -2810,7 +2740,6 @@ function initStockOrderPanel() {
   populateStockRequesterOptions();
   renderStockOrderItems();
   updateStockOrderPreview();
-  loadStockOrderInventory();
   loadStockDuplicateCheckRequests();
 
   stockOrderRequesterNameInput.addEventListener("input", () => {
@@ -10151,7 +10080,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20261012o",
+    assetVersion: "20261012p",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

@@ -13,7 +13,7 @@ const ORDER_ARCHIVE = require("./assets/js/order-archive.js");
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-10-12.11";
+const APP_RELEASE = "2026-10-12.16";
 const STOCK_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
@@ -1021,7 +1021,7 @@ function mapRequestFromDb(row) {
 }
 
 function toPublicStockRequest(request) {
-  const { contactExtension: _privateContact, ...publicRequest } = request;
+  const { contactExtension: _privateContact, requestText: _privateRequestText, ...publicRequest } = request;
   return publicRequest;
 }
 
@@ -1503,23 +1503,6 @@ async function dbListInventorySummary() {
     onHand: Math.max(0, Number(row.quantity_on_hand) || 0),
     updatedAt: sanitizeString(row.updated_at, 40)
   }));
-}
-
-async function dbListPublicInventorySummary() {
-  const summary = await dbListInventorySummary();
-  return summary.map((row) => {
-    const threshold = STOCK_LOW_STOCK_DEFAULT_THRESHOLD;
-    const status = getStockStatusFromQuantity(row.onHand, threshold);
-    return {
-      key: row.key,
-      label: row.label,
-      onHand: row.onHand,
-      status,
-      statusLabel: getStockStatusLabel(status),
-      lowStockThreshold: threshold,
-      updatedAt: row.updatedAt
-    };
-  });
 }
 
 function isMissingDatabaseTableError(error, tableName = "") {
@@ -2193,7 +2176,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
-  if (req.method === "GET" && pathname === "/api/stock-inventory" && !getSessionToken(req)) {
+  // Public catalogue clients never receive balances, even with a dashboard cookie.
+  if (req.method === "GET" && pathname === "/api/stock-inventory") {
     sendJson(req, res, 200, { summary: [], inventoryVisibility: "private" });
     return;
   }
@@ -2775,18 +2759,6 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       includeArchived
     });
     sendJson(req, res, 200, { requests: rows.map(toPublicStockRequest) });
-    return;
-  }
-
-  if (req.method === "GET" && pathname === "/api/stock-inventory") {
-    const session = await requireLabSession(req, res);
-    if (!session) return;
-    const summary = await dbListPublicInventorySummary();
-    sendJson(req, res, 200, {
-      summary,
-      inventoryVisibility: "staff",
-      lowStockDefaultThreshold: STOCK_LOW_STOCK_DEFAULT_THRESHOLD
-    });
     return;
   }
 

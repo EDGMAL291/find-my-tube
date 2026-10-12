@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v359";
+const CACHE_NAME = "find-my-tube-v360";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -12,9 +12,9 @@ const CORE_ASSETS = [
   "./assets/css/modern.css?v=20261012i",
   "./assets/css/discovery.css?v=20261012b",
   "./assets/css/scenes.css?v=20261012j",
-  "./assets/css/workflows.css?v=20261012n",
+  "./assets/css/workflows.css?v=20261012p",
   "./assets/js/stock-catalog-data.js?v=20261006d",
-  "./assets/js/script.js?v=20261012o",
+  "./assets/js/script.js?v=20261012p",
   "./assets/data/data.js?v=20261012o",
   "./favicon.svg",
   "./assets/images/find-my-tube-workflow-warm-cold-v1.webp"
@@ -57,6 +57,12 @@ self.addEventListener("fetch", (event) => {
 
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
+
+  // Session-protected API data must never survive logout in an offline cache.
+  if (requestUrl.pathname.startsWith("/api/")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   if (isLocalPreview()) {
     event.respondWith(fetch(event.request));

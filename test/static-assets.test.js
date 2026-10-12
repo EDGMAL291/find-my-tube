@@ -67,3 +67,26 @@ test("all card surfaces use the canonical ten-percent frost", () => {
     ".footer-card"
   ].forEach((selector) => assert.ok(modern.includes(selector), `${selector} should use the canonical card frost`));
 });
+
+
+test("service worker never reads or writes cached API responses", async () => {
+  const listeners = new Map();
+  let networkCalls = 0;
+  let cacheCalls = 0;
+  const sandbox = {
+    URL,
+    self: { location: { hostname: "findmytube.co.za", origin: "https://findmytube.co.za" },
+      addEventListener: (name, listener) => listeners.set(name, listener) },
+    fetch: async () => { networkCalls += 1; return { status: 200 }; },
+    caches: { match: () => { cacheCalls += 1; }, open: () => { cacheCalls += 1; } }
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), sandbox);
+  for (const pathname of ["/api/lab/stock-inventory", "/api/stock-inventory", "/api/stock-auth/session"]) {
+    let response;
+    listeners.get("fetch")({ request: { method: "GET", mode: "cors", url: `https://findmytube.co.za${pathname}` },
+      respondWith: promise => { response = promise; } });
+    assert.equal((await response).status, 200);
+  }
+  assert.equal(networkCalls, 3);
+  assert.equal(cacheCalls, 0);
+});

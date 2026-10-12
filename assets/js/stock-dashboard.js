@@ -2198,6 +2198,8 @@ function stockDashboardSetSession(user) {
     }
     stockDashboardManagedUsers = [];
     if (stockDashboardInventoryList) stockDashboardInventoryList.innerHTML = "";
+    stockDashboardDatasets.inventorySummary = [];
+    if (stockDashboardInventoryStatus) stockDashboardInventoryStatus.textContent = "Sign in to view stock balances.";
     stockDashboardPrepareDatasets([], []);
     stockDashboardRefreshDataSectionStatus();
     if (stockDashboardStatusCounts) stockDashboardStatusCounts.innerHTML = "";
@@ -2989,6 +2991,10 @@ async function stockDashboardSubmitReceipt() {
 
 async function loadStockInventory() {
   if (!stockDashboardSession) return;
+  const sessionAtStart = stockDashboardSession;
+  const authGenerationAtStart = stockDashboardAuthGeneration;
+  const isCurrentSession = () => stockDashboardSession === sessionAtStart
+    && authGenerationAtStart === stockDashboardAuthGeneration;
 
   try {
     const response = await stockDashboardFetch(STOCK_DASHBOARD_INVENTORY_URL, {
@@ -2996,6 +3002,7 @@ async function loadStockInventory() {
       headers: stockDashboardGetHeaders()
     });
 
+    if (!isCurrentSession()) return;
     if (await stockDashboardHandleUnauthorizedResponse(response, "load_inventory")) return;
     if (response.status === 403) {
       if (stockDashboardInventoryStatus) {
@@ -3009,10 +3016,12 @@ async function loadStockInventory() {
     }
 
     const payload = await response.json().catch(() => ({}));
+    if (!isCurrentSession()) return;
     stockDashboardRenderInventory(Array.isArray(payload?.summary) ? payload.summary : []);
     stockDashboardPrepareDatasets(stockDashboardDatasets.stockRequests, Array.isArray(payload?.recentReceipts) ? payload.recentReceipts : []);
     stockDashboardRefreshDataSectionStatus();
   } catch {
+    if (!isCurrentSession()) return;
     if (stockDashboardInventoryStatus) {
       stockDashboardInventoryStatus.textContent = "Could not load inventory.";
     }
