@@ -152,3 +152,18 @@ html body[data-app-page="home"] .clinical-choice-trigger-chevron {
   margin-top: 0;
   margin-bottom: 0;
 }
+
+/* Tube Plan controls use the site's restrained rectangular shape. */
+html[data-theme] body #drawModal :is(#drawTestsToggleBtn, #drawClearAllBtn) {
+  border-radius: 0;
+}
+
+/* Keep touch, wheel and keyboard scrolling without a visible scroll track. */
+html[data-theme] body #drawModal :is(.draw-modal-card, .draw-planner-body, .draw-selected-list),
+html[data-theme] body[data-app-page="find-my-tube"] #cardsContainer {
+  scrollbar-width: none;
+}
+html[data-theme] body #drawModal :is(.draw-modal-card, .draw-planner-body, .draw-selected-list)::-webkit-scrollbar,
+html[data-theme] body[data-app-page="find-my-tube"] #cardsContainer::-webkit-scrollbar {
+  display: none;
+}

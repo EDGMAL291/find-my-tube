@@ -2735,7 +2735,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Endocrinology test listed on PathCare and Ampath forms."
+          "notes": "Endocrinology test."
         }
       ],
       "tubes_involved": [
@@ -5931,7 +5931,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Endocrinology test listed on PathCare and Ampath forms."
+          "notes": "Endocrinology test."
         },
         {
           "test_name": "Thyroid Antibodies (TPO and Tg Ab)",
@@ -6963,7 +6963,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Listed on Ampath form under inflammatory markers."
+          "notes": "Inflammatory marker."
         },
         {
           "test_name": "FBC",
@@ -7184,7 +7184,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Listed on Ampath form under inflammatory markers."
+          "notes": "Inflammatory marker."
         },
         {
           "test_name": "Blood Culture",
@@ -8079,7 +8079,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Endocrinology test listed on PathCare and Ampath forms."
+          "notes": "Endocrinology test."
         },
         {
           "test_name": "Free T3",
@@ -8087,7 +8087,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Endocrinology test listed on PathCare and Ampath forms."
+          "notes": "Endocrinology test."
         },
         {
           "test_name": "Thyroid Antibodies (TPO and Tg Ab)",
@@ -8612,14 +8612,14 @@
         "joint pain and rash",
         "Musculoskeletal",
         "general inflammatory / autoimmune concern",
-        "ANA Screen and Reflex ENA Antibodies",
+        "ANA (Antinuclear Antibody)",
         "CRP",
         "ESR",
         "Rheumatoid Factor (RF)"
       ],
       "suggested_tests": [
         {
-          "test_name": "ANA Screen and Reflex ENA Antibodies",
+          "test_name": "ANA (Antinuclear Antibody)",
           "reason": "Supports screening for systemic autoimmune/connective tissue disease when clinically indicated.",
           "tube": "SST / Yellow top",
           "department": "Immunology",
@@ -11198,7 +11198,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Endocrinology test listed on PathCare and Ampath forms."
+          "notes": "Endocrinology test."
         },
         {
           "test_name": "Free T3",
@@ -11206,7 +11206,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Endocrinology test listed on PathCare and Ampath forms."
+          "notes": "Endocrinology test."
         }
       ],
       "tubes_involved": [
@@ -11252,7 +11252,7 @@
           "tube": "SST / Yellow top",
           "department": "Chemistry",
           "priority": "Routine/Urgent depending on presentation",
-          "notes": "Endocrinology test listed on PathCare and Ampath forms."
+          "notes": "Endocrinology test."
         },
         {
           "test_name": "FBC",
@@ -12770,7 +12770,7 @@
       ],
       "suggested_tests": [
         {
-          "test_name": "ANA Screen and Reflex ENA Antibodies",
+          "test_name": "ANA (Antinuclear Antibody)",
           "reason": "Supports screening for systemic autoimmune/connective tissue disease when clinically indicated.",
           "tube": "SST / Yellow top",
           "department": "Immunology",
@@ -12890,7 +12890,7 @@
           "notes": "Use clean urine container. Confirm microscopy/culture reflex rules locally. Confirm with local laboratory protocol."
         },
         {
-          "test_name": "ANA Screen and Reflex ENA Antibodies",
+          "test_name": "ANA (Antinuclear Antibody)",
           "reason": "Supports screening for systemic autoimmune/connective tissue disease when clinically indicated.",
           "tube": "SST / Yellow top",
           "department": "Immunology",
@@ -12954,7 +12954,7 @@
           "notes": "Use correct ESR tube where applicable."
         },
         {
-          "test_name": "ANA Screen and Reflex ENA Antibodies",
+          "test_name": "ANA (Antinuclear Antibody)",
           "reason": "Supports screening for systemic autoimmune/connective tissue disease when clinically indicated.",
           "tube": "SST / Yellow top",
           "department": "Immunology",
@@ -16383,7 +16383,7 @@
           "tube": "Heparin / Green top with urgent special handling",
           "department": "Chemistry",
           "priority": "Urgent",
-          "notes": "PathCare courier/driver must be called first. Lab calls doctor to draw while driver waits, then plasma is separated immediately on receipt. Call PathCare courier first. Draw sample only when courier is on-site waiting. Separate plasma immediately after collection and dispatch without delay. Confirm with local laboratory protocol."
+          "notes": "Courier/driver must be called first. Lab calls doctor to draw while driver waits, then plasma is separated immediately on receipt. Call the courier first. Draw sample only when courier is on-site waiting. Separate plasma immediately after collection and dispatch without delay. Confirm with local laboratory protocol."
         },
         {
           "test_name": "Liver Function Tests (LFT)",

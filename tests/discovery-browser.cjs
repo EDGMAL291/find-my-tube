@@ -538,6 +538,9 @@ async function exerciseTubePlanWorkflow(page, width) {
           const plan = names => getResolvedDrawPlan(enrichedTests.filter(t => names.includes(t.name)));
           return {
             hiv: enrichedTests.filter(t => /HIV/.test(t.name)).map(t => ({name:t.name,groups:getTubeGroups(t.tubeColor),specimen:getCardSpecimenValue(t)})),
+            autoimmune: plan(['Autoimmune Profile']),
+            autoimmuneWithHiv: plan(['Autoimmune Profile', 'HIV ELISA']),
+            reflexEntries: enrichedTests.filter(t => /reflex.*ena|ena.*reflex/i.test(t.name)).map(t => t.name),
             shared: plan(['FBC','HbA1c']),
             dedicated: plan(['HIV ELISA','RPR (Syphilis Screen)','CRP']),
             sepsis: plan(['Blood Culture','Procalcitonin (PCT)','Lactate','CRP']),
@@ -556,6 +559,10 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.deepEqual(audit.hiv.find(t=>t.name==='HIV Viral Load').groups, ['Pearl/White']);
         assert.deepEqual(audit.hiv.find(t=>t.name==='HIV PCR Qualitative').groups, ['Purple']);
         assert.ok(audit.hiv.every(t=>t.specimen && t.groups.length));
+        assert.equal(audit.autoimmune.plan.items.find(i => i.key === 'Gold/Yellow').count, 2);
+        assert.equal(audit.autoimmune.plan.items.find(i => i.key === 'Purple').count, 1);
+        assert.equal(audit.autoimmuneWithHiv.plan.items.find(i => i.key === 'Gold/Yellow').count, 3, 'Dedicated HIV tube stays additional to the autoimmune minimum');
+        assert.deepEqual(audit.reflexEntries, []);
         const purple = audit.shared.plan.items.find(i=>i.key==='Purple');
         assert.equal(purple.count, 1);
         assert.deepEqual(purple.tests.sort(), ['FBC','HbA1c']);

@@ -3267,7 +3267,7 @@ const profileComponentsByName = {
     "CRP",
     "Rheumatoid Factor (RF)",
     "Anti-CCP Antibody",
-    "ANA Screen and Reflex ENA Antibodies"
+    "ANA (Antinuclear Antibody)"
   ],
   "Malaria Profile": [
     "Malaria Smear (Thick and Thin)",
@@ -4274,13 +4274,9 @@ const aliasByName = {
     "ANA",
     "A-NA",
     "ANA test",
-    "Antinuclear antibody"
-  ],
-  "ANA Screen and Reflex ENA Antibodies": [
     "ANA Screen",
-    "ANA Reflex ENA",
-    "ANA Screen and Reflex ENA",
-    "A-NA screen"
+    "A-NA screen",
+    "Antinuclear antibody"
   ],
   "Anti-dsDNA": [
     "Anti dsDNA",
@@ -7862,6 +7858,7 @@ function getRequiredSharedGoldTubeCount(selectedTests) {
   const sharedGoldRequestCount = sharedGoldTests.length + (hasCordBloodProfile ? 1 : 0);
 
   if (!sharedGoldRequestCount) return 0;
+  if (sharedGoldTests.some((test) => test.name === "Autoimmune Profile")) return 2;
 
   const listedGoldProfileCount = sharedGoldTests.filter((test) => GOLD_VOLUME_PROFILE_NAMES.has(test.name)).length;
   const hasListedGoldProfile = listedGoldProfileCount > 0;
@@ -7907,6 +7904,10 @@ function applyGoldProfileVolumeRule(plan, selectedTests) {
   }
 
   plan.items.sort((a, b) => a.label.localeCompare(b.label));
+  if (selectedTests.some((test) => test.name === "Autoimmune Profile")) {
+    return "Autoimmune Profile: use 2 yellow (gel) tubes and 1 purple (EDTA) tube.";
+  }
+
   return "Gold rule applied: use 2 x Gold/Yellow when a listed yellow profile is combined with a hormone/enzyme request, or when 3 listed profiles are combined with another shared yellow-top test.";
 }
 
@@ -8094,7 +8095,7 @@ function getDrawPlannerAlerts(selectedTests) {
       title: "Important guidelines for Ammonia",
       items: [
         "Use a Green (Heparin) tube for heparin plasma.",
-        "Call PathCare courier first.",
+        "Call the courier first.",
         "Draw the sample only when the courier is on-site waiting.",
         "Separate plasma immediately after collection.",
         "Dispatch without delay."
@@ -8201,6 +8202,12 @@ function getDrawOrderPlannerAlert(plan) {
   };
 }
 
+// Names collection stages in the order the tubes should be drawn.
+function formatDrawStepLabel(step) {
+  const ordinals = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth", "Eleventh", "Twelfth"];
+  return `${ordinals[step - 1] || `${step}th`} draw`;
+}
+
 // Renders draw result.
 function renderDrawResult() {
   if (!drawResultCard || !drawPlannerCount || !drawPlannerAlerts || !drawGroups || !drawPlannerNote) return;
@@ -8303,7 +8310,7 @@ function renderDrawResult() {
 
       return `
         <article class="draw-group-card draw-group-card-${planToneClass}" style="--plan-tube-accent: ${planAccent};">
-          ${orderOfDrawStep ? `<span class="draw-order-step">Draw ${orderOfDrawStep}</span>` : `<span class="draw-order-step draw-order-step-separate">Separate specimen</span>`}
+          ${orderOfDrawStep ? `<span class="draw-order-step">${formatDrawStepLabel(orderOfDrawStep)}</span>` : `<span class="draw-order-step draw-order-step-separate">Separate specimen</span>`}
           <div class="draw-group-top">
             ${headMarkup}
           </div>
@@ -9871,7 +9878,7 @@ function bindEvents() {
 function updateFindMyTubePublicApi() {
   window.findMyTubeApp = {
     version: "2026-03-23.1",
-    assetVersion: "20260728p",
+    assetVersion: "20261012n",
     normalizeForSearch,
     escapeHtml,
     getTestsByNames,

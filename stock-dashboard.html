@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261012b" />
   <link rel="stylesheet" href="assets/css/stock-inventory.css?v=20261009k" />
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261012j" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012m" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261012n" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -409,15 +409,15 @@
     </div>
   </section>
 
-  <script src="assets/data/data.js?v=20260505a"></script>
+  <script src="assets/data/data.js?v=20261012n"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261012k"></script>
+  <script src="assets/js/script.js?v=20261012n"></script>
   <script src="assets/js/order-archive.js?v=20261007a"></script>
   <script src="assets/js/stock-dashboard.js?v=20261012d"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-12.13";
+      const APP_VERSION = "2026-10-12.14";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -449,7 +449,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20261012m", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20261012n", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 

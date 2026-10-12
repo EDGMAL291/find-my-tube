@@ -5975,7 +5975,7 @@
       "pregnancyRelevance": "not_specific",
       "associatedConcerns": [],
       "associatedTests": [
-        "ANA Screen and Reflex ENA Antibodies",
+        "ANA (Antinuclear Antibody)",
         "CRP",
         "ESR",
         "Rheumatoid Factor (RF)"
@@ -6005,13 +6005,13 @@
         "Systemic autoimmune inflammation",
         "Musculoskeletal",
         "general inflammatory / autoimmune concern",
-        "ANA Screen and Reflex ENA Antibodies",
+        "ANA (Antinuclear Antibody)",
         "CRP",
         "ESR",
         "Rheumatoid Factor (RF)"
       ],
       "relatedTests": [
-        "ANA Screen and Reflex ENA Antibodies",
+        "ANA (Antinuclear Antibody)",
         "CRP",
         "ESR",
         "Rheumatoid Factor (RF)"

@@ -84,8 +84,8 @@ const tests = [
     tubeColor: "Green (Heparin)",
     specimen: "Heparin plasma",
     turnaroundTime: "Urgent / same day",
-    notes: "PathCare courier/driver must be called first. Lab calls doctor to draw while driver waits, then plasma is separated immediately on receipt.",
-    criticalPrep: "Call PathCare courier first. Draw sample only when courier is on-site waiting. Separate plasma immediately after collection and dispatch without delay.",
+    notes: "Courier/driver must be called first. Lab calls doctor to draw while driver waits, then plasma is separated immediately on receipt.",
+    criticalPrep: "Call the courier first. Draw sample only when courier is on-site waiting. Separate plasma immediately after collection and dispatch without delay.",
     borderColor: "#22c55e"
   },
   {
@@ -206,7 +206,7 @@ const tests = [
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "4-8 hours",
-    notes: "Listed on Ampath form under inflammatory markers.",
+    notes: "Inflammatory marker.",
     borderColor: "yellow"
   },
   {
@@ -214,7 +214,7 @@ const tests = [
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "6-24 hours",
-    notes: "Endocrinology test listed on PathCare and Ampath forms.",
+    notes: "Endocrinology test.",
     borderColor: "yellow"
   },
   {
@@ -222,7 +222,7 @@ const tests = [
     tubeColor: "Gold",
     specimen: "Serum",
     turnaroundTime: "6-24 hours",
-    notes: "Endocrinology test listed on PathCare and Ampath forms.",
+    notes: "Endocrinology test.",
     borderColor: "yellow"
   },
   {
@@ -2292,7 +2292,7 @@ const tests = [
     tubeColor: "Gold + Purple",
     specimen: "Serum and EDTA blood",
     turnaroundTime: "1-3 days",
-    notes: "Profile includes ESR, FBC, CRP, rheumatoid factor, anti-CCP/ACCP, and ANA screen.",
+    notes: "Collect 2 yellow (gel) tubes and 1 purple (EDTA) tube. Profile includes ESR, FBC, CRP, rheumatoid factor, anti-CCP/ACCP, and ANA screen.",
     borderColor: "yellow"
   },
   {
@@ -2301,14 +2301,6 @@ const tests = [
     specimen: "Serum",
     turnaroundTime: "1-3 days",
     notes: "Rheumatoid serology panel.",
-    borderColor: "yellow"
-  },
-  {
-    name: "ANA Screen and Reflex ENA Antibodies",
-    tubeColor: "Gold",
-    specimen: "Serum",
-    turnaroundTime: "1-3 days",
-    notes: "Autoimmune connective tissue serology.",
     borderColor: "yellow"
   },
   {
