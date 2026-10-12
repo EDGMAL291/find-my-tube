@@ -63,8 +63,10 @@ html body[data-app-page="home"] #clinicalWorkupSubmitBtn {
   width: auto !important;
 }
 html body[data-app-page="home"] #clinicalWorkupResetBtn {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
   width: auto !important;
+  margin-left: 0;
 }
 /* Use the same accessible photographic choices on desktop and mobile. */
 html body[data-app-page="home"] select.clinical-choice-native {
@@ -96,4 +98,45 @@ html body[data-app-page="home"] .clinical-choice-trigger-chevron {
   border-right: 1px solid currentColor;
   border-bottom: 1px solid currentColor;
   transform: rotate(45deg);
+}
+
+/* Empty field hints can emphasize the clinical term without bold examples. */
+#clinicalWorkupForm .clinical-hint-wrap {
+  position: relative;
+  width: 100%;
+  font-size: .86rem;
+  line-height: 1.42;
+}
+#clinicalWorkupForm .clinical-hint-wrap textarea {
+  display: block;
+  font: inherit;
+  font-weight: 400;
+  min-height: calc(2 * 1.42em + 26px);
+}
+#clinicalWorkupForm .clinical-hint-wrap textarea::placeholder {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  opacity: 0;
+}
+#clinicalWorkupForm .clinical-field-hint {
+  position: absolute;
+  inset: 1px 1px auto;
+  padding: 12px;
+  color: rgba(255, 253, 248, .72);
+  font: inherit;
+  font-weight: 400;
+  pointer-events: none;
+  text-transform: none;
+  letter-spacing: normal;
+}
+#clinicalWorkupForm .clinical-field-hint strong {
+  display: inline;
+  color: #fffdf8;
+  font-weight: 700;
+}
+#clinicalWorkupForm textarea:not(:placeholder-shown) ~ .clinical-field-hint {
+  display: none;
+}
+@media (max-width: 860px) {
+  #clinicalWorkupForm .clinical-hint-wrap { font-size: .84rem; }
 }
