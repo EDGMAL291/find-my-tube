@@ -35,12 +35,15 @@ html body[data-app-page="home"] #clinicalWorkupResetBtn {
 }
 html body[data-app-page="home"] #clinicalChoiceModal {
   background-color: #03111f;
-  background-image: var(--fmt-scene-tone), url("../images/clinical-sex-context-v1.webp");
+  background-image: var(--fmt-scene-tone), url("../images/scene-reference-20261013.webp");
   background-position: center;
   background-size: cover;
 }
 html body[data-app-page="home"] #clinicalChoiceModal[data-choice-type="pregnancy"] {
-  background-image: var(--fmt-scene-tone), url("../images/clinical-pregnancy-context-v1.webp");
+  background-image:
+    linear-gradient(90deg, rgba(3, 24, 42, .64), rgba(7, 31, 46, .24)),
+    url("../images/scene-pregnancy-20261013.webp");
+  background-position: center, 76% center;
 }
 html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-backdrop {
   background: transparent;
@@ -48,9 +51,23 @@ html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-backdrop {
   -webkit-backdrop-filter: none;
 }
 html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-sheet {
-  background: rgba(255, 255, 255, .06) !important;
-  backdrop-filter: blur(8px) saturate(1.04) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
+  background: rgba(255, 255, 255, .04) !important;
+  backdrop-filter: blur(4px) saturate(1.04) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(1.04) !important;
+}
+
+html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-options {
+  background: transparent;
+}
+
+html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-option {
+  background: rgba(3, 17, 31, .06);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-option:is(:hover, :focus-visible, .is-selected) {
+  background: rgba(230, 207, 140, .1);
 }
 
 html body[data-app-page="home"] .clinical-workup-actions {

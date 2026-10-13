@@ -1,24 +1,29 @@
 /* One photographic colour treatment across pages, menus and detail views. */
 :root {
   --fmt-scene-tone: linear-gradient(110deg, rgba(3, 24, 42, .76), rgba(7, 31, 46, .48) 52%, rgba(91, 53, 24, .48));
-  --fmt-scene-image: url("../images/reference-workflow-warm-cold-v1.webp");
+  --fmt-scene-image: url("../images/scene-reference-20261013.webp");
 }
-body[data-app-page="home"],
+body[data-app-page="home"] {
+  --fmt-scene-image: url("../images/scene-home-20261013.webp");
+}
+body[data-app-page="home"].find-my-test-page {
+  --fmt-scene-image: url("../images/scene-test-20261013.webp");
+}
 body[data-app-page="find-my-test-page"] {
-  --fmt-scene-image: url("../images/find-my-test-workflow-warm-cold-v1.webp");
+  --fmt-scene-image: url("../images/scene-test-20261013.webp");
 }
 body[data-app-page="find-my-tube"],
 body[data-app-page="tube-plan-page"] {
-  --fmt-scene-image: url("../images/find-my-tube-workflow-warm-cold-v1.webp");
+  --fmt-scene-image: url("../images/scene-tube-20261013.webp");
 }
 body[data-app-page="stock-order"] {
-  --fmt-scene-image: url("../images/order-stock-workflow-warm-cold-v1.webp");
+  --fmt-scene-image: url("../images/scene-stock-20261013.webp");
 }
 body[data-app-page="track-orders"] {
-  --fmt-scene-image: url("../images/track-orders-workflow-warm-cold-v1.webp");
+  --fmt-scene-image: url("../images/scene-track-20261013.webp");
 }
 body[data-app-page="stock-dashboard"] {
-  --fmt-scene-image: url("../images/stock-dashboard-workflow-warm-cold-v1.webp");
+  --fmt-scene-image: url("../images/scene-dashboard-20261013.webp");
 }
 html body[data-app-page][data-app-page][data-app-page][data-app-page],
 html body[data-app-page][data-app-page][data-app-page][data-app-page]::before {
@@ -34,16 +39,16 @@ html body[data-app-page$="-page"]:is([data-app-page="disclaimer-page"], [data-ap
   background-image: var(--fmt-scene-tone), var(--fmt-scene-image) !important;
 }
 html body[data-app-page][data-app-page] #siteMenuPanel {
-  background-image: var(--fmt-scene-tone), url("../images/menu-laboratory-blue-yellow.webp") !important;
+  background-image: var(--fmt-scene-tone), url("../images/scene-reference-20261013.webp") !important;
 }
 html body[data-app-page][data-app-page] #drawModal {
-  background-image: var(--fmt-scene-tone), url("../images/find-my-tube-workflow-warm-cold-v1.webp") !important;
+  background-image: var(--fmt-scene-tone), url("../images/scene-tube-20261013.webp") !important;
 }
 html body[data-app-page][data-app-page] :is(#aboutInfoModal, #contactFeedbackModal) {
-  background-image: var(--fmt-scene-tone), url("../images/reference-workflow-warm-cold-v1.webp") !important;
+  background-image: var(--fmt-scene-tone), url("../images/scene-reference-20261013.webp") !important;
 }
 html body[data-app-page="home"] .home-lab-desk-backdrop {
-  background-image: var(--fmt-scene-tone), url("../images/hero-lab-collection.jpg") !important;
+  background-image: var(--fmt-scene-tone), url("../images/scene-home-20261013.webp") !important;
 }
 html body[data-app-page][data-app-page] #stockRequestDetailsModal .stock-request-detail-card {
   background-image: var(--fmt-scene-tone), url("../images/order-details-dispatch-v1.webp") !important;

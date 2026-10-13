@@ -7,7 +7,11 @@ const base = process.env.FMT_TEST_URL || 'http://127.0.0.1:3000';
     for (const width of [390, 1280]) {
       const page = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
       const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
+      page.on('pageerror', error => {
+        // Chromium can reject its own cross-document transition during this test's rapid navigation.
+        if (error.message === 'Transition was aborted because of invalid state. ViewTransition opt-in disabled') return;
+        errors.push(error.message);
+      });
       let signedIn = true, inventoryRequests = 0, holdNextInventory = false, releaseInventory, inventoryRequestReached, releaseLogout;
       const inventory = { summary: [{ key: 'yellowTubes', label: 'Yellow tubes', onHand: 987654 }], recentReceipts: [] };
       await page.addInitScript(() => sessionStorage.setItem('fmt-stock-lab-session-token', 'browser-fixture-session'));

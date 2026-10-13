@@ -3862,22 +3862,22 @@ body[data-app-page="stock-dashboard"] .site-footer {
 
 /* Editorial supporting pages */
 body[data-app-page$="-page"]:not(.find-my-test-page) {
-  --support-image: url("../images/reference-workflow-warm-cold-v1.webp");
+  --support-image: url("../images/scene-reference-20261013.webp");
   min-height: 100svh;
   color: var(--fmt-ink);
   background: var(--fmt-canvas);
 }
 
 body[data-app-page="find-my-test-page"]:not(.find-my-test-page) {
-  --support-image: url("../images/find-my-test-workflow-warm-cold-v1.webp");
+  --support-image: url("../images/scene-test-20261013.webp");
 }
 
 body[data-app-page="tube-plan-page"] {
-  --support-image: url("../images/find-my-tube-workflow-warm-cold-v1.webp");
+  --support-image: url("../images/scene-tube-20261013.webp");
 }
 
 body[data-app-page="contact-feedback-page"] {
-  --support-image: url("../images/reference-workflow-warm-cold-v1.webp");
+  --support-image: url("../images/scene-reference-20261013.webp");
 }
 
 body[data-app-page$="-page"]:not(.find-my-test-page)::before,
@@ -6548,10 +6548,10 @@ html[data-theme] body[data-app-page="stock-order"] #stockOrderSubmissionCard {
 }
 
 /* Homepage CTA path: the content rule turns into the page link arrow. */
-body[data-app-page="home"] .home-hero-slide-overview { --hero-image: url("../images/hero-lab-tubes.jpg"); }
-body[data-app-page="home"] .home-hero-slide-rack { --hero-image: url("../images/hero-lab-collection.jpg"); }
-body[data-app-page="home"] .home-hero-slide-clipboard { --hero-image: url("../images/find-my-test-workflow-warm-cold-v1.webp"); }
-body[data-app-page="home"] .home-hero-slide-stock { --hero-image: url("../images/hero-lab-logistics.jpg"); }
+body[data-app-page="home"] .home-hero-slide-overview { --hero-image: url("../images/scene-home-20261013.webp"); }
+body[data-app-page="home"] .home-hero-slide-rack { --hero-image: url("../images/scene-tube-20261013.webp"); }
+body[data-app-page="home"] .home-hero-slide-clipboard { --hero-image: url("../images/scene-test-20261013.webp"); }
+body[data-app-page="home"] .home-hero-slide-stock { --hero-image: url("../images/scene-stock-20261013.webp"); }
 
 body[data-app-page="home"] .home-hero-content {
   position: relative;
@@ -11900,7 +11900,7 @@ html body:is(
   background-color: #03111f !important;
   background-image:
     linear-gradient(110deg, rgba(3,17,31,.74), rgba(3,17,31,.48)),
-    url("../images/reference-workflow-warm-cold-v1.webp") !important;
+    url("../images/scene-reference-20261013.webp") !important;
   background-position: center !important; background-size: cover !important;
   background-repeat: no-repeat !important; background-attachment: fixed !important;
 }
@@ -11908,13 +11908,13 @@ html body:is(
 html body[data-app-page="find-my-test-page"] {
   background:
     linear-gradient(110deg, rgba(3,17,31,.74), rgba(3,17,31,.48)),
-    url("../images/find-my-test-workflow-warm-cold-v1.webp") center / cover fixed no-repeat !important;
+    url("../images/scene-test-20261013.webp") center / cover fixed no-repeat !important;
 }
 
 html body[data-app-page="tube-plan-page"] {
   background:
     linear-gradient(110deg, rgba(3,17,31,.74), rgba(3,17,31,.48)),
-    url("../images/find-my-tube-workflow-warm-cold-v1.webp") center / cover fixed no-repeat !important;
+    url("../images/scene-tube-20261013.webp") center / cover fixed no-repeat !important;
 }
 
 html body:is([data-app-page="find-my-test-page"], [data-app-page="tube-plan-page"]) :is(.header, .container) {
@@ -11927,7 +11927,7 @@ html[data-theme] body #drawModal {
   background-color: #03111f !important;
   background-image:
     linear-gradient(110deg, rgba(3, 17, 31, .76), rgba(3, 17, 31, .52)),
-    url("../images/find-my-tube-workflow-warm-cold-v1.webp") !important;
+    url("../images/scene-tube-20261013.webp") !important;
   background-position: center !important;
   background-size: cover !important;
   background-repeat: no-repeat !important;
@@ -11963,13 +11963,13 @@ html body[data-app-page="about-page"] {
   min-height: 100lvh;
   background:
     linear-gradient(110deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38)),
-    url("../images/reference-workflow-warm-cold-v1.webp") center / cover fixed no-repeat !important;
+    url("../images/scene-reference-20261013.webp") center / cover fixed no-repeat !important;
 }
 
 html body[data-app-page][data-app-page="about-page"]::before {
   background:
     linear-gradient(110deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38)),
-    url("../images/reference-workflow-warm-cold-v1.webp") center / cover no-repeat !important;
+    url("../images/scene-reference-20261013.webp") center / cover no-repeat !important;
 }
 
 html body[data-app-page="about-page"] :is(.header, .container) {
@@ -12128,7 +12128,7 @@ html body[data-app-page="home"].find-my-test-page::before {
   display: block !important;
   background:
     linear-gradient(90deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .38) 58%, rgba(3, 17, 31, .12)),
-    url("../images/find-my-test-workflow-warm-cold-v1.webp") center / cover no-repeat !important;
+    url("../images/scene-test-20261013.webp") center / cover no-repeat !important;
   border: 0 !important;
   border-radius: 0 !important;
   opacity: 1 !important;
@@ -12157,7 +12157,7 @@ html body[data-app-page][data-app-page="stock-order"]::before {
   display: block !important;
   background:
     linear-gradient(90deg, rgba(3, 17, 31, .64), rgba(3, 17, 31, .40) 58%, rgba(3, 17, 31, .14)),
-    url("../images/order-stock-workflow-warm-cold-v1.webp") center / cover no-repeat !important;
+    url("../images/scene-stock-20261013.webp") center / cover no-repeat !important;
   border: 0 !important;
   border-radius: 0 !important;
   opacity: 1 !important;
@@ -12231,13 +12231,13 @@ html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item:is(:h
   html body[data-app-page="home"].find-my-test-page::before {
     background:
       linear-gradient(180deg, rgba(3, 17, 31, .38), rgba(3, 17, 31, .48) 52%, rgba(3, 17, 31, .62)),
-      url("../images/find-my-test-workflow-warm-cold-v1.webp") 64% center / cover no-repeat !important;
+      url("../images/scene-test-20261013.webp") 64% center / cover no-repeat !important;
   }
 
   html body[data-app-page][data-app-page="stock-order"]::before {
     background:
       linear-gradient(180deg, rgba(38, 26, 14, .30), rgba(3, 17, 31, .46) 52%, rgba(3, 17, 31, .64)),
-      url("../images/order-stock-workflow-warm-cold-v1.webp") 68% center / cover no-repeat !important;
+      url("../images/scene-stock-20261013.webp") 68% center / cover no-repeat !important;
   }
 }
 
@@ -12311,7 +12311,7 @@ html body[data-app-page] :is(.contact-sheet-action, .home-help-actions a):focus-
   outline: 2px solid #a7dedc; outline-offset: 3px;
 }
 /* About and Contact share the home laboratory scene, with cool shade and warm light. */
-:root { --support-scene: linear-gradient(110deg, rgba(3,24,42,.82), rgba(74,46,24,.48)), url("../images/reference-workflow-warm-cold-v1.webp"); }
+:root { --support-scene: linear-gradient(110deg, rgba(3,24,42,.82), rgba(74,46,24,.48)), url("../images/scene-reference-20261013.webp"); }
 html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]),
 html body[data-app-page]:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"])::before,
 html body[data-app-page] :is(#aboutInfoModal, #contactFeedbackModal) {
