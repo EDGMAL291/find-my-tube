@@ -237,7 +237,11 @@ body[data-app-page="stock-order"] .stock-cart-dialog {
   overflow: auto;
   border: 1px solid rgba(230, 207, 140, .44);
   border-radius: 10px;
-  background: rgba(8, 29, 43, .97);
+  background-color: #081d2b;
+  background-image: var(--fmt-scene-tone), url("../images/scene-stock-20261013.webp");
+  background-position: center, 72% center;
+  background-size: cover;
+  background-repeat: no-repeat;
   color: #f8fbfb;
   box-shadow: 0 24px 70px rgba(2, 14, 23, .45);
 }
@@ -260,6 +264,19 @@ body[data-app-page="stock-order"] .stock-cart-close {
 body[data-app-page="stock-order"] .stock-cart-dialog-help { margin: 8px 0 18px; color: #cad8d9; }
 body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-form { margin-bottom: 18px; }
 body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-preview-card { padding: 0; border: 0; background: transparent; box-shadow: none; }
+/* Avoid stacking frosted wrappers over the photograph; frost individual fields and items. */
+html[data-theme] body[data-app-page="stock-order"] #stockOrderCartDialog :is(.stock-order-form, .stock-order-preview-card, .stock-order-summary-item) {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 0;
+  box-shadow: none;
+}
+html[data-theme] body[data-app-page="stock-order"] #stockOrderCartDialog :is(.stock-order-field input, .stock-order-field select, .stock-order-field textarea, .stock-order-repeat-reason select, .stock-order-selected-card) {
+  background: var(--fmt-card-frost-background) !important;
+  backdrop-filter: var(--fmt-card-frost-filter) !important;
+  -webkit-backdrop-filter: var(--fmt-card-frost-filter) !important;
+}
 html body[data-app-page="stock-order"] .stock-cart-dialog :is(.stock-order-field input, .stock-order-field select, .stock-order-field textarea, .stock-order-repeat-reason select) {
   background: rgba(255, 255, 255, .1);
   border-color: rgba(255, 255, 255, .23);
