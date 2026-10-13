@@ -1185,8 +1185,8 @@ body[data-app-page="home"] .home-hero-slide > .home-hero-content {
 }
 
 body[data-app-page="home"] .home-hero-slide-clipboard {
-  --hero-scene-position: 0% 70%;
-  --hero-scene-origin: 0% 70%;
+  --hero-scene-position: 80% 65%;
+  --hero-scene-origin: 80% 65%;
   --hero-scene-scale: 1.34;
 }
 
@@ -6550,7 +6550,7 @@ html[data-theme] body[data-app-page="stock-order"] #stockOrderSubmissionCard {
 /* Homepage CTA path: the content rule turns into the page link arrow. */
 body[data-app-page="home"] .home-hero-slide-overview { --hero-image: url("../images/hero-lab-tubes.jpg"); }
 body[data-app-page="home"] .home-hero-slide-rack { --hero-image: url("../images/hero-lab-collection.jpg"); }
-body[data-app-page="home"] .home-hero-slide-clipboard { --hero-image: url("../images/hero-lab-analyser.jpg"); }
+body[data-app-page="home"] .home-hero-slide-clipboard { --hero-image: url("../images/find-my-test-workflow-warm-cold-v1.webp"); }
 body[data-app-page="home"] .home-hero-slide-stock { --hero-image: url("../images/hero-lab-logistics.jpg"); }
 
 body[data-app-page="home"] .home-hero-content {
@@ -6641,27 +6641,27 @@ body[data-app-page="home"] .home-hero-slide-overview .home-hero-label {
 }
 
 @media (max-width: 620px) {
-  body[data-app-page="home"] .home-hero-carousel[data-hero-tone="overview"] .home-hero-swipe-hint {
-    position: absolute;
-    z-index: 3;
-    top: 43%;
-    right: 9%;
+  body[data-app-page="home"] .home-hero-controls {
+    right: 20px;
+    align-items: center;
+  }
+
+  body[data-app-page="home"] .home-hero-swipe-hint {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    color: #fffdf8;
-    font-size: 1.16rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
+    gap: 5px;
+    margin-left: auto;
+    color: rgba(255, 253, 248, 0.82);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
     white-space: nowrap;
     pointer-events: none;
-    text-shadow: 0 2px 9px rgba(1, 13, 27, 0.95);
-    animation: home-swipe-left 2.8s ease-in-out infinite;
   }
 
   body[data-app-page="home"] .home-hero-swipe-arrow {
     color: var(--hero-accent);
-    font-size: 2.5rem;
+    font-size: 1rem;
     line-height: 1;
   }
 
@@ -6675,19 +6675,6 @@ body[data-app-page="home"] .home-hero-slide-overview .home-hero-label {
   body[data-app-page="home"] .home-hero-primary {
     width: calc(100% + 14px);
     margin-left: -14px;
-  }
-}
-
-@keyframes home-swipe-left {
-  0%, 12% { opacity: 0; transform: translateX(22px); }
-  28% { opacity: 1; }
-  72% { opacity: 1; transform: translateX(-40px); }
-  88%, 100% { opacity: 0; transform: translateX(-40px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body[data-app-page="home"] .home-hero-carousel[data-hero-tone="overview"] .home-hero-swipe-hint {
-    animation: none;
   }
 }
 
