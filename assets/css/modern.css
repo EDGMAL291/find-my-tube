@@ -6548,6 +6548,11 @@ html[data-theme] body[data-app-page="stock-order"] #stockOrderSubmissionCard {
 }
 
 /* Homepage CTA path: the content rule turns into the page link arrow. */
+body[data-app-page="home"] .home-hero-slide-overview { --hero-image: url("../images/hero-lab-tubes.jpg"); }
+body[data-app-page="home"] .home-hero-slide-rack { --hero-image: url("../images/hero-lab-collection.jpg"); }
+body[data-app-page="home"] .home-hero-slide-clipboard { --hero-image: url("../images/hero-lab-analyser.jpg"); }
+body[data-app-page="home"] .home-hero-slide-stock { --hero-image: url("../images/hero-lab-logistics.jpg"); }
+
 body[data-app-page="home"] .home-hero-content {
   position: relative;
   top: 0;
@@ -6627,7 +6632,39 @@ body[data-app-page="home"] .home-hero-label {
   white-space: nowrap;
 }
 
+body[data-app-page="home"] .home-hero-slide-overview .home-hero-label {
+  font-weight: 400;
+}
+
+.home-hero-swipe-hint {
+  display: none;
+}
+
 @media (max-width: 620px) {
+  body[data-app-page="home"] .home-hero-controls {
+    right: 20px;
+    align-items: center;
+  }
+
+  body[data-app-page="home"] .home-hero-swipe-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    color: rgba(255, 253, 248, 0.82);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  body[data-app-page="home"] .home-hero-swipe-arrow {
+    color: var(--hero-accent);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
   body[data-app-page="home"] .home-hero-content {
     top: 0;
     margin-top: 0;
