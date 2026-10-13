@@ -197,3 +197,90 @@ html body[data-app-page] .contact-sheet-action-icon {
   width: 38px;
   height: 38px;
 }
+
+body[data-app-page="stock-order"] .stock-cart-bar[hidden] { display: none; }
+body[data-app-page="stock-order"] .stock-cart-bar {
+  position: fixed;
+  z-index: 1120;
+  left: 50%;
+  bottom: 18px;
+  width: min(550px, calc(100% - 32px));
+  transform: translateX(-50%);
+}
+body[data-app-page="stock-order"] .stock-cart-open {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border: 1px solid rgba(230, 207, 140, .55);
+  border-radius: 9px;
+  background: rgba(8, 30, 43, .94);
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(2, 14, 23, .3);
+  backdrop-filter: blur(14px);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+body[data-app-page="stock-order"] .stock-cart-open-copy { display: grid; gap: 2px; }
+body[data-app-page="stock-order"] .stock-cart-open-copy small { color: #e6cf8c; }
+body[data-app-page="stock-order"] .stock-cart-open:focus-visible,
+body[data-app-page="stock-order"] .stock-cart-close:focus-visible { outline: 3px solid #e6cf8c; outline-offset: 3px; }
+body[data-app-page="stock-order"] .stock-cart-dialog {
+  width: min(620px, calc(100% - 24px));
+  max-height: min(90dvh, 850px);
+  margin: auto;
+  padding: 20px;
+  overflow: auto;
+  border: 1px solid rgba(230, 207, 140, .44);
+  border-radius: 10px;
+  background: rgba(8, 29, 43, .97);
+  color: #f8fbfb;
+  box-shadow: 0 24px 70px rgba(2, 14, 23, .45);
+}
+body[data-app-page="stock-order"] .stock-cart-dialog::backdrop {
+  background: rgba(2, 14, 23, .72);
+  backdrop-filter: blur(5px);
+}
+body[data-app-page="stock-order"] .stock-cart-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+body[data-app-page="stock-order"] .stock-cart-dialog-head h2 { margin: 0; font-size: 1.4rem; }
+body[data-app-page="stock-order"] .stock-cart-close {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid rgba(22, 55, 58, .2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .08);
+  color: #f8fbfb;
+  font: inherit;
+  cursor: pointer;
+}
+body[data-app-page="stock-order"] .stock-cart-dialog-help { margin: 8px 0 18px; color: #cad8d9; }
+body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-form { margin-bottom: 18px; }
+body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-preview-card { padding: 0; border: 0; background: transparent; box-shadow: none; }
+html body[data-app-page="stock-order"] .stock-cart-dialog :is(.stock-order-field input, .stock-order-field select, .stock-order-field textarea, .stock-order-repeat-reason select) {
+  background: rgba(255, 255, 255, .1);
+  border-color: rgba(255, 255, 255, .23);
+  color: #f8fbfb;
+}
+body[data-app-page="stock-order"] .stock-cart-dialog :is(input, textarea)::placeholder { color: #c4d2d5; opacity: 1; }
+body[data-app-page="stock-order"] .stock-cart-dialog select option { background: #102c3d; color: #fff; }
+html body[data-app-page="stock-order"] .stock-cart-dialog :is(.stock-order-summary-item, .stock-order-selected-card) {
+  background: rgba(255, 255, 255, .06);
+  border-color: rgba(255, 255, 255, .14);
+}
+html body[data-app-page="stock-order"] .stock-cart-dialog :is(.stock-order-request-head h3, .stock-order-selected-name, .stock-order-summary-value, .stock-order-request-meta, .stock-order-summary-label, .stock-order-selected-quantity) { color: #f8fbfb; }
+body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-selected-remove { color: #e6cf8c; }
+html body[data-app-page="stock-order"] .stock-cart-dialog #submitStockOrderBtn { background: #e6cf8c; color: #102c3d; border-color: #e6cf8c; }
+html body[data-app-page="stock-order"] .stock-cart-dialog #submitStockOrderBtn:disabled { opacity: .55; }
+html body[data-app-page="stock-order"] .stock-cart-dialog #resetStockOrderBtn { color: #e6cf8c; border-color: rgba(230, 207, 140, .64); }
+@media (max-width: 860px) {
+  body[data-app-page="stock-order"] .stock-cart-bar { bottom: calc(env(safe-area-inset-bottom) + 82px); }
+  body[data-app-page="stock-order"] .stock-cart-dialog { max-height: calc(100dvh - env(safe-area-inset-bottom) - 28px); padding: 16px; }
+}
+@media (max-width: 520px) {
+  body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-form { grid-template-columns: 1fr; }
+  body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-field { grid-column: 1; }
+}

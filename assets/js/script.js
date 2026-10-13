@@ -173,6 +173,10 @@ const refreshStockTrackingBtn = document.getElementById("refreshStockTrackingBtn
 const stockOrderTrackingMeta = document.getElementById("stockOrderTrackingMeta");
 const stockOrderTrackingList = document.getElementById("stockOrderTrackingList");
 const stockOrderSubmissionCard = document.getElementById("stockOrderSubmissionCard");
+const stockCartBar = document.getElementById("stockCartBar");
+const stockCartCount = document.getElementById("stockCartCount");
+const stockOrderCartDialog = document.getElementById("stockOrderCartDialog");
+const stockOrderPreviewCard = document.getElementById("stockOrderPreviewCard");
 const stockOrderSubmissionRequestId = document.getElementById("stockOrderSubmissionRequestId");
 const stockOrderSubmissionMessage = document.getElementById("stockOrderSubmissionMessage");
 const stockOrderTrackOrderBtn = document.getElementById("stockOrderTrackOrderBtn");
@@ -2339,6 +2343,8 @@ function updateStockOrderPreview() {
   const requesterWard = String(stockOrderRequesterSelect?.value || "").trim();
   const selectedItems = getSelectedStockConsumables();
   const itemCount = selectedItems.reduce((sum, item) => sum + getStockInventoryUnits(item), 0);
+  if (stockCartBar) stockCartBar.hidden = selectedItems.length === 0;
+  if (stockCartCount) stockCartCount.textContent = `${selectedItems.length} item${selectedItems.length === 1 ? "" : "s"} · ${itemCount} total`;
   const hasRequest = Boolean(requesterName && requesterWard && selectedItems.length);
   const repeatAnalysis = analyzeStockRepeatRequest({
     wardUnit: requesterWard,
@@ -2725,6 +2731,25 @@ function hideStockOrderSubmissionConfirmation() {
 function initStockOrderPanel() {
   if (!stockOrderPanel || !stockOrderRequesterNameInput || !stockOrderRequesterSelect || !stockOrderGrid) return;
 
+  const stockCartFormSlot = document.getElementById("stockCartFormSlot");
+  const stockCartPreviewSlot = document.getElementById("stockCartPreviewSlot");
+  const openStockCartBtn = document.getElementById("openStockCartBtn");
+  const closeStockCartBtn = document.getElementById("closeStockCartBtn");
+  openStockCartBtn?.addEventListener("click", () => {
+    if (!stockOrderCartDialog || !stockCartFormSlot || !stockCartPreviewSlot || !stockOrderForm || !stockOrderPreviewCard) return;
+    stockCartFormSlot.append(stockOrderForm);
+    stockCartPreviewSlot.append(stockOrderPreviewCard);
+    stockOrderCartDialog.showModal();
+    closeStockCartBtn?.focus();
+  });
+  closeStockCartBtn?.addEventListener("click", () => stockOrderCartDialog?.close());
+  stockOrderCartDialog?.addEventListener("close", () => {
+    stockOrderPanel.insertBefore(stockOrderForm, stockOrderPanel.querySelector(".stock-catalog-toolbar"));
+    stockOrderPanel.insertBefore(stockOrderPreviewCard, stockOrderSubmissionCard);
+    if (stockCartBar && !stockCartBar.hidden) openStockCartBtn?.focus();
+    else if (stockOrderSubmissionCard && !stockOrderSubmissionCard.hidden) stockOrderTrackOrderBtn?.focus();
+  });
+
   stockOrderForm?.addEventListener("submit", (event) => {
     event.preventDefault();
   });
@@ -2849,6 +2874,8 @@ function initStockOrderPanel() {
         : `Consumables request submitted.${sheetSyncWarning}`);
       resetStockOrderForm();
       showStockOrderSubmissionConfirmation(submittedRecord, payload);
+      if (stockOrderCartDialog?.open) stockOrderCartDialog.close();
+      stockOrderSubmissionCard?.scrollIntoView({ behavior: "smooth", block: "center" });
       loadStockDuplicateCheckRequests();
     } catch (error) {
       submittedStockOrderRecord = null;

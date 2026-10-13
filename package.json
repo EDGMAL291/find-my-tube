@@ -7,7 +7,7 @@
     "start": "node server.js",
     "check": "node --check server.js && node --check assets/js/script.js && node --check assets/js/stock-dashboard.js && node --check assets/js/track-orders.js && node --check assets/js/find-my-test.js && node --check assets/js/premium-home.js && node --check assets/js/order-stock-catalog.js && node --check assets/js/stock-catalog-data.js && node --check service-worker.js",
     "test": "node --test test/*.test.js && node tests/order-regression.cjs && node tests/sheets-regression.cjs",
-    "test:browser": "node tests/discovery-browser.cjs && node tests/stock-visual-browser.cjs && node tests/laboratory-catalogue-browser.cjs && node tests/stock-privacy-browser.cjs",
+    "test:browser": "node tests/discovery-browser.cjs && node tests/stock-visual-browser.cjs && node tests/stock-cart-browser.cjs && node tests/laboratory-catalogue-browser.cjs && node tests/stock-privacy-browser.cjs",
     "admin:set": "node scripts/set-stock-owner.js",
     "owner:set": "node scripts/set-stock-owner.js"
   },
