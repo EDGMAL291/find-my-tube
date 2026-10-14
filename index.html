@@ -99,7 +99,6 @@
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
   <link rel="stylesheet" href="assets/css/workflows.css?v=20261013e" />
-  <link rel="stylesheet" href="assets/css/lab-panorama.css?v=20261014a" />
 </head>
 <body data-app-page="home">
   <main class="container">
@@ -201,11 +200,10 @@
 
     <section class="home-hub home-dashboard" id="homeHub">
       <section class="home-hero-carousel" id="homeHeroCarousel" aria-roledescription="carousel" aria-label="Find My Tube services" data-hero-tone="overview" tabindex="0">
-        <div class="home-lab-panorama" id="homeLabPanorama" role="img" aria-label="A complete laboratory with specimen collection, testing and stock areas"></div>
         <article class="home-hero-slide home-hero-slide-overview is-active" data-hero-slide data-hero-tone="overview" aria-hidden="false">
           <div class="home-hero-content">
-            <h2><button type="button" class="home-hero-heading-link" data-hero-next>Step inside the lab.</button></h2>
-            <p class="home-hero-copy">Find tubes, plan tests and order stock—all from one place.</p>
+            <h2><button type="button" class="home-hero-heading-link" data-hero-next>Clearer decisions for every specimen.</button></h2>
+            <p class="home-hero-copy">Find My Tube helps clinical teams choose the right tests and specimen tubes, and request essential laboratory consumables with less uncertainty.</p>
             <button type="button" class="home-hero-primary" data-hero-next><span class="home-hero-label">Explore the lab</span><span class="home-hero-arrow" aria-hidden="true">→</span></button>
           </div>
         </article>
@@ -231,10 +229,10 @@
           </div>
         </article>
         <div class="home-hero-controls" aria-label="Choose a hero slide">
-          <button type="button" class="home-hero-dot is-active" data-hero-dot aria-label="Show laboratory overview" aria-current="true">Overview</button>
-          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Tube" aria-current="false">Tubes</button>
-          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Test" aria-current="false">Tests</button>
-          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Order My Stock" aria-current="false">Stock</button>
+          <button type="button" class="home-hero-dot is-active" data-hero-dot aria-label="Show laboratory overview" aria-current="true"></button>
+          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Tube" aria-current="false"></button>
+          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Test" aria-current="false"></button>
+          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Order My Stock" aria-current="false"></button>
           <span class="home-hero-swipe-hint" aria-hidden="true"><span class="home-hero-swipe-arrow">←</span> Swipe left</span>
         </div>
       </section>
@@ -572,10 +570,10 @@
   <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
   <script src="assets/js/script.js?v=20261013a"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
-  <script src="assets/js/premium-home.js?v=20261014a"></script>
+  <script src="assets/js/premium-home.js?v=20260813a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
-      const APP_VERSION = "2026-10-14.1";
+      const APP_VERSION = "2026-10-14.2";
       const hostname = window.location.hostname || "";
       const isPrivateIpv4 = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
       const isLocalPreview = window.location.port === "3000"
@@ -596,7 +594,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261014a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261014b", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
@@ -641,6 +639,5 @@
       });
     }
   </script>
-  <script src="assets/js/lab-panorama.js?v=20261014a"></script>
 </body>
 </html>

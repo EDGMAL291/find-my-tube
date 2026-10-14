@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v367";
+const CACHE_NAME = "find-my-tube-v368";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -13,13 +13,11 @@ const CORE_ASSETS = [
   "./assets/css/discovery.css?v=20261013c",
   "./assets/css/scenes.css?v=20261013c",
   "./assets/css/workflows.css?v=20261013e",
-  "./assets/css/lab-panorama.css?v=20261014a",
-  "./assets/js/lab-panorama.js?v=20261014a",
   "./assets/js/stock-catalog-data.js?v=20261006d",
   "./assets/js/script.js?v=20261013a",
   "./assets/data/data.js?v=20261012o",
   "./favicon.svg",
-  "./assets/images/lab-panorama-20261014.webp"
+  "./assets/images/scene-tube-20261013.webp"
 ];
 
 // Page-specific scripts, reference pages, icons, and photography are cached by

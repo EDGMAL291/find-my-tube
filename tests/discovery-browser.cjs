@@ -395,8 +395,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.keyboard.press('Escape');
         await page.waitForTimeout(250);
         assert.equal(await page.locator('#siteMenuPanel').isVisible(), false);
-        const pageBackdrop = await page.locator('.lab-world-scene img').getAttribute('src');
-        assert.match(pageBackdrop, /lab-panorama-20261014/);
+        const pageBackdrop = await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage);
+        assert.match(pageBackdrop, /scene-tube-20261013/);
         assert.equal(await page.locator('#tubeLookupPanel').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Search shell shows the page photograph');
         assert.equal(await page.locator('.group-chip-icon:visible').count(), 0, 'Department navigation has no decorative glyphs');
         await page.screenshot({ path:path.join(screenshots, `browse-${width}-${theme}.png`) });
@@ -415,8 +415,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await card.locator('.discovery-body').isVisible(), false, 'Selection does not force details open');
         await card.locator('.discovery-inspect').click();
         const surfaces = await page.evaluate(() => ({
-          backdrop: document.querySelector('.lab-world-scene img').src,
-          fixed: getComputedStyle(document.querySelector('.lab-world-scene')).position,
+          backdrop: getComputedStyle(document.body, '::before').backgroundImage,
+          fixed: getComputedStyle(document.body, '::before').position,
           count: getComputedStyle(document.querySelector('.results-toolbar')).backgroundColor,
           grid: getComputedStyle(document.querySelector('#cardsContainer')).backgroundColor,
           clipping: getComputedStyle(document.querySelector('.discovery-card')).overflow
@@ -465,8 +465,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.locator('#selectionCartBar').click();
         assert.equal(await page.locator('#drawModal').isVisible(), true);
         await page.waitForFunction(() => document.querySelector('.draw-modal-card').getBoundingClientRect().top >= 0 && getComputedStyle(document.querySelector('#drawModal')).opacity === '1');
-        assert.match(await page.locator('#drawModal .lab-scene-camera').getAttribute('src'), /lab-panorama-20261014/);
-        assert.equal(await page.locator('#drawModal .lab-modal-scene').getAttribute('data-lab-focus'), 'plan');
+        assert.match(await page.locator('#drawModal').evaluate(el => getComputedStyle(el).backgroundImage), /scene-tube-20261013/);
         assert.equal(await page.locator('.draw-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan enclosing card uses 10% frost');
         assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan results use 10% frost');
         await assertVisibleCardsUseTenPercentFrost(page, `Tube Plan ${width}px ${theme}`);
@@ -662,13 +661,13 @@ async function exerciseTubePlanWorkflow(page, width) {
       await testPage.goto(`${base}/index.html?tool=find-my-test`);
       assert.equal(await testPage.locator('body').evaluate(el => el.classList.contains('find-my-test-page')), true);
       const initialVisual = await testPage.evaluate(() => ({
-        background:document.querySelector('.lab-world-scene img').src,
-        position:getComputedStyle(document.querySelector('.lab-world-scene')).position,
+        background:getComputedStyle(document.body, '::before').backgroundImage,
+        position:getComputedStyle(document.body, '::before').position,
         panel:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundColor,
         panelImage:getComputedStyle(document.querySelector('.clinical-workup-panel')).backgroundImage,
         input:getComputedStyle(document.querySelector('#clinicalSymptomsInput')).backgroundColor
       }));
-      assert.match(initialVisual.background, /lab-panorama-20261014/, `Find My Test warm/cold photograph missing at ${width}`);
+      assert.match(initialVisual.background, /scene-test-20261013/, `Find My Test warm/cold photograph missing at ${width}`);
       assert.equal(initialVisual.position, 'fixed', 'Find My Test photograph must stay still while scrolling');
       assert.equal(initialVisual.panel, 'rgba(255, 255, 255, 0.1)', 'Find My Test form uses 10% frost');
       assert.equal(initialVisual.panelImage, 'none', 'Find My Test form does not cover the photograph');
@@ -730,14 +729,14 @@ async function exerciseTubePlanWorkflow(page, width) {
       await deskPage.goto(`${base}/index.html?tool=collection-desk`);
       assert.equal(await deskPage.locator('#homeLabDeskPanel').isVisible(), true);
       const deskVisual = await deskPage.evaluate(() => ({
-        background:document.querySelector('#homeLabDeskBackdrop .lab-scene-camera').src,
+        background:getComputedStyle(document.querySelector('#homeLabDeskBackdrop')).backgroundImage,
         blur:getComputedStyle(document.querySelector('#homeLabDeskBackdrop')).backdropFilter,
         panel:getComputedStyle(document.querySelector('#homeLabDeskPanel')).backgroundColor,
         panelImage:getComputedStyle(document.querySelector('#homeLabDeskPanel')).backgroundImage,
         card:getComputedStyle(document.querySelector('.home-collection-checklist-card')).backgroundColor,
         action:getComputedStyle(document.querySelector('.home-action-tile')).backgroundColor
       }));
-      assert.match(deskVisual.background, /lab-panorama-20261014/, `Collection Desk photograph missing at ${width}`);
+      assert.match(deskVisual.background, /scene-home-20261013/, `Collection Desk photograph missing at ${width}`);
       assert.equal(deskVisual.blur, 'none', 'Collection Desk photograph stays sharp');
       assert.equal(deskVisual.panel, 'rgba(0, 0, 0, 0)', 'Collection Desk panel stays transparent');
       assert.equal(deskVisual.panelImage, 'none');
@@ -817,10 +816,10 @@ async function exerciseTubePlanWorkflow(page, width) {
       if(route !== 'index.html') await assertVisibleCardsUseTenPercentFrost(page, route);
       if(route === 'order-stock.html') {
         const stockBackdrop = await page.evaluate(() => ({
-          image:document.querySelector('.lab-world-scene img').src,
-          position:getComputedStyle(document.querySelector('.lab-world-scene')).position
+          image:getComputedStyle(document.body, '::before').backgroundImage,
+          position:getComputedStyle(document.body, '::before').position
         }));
-        assert.match(stockBackdrop.image, /lab-panorama-20261014/, 'Order My Stock uses its warm/cold supply photograph');
+        assert.match(stockBackdrop.image, /scene-stock-20261013/, 'Order My Stock uses its warm/cold supply photograph');
         assert.equal(stockBackdrop.position, 'fixed', 'Order My Stock photograph stays still while scrolling');
         assert.match(await page.locator('body').innerText(), /22 of 22 stock items/);
         for (const width of [360, 390, 412, 430, 768, 1280]) {
@@ -846,10 +845,10 @@ async function exerciseTubePlanWorkflow(page, width) {
         );
       }
       if(route === 'track-orders.html') {
-        assert.match(await page.locator('.lab-world-scene img').getAttribute('src'), /lab-panorama-20261014/, 'Track Orders uses its warm/cold logistics photograph');
+        assert.match(await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage), /scene-track-20261013/, 'Track Orders uses its warm/cold logistics photograph');
       }
       if(route === 'stock-dashboard.html') {
-        assert.match(await page.locator('.lab-world-scene img').getAttribute('src'), /lab-panorama-20261014/, 'Stock Dashboard uses its warm/cold inventory photograph');
+        assert.match(await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage), /scene-dashboard-20261013/, 'Stock Dashboard uses its warm/cold inventory photograph');
       }
       await page.screenshot({path:path.join(screenshots, route.replace('.html','.png'))});
       await page.close();

@@ -6,7 +6,6 @@
   const dots = Array.from(carousel.querySelectorAll("[data-hero-dot]"));
   let activeIndex = 0;
   let touchStartX = null;
-  let lastWheelChange = -Infinity;
 
   const showSlide = (index) => {
     activeIndex = (index + slides.length) % slides.length;
@@ -15,7 +14,6 @@
       const isActive = slideIndex === activeIndex;
       slide.classList.toggle("is-active", isActive);
       slide.setAttribute("aria-hidden", String(!isActive));
-      slide.inert = !isActive;
     });
     dots.forEach((dot, dotIndex) => {
       const isActive = dotIndex === activeIndex;
@@ -55,15 +53,6 @@
       showSlide(activeIndex - 1);
     }
   });
-
-  carousel.addEventListener("wheel", (event) => {
-    if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 24) return;
-    event.preventDefault();
-    const now = performance.now();
-    if (now - lastWheelChange < 650) return;
-    lastWheelChange = now;
-    showSlide(activeIndex + (event.deltaX > 0 ? 1 : -1));
-  }, { passive: false });
 
   showSlide(activeIndex);
 
