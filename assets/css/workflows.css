@@ -220,6 +220,7 @@ body[data-app-page="stock-order"] .stock-cart-open {
   background: rgba(8, 30, 43, .94);
   color: #fff;
   box-shadow: 0 14px 34px rgba(2, 14, 23, .3);
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   font: inherit;
   text-align: left;
@@ -247,6 +248,7 @@ body[data-app-page="stock-order"] .stock-cart-dialog {
 }
 body[data-app-page="stock-order"] .stock-cart-dialog::backdrop {
   background: rgba(2, 14, 23, .72);
+  -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
 }
 body[data-app-page="stock-order"] .stock-cart-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -300,4 +302,25 @@ html body[data-app-page="stock-order"] .stock-cart-dialog #resetStockOrderBtn { 
 @media (max-width: 520px) {
   body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-form { grid-template-columns: 1fr; }
   body[data-app-page="stock-order"] .stock-cart-dialog .stock-order-field { grid-column: 1; }
+}
+
+/* iOS WebKit composites nested backdrop filters unevenly. Let the enclosing
+   frosted panel blur the scene once; its children retain their transparent fill.
+   The cart's transparent wrappers are excluded so its fields still own their frost. */
+@supports (-webkit-touch-callout: none) {
+  html[data-theme] body[data-app-page] :is(
+    .clinical-workup-panel,
+    .draw-modal-card,
+    .profile-modal-card,
+    .contact-sheet-card,
+    .about-info-modal-card,
+    .legal-modal-card,
+    .section-browse-modal-card,
+    .stock-dashboard-card,
+    .stock-dashboard-login-modal-card,
+    .stock-dashboard-request-card
+  ) > *,
+  html[data-theme] body[data-app-page] #stockOrderPanel :is(.stock-order-form, .stock-order-request-card) > * {
+    --fmt-card-frost-filter: none;
+  }
 }
