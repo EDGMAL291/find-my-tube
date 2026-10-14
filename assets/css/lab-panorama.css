@@ -1,0 +1,105 @@
+/* A complete room in the overview; the same photograph follows every workspace. */
+html body.lab-panorama-enabled[data-app-page][data-app-page][data-app-page][data-app-page] {
+  background: #061827 !important;
+  isolation: isolate;
+}
+html body.lab-panorama-enabled[data-app-page][data-app-page][data-app-page][data-app-page]::before { display: none; }
+html body.lab-panorama-enabled::after { display: none; }
+.lab-world-scene, .lab-modal-scene { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+.lab-world-scene { z-index: -1; }
+.lab-modal-scene { position: absolute; z-index: 0; }
+.lab-scene-camera {
+  position: absolute;
+  max-width: none;
+  object-fit: fill;
+  transform-origin: center;
+  transition: transform 1200ms cubic-bezier(.22, 1, .36, 1);
+  pointer-events: none;
+}
+.lab-scene-shade { position: absolute; inset: 0; background: var(--fmt-scene-tone); pointer-events: none; }
+.lab-world-scene .lab-scene-shade { background: linear-gradient(110deg, rgba(3, 24, 42, .8), rgba(7, 31, 46, .57) 52%, rgba(63, 35, 15, .6)); }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel {
+  position: relative;
+  display: block;
+  width: min(100%, 760px);
+  height: auto;
+  min-height: 0;
+  margin: 0 auto;
+  overflow: hidden;
+  background: rgba(4, 20, 32, .4);
+  border: 1px solid rgba(230, 207, 140, .2);
+  border-radius: 8px;
+}
+html[data-theme] body[data-app-page="home"] #homeHub {
+  display: block;
+  height: auto;
+  min-height: 0;
+  padding-top: 84px;
+  padding-bottom: 24px;
+}
+html[data-theme] body[data-app-page="home"].find-my-test-page #homeHub { padding: 0; }
+html[data-theme] body[data-app-page="home"] #homeLabPanorama {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+}
+#homeLabPanorama .lab-scene-shade { background: linear-gradient(110deg, rgba(3, 24, 42, .12), rgba(7, 31, 46, .04) 52%, rgba(91, 53, 24, .12)); }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-slide {
+  position: relative;
+  inset: auto;
+  display: none;
+  min-height: 0;
+  height: auto;
+  padding: 24px 28px 12px;
+  background: transparent;
+  transform: none;
+}
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-slide.is-active { display: block; opacity: 1; }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-slide::before,
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-slide::after { display: none; }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-content { max-width: 760px; padding: 0; margin: 0; transform: none; opacity: 1; }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-content::before { display: none; }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-content h2 { max-width: none; font-size: clamp(1.65rem, 3vw, 2.5rem); }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-copy { max-width: 65ch; }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-controls {
+  position: relative;
+  inset: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 24px 20px;
+}
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-dot {
+  width: auto;
+  height: auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #d3dfe1;
+  font: inherit;
+  cursor: pointer;
+}
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-dot::before { display: none; }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-dot.is-active { color: #e6cf8c; background: rgba(230, 207, 140, .1); }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-dot:focus-visible { outline: 2px solid #e6cf8c; outline-offset: -2px; }
+html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-swipe-hint { margin-left: auto; align-self: center; font-size: .75rem; }
+html body.lab-panorama-enabled[data-app-page][data-app-page] :is(#drawModal, #homeLabDeskBackdrop) { background: transparent !important; }
+html body.lab-panorama-enabled #drawModal > .draw-modal-card { position: relative; z-index: 1; }
+html body.lab-panorama-enabled[data-app-page] #stockOrderCartDialog {
+  background-image: var(--fmt-scene-tone), url("../images/lab-panorama-20261014.webp");
+  background-position: center, 100% 45%;
+  background-size: cover, auto 180%;
+}
+@media (max-width: 620px) {
+  html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-slide { padding: 20px 18px 8px; }
+  html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-controls { padding: 8px 10px 16px; }
+  html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-dot { padding-inline: 9px; font-size: .85rem; }
+  html[data-theme] body[data-app-page="home"] #homeHeroCarousel .home-hero-swipe-hint { width: 100%; margin: 4px 8px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-scene-camera { transition: none; }
+}
