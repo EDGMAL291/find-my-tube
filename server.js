@@ -9,11 +9,16 @@ const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const STOCK_CATALOG = require("./assets/js/stock-catalog-data.js");
 const ORDER_ARCHIVE = require("./assets/js/order-archive.js");
+const { createStockOrderEmailSender } = require("./lib/stock-order-email.js");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-10-12.16";
+const APP_RELEASE = "2026-10-18.2";
+const stockOrderEmail = createStockOrderEmailSender({
+  apiKey: process.env.RESEND_API_KEY,
+  from: process.env.STOCK_ORDER_EMAIL_FROM
+});
 const STOCK_SHEETS_WEBHOOK_URL = String(
   process.env.STOCK_SHEETS_WEBHOOK_URL
   ?? "https://script.google.com/macros/s/AKfycbyBQ7KCRmthNf9THsDY_WcsPi_k_R1Yyzkv4IXwuTq8FPVqp2voWXXNT87ebjEpRSsHqA/exec"
@@ -1976,6 +1981,18 @@ async function syncStockRecordToSheets(record, options = {}) {
   }
 }
 
+async function notifyLabOfStockOrder(record) {
+  const result = await stockOrderEmail.send(record);
+  if (!result.ok && !result.skipped) {
+    console.error("[stock-email] delivery-failed", {
+      requestId: record.id,
+      statusCode: result.statusCode || 0,
+      attempts: result.attempts || 0
+    });
+  }
+  return result;
+}
+
 function toSheetLineItems(items) {
   return (Array.isArray(items) ? items : []).map((item) => ({
     id: sanitizeString(item?.id, 80),
@@ -2137,6 +2154,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       service: "find-my-tube-backend",
       release: APP_RELEASE,
       commit: String(process.env.RENDER_GIT_COMMIT || "").slice(0, 12) || null,
+      notifications: { stockOrderEmailConfigured: stockOrderEmail.configured },
       timestamp: new Date().toISOString()
     });
     return;
@@ -3048,10 +3066,12 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
 
     const record = await dbInsertRequest(cleanPayload, session.user);
+    const emailNotificationPromise = notifyLabOfStockOrder(record);
     const sheetSync = await syncStockRecordToSheets(record, {
       action: "create-request",
       changedBy: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
     });
+    const emailNotification = await emailNotificationPromise;
 
     sendJson(req, res, 201, {
       ok: true,
@@ -3063,7 +3083,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         updatedAt: record.updatedAt,
         enteredBy: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true })
       },
-      sheetSync
+      sheetSync,
+      emailNotification
     });
     return;
   }
@@ -3169,8 +3190,6 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     let sheetMirror = null;
     try {
       record = await dbInsertRequest(cleanPayload, null);
-      sheetSync = await syncStockRecordToSheets(record, { action: "create-request" });
-      sheetMirror = await mirrorStockRequestToGoogleSheets(record);
     } catch (error) {
       console.error("[stock-submit] write-failed", {
         lineItemCount: cleanPayload.lineItemCount,
@@ -3185,6 +3204,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       }
       throw error;
     }
+
+    // Independent notifications start only after both the order and its items
+    // have been saved. Email delivery cannot roll back or reject that order.
+    const emailNotificationPromise = notifyLabOfStockOrder(record);
+    sheetSync = await syncStockRecordToSheets(record, { action: "create-request" });
+    sheetMirror = await mirrorStockRequestToGoogleSheets(record);
+    const emailNotification = await emailNotificationPromise;
 
     if (!sheetMirror.ok && !sheetMirror.skipped) {
       console.error(`Find My Tube: Google Sheets mirror failed for ${record.id}: ${sheetMirror.reason}`);
@@ -3205,6 +3231,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         createdAt: record.createdAt
       },
       sheetSync,
+      emailNotification,
       sheetMirror: {
         ok: sheetMirror.ok,
         skipped: sheetMirror.skipped,
@@ -3336,6 +3363,7 @@ function startServer() {
   return server.listen(PORT, HOST, () => {
     console.log(`Find My Tube server running at http://${HOST}:${PORT}`);
     console.log(`Supabase configured: ${HAS_SUPABASE ? "yes" : "no"}`);
+    console.log(`Stock order email configured: ${stockOrderEmail.configured ? "yes" : "no"}`);
   });
 }
 
