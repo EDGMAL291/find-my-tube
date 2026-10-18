@@ -225,12 +225,11 @@ html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip:focu
 html[data-theme] body[data-app-page="find-my-tube"] .group-chip-icon { display: none !important; }
 html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip {
   min-height: 48px; padding: 12px 0 !important; border: 0 !important;
-  border-bottom: 1px solid var(--clinical-line) !important; border-radius: 0 !important;
+  border-radius: 0 !important;
   transform: none !important; text-align: left;
 }
 html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-stack { border: 0 !important; background: transparent !important; box-shadow: none !important; }
 html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-label { color: #fffdf8 !important; text-shadow: none !important; filter: none !important; }
-html[data-theme] body[data-app-page="find-my-tube"] #groupChips .group-chip-stack:last-child .group-chip { border-bottom: 0 !important; }
 html[data-theme] body[data-app-page="find-my-tube"] .group-chip::before,
 html[data-theme] body[data-app-page="find-my-tube"] .group-chip::after { display: none !important; }
 /* Profile contents sit directly on the page photograph rather than inside another card. */
