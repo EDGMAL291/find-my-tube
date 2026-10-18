@@ -807,6 +807,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
       await page.goto(`${base}/${route}`);
+      if (route === 'index.html') await page.locator('#skipHomeIntroBtn').click();
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route} overflow`);
       assert.deepEqual(errors, [], `${route} runtime errors`);
       const radii = await page.locator('.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).borderRadius));
