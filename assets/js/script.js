@@ -302,7 +302,7 @@ const isFindMyTestPage = currentAppPage === "find-my-test";
 const isStockOrderPage = currentAppPage === "stock-order";
 const isStockDashboardPage = currentAppPage === "stock-dashboard";
 const isTrackOrdersPage = currentAppPage === "track-orders";
-const MENU_MAIN_ACTION_ORDER = ["home", "tube", "find-my-test", "draw", "collection-desk"];
+const MENU_MAIN_ACTION_ORDER = ["home", "tube", "draw", "collection-desk"];
 const MENU_STOCK_ACTION_ORDER = ["stock", "stock-dashboard", "track-orders"];
 const MENU_SECONDARY_ACTION_ORDER = ["about"];
 const MENU_ACTION_ORDER = [...MENU_MAIN_ACTION_ORDER, ...MENU_STOCK_ACTION_ORDER, ...MENU_SECONDARY_ACTION_ORDER];
@@ -1775,7 +1775,7 @@ function getStockItemQuantityText(item) {
   const isTube = /tube|microtainer/i.test(`${item?.id || ""} ${item?.label || ""} ${item?.sheetColumnKey || ""}`);
 
   if (unitType === "tray") return `${quantity} tray${quantity === 1 ? "" : "s"}`;
-  if (unitType === "packet") return `${quantity} packet${quantity === 1 ? "" : "s"}`;
+  if (unitType === "packet") return formatStockQuantity(item);
   if (isTube) return `${quantity} tube${quantity === 1 ? "" : "s"}`;
   if (formatted) return formatted.replace(/\s*\([^)]*\)\s*$/g, "");
   return `${quantity} each`;
@@ -2130,8 +2130,7 @@ function formatStockQuantity(item) {
   }
 
   if (item.unitType === "packet") {
-    const itemCount = item.quantity * item.packetSize;
-    return `${item.quantity} packet${item.quantity === 1 ? "" : "s"} (${itemCount} bags)`;
+    return window.FMT_STOCK_CATALOG.formatQuantity(item, item.quantity);
   }
 
   return `${item.quantity} each`;
@@ -2471,7 +2470,7 @@ function getStockOrderCardSelectionLabel(item, quantity) {
   const safeQuantity = Math.max(0, Number(quantity) || 0);
   if (!safeQuantity) return "";
   if (item?.unitType === "tray") return `${safeQuantity} tray${safeQuantity === 1 ? "" : "s"}`;
-  if (item?.unitType === "packet") return `${safeQuantity} packet${safeQuantity === 1 ? "" : "s"}`;
+  if (item?.unitType === "packet") return formatStockQuantity({ ...item, quantity: safeQuantity });
   return `${safeQuantity} each`;
 }
 
@@ -2556,12 +2555,12 @@ function renderStockOrderItems() {
         ? item.unitType === "tray"
           ? `${item.variantLabel} · Tray of ${item.traySize}`
           : item.unitType === "packet"
-          ? `${item.variantLabel} · Packet of ${item.packetSize}`
+          ? `${item.variantLabel} · ${item.packetSize} per pack`
           : item.variantLabel
         : item.unitType === "tray"
         ? `Tray of ${item.traySize}`
         : item.unitType === "packet"
-        ? `Packet of ${item.packetSize}`
+        ? `${item.packetSize} per pack`
         : "Each";
 
       return `
@@ -2605,7 +2604,7 @@ function renderStockOrderItems() {
               class="stock-order-qty-input"
               data-stock-qty-input="${item.id}"
               ${item.maxQuantity ? `max="${item.maxQuantity}"` : ""}
-              aria-label="${cardLabel} quantity"
+              aria-label="${cardLabel} quantity${item.unitType === "packet" ? ` in packs of ${item.packetSize}` : " each"}"
             />
             <button
               type="button"
@@ -3385,7 +3384,7 @@ const stockRequesterGroups = [
 ];
 
 const stockConsumableItems = Array.isArray(window.FMT_STOCK_CATALOG?.items)
-  ? window.FMT_STOCK_CATALOG.items
+  ? window.FMT_STOCK_CATALOG.items.filter((item) => item.orderable !== false)
   : [];
 
 // Section metadata drives the browse chips, labels, and icons shown on the home screen.
@@ -6555,8 +6554,7 @@ function getFindMyTestHandoffMarkup(queryLabel = "") {
   return `
     <div class="no-results no-results-handoff-card">
       <p class="no-results-handoff">Find My Tube works best for test and profile names.</p>
-      <p>Use Find My Test for condition-based searches like <strong>${escapedQuery}</strong>.</p>
-      <a class="no-results-link-btn" href="./index.html?tool=find-my-test">Open Find My Test</a>
+      <p>For <strong>${escapedQuery}</strong>, confirm the required investigations with your clinical team, then search by test name.</p>
     </div>
   `;
 }
@@ -7279,12 +7277,6 @@ function initMobileBottomNav() {
       <span class="mobile-bottom-nav-label">Menu</span>
     </button>
     <div class="mobile-bottom-nav-group" data-group="right">
-      <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="test" data-bottom-nav="test" aria-label="Find My Test">
-        <span class="mobile-bottom-nav-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 11h10M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/></svg>
-        </span>
-        <span class="mobile-bottom-nav-label">Suggest</span>
-      </button>
       <button type="button" class="mobile-bottom-nav-btn" data-mobile-nav="order" data-bottom-nav="order" aria-label="Order">
         <span class="mobile-bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M3.8 8.2 12 4l8.2 4.2M3.8 8.2V16L12 20l8.2-4V8.2M3.8 8.2 12 12.4m8.2-4.2L12 12.4m0 0V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -7324,7 +7316,6 @@ function initMobileBottomNav() {
         <p class="mobile-bottom-menu-group-title">Main navigation</p>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="home">Home</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="tube">Find My Tube</button>
-        <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="find-my-test">Find My Test</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="start-draw">Tube Plan</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock">Order My Stock</button>
         <button type="button" class="mobile-bottom-menu-item" data-mobile-menu-action="stock-dashboard">Stock Dashboard</button>

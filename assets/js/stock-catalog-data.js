@@ -86,7 +86,7 @@
       sheetColumnKey: "PaediatricGreyMicrotainer"
     },
     { id: "specimen-jars", label: "Specimen jars", unitType: "each", maxQuantity: 50, note: "Requested individually." },
-    { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, maxQuantity: 20, note: "Packed in 50s." },
+    { id: "lab-bags", label: "Lab bags", unitType: "packet", packetSize: 50, quantityNoun: "bags", maxQuantity: 20, note: "50 bags per pack. Quantity 1 = 50 bags." },
     { id: "blood-culture-bottle-aerobic", label: "Aerobic Blood Culture Bottle (Blue)", unitType: "each", maxQuantity: 50, note: "Requested individually." },
     { id: "blood-culture-bottle-paediatric-aerobic", label: "Paediatric Aerobic Blood Culture Bottle (Yellow)", unitType: "each", maxQuantity: 50, note: "Requested individually." },
     { id: "blood-culture-bottle-anaerobic", label: "Anaerobic Blood Culture Bottle (Orange)", unitType: "each", maxQuantity: 50, note: "Requested individually." },
@@ -98,6 +98,7 @@
       unitType: "each",
       maxQuantity: 50,
       note: "Requested individually.",
+      orderable: false,
       searchTerms: "vacutainer needles blood collection needle green"
     },
     {
@@ -106,8 +107,18 @@
       unitType: "each",
       maxQuantity: 50,
       note: "Requested individually.",
+      orderable: false,
       searchTerms: "vacutainer needles blood collection needle black"
     },
+    ...["green", "black"].map(color => ({
+      id: `vacutainer-needle-${color}-pack`,
+      label: `Vacutainer needle (${color === "green" ? "Green" : "Black"})`,
+      unitType: "packet", packetSize: 50, quantityNoun: "needles", maxQuantity: 50,
+      note: "50 needles per pack. Quantity 1 = 50 needles.",
+      // Keep the same inventory key as historical individual-needle orders.
+      sheetColumnKey: `vacutainer-needle-${color}`,
+      searchTerms: `vacutainer needles blood collection needle ${color}`
+    })),
     { id: "blood-gas-syringes", label: "Blood gas syringes", unitType: "each", maxQuantity: 50, note: "Requested individually." },
     { id: "swabs-transport-media", label: "Swabs with transport media", unitType: "each", maxQuantity: 50, note: "Requested individually." }
   ].map((item) => Object.freeze({ ...item }));
@@ -134,9 +145,10 @@
     }
     if (item?.unitType === "packet") {
       const units = getInventoryUnits(item, safeQuantity);
-      return `${safeQuantity} packet${safeQuantity === 1 ? "" : "s"} (${units} items)`;
+      const noun = item.quantityNoun || (/needle/i.test(item.label || "") ? "needles" : /lab bags/i.test(item.label || "") ? "bags" : "items");
+      return `${safeQuantity} pack${safeQuantity === 1 ? "" : "s"} (${units} ${noun})`;
     }
-    return `${safeQuantity} item${safeQuantity === 1 ? "" : "s"}`;
+    return `${safeQuantity} each`;
   }
 
   return Object.freeze({ items: Object.freeze(items), byId, getItem, getInventoryUnits, formatQuantity });

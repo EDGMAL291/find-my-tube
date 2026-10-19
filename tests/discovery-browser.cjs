@@ -832,7 +832,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.locator('#stockCatalogSearch').fill('vacutainer');
         assert.deepEqual(
           await page.locator('.stock-order-item-card:visible').evaluateAll(cards => cards.map(card => card.dataset.stockItem).sort()),
-          ['vacutainer-needle-black', 'vacutainer-needle-green']
+          ['vacutainer-needle-black-pack', 'vacutainer-needle-green-pack']
         );
         const needlePhotos = page.locator('.stock-item-photo-needle:visible');
         assert.equal(await needlePhotos.count(), 2, 'Both Vacutainer needle cards use product cutouts');

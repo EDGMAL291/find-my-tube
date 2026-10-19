@@ -3,6 +3,8 @@
 - A request needs a requester, ward/unit, and at least one current catalogue item.
 - Quantities are positive whole numbers and are capped by the canonical catalogue.
 - Tray and packet inventory units are calculated server-side. Browser totals are display-only.
+- Lab bags and current Vacutainer needle options are ordered in packs of 50. Blood culture bottles are ordered individually. Pack summaries show both pack count and total items.
+- New needle packs use `vacutainer-needle-green-pack` and `vacutainer-needle-black-pack`. Historical individual IDs remain supported for older clients but are hidden from the current order/receipt catalogue. Pack entries retain the original individual needle inventory keys. Never reinterpret an old quantity of two needles as two packs.
 - An active duplicate for the same ward and item is blocked. High-volume repeats fulfilled in the previous 48 hours require a reason.
 - Normal status flow is `Pending -> Ready -> Collected` (or `Completed`). `Cancelled` and `No Stock` are terminal alternatives.
 - Stock is deducted once, only when an order reaches `Collected` or `Completed`.

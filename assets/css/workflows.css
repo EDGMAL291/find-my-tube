@@ -326,7 +326,6 @@ html body[data-app-page="stock-order"] .stock-cart-dialog #resetStockOrderBtn { 
 }
 
 /* A short, optional first-visit guide using the home page's existing lab scene. */
-body.home-intro-open { overflow: hidden; }
 body[data-app-page="home"] .home-hero-guide-btn {
   min-height: 44px;
   padding: 6px 10px;
@@ -338,56 +337,54 @@ body[data-app-page="home"] .home-hero-guide-btn {
   white-space: nowrap;
   cursor: pointer;
 }
-body[data-app-page="home"] .home-intro-dialog {
-  box-sizing: border-box;
-  width: min(440px, calc(100% - 32px));
-  max-height: calc(100dvh - 32px);
-  margin: auto;
-  padding: 24px;
-  overflow: auto;
-  border: 1px solid rgba(230, 207, 140, .36);
-  border-radius: 8px;
-  background: linear-gradient(110deg, rgba(3, 24, 42, .94), rgba(7, 31, 46, .9) 55%, rgba(61, 36, 18, .92)), url("../images/scene-home-20261013.webp") center / cover;
-  color: #fffdf8;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .4);
-  font-family: inherit;
-  touch-action: pan-y;
+/* The walkthrough points to the real controls on each page. */
+body.site-guide-open { overflow: hidden; }
+body.site-guide-open #homeHeroCarousel * { animation: none !important; transition: none !important; }
+/* Keep the menu control aligned with its close control and walkthrough target. */
+html[data-theme] body #menuToggleBtn:is(:hover, :active) { transform: none !important; }
+html body #homeIntroDialog.site-guide-dialog {
+  position: fixed; inset: 0; margin: 0; padding: 0;
+  width: 100%; height: 100dvh; max-width: none; max-height: none;
+  border: 0; border-radius: 0; background: transparent; color: #fffdf8;
+  overflow: hidden; box-shadow: none; font: inherit;
 }
-body[data-app-page="home"] .home-intro-dialog::backdrop {
-  background: rgba(2, 14, 23, .7);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+.site-guide-dialog::backdrop { background: transparent; }
+.site-guide-spotlight {
+  position: absolute; box-sizing: border-box; border: 2px solid #e6cf8c;
+  border-radius: 4px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(2, 12, 23, .72);
 }
-body[data-app-page="home"] .home-intro-top,
-body[data-app-page="home"] .home-intro-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-body[data-app-page="home"] .home-intro-top { color: #e6cf8c; font-size: .8rem; }
-body[data-app-page="home"] .home-intro-dialog button {
-  min-width: 64px;
-  min-height: 44px;
-  padding: 8px 14px;
-  border: 1px solid rgba(255, 253, 248, .25);
-  border-radius: 5px;
-  background: transparent;
-  color: #fffdf8;
-  font: inherit;
-  cursor: pointer;
+.site-guide-spotlight[hidden] { display: none; }
+.site-guide-panel {
+  position: absolute; box-sizing: border-box; width: min(420px, calc(100% - 24px));
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: calc(100dvh - 110px); overflow: hidden; padding: 18px;
+  border: 1px solid rgba(230, 207, 140, .55); border-radius: 4px;
+  background: linear-gradient(120deg, #081e30, #14252d 65%, #30271d);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
 }
-body[data-app-page="home"] #skipHomeIntroBtn { border-color: transparent; }
-body[data-app-page="home"] #nextHomeIntroBtn { background: #e6cf8c; border-color: #e6cf8c; color: #102c3d; }
-body[data-app-page="home"] .home-intro-dialog button:disabled { opacity: .35; cursor: default; }
-body[data-app-page="home"] :is(.home-intro-dialog button, .home-hero-guide-btn):focus-visible { outline: 2px solid #e6cf8c; outline-offset: 3px; }
-body[data-app-page="home"] .home-intro-gesture { height: 112px; display: flex; justify-content: center; align-items: center; gap: 42px; color: #e6cf8c; font-size: 1.6rem; }
-body[data-app-page="home"] .home-intro-gesture-dot { width: 20px; height: 20px; border: 2px solid #e6cf8c; border-radius: 50%; background: rgba(230, 207, 140, .15); animation: homeIntroSwipe 2.4s ease-in-out infinite; }
-body[data-app-page="home"] .home-intro-copy { min-height: 170px; }
-body[data-app-page="home"] .home-intro-copy h2 { margin: 0 0 12px; color: #fffdf8; font-size: clamp(1.3rem, 5vw, 1.65rem); line-height: 1.2; }
-body[data-app-page="home"] .home-intro-copy p { margin: 0; color: #d4dfe1; line-height: 1.6; }
-body[data-app-page="home"] .home-intro-hint { margin: 16px 0; color: #b8c8ce; font-size: .75rem; }
-@keyframes homeIntroSwipe { 0%, 100% { transform: translateX(22px); } 50% { transform: translateX(-22px); } }
-@media (max-height: 600px) {
-  body[data-app-page="home"] .home-intro-dialog { padding: 16px; }
-  body[data-app-page="home"] .home-intro-gesture { height: 60px; }
-  body[data-app-page="home"] .home-intro-copy { min-height: 0; }
+.site-guide-top, .site-guide-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.site-guide-top { color: #e6cf8c; font-size: .8rem; margin-bottom: 8px; }
+.site-guide-actions { margin-top: 16px; }
+.site-guide-copy { overflow: auto; }
+.site-guide-copy:focus-visible { outline: 2px solid #e6cf8c; outline-offset: -2px; }
+.site-guide-panel h2 { margin: 0 0 10px; font-size: 1.2rem; line-height: 1.25; color: #fffdf8; }
+.site-guide-panel p { margin: 0; font-size: .93rem; line-height: 1.5; color: #d8e3e6; }
+.site-guide-panel button { min-height: 44px; padding: 8px 14px; border: 1px solid rgba(255, 253, 248, .3); border-radius: 3px; color: #fffdf8; background: transparent; font: inherit; cursor: pointer; }
+.site-guide-panel #skipHomeIntroBtn { border-color: transparent; }
+.site-guide-panel #nextHomeIntroBtn { background: #e6cf8c; border-color: #e6cf8c; color: #102c3d; }
+.site-guide-panel button:disabled { opacity: .4; cursor: default; }
+.site-guide-panel button:focus-visible { outline: 2px solid #e6cf8c; outline-offset: 3px; }
+@media (max-height: 500px) {
+  .site-guide-panel { padding: 12px; max-height: calc(100dvh - 200px); }
+  .site-guide-top { margin-bottom: 4px; }
+  .site-guide-actions { margin-top: 8px; }
+  .site-guide-panel h2 { font-size: 1.05rem; margin-bottom: 6px; }
+  .site-guide-panel p { font-size: .85rem; line-height: 1.4; }
 }
-@media (prefers-reduced-motion: reduce) {
-  body[data-app-page="home"] .home-intro-gesture-dot { animation: none; }
+
+/* Ordering units stay visible before and after expanding an item. */
+html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card .stock-order-item-kicker {
+  display: block !important; font-size: .78rem; line-height: 1.35;
+  color: #d8e3e6; white-space: normal;
 }

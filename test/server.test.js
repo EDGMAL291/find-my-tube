@@ -56,7 +56,7 @@ test("receipt validation and normalization use catalogue packet sizes", () => {
   assert.equal(payload.totalReceivedQuantity, 100);
 });
 
-test("green and black Vacutainer needles are canonical orderable stock items", () => {
+test("legacy individual green and black needle records keep their original units", () => {
   const greenNeedle = stockCatalog.getItem("vacutainer-needle-green");
   const blackNeedle = stockCatalog.getItem("vacutainer-needle-black");
   assert.equal(greenNeedle.label, "Vacutainer needle (Green)");
@@ -70,6 +70,30 @@ test("green and black Vacutainer needles are canonical orderable stock items", (
   ] });
   assert.deepEqual(payload.items.map((item) => item.label), [greenNeedle.label, blackNeedle.label]);
   assert.equal(payload.totalRequestedQuantity, 5);
+});
+
+test("new needle packs and bag packs contain 50 units while bottles and legacy needles stay individual", () => {
+  for (const color of ["green", "black"]) {
+    const pack = stockCatalog.getItem(`vacutainer-needle-${color}-pack`);
+    const old = stockCatalog.getItem(`vacutainer-needle-${color}`);
+    assert.equal(old.orderable, false, "Legacy IDs are retained for historical requests and older clients");
+    assert.equal(pack.unitType, "packet");
+    assert.equal(pack.packetSize, 50);
+    const payload = sanitizeStockRequestPayload({ items: [{ id: pack.id, quantity: 2, packetSize: 1, inventoryUnits: 2 }] });
+    assert.equal(payload.items[0].inventoryUnits, 100, "The server derives units instead of trusting browser counts");
+    assert.equal(payload.items[0].sheetColumnKey, old.id, "Packs use the existing needle inventory balance");
+    assert.equal(payload.items[0].formattedQuantity, "2 packs (100 needles)");
+    assert.equal(sanitizeStockRequestPayload({ items: [{ id: old.id, quantity: 2 }] }).totalRequestedQuantity, 2);
+    assert.equal(sanitizeStockReceiptPayload({ items: [{ id: pack.id, quantity: 2 }] }).totalReceivedQuantity, 100);
+  }
+  const bags = stockCatalog.getItem("lab-bags");
+  assert.equal(stockCatalog.formatQuantity(bags, 2), "2 packs (100 bags)");
+  for (const bottle of stockCatalog.items.filter(item => item.id.startsWith("blood-culture-bottle-"))) {
+    assert.equal(bottle.unitType, "each");
+    assert.equal(stockCatalog.getInventoryUnits(bottle, 2), 2);
+    assert.equal(stockCatalog.formatQuantity(bottle, 2), "2 each");
+  }
+  assert.equal(require('../server').getItemInventoryUnits({ unitType: 'each', quantity: 2, inventoryUnits: 2 }), 2);
 });
 
 test("order status transitions preserve the clinical work queue", () => {

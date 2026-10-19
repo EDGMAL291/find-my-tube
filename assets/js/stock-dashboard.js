@@ -647,7 +647,7 @@ function stockDashboardBuildReceiptItemCatalog() {
       row.options.push({
         value: "packet",
         sourceItem: item,
-        label: `Packet (${Number(item.packetSize || 0) || 50} each)`
+        label: `Pack (${Number(item.packetSize || 0) || 50} each)`
       });
       return;
     }
@@ -715,7 +715,7 @@ function stockDashboardGetReceiptUnitCountLabel(unitOption, quantity) {
   const count = Math.max(0, Number(quantity) || 0);
   const unitType = String(unitOption?.value || unitOption?.sourceItem?.unitType || "").toLowerCase();
   if (unitType === "tray") return count === 1 ? "tray" : "trays";
-  if (unitType === "packet") return count === 1 ? "packet" : "packets";
+  if (unitType === "packet") return count === 1 ? "pack" : "packs";
   return count === 1 ? "item" : "items";
 }
 
@@ -1040,7 +1040,7 @@ function stockDashboardBuildReceiptPayload({ validate = true } = {}) {
     const unitLabel = item.unitType === "tray"
       ? `Tray (${Number(item.traySize || 0) || 100} each)`
       : item.unitType === "packet"
-        ? `Packet (${Number(item.packetSize || 0) || 50} each)`
+        ? `Pack (${Number(item.packetSize || 0) || 50} each)`
         : "Each";
     summaryRows.push({
       id: item.id,

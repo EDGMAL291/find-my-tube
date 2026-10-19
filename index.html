@@ -98,7 +98,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261018a" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261019b" />
 </head>
 <body data-app-page="home">
   <main class="container">
@@ -137,7 +137,6 @@
             <button type="button" class="site-menu-link" data-menu-action="tube" role="menuitem">Find My Tube</button>
             <button type="button" class="site-menu-link" data-menu-action="draw" role="menuitem">Tube Plan</button>
             <button type="button" class="site-menu-link" data-menu-action="collection-desk" role="menuitem">Collection Desk</button>
-            <button type="button" class="site-menu-link" data-menu-action="find-my-test" role="menuitem">Find My Test</button>
             <button type="button" class="site-menu-link" data-menu-action="stock" role="menuitem">Order My Stock</button>
             <button type="button" class="site-menu-link" data-menu-action="stock-dashboard" role="menuitem">Stock Dashboard</button>
             <button type="button" class="site-menu-link" data-menu-action="track-orders" role="menuitem">Track Orders</button>
@@ -203,7 +202,7 @@
         <article class="home-hero-slide home-hero-slide-overview is-active" data-hero-slide data-hero-tone="overview" aria-hidden="false">
           <div class="home-hero-content">
             <h2><button type="button" class="home-hero-heading-link" data-hero-next>Clearer decisions for every specimen.</button></h2>
-            <p class="home-hero-copy">Find My Tube helps clinical teams choose the right tests and specimen tubes, and request essential laboratory consumables with less uncertainty.</p>
+            <p class="home-hero-copy">Find My Tube helps clinical teams find specimen tubes, build a Tube Plan, and request essential laboratory consumables with less uncertainty.</p>
             <button type="button" class="home-hero-primary" data-hero-next><span class="home-hero-label">Explore the lab</span><span class="home-hero-arrow" aria-hidden="true">→</span></button>
           </div>
         </article>
@@ -212,13 +211,6 @@
             <h2><a class="home-hero-heading-link" href="./find-my-tube.html" data-menu-action="tube">Find My Tube</a></h2>
             <p class="home-hero-copy">Identify the correct specimen tube quickly and accurately, before collection.</p>
             <a class="home-hero-primary" href="./find-my-tube.html" data-menu-action="tube"><span class="home-hero-label">Find My Tube</span><span class="home-hero-arrow" aria-hidden="true">→</span></a>
-          </div>
-        </article>
-        <article class="home-hero-slide home-hero-slide-clipboard" data-hero-slide data-hero-tone="gold" aria-hidden="true">
-          <div class="home-hero-content">
-            <h2><a class="home-hero-heading-link" href="./index.html?tool=find-my-test" data-menu-action="find-my-test">Find My Test</a></h2>
-            <p class="home-hero-copy">Start with the clinical picture and build a practical test plan in seconds.</p>
-            <a class="home-hero-primary" href="./index.html?tool=find-my-test" data-menu-action="find-my-test"><span class="home-hero-label">Find My Test</span><span class="home-hero-arrow" aria-hidden="true">→</span></a>
           </div>
         </article>
         <article class="home-hero-slide home-hero-slide-stock" data-hero-slide data-hero-tone="serum" aria-hidden="true">
@@ -231,7 +223,6 @@
         <div class="home-hero-controls" aria-label="Choose a hero slide">
           <button type="button" class="home-hero-dot is-active" data-hero-dot aria-label="Show laboratory overview" aria-current="true"></button>
           <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Tube" aria-current="false"></button>
-          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Test" aria-current="false"></button>
           <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Order My Stock" aria-current="false"></button>
           <span class="home-hero-swipe-hint" aria-hidden="true"><span class="home-hero-swipe-arrow">↔</span> Swipe</span>
           <button type="button" class="home-hero-guide-btn" id="openHomeIntroBtn" aria-haspopup="dialog" aria-controls="homeIntroDialog">Quick guide</button>
@@ -254,11 +245,6 @@
           <a href="./find-my-tube.html" class="home-action-tile home-action-tile-tube" data-menu-action="tube" aria-label="Open Find My Tube">
             <span class="home-action-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-tube"></use></svg></span>
             <span class="home-action-text"><span class="home-action-label">Find My Tube</span><span class="home-action-copy">Find the right collection tube</span></span>
-            <span class="home-action-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg></span>
-          </a>
-          <a href="./index.html?tool=find-my-test" class="home-action-tile home-action-tile-test" data-menu-action="find-my-test" aria-label="Open Find My Test">
-            <span class="home-action-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-test"></use></svg></span>
-            <span class="home-action-text"><span class="home-action-label">Find My Test</span><span class="home-action-copy">Search by symptoms, signs, or clinical concern</span></span>
             <span class="home-action-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg></span>
           </a>
           <a href="./order-stock.html" class="home-action-tile home-action-tile-order" data-menu-action="stock" aria-label="Open Order My Stock">
@@ -566,29 +552,14 @@
     </div>
   </section>
 
-  <dialog class="home-intro-dialog" id="homeIntroDialog" aria-labelledby="homeIntroTitle" aria-describedby="homeIntroDescription">
-    <div class="home-intro-top">
-      <span id="homeIntroProgress">1 of 3</span>
-      <button type="button" id="skipHomeIntroBtn">Skip</button>
-    </div>
-    <div class="home-intro-gesture" aria-hidden="true"><span>←</span><span class="home-intro-gesture-dot"></span><span>→</span></div>
-    <div class="home-intro-copy" aria-live="polite" aria-atomic="true">
-      <h2 id="homeIntroTitle">Swipe to explore</h2>
-      <p id="homeIntroDescription">Swipe across the home screen to move between Find My Tube, Find My Test and Order My Stock. You can also use the dots below.</p>
-    </div>
-    <p class="home-intro-hint">Swipe through this guide, or use Next.</p>
-    <div class="home-intro-actions">
-      <button type="button" id="backHomeIntroBtn" disabled>Back</button>
-      <button type="button" id="nextHomeIntroBtn" autofocus>Next</button>
-    </div>
-  </dialog>
+
 
   <script src="assets/data/data.js?v=20261012o"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
-  <script src="assets/js/stock-catalog-data.js?v=20261006d"></script>
-  <script src="assets/js/script.js?v=20261019a"></script>
+  <script src="assets/js/stock-catalog-data.js?v=20261019b"></script>
+  <script src="assets/js/script.js?v=20261019b"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
-  <script src="assets/js/premium-home.js?v=20261018a"></script>
+  <script src="assets/js/premium-home.js?v=20261019b"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
       const APP_VERSION = "2026-10-18.1";
@@ -657,5 +628,6 @@
       });
     }
   </script>
+  <script src="assets/js/quick-guide.js?v=20261019b"></script>
 </body>
 </html>

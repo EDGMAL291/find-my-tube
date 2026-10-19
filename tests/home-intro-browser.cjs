@@ -2,74 +2,71 @@ const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const base = process.env.FMT_TEST_URL || 'http://127.0.0.1:3000';
 
-async function swipe(locator, dx, dy = 0) {
-  await locator.evaluate((target, { dx, dy }) => {
-    const touch = (x, y) => new Touch({ identifier: 1, target, screenX: x, screenY: y });
-    target.dispatchEvent(new TouchEvent('touchstart', { changedTouches: [touch(250, 200)] }));
-    target.dispatchEvent(new TouchEvent('touchend', { changedTouches: [touch(250 + dx, 200 + dy)] }));
-  }, { dx, dy });
-}
-
 (async () => {
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const width of [360, 390, 1280]) {
-      const page = await browser.newPage({ viewport: { width, height: 844 }, reducedMotion: 'reduce' });
-      await page.route('**/api/**', route => route.fulfill({ json: { requests: [], items: [] } }));
+    for (const [width,height] of [[360,844],[390,844],[1280,900],[844,390]]) {
+      const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' });
+      let posts = 0;
+      await page.route('**/api/**', route => {
+        if (route.request().method() === 'POST') posts++;
+        return route.fulfill({ json: { requests: [], items: [] } });
+      });
       await page.goto(`${base}/index.html`);
       const intro = page.locator('#homeIntroDialog');
       await page.locator('#homeIntroDialog[open]').waitFor();
       assert.equal(await page.locator('#backHomeIntroBtn').isDisabled(), true);
-      assert.equal(await page.locator('.home-intro-gesture-dot').evaluate(el => getComputedStyle(el).animationName), 'none');
-      const box = await intro.boundingBox();
-      assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 844);
-      await page.keyboard.press('Tab');
-      assert.equal(await intro.evaluate(el => el.contains(document.activeElement)), true, 'Guide keeps keyboard focus inside');
-      await page.locator('#nextHomeIntroBtn').click();
-      assert.equal(await page.locator('#homeIntroProgress').innerText(), '2 of 3');
-      await page.locator('#backHomeIntroBtn').click();
-      await swipe(intro, -140);
-      assert.equal(await page.locator('#homeIntroProgress').innerText(), '2 of 3');
-      await swipe(intro, 140);
-      assert.equal(await page.locator('#homeIntroProgress').innerText(), '1 of 3');
-      await page.locator('#nextHomeIntroBtn').click();
-      await page.locator('#nextHomeIntroBtn').click();
-      assert.equal(await page.locator('#nextHomeIntroBtn').innerText(), 'Get started');
-      await page.locator('#nextHomeIntroBtn').click();
-      assert.equal(await intro.evaluate(el => el.open), false);
+      for (let step=1;step<=11;step++) {
+        await page.locator('#homeIntroProgress').filter({hasText:`${step} of 11`}).waitFor();
+        await page.waitForTimeout(180);
+        assert.equal(await intro.evaluate(el => el.open), true);
+        assert.equal(await page.locator('.site-guide-spotlight').isVisible(), true, `Step ${step} highlights a real visible control`);
+        const card = await page.locator('.site-guide-panel').boundingBox();
+        const spot = await page.locator('.site-guide-spotlight').boundingBox();
+        assert.ok(card.x >= 0 && card.x+card.width <= width+1 && card.y >= 0 && card.y+card.height <= height+1, `Step ${step} panel fits ${width}x${height}`);
+        assert.ok(card.y+card.height <= spot.y || card.y >= spot.y+spot.height || card.x+card.width <= spot.x || card.x >= spot.x+spot.width, `Step ${step} explanation does not cover its target`);
+        await page.keyboard.press('Tab');
+        assert.equal(await intro.evaluate(el => el.contains(document.activeElement)), true);
+        assert.equal(await page.evaluate(() => typeof getSelectedTests === 'function' ? getSelectedTests().length : 0), 0, 'Guide adds no tests');
+        assert.equal(await page.locator('[data-menu-action="find-my-test"], [data-mobile-menu-action="find-my-test"], [data-bottom-nav="test"]').count(), 0);
+        if(step===4) assert.equal(await page.locator('#searchInput').inputValue(),'FBC');
+        if(step===5) {
+          assert.equal(await page.locator('#searchInput').inputValue(),'');
+          assert.equal(await page.locator('#drawModal').isVisible(),true);
+          await page.locator('#backHomeIntroBtn').click();
+          await page.locator('#homeIntroProgress').filter({hasText:'4 of 11'}).waitFor();
+          assert.equal(await page.locator('#drawModal').isVisible(),false);
+          await page.locator('#nextHomeIntroBtn').click();
+          await page.locator('#homeIntroProgress').filter({hasText:'5 of 11'}).waitFor();
+        }
+        if(step===7) await page.screenshot({path:`/tmp/fmt-stock-guide-${width}.png`});
+        if(step===11) assert.equal(await page.locator('#nextHomeIntroBtn').innerText(),'Finish');
+        await page.locator('#nextHomeIntroBtn').click();
+      }
+      assert.equal(posts,0,'Walkthrough never posts an order');
+      assert.equal(await intro.evaluate(el=>el.open),false);
       await page.reload();
-      assert.equal(await intro.evaluate(el => el.open), false, 'Completed guide stays dismissed');
+      assert.equal(await intro.evaluate(el=>el.open),false,'Completion persists');
       await page.locator('#openHomeIntroBtn').click();
-      assert.equal(await page.locator('#homeIntroProgress').innerText(), '1 of 3');
+      await page.locator('#nextHomeIntroBtn').click();
+      await page.locator('#nextHomeIntroBtn').click();
+      await page.locator('#homeIntroProgress').filter({hasText:'3 of 11'}).waitFor();
+      await page.locator('#backHomeIntroBtn').click();
+      await page.locator('#homeIntroProgress').filter({hasText:'2 of 11'}).waitFor();
       await page.locator('#skipHomeIntroBtn').click();
       await page.reload();
-      assert.equal(await intro.evaluate(el => el.open), false, 'Skipped guide stays dismissed');
+      assert.equal(await intro.evaluate(el=>el.open),false,'Skip persists');
       await page.locator('#openHomeIntroBtn').click();
       await page.keyboard.press('Escape');
-      assert.equal(await intro.evaluate(el => el.open), false);
-      const carousel = page.locator('#homeHeroCarousel');
-      await swipe(carousel, -140);
-      assert.equal(await carousel.getAttribute('data-hero-tone'), 'lavender');
-      await swipe(carousel, -60, 240);
-      assert.equal(await carousel.getAttribute('data-hero-tone'), 'lavender', 'Vertical scrolling does not change sections');
-      assert.equal(await page.locator('[data-hero-slide]:not(.is-active)').evaluateAll(slides => slides.every(slide => slide.inert)), true);
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      if (width < 620) assert.equal((await page.locator('.home-hero-swipe-hint').innerText()).replace(/\s+/g, ' '), '↔ Swipe');
+      assert.equal(await intro.evaluate(el=>el.open),false);
+      assert.equal(await page.locator('#openHomeIntroBtn').evaluate(el=>el===document.activeElement),true);
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
       await page.close();
-      console.log(`PASS home guide ${width}px: first visit, Next/Back, swipe, complete, Skip, Escape, replay and persistence`);
+      console.log(`PASS guided walkthrough ${width}x${height}: real targets, cross-page Next/Back, no overlap, no orders/tests added, finish, Skip, Escape, replay and persistence`);
     }
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const page = await browser.newPage();
     await page.goto(`${base}/index.html?tool=find-my-test`);
-    assert.equal(await page.locator('#homeIntroDialog').evaluate(el => el.open), false);
-    assert.equal(await page.locator('.clinical-workup-panel').isVisible(), true);
-    await page.goto(`${base}/index.html?tool=collection-desk`);
-    assert.equal(await page.locator('#homeIntroDialog').evaluate(el => el.open), false);
-    assert.equal(await page.locator('#homeLabDeskPanel').isVisible(), true);
-    await page.goto(`${base}/index.html`);
-    assert.equal(await page.locator('#homeIntroDialog').evaluate(el => el.open), true, 'Direct tool visits do not consume the first home guide');
+    assert.equal(await page.locator('#homeIntroDialog').evaluate(el=>el.open),false,'Direct tools are not interrupted');
     await page.close();
-    console.log('PASS direct tool links stay unobstructed');
-  } finally {
-    await browser.close();
-  }
+  } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
