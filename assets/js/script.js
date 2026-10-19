@@ -2845,7 +2845,10 @@ function initStockOrderPanel() {
         const serverMessage = String(result?.error || "").trim();
         const detailMessage = String(result?.detail || "").trim();
         const combinedMessage = [serverMessage, detailMessage].filter(Boolean).join(" - ");
-        throw new Error(response.status >= 500
+        const contactStorageUnavailable = response.status === 503 && result?.code === "contact_storage_unavailable";
+        throw new Error(contactStorageUnavailable
+          ? "Your order was not saved because the extension could not be stored. Leave the optional extension blank and submit again, or contact the lab."
+          : response.status >= 500
           ? "The laboratory service could not confirm the request. Your selections are kept. Check Track Orders before trying again."
           : combinedMessage || `Submit failed with status ${response.status}`);
       }

@@ -18,6 +18,9 @@ test('only saved orders notify the lab, and email errors never reject the saved 
     const send = (status, data) => { res.writeHead(status, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)); };
     if (url.pathname.endsWith('/stock_requests')) {
       if (req.method === 'POST') {
+        if (body.ward_or_unit === 'Legacy Contact Ward' && body.contact_extension) {
+          return send(400, { code: 'PGRST204', message: "Could not find the 'contact_extension' column of 'stock_requests' in the schema cache" });
+        }
         if (body.ward_or_unit === 'Database Failure Ward') return send(500, { message: 'Fixture database failure' });
         orders.set(body.id, { ...body, stock_request_items: [] });
         return send(201, null);
@@ -124,6 +127,15 @@ test('only saved orders notify the lab, and email errors never reject the saved 
     assert.equal(deliveries.length, 3, 'Manual staff orders use the same notifier');
     assert.match(deliveries[2].text, /Manual Ward/);
     assert.equal((await fetch(`${base}/lib/stock-order-email.js`)).status, 404, 'Notifier stays server-only');
+
+    const missingContactStorage = await submit(payload('Legacy Contact Ward'));
+    assert.equal(missingContactStorage.status, 503);
+    assert.equal((await missingContactStorage.json()).code, 'contact_storage_unavailable');
+    assert.equal([...orders.values()].some(order => order.ward_or_unit === 'Legacy Contact Ward'), false);
+    assert.equal(deliveries.length, 3, 'An unsaved extension-bearing order must not notify the lab');
+    const withoutExtension = await submit({ ...payload('Legacy Contact Ward'), contactExtension: '' });
+    assert.equal(withoutExtension.status, 201, 'An order can be saved without the optional extension on the legacy schema');
+    assert.equal(deliveries.length, 4);
   } finally {
     if (child.exitCode === null) {
       const closed = new Promise(resolve => child.once('exit', resolve));

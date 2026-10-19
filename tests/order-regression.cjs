@@ -9,7 +9,7 @@ function setup(response, blocked = '') {
   const gate = new Promise(resolve => release = resolve);
   const state = {calls:0, resets:0, notices:[], release};
   const ctx = {isSubmittingStockOrder:false, lastStockSubmitErrorMessage:'', submittedStockOrderRecord:null,
-    stockOrderStatusMode:'ready', submitStockOrderBtn:{}, STOCK_ORDER_SUBMIT_URL:'/api/stock-requests',
+    stockOrderStatusMode:'ready', submitStockOrderBtn:{}, stockOrderCartDialog:null, stockOrderSubmissionCard:null, STOCK_ORDER_SUBMIT_URL:'/api/stock-requests',
     AbortController, Error, TypeError, setTimeout, clearTimeout, console:{error(){}},
     bindPressAction:(_, fn)=>state.submit=fn, updateStockOrderPreview(){},
     loadStockDuplicateCheckRequests:()=>gate, getStockSubmitBlockedReason:()=>blocked,
@@ -23,8 +23,11 @@ function setup(response, blocked = '') {
 (async()=>{
   let {ctx,state}=setup({ok:true,json:async()=>({ok:true,request:{id:'TEST-1'}})});
   const first=state.submit();const second=state.submit();assert.equal(ctx.isSubmittingStockOrder,true);state.release();await Promise.all([first,second]);assert.equal(state.calls,1);assert.equal(state.resets,1);assert.equal(state.confirmed,'TEST-1');assert.equal(ctx.isSubmittingStockOrder,false);
+  assert.equal(ctx.stockOrderStatusMode,'submitted');assert.equal(ctx.lastStockSubmitErrorMessage,'');
   ({ctx,state}=setup({ok:false,status:409,json:async()=>({error:'Already ordered for this ward.',detail:'Check Track Orders.'})}));state.release();await state.submit();assert.equal(state.resets,0);assert.match(ctx.lastStockSubmitErrorMessage,/Already ordered/);
   ({ctx,state}=setup({ok:true,json:async()=>({})}));state.release();await state.submit();assert.equal(state.resets,0);assert.match(ctx.lastStockSubmitErrorMessage,/did not confirm/);
+  ({ctx,state}=setup({ok:false,status:503,json:async()=>({code:'contact_storage_unavailable',error:'internal diagnostic'})}));state.release();await state.submit();assert.equal(state.resets,0);assert.equal(ctx.stockOrderStatusMode,'submit-failed');assert.match(ctx.lastStockSubmitErrorMessage,/order was not saved/);assert.match(ctx.lastStockSubmitErrorMessage,/extension blank/);assert.doesNotMatch(ctx.lastStockSubmitErrorMessage,/internal diagnostic/);
+  ({ctx,state}=setup({ok:false,status:500,json:async()=>({error:'private database failure'})}));state.release();await state.submit();assert.equal(state.resets,0);assert.match(ctx.lastStockSubmitErrorMessage,/Check Track Orders/);assert.doesNotMatch(ctx.lastStockSubmitErrorMessage,/private database/);
   ({ctx,state}=setup({},'Already ordered'));state.release();await state.submit();assert.equal(state.calls,0);assert.equal(ctx.isSubmittingStockOrder,false);
-  console.log('PASS: concurrent clicks, saved confirmation, conflict explanation, invalid success response, blocked-order unlock');
+  console.log('PASS: concurrent clicks, saved confirmation, conflict explanation, contact-storage recovery, private server errors, invalid success response, blocked-order unlock');
 })().catch(e=>{console.error(e);process.exitCode=1});
