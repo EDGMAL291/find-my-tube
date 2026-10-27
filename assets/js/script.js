@@ -249,7 +249,7 @@ const OGTT_MULTI_DRAW_TESTS = new Set([
   "OGTT Pregnancy (fasting, 1hr, 2hr)"
 ]);
 const selectedTestNames = new Set();
-// Result selection adds to Tube Plan; only the secondary Details control expands metadata.
+// Result selection toggles Tube Plan; only the secondary Details control expands metadata.
 const expandedTestNames = new Set();
 let lastDrawModalTrigger = null;
 let activeSectionGroup = "";
@@ -6884,12 +6884,13 @@ function syncDiscoverySelectionState() {
   cardsContainer?.querySelectorAll(".discovery-card").forEach((card) => {
     const name = card.dataset.testName;
     const covered = getSelectedProfilesContainingTest(name);
-    const inPlan = selectedTestNames.has(name) || covered.length > 0;
+    const directlySelected = selectedTestNames.has(name);
+    const inPlan = directlySelected || covered.length > 0;
     card.classList.toggle("card-selected", inPlan);
     const action = card.querySelector(".discovery-select");
     if (!action) return;
     action.setAttribute("aria-pressed", String(inPlan));
-    action.setAttribute("aria-label", inPlan ? `${name}, in Tube Plan` : `Add ${name} to Tube Plan`);
+    action.setAttribute("aria-label", directlySelected ? `Remove ${name} from Tube Plan` : covered.length ? `${name}, included in ${covered.join(", ")}` : `Add ${name} to Tube Plan`);
     card.querySelector(".discovery-selection-state").textContent = inPlan ? "✓ In Tube Plan" : "Select";
     const coverage = card.querySelector(".discovery-coverage");
     coverage.textContent = covered.length ? `Included in ${covered.join(", ")}` : "";
@@ -9682,11 +9683,14 @@ function renderCards(filteredTests) {
     add.addEventListener('pointerdown', preserveSearchFocus);
     add.addEventListener('mousedown', preserveSearchFocus);
     add.addEventListener('click', () => {
+      if (selectedTestNames.has(test.name)) {
+        removeSelectedTest(test.name, { rerenderCards: false });
+        return;
+      }
       // Ready for the next test, keeping result feedback and mobile focus in place.
       if (searchInput) searchInput.value = "";
       updateSearchClearButton();
       refreshSearchPlaceholder();
-      if (selectedTestNames.has(test.name)) return;
       const coverage = getAlreadyCoveredSelectionMessage(test.name);
       if (coverage) {
         showSelectionNotice(coverage);

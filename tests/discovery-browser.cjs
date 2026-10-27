@@ -434,7 +434,13 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'Details must not change selection');
         await card.locator('.discovery-select').focus();
         await page.keyboard.press('Enter');
-        assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'Repeated selection must not remove a test');
+        assert.equal(await page.evaluate(() => selectedTestNames.size), 0, 'Selecting an added test again removes it');
+        assert.equal(await card.locator('.discovery-select').getAttribute('aria-pressed'), 'false');
+        assert.equal(await card.locator('.discovery-selection-state').innerText(), 'Select');
+        assert.equal(await page.locator('#selectionCartBar').isVisible(), false, 'Removing the last test hides the dock');
+        assert.equal(await card.locator('.discovery-body').isVisible(), true, 'Removing does not close the test details');
+        await page.keyboard.press('Enter');
+        assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'The same button can add the test again');
         assert.equal(await page.locator('#searchInput').inputValue(), '', 'Adding clears the search field');
         assert.equal(await page.locator('#selectionCartBar').isVisible(), true);
         assert.equal(await page.locator('#selectionCartBar .selection-cart-icon').count(), 0, 'Floating Tube Plan has no glyph');

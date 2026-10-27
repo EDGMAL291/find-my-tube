@@ -289,7 +289,7 @@
   <script src="assets/data/data.js?v=20261012o"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261019b"></script>
-  <script src="assets/js/script.js?v=20261027c"></script>
+  <script src="assets/js/script.js?v=20261027e"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
@@ -318,7 +318,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261027d", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261027e", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
