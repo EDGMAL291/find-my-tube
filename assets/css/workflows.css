@@ -388,3 +388,20 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card .stock
   display: block !important; font-size: .78rem; line-height: 1.35;
   color: #d8e3e6; white-space: normal;
 }
+
+.stock-availability-notice {
+  margin: 10px 0; padding: 10px 12px; border-left: 2px solid #e6cf8c;
+  background: rgba(230, 207, 140, .08); color: #fff1c9;
+  font-size: .88rem; line-height: 1.45; overflow-wrap: anywhere;
+}
+.stock-availability-notice p { margin: 4px 0 0; }
+.stock-item-unavailable { color: #f1d18a !important; font-weight: 600; }
+.stock-availability-editor { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .18); }
+.stock-availability-editor h4 { margin: 0 0 8px; }
+.stock-availability-editor p { font-size: .88rem; line-height: 1.5; }
+.stock-availability-editor fieldset { margin: 12px 0; padding: 0; border: 0; min-width: 0; }
+.stock-availability-editor legend { font-size: .88rem; font-weight: 600; }
+.stock-availability-editor label { min-height: 44px; display: flex; align-items: center; gap: 10px; text-align: left; }
+.stock-availability-editor label span { min-width: 0; overflow-wrap: anywhere; }
+.stock-availability-editor input[type="checkbox"] { width: 20px; height: 20px; flex: 0 0 20px; accent-color: #e6cf8c; }
+.stock-availability-editor-status { min-height: 1.5em; }

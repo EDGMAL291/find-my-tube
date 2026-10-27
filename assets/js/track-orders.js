@@ -179,6 +179,7 @@
           </span>
           <span class="track-orders-cell track-orders-items-cell" data-label="Items ordered">
             ${itemSummary}
+            ${typeof getStockAvailabilityNoticeMarkup === "function" ? getStockAvailabilityNoticeMarkup(request) : ""}
             <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${escapeHtml(detailKey)}">View order</button>
           </span>
         </div>

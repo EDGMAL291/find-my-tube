@@ -1879,6 +1879,18 @@ function registerStockRequestForDetails(request) {
   return key;
 }
 
+function getUnavailableStockRequestItems(request) {
+  if (["completed", "collected", "cancelled"].includes(normalizeStockRequestStatus(request?.status))) return [];
+  const ids = new Set(Array.isArray(request?.availabilityNotice?.unavailableItemIds) ? request.availabilityNotice.unavailableItemIds : []);
+  return (Array.isArray(request?.items) ? request.items : []).filter(item => ids.has(item.id));
+}
+
+function getStockAvailabilityNoticeMarkup(request) {
+  const items = getUnavailableStockRequestItems(request);
+  if (!items.length) return "";
+  return `<div class="stock-availability-notice" role="status"><strong>Stock update</strong><p>Unavailable: ${items.map(item => escapeHtml(getStockItemTextName(item))).join(", ")}.</p><p>Contact the lab about ${items.length === 1 ? "this item" : "these items"}.</p></div>`;
+}
+
 function getStockRequestCompactItemsMarkup(request, maxItems = 3) {
   const items = Array.isArray(request?.items) ? request.items : [];
   if (!items.length) return '<p class="stock-request-compact-empty">No items listed</p>';
@@ -1959,6 +1971,7 @@ function showStockRequestDetails(requestOrKey) {
   if (!request) return;
 
   const modal = ensureStockRequestDetailsModal();
+  modal.dataset.requestId = String(request.id || "");
   const body = modal.querySelector("#stockRequestDetailsBody");
   const title = modal.querySelector("#stockRequestDetailsTitle");
   const items = Array.isArray(request.items) ? request.items : [];
@@ -1980,6 +1993,7 @@ function showStockRequestDetails(requestOrKey) {
       </div>
       ${request.contactExtension ? `<div class="stock-request-detail-notes"><span>Extension / speed dial</span><p>${escapeHtml(request.contactExtension)}</p></div>` : ""}
       ${request.notes ? `<div class="stock-request-detail-notes"><span>Notes</span><p>${escapeHtml(request.notes)}</p></div>` : ""}
+      ${getStockAvailabilityNoticeMarkup(request)}
       <div class="stock-request-detail-items">
         <h4>Items ordered</h4>
         ${items.length ? items.map((item) => {
@@ -1989,6 +2003,7 @@ function showStockRequestDetails(requestOrKey) {
               <div>
                 <strong>${escapeHtml(getStockItemTextName(item))}</strong>
                 <span>${escapeHtml(getStockItemQuantityText(item))}</span>
+                ${getUnavailableStockRequestItems(request).some(unavailable => unavailable.id === item.id) ? '<span class="stock-item-unavailable">Currently unavailable</span>' : ""}
               </div>
               ${stockStatus ? getStockStatusBadgeMarkup(stockStatus) : ""}
             </div>
@@ -1997,6 +2012,10 @@ function showStockRequestDetails(requestOrKey) {
       </div>
       ${request.statusUpdatedAt || request.updatedAt ? `<p class="stock-request-detail-admin">Last update ${escapeHtml(formatStockRequestDateTime(request.statusUpdatedAt || request.updatedAt))}${request.statusUpdatedBy ? ` by lab user ${escapeHtml(request.statusUpdatedBy)}` : ""}</p>` : ""}
     `;
+  }
+
+  if (document.body.dataset.appPage === "stock-dashboard" && typeof window.stockDashboardRenderAvailabilityEditor === "function") {
+    window.stockDashboardRenderAvailabilityEditor(request, body);
   }
 
   modal.hidden = false;

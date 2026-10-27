@@ -1060,7 +1060,7 @@ function stockDashboardBuildAuditRows(request) {
 
   return history.map((entry) => `
     <div class="stock-dashboard-audit-item">
-      ${stockDashboardEscapeHtml(stockDashboardFormatStatus(entry.status))}
+      ${entry.type === "item-availability-notice" ? "Stock availability notice updated" : stockDashboardEscapeHtml(stockDashboardFormatStatus(entry.status))}
       · ${stockDashboardEscapeHtml(stockDashboardFormatDateTime(entry.updatedAt))}
       ${entry.updatedBy ? ` · Medical Technologist ${stockDashboardEscapeHtml(entry.updatedBy)}` : ""}
     </div>
@@ -3113,6 +3113,68 @@ function renderStockDashboardStats(stats) {
   }
 }
 
+function stockDashboardRenderAvailabilityEditor(request, container) {
+  if (!container || !stockDashboardSession || !["pending", "ready"].includes(stockDashboardNormalizeStatus(request.status))
+    || FMT_ORDER_ARCHIVE.isArchived(request)) return;
+  const items = [...new Map((request.items || []).map(item => [item.id, item])).values()];
+  if (!items.length) return;
+  const unavailable = new Set(request.availabilityNotice?.unavailableItemIds || []);
+  const section = document.createElement("section");
+  section.className = "stock-availability-editor";
+  section.innerHTML = `
+    <h4>Notify requester about unavailable items</h4>
+    <p>Select the items that are unavailable, then publish. The notice appears in Track Orders. Uncheck an item and publish again to clear its notice.</p>
+    <fieldset><legend>Unavailable items</legend>${items.map(item => `
+      <label><input type="checkbox" value="${stockDashboardEscapeHtml(item.id)}" ${unavailable.has(item.id) ? "checked" : ""}><span>${stockDashboardEscapeHtml(getStockItemTextName(item))}</span></label>
+    `).join("")}</fieldset>
+    <p class="stock-availability-editor-status" role="status" aria-live="polite"></p>
+    <button type="button" class="quick-tool-launch-btn" data-publish-availability>Publish notice</button>`;
+  container.append(section);
+  const status = section.querySelector(".stock-availability-editor-status");
+  const button = section.querySelector("[data-publish-availability]");
+  button.addEventListener("click", async () => {
+    if (!stockDashboardSession || button.disabled) return;
+    const generation = stockDashboardAuthGeneration;
+    const selected = [...section.querySelectorAll("input:checked")].map(input => input.value);
+    button.disabled = true;
+    section.querySelector("fieldset").disabled = true;
+    status.textContent = "Publishing notice…";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    try {
+      const response = await stockDashboardFetch(stockDashboardBuildApiUrl(`/api/lab/stock-requests/${encodeURIComponent(request.id)}/availability`), {
+        method: "PATCH", headers: stockDashboardGetHeaders(true), signal: controller.signal,
+        body: JSON.stringify({ unavailableItemIds: selected, expectedRevision: request.availabilityNotice?.revision || 0 })
+      });
+      if (await stockDashboardHandleUnauthorizedResponse(response, "publish_availability")) return;
+      if (!stockDashboardSession || generation !== stockDashboardAuthGeneration) return;
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.ok !== true || payload?.request?.id !== request.id) {
+        if (response.status === 409) await loadStockDashboard({ silent: true });
+        throw new Error(response.status >= 500 ? "The notice could not be confirmed. Reopen the order to check before trying again." : payload?.error || "Could not publish the notice.");
+      }
+      registerStockRequestForDetails(payload.request);
+      await loadStockDashboard({ silent: true });
+      if (!stockDashboardSession || generation !== stockDashboardAuthGeneration) return;
+      if (section.isConnected && !container.closest("[hidden]")
+        && container.closest("#stockRequestDetailsModal")?.dataset.requestId === String(request.id)) {
+        showStockRequestDetails(payload.request);
+        const message = document.querySelector("#stockRequestDetailsBody .stock-availability-editor-status");
+        if (message) message.textContent = selected.length ? "Notice published to Track Orders." : "Unavailable-item notices cleared.";
+        container.querySelector("[data-publish-availability]")?.focus();
+      }
+    } catch (error) {
+      if (stockDashboardSession && generation === stockDashboardAuthGeneration) status.textContent = error.name === "AbortError"
+        ? "The connection timed out. Reopen the order to check whether the notice was saved before trying again."
+        : error.message || "Could not publish the notice.";
+    } finally {
+      clearTimeout(timeout);
+      if (!stockDashboardSession) section.remove();
+      else if (section.isConnected) { button.disabled = false; section.querySelector("fieldset").disabled = false; }
+    }
+  });
+}
+
 function renderStockDashboardRequests(requests) {
   if (!stockDashboardRequestList) return;
 
@@ -3164,7 +3226,7 @@ function renderStockDashboardRequests(requests) {
         </div>
         <div class="stock-dashboard-queue-cell" data-label="Ward / Unit">${stockDashboardEscapeHtml(request.wardUnit || "No ward set")}</div>
         <div class="stock-dashboard-queue-cell" data-label="Date">${stockDashboardEscapeHtml(compactDate)}</div>
-        <div class="stock-dashboard-queue-cell stock-dashboard-queue-items" data-label="Items requested">${itemSummaryMarkup || "No items listed"}</div>
+        <div class="stock-dashboard-queue-cell stock-dashboard-queue-items" data-label="Items requested">${itemSummaryMarkup || "No items listed"}${getStockAvailabilityNoticeMarkup(request)}</div>
         <div class="stock-dashboard-queue-cell" data-label="Status">
           <span class="stock-dashboard-queue-status-badge" data-stage="${stockDashboardEscapeHtml(statusMeta.stage)}">${stockDashboardEscapeHtml(statusMeta.label)}</span>
         </div>

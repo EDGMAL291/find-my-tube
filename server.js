@@ -14,7 +14,7 @@ const { createStockOrderEmailSender } = require("./lib/stock-order-email.js");
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-10-18.2";
+const APP_RELEASE = "2026-10-27.1";
 const stockOrderEmail = createStockOrderEmailSender({
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.STOCK_ORDER_EMAIL_FROM
@@ -990,6 +990,22 @@ function mapRequestItemFromDb(item) {
   };
 }
 
+function getRequestAvailabilityNotice(history, items) {
+  if (!Array.isArray(history)) return null;
+  const itemIds = new Set(items.map(item => item.id));
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const event = history[index];
+    if (event?.type !== "item-availability-notice") continue;
+    return {
+      unavailableItemIds: [...new Set((Array.isArray(event.unavailableItemIds) ? event.unavailableItemIds : [])
+        .filter(id => typeof id === "string" && itemIds.has(id)))],
+      updatedAt: sanitizeString(event.updatedAt, 40),
+      revision: index + 1
+    };
+  }
+  return null;
+}
+
 function mapRequestFromDb(row) {
   const items = Array.isArray(row?.stock_request_items) ? row.stock_request_items.map(mapRequestItemFromDb) : [];
   const statusHistory = normalizeStatusHistory(row?.status_history);
@@ -1021,6 +1037,7 @@ function mapRequestFromDb(row) {
     cancelledAt,
     cancelled_at: cancelledAt,
     statusHistory,
+    availabilityNotice: getRequestAvailabilityNotice(statusHistory, items),
     items
   };
 }
@@ -3238,6 +3255,64 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         reason: sheetMirror.reason || ""
       }
     });
+    return;
+  }
+
+  if (req.method === "PATCH" && /^\/api\/lab\/stock-requests\/[^/]+\/availability$/.test(pathname)) {
+    const session = await requireLabSession(req, res);
+    if (!session) return;
+    if (!enforceRateLimit(req, res, "stock-availability-update", { limit: 120, windowMs: 15 * 60 * 1000 })) return;
+    let bodyText;
+    try { bodyText = await collectRequestBody(req); }
+    catch { sendJson(req, res, 413, { ok: false, error: "Request body too large" }); return; }
+    let payload;
+    try { payload = JSON.parse(bodyText); }
+    catch { sendJson(req, res, 400, { ok: false, error: "Invalid JSON payload" }); return; }
+    const ids = payload?.unavailableItemIds;
+    if (!Array.isArray(ids) || ids.length > 100 || ids.some(id => typeof id !== "string")
+      || new Set(ids).size !== ids.length || !Number.isInteger(payload?.expectedRevision) || payload.expectedRevision < 0) {
+      sendJson(req, res, 400, { ok: false, error: "Choose ordered items and include the current notice revision." }); return;
+    }
+    let requestId;
+    try { requestId = decodeURIComponent(pathname.split("/")[4]); }
+    catch { sendJson(req, res, 400, { ok: false, error: "Invalid order number" }); return; }
+    const row = await dbGetRequestById(requestId);
+    if (!row) { sendJson(req, res, 404, { ok: false, error: "Order not found" }); return; }
+    const request = mapRequestFromDb(row);
+    if (!["pending", "ready"].includes(request.status) || ORDER_ARCHIVE.isArchived(request)) {
+      sendJson(req, res, 409, { ok: false, error: "Availability notices can only be changed on active orders." }); return;
+    }
+    if (ids.some(id => !request.items.some(item => item.id === id))) {
+      sendJson(req, res, 400, { ok: false, error: "Choose only items from this order." }); return;
+    }
+    if (payload.expectedRevision !== (request.availabilityNotice?.revision || 0)) {
+      sendJson(req, res, 409, { ok: false, error: "The notice changed. Reopen the order to review the latest update." }); return;
+    }
+    const previousIds = request.availabilityNotice?.unavailableItemIds || [];
+    if (ids.length === previousIds.length && ids.every(id => previousIds.includes(id))) {
+      sendJson(req, res, 200, { ok: true, request, unchanged: true }); return;
+    }
+    if (row.status_history != null && !Array.isArray(row.status_history)) throw new Error("Order history format is invalid");
+    const now = new Date().toISOString();
+    const history = [...(row.status_history || []), {
+      type: "item-availability-notice", unavailableItemIds: [...ids].sort(), updatedAt: now,
+      updatedBy: normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true }) || ""
+    }];
+    // Compare the original history and status so concurrent notices or status
+    // transitions cannot be overwritten. The existing audit column needs no migration.
+    let update = supabase.from("stock_requests").update({ status_history: history, updated_at: now })
+      .eq("id", requestId).eq("status", row.status);
+    update = row.status_history == null ? update.is("status_history", null)
+      : update.eq("status_history", JSON.stringify(row.status_history));
+    const updated = await dbSingle(update.select("id"));
+    if (!updated?.length) {
+      sendJson(req, res, 409, { ok: false, error: "The order changed. Reopen it before publishing a notice." }); return;
+    }
+    const saved = await dbGetRequestById(requestId);
+    if (!saved) {
+      sendJson(req, res, 409, { ok: false, error: "The order could not be reloaded. Refresh the dashboard to check its latest state." }); return;
+    }
+    sendJson(req, res, 200, { ok: true, request: mapRequestFromDb(saved) });
     return;
   }
 
