@@ -61,7 +61,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027d" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027f" />
 </head>
 <body data-app-page="find-my-tube">
   <main class="container">
@@ -318,7 +318,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261027e", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261027f", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

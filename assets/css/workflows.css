@@ -441,3 +441,24 @@ html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-status-o
 .push-controls-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .push-controls-actions button { min-height: 44px; }
 #labPushPanel .push-controls { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* Push actions distinguish an available test from a blocked browser permission. */
+html[data-theme] body[data-app-page] .push-controls-actions button:not(:disabled) {
+  opacity: 1 !important;
+  color: #fffdf8 !important;
+  background: transparent !important;
+  border-color: rgba(230, 207, 140, .65) !important;
+  cursor: pointer;
+}
+html[data-theme] body[data-app-page] .push-controls-actions [data-push-test]:not(:disabled) {
+  color: #102c3d !important;
+  background: #e6cf8c !important;
+}
+html[data-theme] body[data-app-page] .push-controls-actions button:disabled {
+  opacity: .45 !important;
+  cursor: not-allowed;
+}
+html[data-theme] body[data-app-page] .push-controls-actions button:focus-visible {
+  outline: 2px solid #bbdbe9;
+  outline-offset: 3px;
+}

@@ -2,6 +2,12 @@
   const prefix = 'fmt-order-push:';
   const labKey = 'fmt-lab-push-binding';
   let configPromise, labSignedIn = null, labGeneration = 0;
+  const permissionRefreshers = new Set();
+  const permissionState = () => typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
+  const refreshPermissions = () => { for (const refresh of permissionRefreshers) refresh(); };
+  window.addEventListener('focus', refreshPermissions);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshPermissions(); });
+  try { navigator.permissions?.query?.({ name: 'notifications' }).then(state => state.addEventListener('change', refreshPermissions)).catch(() => {}); } catch { /* Focus/visibility still refresh permission in browsers without this API. */ }
   const apiBase = String(window.FMT_APP_CONFIG?.stockApiBaseUrl || location.origin).replace(/\/+$/, '');
   const storageAvailable = (() => { try { localStorage.setItem('fmt-push-storage-check', '1'); localStorage.removeItem('fmt-push-storage-check'); return true; } catch { return false; } })();
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
@@ -32,7 +38,7 @@
   }
   const bytes = value => Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), char => char.charCodeAt(0));
   async function browserSubscription(publicKey) {
-    const url = new URL('./service-worker.js?v=20261027e', location.href);
+    const url = new URL('./service-worker.js?v=20261027f', location.href);
     const registered = await navigator.serviceWorker.register(url, { updateViaCache: 'none' });
     // An older active worker may satisfy `ready` while the push-capable update installs.
     const updating = registered.installing || registered.waiting;
@@ -75,7 +81,7 @@
     const key = scope.lab ? labKey : prefix + scope.orderId;
     const root = scope.lab ? '/api/lab/push/subscriptions' : `/api/push/orders/${encodeURIComponent(scope.orderId)}/subscriptions`;
     const generation = labGeneration;
-    let enabled = false, busy = false, config;
+    let enabled = false, busy = false, config, lastPermission = permissionState();
     const active = () => panel.isConnected && (!scope.lab || (labSignedIn && generation === labGeneration));
     const record = () => read(key) || {};
     const saveBinding = bindingId => { const value = record(); if (scope.lab) write(key, bindingId ? { subscriptionId: bindingId } : null); else write(key, { ...value, subscriptionId: bindingId || null }); };
@@ -83,15 +89,28 @@
       if (!active()) return;
       if (scope.lab) window.FMT_PUSH.labEnabled = enabled;
       const unsupported = supportMessage();
+      const permission = permissionState();
+      lastPermission = permission;
       toggle.textContent = enabled ? 'Turn off alerts' : 'Enable alerts';
-      toggle.disabled = busy || (!enabled && Boolean(unsupported || !config?.configured || Notification.permission === 'denied'));
-      test.hidden = !enabled; test.disabled = busy || Boolean(unsupported) || (typeof Notification !== 'undefined' && Notification.permission !== 'granted');
+      toggle.disabled = busy || (!enabled && Boolean(unsupported || !config?.configured || permission === 'denied'));
+      test.hidden = !enabled;
+      test.disabled = busy || Boolean(unsupported) || !config?.configured || permission === 'denied';
+      test.textContent = permission === 'default' ? 'Allow notifications & test' : 'Send test alert';
+      const blocked = unsupported || (!config?.configured ? 'Push alerts need server setup. The dashboard and Track Orders still work.'
+        : permission === 'denied' ? 'Notifications are blocked on this browser. Allow notifications for this site in browser settings, then return here.'
+          : permission === 'default' ? 'Your subscription is saved, but browser permission is needed. Tap Allow notifications & test to finish setup.' : '');
+      test.title = test.disabled && !busy ? blocked : '';
       status.textContent = message || (enabled
-        ? scope.lab ? 'Alerts are on for this signed-in lab session, even when the dashboard is closed.' : 'Alerts are on for this order. You can close the site; use Track Orders for the latest details.'
+        ? blocked || (scope.lab ? 'Alerts are on for this signed-in lab session, even when the dashboard is closed.' : 'Alerts are on for this order. You can close the site; use Track Orders for the latest details.')
         : unsupported || (!config?.configured ? scope.lab ? 'Push alerts need server setup. The dashboard and Track Orders still work.' : 'Use Track Orders to follow this request.'
           : Notification.permission === 'denied' ? 'Notifications are blocked. Change this site’s notification permission in your browser settings.'
             : scope.lab ? 'Get a push alert when a new stock order is saved. Sign in again when your lab session expires to renew alerts.' : 'Get optional alerts for status and unavailable-item updates. No email or phone number is needed.'));
     }
+    const refreshPermission = () => {
+      if (!active()) { permissionRefreshers.delete(refreshPermission); return; }
+      if (!busy && permissionState() !== lastPermission) render();
+    };
+    permissionRefreshers.add(refreshPermission);
     (async () => {
       try {
         config = await getConfig();
@@ -130,9 +149,24 @@
       finally { busy = false; if (active()) { toggle.disabled = false; render(status.textContent); } }
     });
     test.addEventListener('click', async () => {
-      if (busy || !active()) return;
-      busy = true; render('Queuing a test alert…');
-      try { await request(`${root}/${record().subscriptionId}/test`, { method: 'POST' }, scope.token); render('Test alert queued. It may take a moment to appear.'); }
+      if (busy || !active() || test.disabled) return;
+      const needsPermission = permissionState() === 'default';
+      // Keep the permission prompt in the tap handler, including restored subscriptions.
+      const permission = needsPermission ? Notification.requestPermission() : Promise.resolve(permissionState());
+      busy = true; render(needsPermission ? 'Waiting for notification permission…' : 'Queuing a test alert…');
+      try {
+        if (await permission !== 'granted') { render(); return; }
+        if (!active()) return;
+        if (needsPermission) {
+          const subscription = await browserSubscription(config.publicKey);
+          if (!active()) return;
+          const result = await request(root, { method: 'POST', body: JSON.stringify({ subscription: subscription.toJSON() }) }, scope.token);
+          if (!active()) return;
+          saveBinding(result.subscription.id);
+        }
+        await request(`${root}/${record().subscriptionId}/test`, { method: 'POST' }, scope.token);
+        render('Test alert queued. It may take a moment to appear.');
+      }
       catch (error) { render(error.message); }
       finally { busy = false; render(status.textContent); }
     });
