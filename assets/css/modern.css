@@ -11884,7 +11884,7 @@ html body[data-app-page] :is(
 ) {
   border-radius: var(--fmt-card-radius) !important;
   background-clip: padding-box !important;
-  background-color: rgba(255, 255, 255, .10) !important;
+  background-color: transparent !important;
   background-image: none !important;
   backdrop-filter: blur(8px) saturate(1.04) !important;
   -webkit-backdrop-filter: blur(8px) saturate(1.04) !important;
@@ -11978,7 +11978,7 @@ html body[data-app-page="about-page"] :is(.header, .container) {
 }
 
 html body[data-app-page="about-page"] :is(.support-home-link, .support-nav, .stock-order-request-card, .footer-card) {
-  background-color: rgba(255, 255, 255, .10) !important;
+  background-color: transparent !important;
   background-image: none !important;
   border-color: rgba(255, 255, 255, .22) !important;
   box-shadow: none !important;
@@ -12020,7 +12020,7 @@ html body[data-app-page="home"] .home-lab-desk-panel :is(
   .home-status-item,
   .home-help-actions a
 ) {
-  background-color: rgba(255, 255, 255, .10) !important;
+  background-color: transparent !important;
   background-image: none !important;
   border-color: rgba(255, 255, 255, .20) !important;
   color: #fffdf8 !important;
@@ -12089,7 +12089,7 @@ html[data-theme] body #drawModal :is(.draw-selection-head, .draw-result-card) {
 }
 
 html[data-theme] body #drawModal :is(.draw-group-card, .draw-planner-alert) {
-  background-color: rgba(255, 255, 255, .10) !important;
+  background-color: transparent !important;
   background-image: none !important;
   border-color: rgba(255, 255, 255, .24) !important;
   box-shadow: none !important;
@@ -12108,7 +12108,7 @@ html[data-theme] body #drawModal .draw-return-btn {
 }
 
 /* Find My Test keeps the analyser photograph sharp and uses one restrained
-   10% frost language for the form, choices, suggestions, and results. */
+   untinted frost language for the form, choices, suggestions, and results. */
 html body[data-app-page="home"].find-my-test-page {
   min-height: 100lvh;
   isolation: isolate;
@@ -12185,7 +12185,7 @@ html[data-theme] body.find-my-test-page :is(
   .clinical-workup-test-option,
   .clinical-workup-autocomplete
 ) {
-  background-color: rgba(255, 255, 255, .10) !important;
+  background-color: transparent !important;
   background-image: none !important;
   border-color: rgba(255, 255, 255, .22) !important;
   box-shadow: none !important;
@@ -12199,7 +12199,7 @@ html[data-theme] body.find-my-test-page :is(
   .clinical-workup-field textarea,
   .clinical-choice-trigger
 ) {
-  background-color: rgba(255, 255, 255, .10) !important;
+  background-color: transparent !important;
   background-image: none !important;
   border-color: rgba(255, 255, 255, .24) !important;
   color: #fffdf8 !important;
@@ -12215,7 +12215,7 @@ html[data-theme] body.find-my-test-page :is(
   .clinical-choice-trigger,
   .clinical-workup-test-option
 ):is(:hover, :focus, :focus-visible, [aria-expanded="true"], .is-selected) {
-  background-color: rgba(255, 255, 255, .16) !important;
+  background-color: transparent !important;
   border-color: rgba(230, 207, 140, .58) !important;
 }
 
@@ -12224,7 +12224,7 @@ html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item {
 }
 
 html[data-theme] body.find-my-test-page .clinical-workup-autocomplete-item:is(:hover, .is-highlighted) {
-  background: rgba(255, 255, 255, .14) !important;
+  background: transparent !important;
 }
 
 @media (max-width: 620px) {
@@ -12290,12 +12290,12 @@ html body[data-app-page="home"] .home-help-actions a {
   display: grid; place-items: center; flex: 0 0 48px; width: 48px; min-width: 48px;
   height: 48px; min-height: 48px; padding: 0; gap: 0;
   grid-template-columns: 1fr;
-  background: rgba(255,255,255,.10) !important; color: #fffdf8 !important;
+  background: transparent !important; color: #fffdf8 !important;
   border: 1px solid rgba(255,255,255,.35) !important; border-radius: var(--fmt-card-radius);
   box-shadow: none !important; backdrop-filter: blur(8px);
 }
 html body[data-app-page] .contact-sheet-actions .contact-sheet-action {
-  background: rgba(255,255,255,.10) !important; color: #fffdf8 !important;
+  background: transparent !important; color: #fffdf8 !important;
 }
 html body[data-app-page] .contact-sheet-action-icon {
   width: 28px; height: 28px; min-width: 0; padding: 0;
@@ -12324,7 +12324,7 @@ html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page
 html body[data-app-page]:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]) :is(h1,h2,p,a) { color: #fffdf8 !important; }
 html body:is([data-app-page="about-page"], [data-app-page="contact-feedback-page"]) :is(.support-home-link,.support-nav,.stock-order-request-card,.footer-card),
 html body[data-app-page] :is(#aboutInfoModal .about-info-modal-card, #contactFeedbackModal .contact-sheet-card) {
-  background: rgba(255,255,255,.10) !important; border-color: rgba(255,255,255,.22) !important;
+  background: transparent !important; border-color: rgba(255,255,255,.22) !important;
   box-shadow: none !important; backdrop-filter: blur(8px) saturate(1.04) !important;
   -webkit-backdrop-filter: blur(8px) saturate(1.04) !important; color: #fffdf8 !important;
 }
@@ -12436,11 +12436,11 @@ html[data-theme] body #siteMenuPanel .site-menu-link[data-menu-action="home"] {
   padding-top: 0; padding-bottom: 12px;
 }
 
-/* Canonical card surface: every card stays at exactly 10% white frost.
+/* Canonical card surface: clear frost blurs the scene without a white fill.
    Clinical and workflow states retain meaning through borders, labels, and
    accents instead of replacing the transparent card background. */
 :root {
-  --fmt-card-frost-background: rgba(255, 255, 255, .10);
+  --fmt-card-frost-background: transparent;
   --fmt-card-frost-filter: blur(8px) saturate(1.04);
 }
 

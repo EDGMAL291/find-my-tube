@@ -32,7 +32,7 @@
   }
   const bytes = value => Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), char => char.charCodeAt(0));
   async function browserSubscription(publicKey) {
-    const url = new URL('./service-worker.js?v=20261027c', location.href);
+    const url = new URL('./service-worker.js?v=20261027d', location.href);
     const registered = await navigator.serviceWorker.register(url, { updateViaCache: 'none' });
     // An older active worker may satisfy `ready` while the push-capable update installs.
     const updating = registered.installing || registered.waiting;

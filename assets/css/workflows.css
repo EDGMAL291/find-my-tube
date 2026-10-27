@@ -1,6 +1,6 @@
 /* Stock ordering and clinical inputs: quiet surfaces, clear actions. */
 html body[data-app-page="stock-order"] #stockOrderGrid {
-  --fmt-card-frost-background: rgba(255, 255, 255, .06);
+  --fmt-card-frost-background: transparent;
   background: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -51,7 +51,7 @@ html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-backdrop {
   -webkit-backdrop-filter: none;
 }
 html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-sheet {
-  background: rgba(255, 255, 255, .04) !important;
+  background: transparent !important;
   backdrop-filter: blur(4px) saturate(1.04) !important;
   -webkit-backdrop-filter: blur(4px) saturate(1.04) !important;
 }
@@ -258,7 +258,7 @@ body[data-app-page="stock-order"] .stock-cart-close {
   padding: 8px 14px;
   border: 1px solid rgba(22, 55, 58, .2);
   border-radius: 6px;
-  background: rgba(255, 255, 255, .08);
+  background: transparent;
   color: #f8fbfb;
   font: inherit;
   cursor: pointer;
@@ -280,14 +280,14 @@ html[data-theme] body[data-app-page="stock-order"] #stockOrderCartDialog :is(.st
   -webkit-backdrop-filter: var(--fmt-card-frost-filter) !important;
 }
 html body[data-app-page="stock-order"] .stock-cart-dialog :is(.stock-order-field input, .stock-order-field select, .stock-order-field textarea, .stock-order-repeat-reason select) {
-  background: rgba(255, 255, 255, .1);
+  background: transparent;
   border-color: rgba(255, 255, 255, .23);
   color: #f8fbfb;
 }
 body[data-app-page="stock-order"] .stock-cart-dialog :is(input, textarea)::placeholder { color: #c4d2d5; opacity: 1; }
 body[data-app-page="stock-order"] .stock-cart-dialog select option { background: #102c3d; color: #fff; }
 html body[data-app-page="stock-order"] .stock-cart-dialog :is(.stock-order-summary-item, .stock-order-selected-card) {
-  background: rgba(255, 255, 255, .06);
+  background: transparent;
   border-color: rgba(255, 255, 255, .14);
 }
 html body[data-app-page="stock-order"] .stock-cart-dialog :is(.stock-order-request-head h3, .stock-order-selected-name, .stock-order-summary-value, .stock-order-request-meta, .stock-order-summary-label, .stock-order-selected-quantity) { color: #f8fbfb; }

@@ -145,10 +145,10 @@ html body[data-app-page="stock-dashboard"]::before {
     url("../images/scene-dashboard-20261013.webp") center / cover no-repeat !important;
 }
 html body[data-app-page="stock-dashboard"] #stockDashboardInventoryCard {
-  background: rgba(255, 255, 255, .10) !important;
+  background: transparent !important;
 }
 html body[data-app-page="stock-dashboard"] #stockDashboardInventoryList .stock-dashboard-list-row {
-  background: rgba(255, 255, 255, .10) !important;
+  background: transparent !important;
   border-color: rgba(255, 255, 255, .22); border-radius: 0;
   box-shadow: none;
   backdrop-filter: blur(8px) saturate(1.04);
@@ -168,13 +168,13 @@ html body[data-app-page="stock-dashboard"] #stockDashboardInventoryCard :is(
   color: #fffdf8 !important;
 }
 html body[data-app-page="stock-dashboard"] #stockDashboardInventoryList .stock-dashboard-inventory-section-head > span {
-  background: rgba(255, 255, 255, .10);
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, .22);
 }
 
 /* The work queue uses the same frosted treatment as available stock. */
 html body[data-app-page="stock-dashboard"] #stockDashboardRequestList .stock-dashboard-queue-row {
-  background: rgba(255, 255, 255, .10) !important;
+  background: transparent !important;
   border: 1px solid rgba(255, 255, 255, .22) !important;
   border-radius: 0; box-shadow: none !important;
   backdrop-filter: blur(8px) saturate(1.04);
@@ -189,6 +189,6 @@ html body[data-app-page="stock-dashboard"] #stockDashboardRequestList :is(
 ) { color: #fffdf8 !important; }
 html body[data-app-page="stock-dashboard"] #stockDashboardRequestList .stock-dashboard-queue-cell::before { color: #c9d8e2 !important; }
 html body[data-app-page="stock-dashboard"] #stockDashboardRequestList .stock-dashboard-queue-actions button {
-  background: rgba(255, 255, 255, .10) !important; color: #fffdf8 !important;
+  background: transparent !important; color: #fffdf8 !important;
   border: 1px solid rgba(255, 255, 255, .30) !important; box-shadow: none !important;
 }

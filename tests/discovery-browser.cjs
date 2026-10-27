@@ -39,7 +39,7 @@ const FROSTED_CARD_SELECTOR = [
   '.support-home-link', '.support-nav'
 ].join(',');
 
-async function assertVisibleCardsUseTenPercentFrost(page, context) {
+async function assertVisibleCardsUseTransparentFrost(page, context) {
   const surfaces = await page.locator(FROSTED_CARD_SELECTOR).evaluateAll((elements) => elements
     .filter((element) => element.getClientRects().length)
     .map((element) => {
@@ -57,7 +57,7 @@ async function assertVisibleCardsUseTenPercentFrost(page, context) {
     }));
   assert.ok(surfaces.length > 0, `${context} should expose at least one card surface`);
   surfaces.forEach((surface) => {
-    assert.equal(surface.background, surface.transparentSelector || surface.stockGrid ? 'rgba(0, 0, 0, 0)' : surface.choiceSheet ? 'rgba(255, 255, 255, 0.04)' : surface.stockCard ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.1)', `${context} ${surface.selector} must use its intended frost`);
+    assert.equal(surface.background, 'rgba(0, 0, 0, 0)', `${context} ${surface.selector} must use its intended frost`);
     assert.equal(surface.image, 'none', `${context} ${surface.selector} must keep its background transparent`);
     if (!surface.stockGrid) assert.match(surface.filter, surface.choiceSheet ? /blur\(4px\)/ : /blur\(8px\)/, `${context} ${surface.selector} must blur the scene behind it`);
   });
@@ -402,8 +402,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.screenshot({ path:path.join(screenshots, `browse-${width}-${theme}.png`) });
         await page.locator('#searchInput').fill('HIV');
         const card = page.locator('[data-test-name="HIV ELISA"]');
-        assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Result card uses 10% frost');
-        await assertVisibleCardsUseTenPercentFrost(page, `Find My Tube ${width}px ${theme}`);
+        assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Result card uses untinted frost');
+        await assertVisibleCardsUseTransparentFrost(page, `Find My Tube ${width}px ${theme}`);
         assert.equal(await card.locator('.discovery-body').isVisible(), false);
         assert.equal(await page.locator('#drawModal').isVisible(), false);
         assert.equal(await page.locator('#selectionCartBar').isVisible(), false);
@@ -427,7 +427,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(surfaces.grid, 'rgba(0, 0, 0, 0)', 'No rectangle behind result cards');
         assert.equal(surfaces.clipping, 'hidden', 'Card contents stay within card edges');
         assert.equal(await card.evaluate(el => getComputedStyle(el).borderRadius), '0px', 'Discovery uses shared square card geometry');
-        assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Collapsed result keeps the page photograph behind 10% frost');
+        assert.equal(await card.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Collapsed result keeps the page photograph behind untinted frost');
         assert.equal(await card.locator('.discovery-body').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Expanded result shows the page photograph');
         assert.match(await card.innerText(), /Gold\/Yellow/);
         assert.match(await card.innerText(), /Serum/);
@@ -446,7 +446,7 @@ async function exerciseTubePlanWorkflow(page, width) {
           background:getComputedStyle(el).backgroundColor, image:getComputedStyle(el).backgroundImage,
           filter:getComputedStyle(el).backdropFilter
         }));
-        assert.equal(dockFrost.background, 'rgba(255, 255, 255, 0.1)', 'Compact planner has translucent frost');
+        assert.equal(dockFrost.background, 'rgba(0, 0, 0, 0)', 'Compact planner has translucent frost');
         assert.equal(dockFrost.image, 'none', 'No opaque gradient hides the photograph');
         assert.match(dockFrost.filter, /blur\(8px\)/);
         assert.equal(await page.locator('#drawModal').isVisible(), false, 'Adding does not force open planner');
@@ -466,9 +466,9 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await page.locator('#drawModal').isVisible(), true);
         await page.waitForFunction(() => document.querySelector('.draw-modal-card').getBoundingClientRect().top >= 0 && getComputedStyle(document.querySelector('#drawModal')).opacity === '1');
         assert.match(await page.locator('#drawModal').evaluate(el => getComputedStyle(el).backgroundImage), /scene-tube-20261013/);
-        assert.equal(await page.locator('.draw-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan enclosing card uses 10% frost');
-        assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan results use 10% frost');
-        await assertVisibleCardsUseTenPercentFrost(page, `Tube Plan ${width}px ${theme}`);
+        assert.equal(await page.locator('.draw-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan enclosing card uses untinted frost');
+        assert.equal(await page.locator('.draw-result-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan results use untinted frost');
+        await assertVisibleCardsUseTransparentFrost(page, `Tube Plan ${width}px ${theme}`);
         assert.equal(await page.evaluate(() => document.body.classList.contains('draw-modal-open')), true);
         await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
         assert.equal(await page.locator('#drawSelectedList').isVisible(), false);
@@ -591,7 +591,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(await fbcCard.locator('.discovery-select').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Plan action is transparent');
         assert.equal(await fbcCard.locator('.profile-tests-btn').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile action is transparent');
         await fbcCard.locator('.discovery-select').click();
-        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Tube Plan bar keeps its frosted background');
+        assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Tube Plan bar keeps its frosted background');
         assert.deepEqual(await page.locator('#selectionCartBar').evaluate(el => ({
           style: getComputedStyle(el).borderTopStyle,
           width: getComputedStyle(el).borderTopWidth
@@ -601,8 +601,8 @@ async function exerciseTubePlanWorkflow(page, width) {
         await page.waitForFunction(() => getComputedStyle(document.querySelector('.container')).opacity === '0');
         assert.equal((await page.locator('#closeProfileModalBtn').innerText()).trim(), '×');
         assert.equal((await page.locator('#profileModal .profile-modal-brand').innerText()).trim(), 'FIND MY TUBE');
-        assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Profile contents use 10% frost');
-        await assertVisibleCardsUseTenPercentFrost(page, `Profile modal ${width}px ${theme}`);
+        assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Profile contents use untinted frost');
+        await assertVisibleCardsUseTransparentFrost(page, `Profile modal ${width}px ${theme}`);
         assert.equal(await page.locator('#profileModal .profile-modal-card').evaluate(el => getComputedStyle(el).borderTopStyle), 'none');
         assert.equal(await page.locator('.container').evaluate(el => getComputedStyle(el).opacity), '0', 'Underlying workspace is removed while profile contents are open');
         assert.equal(await page.locator('#selectionCartBar').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'Floating plan does not compete with profile contents');
@@ -669,9 +669,9 @@ async function exerciseTubePlanWorkflow(page, width) {
       }));
       assert.match(initialVisual.background, /scene-test-20261013/, `Find My Test warm/cold photograph missing at ${width}`);
       assert.equal(initialVisual.position, 'fixed', 'Find My Test photograph must stay still while scrolling');
-      assert.equal(initialVisual.panel, 'rgba(255, 255, 255, 0.1)', 'Find My Test form uses 10% frost');
+      assert.equal(initialVisual.panel, 'rgba(0, 0, 0, 0)', 'Find My Test form uses untinted frost');
       assert.equal(initialVisual.panelImage, 'none', 'Find My Test form does not cover the photograph');
-      assert.equal(initialVisual.input, 'rgba(255, 255, 255, 0.1)', 'Find My Test fields use 10% frost');
+      assert.equal(initialVisual.input, 'rgba(0, 0, 0, 0)', 'Find My Test fields use untinted frost');
       if (width === 390) {
         for (const [index, imageName] of [[0, 'scene-reference-20261013'], [1, 'scene-pregnancy-20261013']]) {
           await testPage.locator('.clinical-choice-trigger').nth(index).click();
@@ -681,7 +681,7 @@ async function exerciseTubePlanWorkflow(page, width) {
             option:getComputedStyle(el.querySelector('.clinical-choice-option:not(.is-selected)')).backgroundColor
           }));
           assert.match(choiceVisual.image, new RegExp(imageName), 'Choice background stays inside the lab');
-          assert.equal(choiceVisual.sheet, 'rgba(255, 255, 255, 0.04)', 'Choice sheet lets the scene show through');
+          assert.equal(choiceVisual.sheet, 'rgba(0, 0, 0, 0)', 'Choice sheet lets the scene show through');
           assert.equal(choiceVisual.option, 'rgba(3, 17, 31, 0.06)', 'Choice rows stay transparent');
           await testPage.locator('#clinicalChoiceCloseBtn').click();
         }
@@ -693,10 +693,10 @@ async function exerciseTubePlanWorkflow(page, width) {
       await testPage.waitForTimeout(250);
       assert.equal(await testPage.locator('#clinicalWorkupResults').isVisible(), true);
       assert.ok(await testPage.locator('.clinical-workup-test-option').count() > 0, 'Find My Test returns suggestions');
-      assert.equal(await testPage.locator('#clinicalWorkupResults').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Find My Test results use 10% frost');
+      assert.equal(await testPage.locator('#clinicalWorkupResults').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Find My Test results use untinted frost');
       const optionSurfaces = await testPage.locator('.clinical-workup-test-option').evaluateAll(items => items.map(item => getComputedStyle(item).backgroundColor));
-      assert.ok(optionSurfaces.every(color => color === 'rgba(255, 255, 255, 0.1)'), `Suggested tests use 10% frost at ${width}: ${JSON.stringify(optionSurfaces)}`);
-      await assertVisibleCardsUseTenPercentFrost(testPage, `Find My Test ${width}px`);
+      assert.ok(optionSurfaces.every(color => color === 'rgba(0, 0, 0, 0)'), `Suggested tests use untinted frost at ${width}: ${JSON.stringify(optionSurfaces)}`);
+      await assertVisibleCardsUseTransparentFrost(testPage, `Find My Test ${width}px`);
       await testPage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       assert.equal(await testPage.evaluate(() => getComputedStyle(document.body, '::before').position), 'fixed', 'Find My Test photograph remains fixed after scrolling');
       assert.ok(await testPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Find My Test overflow at ${width}`);
@@ -704,7 +704,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       await testPage.screenshot({path:path.join(screenshots, `find-my-test-${width}.png`), fullPage:true});
       await testPage.close();
     }
-    console.log('PASS Find My Test sharp photograph, 10% frost, results and responsive checks');
+    console.log('PASS Find My Test sharp photograph, untinted frost, results and responsive checks');
     for (const width of [360, 390, 412, 430, 1280]) {
       const aboutPage = await createTestPage(browser, { viewport:{width,height:844}, reducedMotion:'reduce' });
       await aboutPage.goto(`${base}/about.html`);
@@ -718,9 +718,9 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.match(aboutVisual.background, /scene-reference-20261013/, `About warm/cold photograph missing at ${width}`);
       assert.equal(aboutVisual.position, 'fixed');
       assert.equal(aboutVisual.header, 'rgba(0, 0, 0, 0)', 'About header must not cover the photograph');
-      assert.equal(aboutVisual.card, 'rgba(255, 255, 255, 0.1)', 'About content uses 10% frost');
-      assert.equal(aboutVisual.nav, 'rgba(255, 255, 255, 0.1)', 'About navigation uses 10% frost');
-      await assertVisibleCardsUseTenPercentFrost(aboutPage, `About ${width}px`);
+      assert.equal(aboutVisual.card, 'rgba(0, 0, 0, 0)', 'About content uses untinted frost');
+      assert.equal(aboutVisual.nav, 'rgba(0, 0, 0, 0)', 'About navigation uses untinted frost');
+      await assertVisibleCardsUseTransparentFrost(aboutPage, `About ${width}px`);
       assert.ok(await aboutPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `About overflow at ${width}`);
       await aboutPage.screenshot({path:path.join(screenshots, `about-${width}.png`), fullPage:true});
       await aboutPage.close();
@@ -740,9 +740,9 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.equal(deskVisual.blur, 'none', 'Collection Desk photograph stays sharp');
       assert.equal(deskVisual.panel, 'rgba(0, 0, 0, 0)', 'Collection Desk panel stays transparent');
       assert.equal(deskVisual.panelImage, 'none');
-      assert.equal(deskVisual.card, 'rgba(255, 255, 255, 0.1)', 'Collection Desk cards use 10% frost');
-      assert.equal(deskVisual.action, 'rgba(255, 255, 255, 0.1)', 'Collection Desk actions use 10% frost');
-      await assertVisibleCardsUseTenPercentFrost(deskPage, `Collection Desk ${width}px`);
+      assert.equal(deskVisual.card, 'rgba(0, 0, 0, 0)', 'Collection Desk cards use untinted frost');
+      assert.equal(deskVisual.action, 'rgba(0, 0, 0, 0)', 'Collection Desk actions use untinted frost');
+      await assertVisibleCardsUseTransparentFrost(deskPage, `Collection Desk ${width}px`);
       assert.ok(await deskPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Collection Desk overflow at ${width}`);
       await deskPage.screenshot({path:path.join(screenshots, `collection-desk-${width}.png`), fullPage:true});
       await deskPage.close();
@@ -788,7 +788,7 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.deepEqual(datasets.active, ['RECENT-ACTIVITY','FRESH-PENDING']);
       assert.deepEqual(datasets.archived, ['STALE-PENDING','STALE-READY']);
       await page.evaluate(() => { document.querySelector('#stockDashboardRequestsCard').hidden = false; });
-      assert.equal(await page.locator('.stock-dashboard-queue-row').first().evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(255, 255, 255, 0.1)', 'Work queue rows use light frost');
+      assert.equal(await page.locator('.stock-dashboard-queue-row').first().evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Work queue rows use untinted frost');
       await page.locator('#stockDashboardRequestsCard').scrollIntoViewIfNeeded();
       await page.screenshot({path:path.join(screenshots, `stock-queue-${width}.png`)});
       await page.evaluate(() => {
@@ -812,9 +812,9 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.deepEqual(errors, [], `${route} runtime errors`);
       const radii = await page.locator('.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>getComputedStyle(el).borderRadius));
       assert.ok(radii.every(radius=>radius==='0px'), `${route} inconsistent card corners: ${radii}`);
-      const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>({color:getComputedStyle(el).backgroundColor, expected:el.id === 'stockOrderGrid' ? 'rgba(0, 0, 0, 0)' : el.closest('#stockOrderGrid') ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.1)'})));
+      const frost = await page.locator('.home-action-tile,.home-order-status-card,.stock-order-card,.stock-order-request-card,.stock-order-form,.stock-catalog-toolbar,.stock-order-grid,.stock-dashboard-request-card').evaluateAll(els => els.filter(el=>el.getClientRects().length).map(el=>({color:getComputedStyle(el).backgroundColor, expected:'rgba(0, 0, 0, 0)'})));
       assert.ok(frost.every(surface=>surface.color === surface.expected), `${route} inconsistent card frost: ${JSON.stringify(frost)}`);
-      if(route !== 'index.html') await assertVisibleCardsUseTenPercentFrost(page, route);
+      if(route !== 'index.html') await assertVisibleCardsUseTransparentFrost(page, route);
       if(route === 'order-stock.html') {
         const stockBackdrop = await page.evaluate(() => ({
           image:getComputedStyle(document.body, '::before').backgroundImage,

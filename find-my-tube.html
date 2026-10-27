@@ -41,8 +41,8 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-  <link rel="stylesheet" href="assets/css/modern.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/discovery.css?v=20261018b" />
+  <link rel="stylesheet" href="assets/css/modern.css?v=20261027d" />
+  <link rel="stylesheet" href="assets/css/discovery.css?v=20261027d" />
   <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -61,7 +61,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027c" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027d" />
 </head>
 <body data-app-page="find-my-tube">
   <main class="container">
@@ -318,7 +318,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261027c", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261027d", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
