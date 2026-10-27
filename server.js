@@ -14,7 +14,7 @@ const { createStockOrderEmailSender } = require("./lib/stock-order-email.js");
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-10-27.1";
+const APP_RELEASE = "2026-10-27.2";
 const stockOrderEmail = createStockOrderEmailSender({
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.STOCK_ORDER_EMAIL_FROM
@@ -1803,132 +1803,67 @@ async function dbTryAtomicStockTransition(requestId, nextStatus, sessionUser) {
   }
 
   const reloaded = await dbGetRequestById(requestId);
+  if (!reloaded) return { error: "confirmation-unavailable" };
   return {
     record: mapRequestFromDb(reloaded),
-    previousStatus: String(data.previousStatus || "")
+    previousStatus: String(data.previousStatus || ""),
+    unchanged: slugifyStatus(data.previousStatus) === nextStatus
   };
 }
 
-async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser) {
+async function dbUpdateRequestStatus(requestId, nextStatus, sessionUser, expectedStatus = "") {
   const dbRecord = await dbGetRequestById(requestId);
   if (!dbRecord) return { error: "not-found" };
-
   const request = mapRequestFromDb(dbRecord);
   const previousStatus = slugifyStatus(request.status);
+  // A retry confirms the saved state; it must never deduct inventory again.
+  if (previousStatus === nextStatus) return { record: request, previousStatus, unchanged: true };
+  if (expectedStatus && previousStatus !== slugifyStatus(expectedStatus)) {
+    return { error: "status-conflict", previousStatus, nextStatus };
+  }
   if (!isAllowedStockStatusTransition(previousStatus, nextStatus)) {
     return { error: "invalid-transition", previousStatus, nextStatus };
   }
-  const wasDeducted = isRequestInventoryDeducted(request);
-  const shouldDeductInventory = (nextStatus === "completed" || nextStatus === "collected") && !wasDeducted;
 
-  if (shouldDeductInventory) {
-    const atomicResult = await dbTryAtomicStockTransition(requestId, nextStatus, sessionUser);
-    if (atomicResult) {
-      if (atomicResult.record) {
-        await dbCreateAuditLog(sessionUser?.id || null, "update-stock-request-status", "stock_request", requestId, {
-          previousStatus: atomicResult.previousStatus,
-          nextStatus,
-          inventoryTransition: "atomic"
-        });
-      }
-      return atomicResult;
+  if (["collected", "completed"].includes(nextStatus)) {
+    // Collection must commit the status, audit history and inventory together.
+    // Do not fall back to separate inventory writes on an older database.
+    const result = await dbTryAtomicStockTransition(requestId, nextStatus, sessionUser);
+    if (!result) return { error: "collection-setup-required", previousStatus, nextStatus };
+    if (result.record && result.record.status !== nextStatus) {
+      return { error: "status-conflict", previousStatus: result.record.status, nextStatus };
     }
-  }
-
-  if (shouldDeductInventory) {
-    const inventoryMap = await dbGetInventoryMap();
-    const shortages = [];
-    for (const item of request.items) {
-      const key = getStockInventoryKey(item);
-      const requiredUnits = getItemInventoryUnits(item);
-      const onHand = Math.max(0, Number(inventoryMap.get(key)?.onHand || 0));
-      if (requiredUnits > onHand) {
-        shortages.push({
-          key,
-          label: getStockInventoryLabel(item),
-          requiredUnits,
-          onHand,
-          shortBy: requiredUnits - onHand
-        });
-      }
-    }
-    if (shortages.length) {
-      return { error: "insufficient-stock", shortages };
-    }
+    return result;
   }
 
   const nowIso = new Date().toISOString();
-  request.status = nextStatus;
-  request.updatedAt = nowIso;
-  request.statusUpdatedAt = nowIso;
-  request.statusUpdatedBy = normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || "";
-  appendStatusAudit(request, nextStatus, request.statusUpdatedBy, nowIso);
-
+  if (dbRecord.status_history != null && !Array.isArray(dbRecord.status_history)) throw new Error("Order history format is invalid");
+  appendStatusAudit(request, nextStatus, normalizeElabUserNumber(sessionUser?.user_number, { allowAnyLength: true }) || "", nowIso);
   const updatePayload = {
-    status: nextStatus,
-    updated_at: nowIso,
-    status_updated_by_user_id: sessionUser?.id || null,
-    status_history: request.statusHistory
+    status: nextStatus, updated_at: nowIso, status_updated_by_user_id: sessionUser?.id || null,
+    status_history: request.statusHistory, cancelled_at: nextStatus === "cancelled" ? nowIso : null
   };
-  if (nextStatus === "cancelled") {
-    updatePayload.cancelled_at = nowIso;
-  } else {
-    updatePayload.cancelled_at = null;
+  const write = async payload => {
+    let query = supabase.from("stock_requests").update(payload).eq("id", requestId).eq("status", dbRecord.status);
+    query = dbRecord.status_history == null ? query.is("status_history", null)
+      : query.eq("status_history", JSON.stringify(dbRecord.status_history));
+    return dbSingle(query.select("id"));
+  };
+  let updated;
+  try { updated = await write(updatePayload); }
+  catch (error) {
+    if (!/cancelled_at/i.test(error.message) || !/column/i.test(error.message)) throw error;
+    const { cancelled_at: _legacyColumn, ...legacyPayload } = updatePayload;
+    updated = await write(legacyPayload);
   }
-
-  if (shouldDeductInventory) {
-    const deductedItems = request.items.map((item) => ({
-      id: sanitizeString(item?.id, 80),
-      label: sanitizeString(item?.label, 120),
-      variantLabel: sanitizeString(item?.variantLabel, 80),
-      quantity: Math.max(0, Number(item?.quantity) || 0),
-      unitType: sanitizeString(item?.unitType, 40),
-      traySize: Number(item?.traySize) || null,
-      packetSize: Number(item?.packetSize) || null,
-      formattedQuantity: sanitizeString(item?.formattedQuantity, 120),
-      inventoryUnits: getItemInventoryUnits(item)
-    }));
-    const totalUnitsDeducted = deductedItems.reduce((sum, item) => sum + Math.max(0, Number(item.inventoryUnits || 0)), 0);
-
-    updatePayload.inventory_deducted = true;
-    updatePayload.inventory_deducted_at = nowIso;
-    updatePayload.inventory_deducted_by_user_id = sessionUser?.id || null;
-    updatePayload.collection_record = {
-      orderId: request.id,
-      collectedAt: nowIso,
-      requestedBy: sanitizeString(request.requestedBy, 120),
-      wardUnit: sanitizeString(request.wardUnit, 120),
-      markedCollectedBy: request.statusUpdatedBy,
-      collectedBy: sanitizeString(request.requestedBy, 120),
-      items: deductedItems,
-      totalUnitsDeducted
-    };
-
-    for (const item of request.items) {
-      await dbApplyInventoryDelta(item, -getItemInventoryUnits(item));
-    }
-  }
-
-  try {
-    await dbSingle(supabase.from("stock_requests").update(updatePayload).eq("id", requestId));
-  } catch (error) {
-    const message = String(error?.message || "");
-    const isCancelledAtColumnError = /cancelled_at/i.test(message) && /column/i.test(message);
-    if (!isCancelledAtColumnError) throw error;
-    const { cancelled_at: _cancelledAt, ...fallbackPayload } = updatePayload;
-    await dbSingle(supabase.from("stock_requests").update(fallbackPayload).eq("id", requestId));
-  }
-
-  await dbCreateAuditLog(sessionUser?.id || null, "update-stock-request-status", "stock_request", requestId, {
-    previousStatus,
-    nextStatus
-  });
-
   const reloaded = await dbGetRequestById(requestId);
-  return {
-    record: mapRequestFromDb(reloaded),
-    previousStatus
-  };
+  if (!reloaded) return { error: "not-found" };
+  const record = mapRequestFromDb(reloaded);
+  if (!updated?.length || record.status !== nextStatus) {
+    if (record.status === nextStatus) return { record, previousStatus, unchanged: true };
+    return { error: "status-conflict", previousStatus: record.status, nextStatus };
+  }
+  return { record, previousStatus };
 }
 
 async function postJson(urlString, payload, redirectCount = 0, method = "POST") {
@@ -2797,6 +2732,18 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     return;
   }
 
+  if (req.method === "GET" && /^\/api\/lab\/stock-requests\/[^/]+$/.test(pathname)) {
+    const session = await requireLabSession(req, res);
+    if (!session) return;
+    let requestId;
+    try { requestId = decodeURIComponent(pathname.split("/")[4]); }
+    catch { sendJson(req, res, 400, { ok: false, error: "Invalid order number" }); return; }
+    const row = await dbGetRequestById(requestId);
+    if (!row) { sendJson(req, res, 404, { ok: false, error: "Order not found" }); return; }
+    sendJson(req, res, 200, { ok: true, request: mapRequestFromDb(row) });
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/api/lab/stock-requests") {
     const session = await requireLabSession(req, res);
     if (!session) return;
@@ -3349,7 +3296,11 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     }
     const nextStatus = slugifyStatus(rawStatus);
     const requestId = sanitizeString(match[1], 80);
-    const updatedResult = await dbUpdateRequestStatus(requestId, nextStatus, session.user);
+    const expectedStatus = payload?.expectedStatus == null ? "" : String(payload.expectedStatus).trim().toLowerCase();
+    if (expectedStatus && !VALID_REQUEST_STATUSES.has(expectedStatus)) {
+      sendJson(req, res, 400, { ok: false, error: "Invalid current status" }); return;
+    }
+    const updatedResult = await dbUpdateRequestStatus(requestId, nextStatus, session.user, expectedStatus);
 
     if (!updatedResult?.record) {
       if (updatedResult?.error === "insufficient-stock") {
@@ -3362,6 +3313,13 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         });
         return;
       }
+      if (updatedResult?.error === "collection-setup-required") {
+        sendJson(req, res, 503, { ok: false, code: "collection_setup_required", error: "Collection cannot be saved until the atomic inventory database update is installed. Keep the order Ready and contact the administrator." }); return;
+      }
+      if (updatedResult?.error === "status-conflict") {
+        sendJson(req, res, 409, { ok: false, code: "status_conflict", currentStatus: updatedResult.previousStatus,
+          error: `The saved status is now ${formatStatusLabel(updatedResult.previousStatus)}. Review the order before updating it.` }); return;
+      }
       if (updatedResult?.error === "invalid-transition") {
         sendJson(req, res, 409, {
           ok: false,
@@ -3370,32 +3328,25 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         });
         return;
       }
-      sendJson(req, res, 404, { ok: false, error: "Request not found" });
+      sendJson(req, res, updatedResult?.error === "not-found" ? 404 : 503, {
+        ok: false, error: updatedResult?.error === "not-found" ? "Request not found" : "The status update could not be confirmed. Check the saved order before trying again."
+      });
       return;
     }
 
     const updatedRecord = updatedResult.record;
     const changedBy = normalizeElabUserNumber(session.user?.user_number, { allowAnyLength: true });
-    const sheetSync = await syncStockRecordToSheets(updatedRecord, {
-      action: "update-status",
-      previousStatus: updatedResult.previousStatus,
-      changedBy
-    });
-
-    sendJson(req, res, 200, {
-      ok: true,
-      request: {
-        id: updatedRecord.id,
-        status: updatedRecord.status,
-        statusLabel: formatStatusLabel(updatedRecord.status),
-        updatedAt: updatedRecord.updatedAt,
-        statusUpdatedAt: updatedRecord.statusUpdatedAt || updatedRecord.updatedAt,
-        statusUpdatedBy: changedBy || "",
-        inventoryDeducted: Boolean(updatedRecord.inventoryDeducted),
-        collectionRecord: updatedRecord.collectionRecord || null
-      },
-      sheetSync
-    });
+    sendJson(req, res, 200, { ok: true, request: { ...updatedRecord, statusUpdatedBy: updatedResult.unchanged ? updatedRecord.statusUpdatedBy : changedBy || "" }, unchanged: Boolean(updatedResult.unchanged) });
+    // The order's status_history is the primary audit. Secondary logs and Sheets
+    // must not turn a committed update into a failed or delayed confirmation.
+    if (!updatedResult.unchanged) {
+      void dbCreateAuditLog(session.user?.id || null, "update-stock-request-status", "stock_request", requestId, {
+        previousStatus: updatedResult.previousStatus, nextStatus
+      }).catch(() => console.error("[stock-status] secondary-audit-failed", { requestId }));
+      void syncStockRecordToSheets(updatedRecord, { action: "update-status", previousStatus: updatedResult.previousStatus, changedBy })
+        .then(result => { if (!result.ok && !result.skipped) console.error("[stock-status] sheet-sync-failed", { requestId }); })
+        .catch(() => console.error("[stock-status] sheet-sync-failed", { requestId }));
+    }
     return;
   }
 

@@ -9,6 +9,7 @@
 - Normal status flow is `Pending -> Ready -> Collected` (or `Completed`). `Cancelled` and `No Stock` are terminal alternatives.
 - Stock is deducted once, only when an order reaches `Collected` or `Completed`.
 - The atomic Supabase transition checks every required balance before changing any balance.
+- Collected/Completed require that atomic transition; there is no separate-write inventory fallback. Repeating an already-saved status does not deduct again. Status confirmation is independent of secondary audit logging or Google Sheets delivery. See `docs/order-status-updates.md`.
 - Reset current stock clears balances, received-stock records, and batches. It preserves requests, archived orders, users, sessions, and audit logs.
 - Admins manage users and destructive maintenance; Medical Technologists can operate the work queue and received-stock workflow.
 

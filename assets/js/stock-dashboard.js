@@ -151,6 +151,10 @@ let stockDashboardSessionCheckTimer = 0;
 let stockDashboardAuthSyncChannel = null;
 let stockDashboardHandlingRemoteLogout = false;
 let stockDashboardSessionRestorePending = false;
+let stockDashboardLoadSequence = 0;
+let stockDashboardMutationSequence = 0;
+const stockDashboardStatusUpdates = new Map();
+let stockDashboardStatusReceipt = null;
 
 function stockDashboardLogAuthDebug(stage, details = {}) {
   if (!STOCK_DASHBOARD_AUTH_DEBUG) return;
@@ -2095,6 +2099,12 @@ function stockDashboardSetSession(user) {
     stockDashboardSetSignedOutOverride(false);
   }
 
+  if (!stockDashboardSession) {
+    stockDashboardStatusUpdates.clear();
+    stockDashboardStatusReceipt = null;
+    stockDashboardMutationSequence += 1;
+    stockDashboardLoadSequence += 1;
+  }
   const { isLoggedIn, isAdmin, canViewDashboard } = stockDashboardGetAccessFlags(stockDashboardSession);
   stockDashboardLogAuthDebug("set-session", {
     sessionUser: stockDashboardSession ? {
@@ -3175,6 +3185,35 @@ function stockDashboardRenderAvailabilityEditor(request, container) {
   });
 }
 
+function stockDashboardStatusFeedback(requestId) {
+  const update = stockDashboardStatusUpdates.get(requestId);
+  return update ? `<p class="stock-dashboard-request-feedback" data-kind="${stockDashboardEscapeHtml(update.stage)}" role="status" tabindex="-1">${stockDashboardEscapeHtml(update.message)}</p>` : "";
+}
+
+function stockDashboardStatusControls(request) {
+  const id = stockDashboardEscapeHtml(request.id);
+  const status = stockDashboardNormalizeStatus(request.status);
+  const update = stockDashboardStatusUpdates.get(request.id);
+  const busy = ["saving", "checking"].includes(update?.stage);
+  const primary = status === "pending" ? "ready" : status === "ready" ? "collected" : "";
+  if (update?.stage === "confirm") {
+    return `<div class="stock-dashboard-status-confirm" role="group" aria-label="Confirm status change">
+      ${stockDashboardStatusFeedback(request.id)}
+      <button type="button" class="stock-dashboard-status-btn" data-request-id="${id}" data-request-status="${stockDashboardEscapeHtml(update.target)}" data-status-confirmed="true">Confirm ${stockDashboardEscapeHtml(stockDashboardFormatStatus(update.target))}</button>
+      <button type="button" class="quick-tool-clear-btn" data-status-keep="${id}">Keep ${stockDashboardEscapeHtml(stockDashboardFormatStatus(status))}</button></div>`;
+  }
+  if (update?.stage === "unconfirmed") return `${stockDashboardStatusFeedback(request.id)}<button type="button" class="quick-tool-clear-btn" data-check-request-status="${id}">Check saved status</button>`;
+  return `${primary ? `<button type="button" class="stock-dashboard-status-btn stock-dashboard-status-primary" data-request-id="${id}" data-request-status="${primary}" ${busy ? "disabled" : ""} aria-busy="${busy}">${busy ? stockDashboardEscapeHtml(update.message) : `Mark ${stockDashboardEscapeHtml(stockDashboardFormatStatus(primary))}`}</button>` : ""}
+    <details class="stock-dashboard-status-other"><summary>Other actions <span aria-hidden="true">⌄</span></summary>
+      ${["cancelled", "no-stock"].filter(next => (STOCK_DASHBOARD_STATUS_TRANSITIONS[status] || []).includes(next)).map(next => `<button type="button" class="quick-tool-clear-btn" data-request-id="${id}" data-request-status="${next}" ${busy ? "disabled" : ""}>${next === "cancelled" ? "Cancel order" : "Mark No Stock"}</button>`).join("")}
+    </details>${stockDashboardStatusFeedback(request.id)}`;
+}
+
+function stockDashboardReceiptMarkup() {
+  const receipt = stockDashboardStatusReceipt;
+  return receipt ? `<div class="stock-dashboard-update-receipt" role="status" tabindex="-1"><p>${stockDashboardEscapeHtml(receipt.message)}</p><button type="button" class="quick-tool-clear-btn" data-stock-request-view="${stockDashboardEscapeHtml(receipt.id)}">View order</button></div>` : "";
+}
+
 function renderStockDashboardRequests(requests) {
   if (!stockDashboardRequestList) return;
 
@@ -3186,7 +3225,7 @@ function renderStockDashboardRequests(requests) {
     : [];
 
   if (!activeRequests.length) {
-    stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">No active consumables requests in the queue.</p>';
+    stockDashboardRequestList.innerHTML = stockDashboardReceiptMarkup() + '<p class="stock-dashboard-empty">No active consumables requests in the queue.</p>';
     return;
   }
 
@@ -3205,23 +3244,11 @@ function renderStockDashboardRequests(requests) {
     const repeatBadge = typeof requestHasRepeatOverride === "function" && requestHasRepeatOverride(request)
       ? '<span class="stock-order-repeat-mini-badge">48h override</span>'
       : "";
-    const allowedStatuses = STOCK_DASHBOARD_STATUS_TRANSITIONS[safeStatus] || [];
-    const statusButtons = allowedStatuses.map((status) => `
-      <button
-        type="button"
-        class="stock-dashboard-status-btn"
-        data-request-id="${stockDashboardEscapeHtml(request.id)}"
-        data-request-status="${stockDashboardEscapeHtml(status)}"
-        aria-label="Move order ${stockDashboardEscapeHtml(request.id)} to ${stockDashboardEscapeHtml(stockDashboardFormatStatus(status))}"
-      >
-        ${stockDashboardEscapeHtml(stockDashboardFormatStatus(status))}
-      </button>
-    `).join("");
-
     return `
       <div class="stock-dashboard-queue-row" role="row" data-dashboard-request="${stockDashboardEscapeHtml(request.id)}">
         <div class="stock-dashboard-queue-cell" data-label="Requested by">
           <span>${stockDashboardEscapeHtml(stockDashboardFormatRequesterName(request.requestedBy) || "Unknown requester")}</span>
+          <small class="stock-dashboard-request-number">${stockDashboardEscapeHtml(request.id)}</small>
           ${repeatBadge}
         </div>
         <div class="stock-dashboard-queue-cell" data-label="Ward / Unit">${stockDashboardEscapeHtml(request.wardUnit || "No ward set")}</div>
@@ -3232,13 +3259,13 @@ function renderStockDashboardRequests(requests) {
         </div>
         <div class="stock-dashboard-queue-actions">
           <button type="button" class="quick-tool-clear-btn stock-request-view-btn" data-stock-request-view="${stockDashboardEscapeHtml(detailKey)}">View order</button>
-          ${statusButtons}
+          ${stockDashboardStatusControls(request)}
         </div>
       </div>
     `;
   }).join("");
 
-  stockDashboardRequestList.innerHTML = `
+  stockDashboardRequestList.innerHTML = `${stockDashboardReceiptMarkup()}
     <div class="stock-dashboard-queue" role="table" aria-label="Recent consumables requests queue">
       <div class="stock-dashboard-queue-head" role="row">
         <span>Requested by</span>
@@ -3256,6 +3283,8 @@ async function loadStockDashboard(options = {}) {
   if (!stockDashboardSession) {
     return;
   }
+  const loadSequence = ++stockDashboardLoadSequence;
+  const mutationSequence = stockDashboardMutationSequence;
   const authGenerationAtStart = stockDashboardAuthGeneration;
   const requestedForUserNumber = String(stockDashboardSession.userNumber || "");
   const { silent = false, fromPoll = false } = options;
@@ -3274,6 +3303,8 @@ async function loadStockDashboard(options = {}) {
       stockDashboardFetch(STOCK_DASHBOARD_INVENTORY_URL, { cache: "no-store", headers: stockDashboardGetHeaders() })
     ]);
 
+    if (loadSequence !== stockDashboardLoadSequence || mutationSequence !== stockDashboardMutationSequence
+      || authGenerationAtStart !== stockDashboardAuthGeneration || !stockDashboardSession) return;
     if (
       await stockDashboardHandleUnauthorizedResponse(statsResponse, "load_dashboard_stats")
       || await stockDashboardHandleUnauthorizedResponse(requestsResponse, "load_dashboard_requests")
@@ -3305,7 +3336,8 @@ async function loadStockDashboard(options = {}) {
     const authGenerationChanged = authGenerationAtStart !== stockDashboardAuthGeneration;
     const sessionChanged = !stockDashboardSession
       || String(stockDashboardSession.userNumber || "") !== requestedForUserNumber;
-    if (authGenerationChanged || sessionChanged || stockDashboardLogoutInProgress) {
+    if (authGenerationChanged || sessionChanged || stockDashboardLogoutInProgress
+      || loadSequence !== stockDashboardLoadSequence || mutationSequence !== stockDashboardMutationSequence) {
       stockDashboardLogAuthDebug("skip-stale-dashboard-render", {
         authGenerationAtStart,
         authGenerationCurrent: stockDashboardAuthGeneration,
@@ -3316,78 +3348,193 @@ async function loadStockDashboard(options = {}) {
       return;
     }
 
+    for (const cached of stockDashboardDatasets.stockRequests) {
+      if (["saving", "checking", "unconfirmed"].includes(stockDashboardStatusUpdates.get(cached.id)?.stage)
+        && !requests.some(request => request.id === cached.id)) requests.push(cached);
+    }
     stockDashboardRenderInventory(Array.isArray(inventoryPayload?.summary) ? inventoryPayload.summary : []);
     renderStockDashboardStats(statsPayload.stats || {});
     stockDashboardPrepareDatasets(requests, recentReceipts);
+    for (const request of requests) {
+      registerStockRequestForDetails(request);
+      const update = stockDashboardStatusUpdates.get(request.id);
+      if (update?.stage === "unconfirmed" && stockDashboardIsConfirmedRequest(request, request.id)
+        && stockDashboardNormalizeStatus(request.status) === update.target) {
+        const message = `Order ${request.id}: ${stockDashboardFormatStatus(request.status)} confirmed from the saved order.`;
+        stockDashboardStatusUpdates.set(request.id, { stage: "success", target: update.target, message });
+        stockDashboardStatusReceipt = { id: request.id, message };
+        stockDashboardStatus.textContent = message;
+      } else if (update?.stage === "unconfirmed" && stockDashboardIsConfirmedRequest(request, request.id)
+        && !["pending", "ready"].includes(stockDashboardNormalizeStatus(request.status))) {
+        const message = `Order ${request.id} changed. Saved status: ${stockDashboardFormatStatus(request.status)}.`;
+        stockDashboardStatusUpdates.set(request.id, { stage: "error", target: update.target, message });
+        stockDashboardStatusReceipt = { id: request.id, message };
+        stockDashboardStatus.textContent = message;
+      }
+    }
     renderStockDashboardRequests(requests);
     stockDashboardRefreshDataSectionStatus();
     stockDashboardProcessNotifications(requests, { fromPoll });
     if (!silent) {
       stockDashboardStatus.textContent = `Updated ${stockDashboardFormatDateTime(new Date().toISOString())}`;
     }
+    return true;
   } catch {
-    stockDashboardStatus.textContent = "Dashboard data could not load. Please check your connection or refresh the page.";
-    if (stockDashboardRequestList) {
-      stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Dashboard data could not load. Please check your connection or refresh the page.</p>';
+    if (!silent && loadSequence === stockDashboardLoadSequence && mutationSequence === stockDashboardMutationSequence
+      && authGenerationAtStart === stockDashboardAuthGeneration && stockDashboardSession) {
+      stockDashboardStatus.textContent = "Refresh could not complete. Saved order information is kept; check your connection and try Refresh.";
+      if (stockDashboardRequestList && !stockDashboardDatasets.stockRequests.length) {
+        stockDashboardRequestList.innerHTML = '<p class="stock-dashboard-empty">Dashboard data could not load. Please refresh to try again.</p>';
+      }
     }
+    if (loadSequence === stockDashboardLoadSequence && mutationSequence === stockDashboardMutationSequence) return false;
   } finally {
-    if (!silent) {
-      stockDashboardSetBusy(false);
-    }
+    if (loadSequence === stockDashboardLoadSequence && authGenerationAtStart === stockDashboardAuthGeneration) stockDashboardSetBusy(false);
   }
 }
 
-async function updateStockDashboardRequestStatus(requestId, status) {
+function stockDashboardRenderStatusUpdates() {
+  renderStockDashboardRequests(stockDashboardDatasets.stockRequests);
+}
+
+function stockDashboardIsConfirmedRequest(record, requestId) {
+  return record?.id === requestId && typeof record.status === "string" && Boolean(record.status.trim())
+    && STOCK_DASHBOARD_STATUS_ORDER.includes(stockDashboardNormalizeStatus(record.status));
+}
+
+function stockDashboardNewestRequest(record) {
+  const current = stockDashboardDatasets.stockRequests.find(request => request.id === record.id);
+  // History is append-only. A late read/acknowledgement cannot replace a record
+  // with a longer saved history, even when server clocks differ slightly.
+  return Array.isArray(current?.statusHistory) && Array.isArray(record.statusHistory)
+    && current.statusHistory.length > record.statusHistory.length ? current : record;
+}
+
+function stockDashboardApplySavedRequest(record) {
+  record = stockDashboardNewestRequest(record);
+  stockDashboardMutationSequence += 1;
+  const records = new Map(stockDashboardDatasets.stockRequests.map(request => [request.id, request]));
+  const saved = { ...(records.get(record.id) || {}), ...record, status: stockDashboardNormalizeStatus(record.status) };
+  records.set(record.id, saved);
+  registerStockRequestForDetails(saved);
+  stockDashboardPrepareDatasets([...records.values()], stockDashboardDatasets.receivedStock);
+  stockDashboardRefreshDataSectionStatus();
+  return saved;
+}
+
+function stockDashboardConfirmSavedStatus(record, target) {
+  const saved = stockDashboardApplySavedRequest(record);
+  const label = stockDashboardFormatStatus(saved.status);
+  if (stockDashboardNormalizeStatus(saved.status) !== target) {
+    const message = `Order ${saved.id} has since changed. Saved status: ${label}.`;
+    stockDashboardStatusUpdates.set(saved.id, { stage: "error", target, message });
+    stockDashboardStatusReceipt = { id: saved.id, message };
+    stockDashboardStatus.textContent = message;
+    stockDashboardRenderStatusUpdates();
+    return;
+  }
+  const message = `Order ${saved.id}: ${label} saved.${["collected", "completed"].includes(saved.status) ? " Moved to Archives." : ""}`;
+  stockDashboardStatusUpdates.set(saved.id, { stage: "success", target, message });
+  stockDashboardStatusReceipt = { id: saved.id, message };
+  stockDashboardStatus.textContent = message;
+  stockDashboardRenderStatusUpdates();
+  const row = [...stockDashboardRequestList.querySelectorAll("[data-dashboard-request]")].find(element => element.dataset.dashboardRequest === saved.id);
+  (row?.querySelector(".stock-dashboard-request-feedback") || stockDashboardRequestList.querySelector(".stock-dashboard-update-receipt"))?.focus();
+  const generation = stockDashboardAuthGeneration;
+  void loadStockDashboard({ silent: true }).then(loaded => {
+    if (loaded !== false || !stockDashboardSession || generation !== stockDashboardAuthGeneration || stockDashboardStatusReceipt?.id !== saved.id) return;
+    const warning = message + " The dashboard summary could not refresh. Use Refresh to update it.";
+    stockDashboardStatusReceipt = { id: saved.id, message: warning };
+    stockDashboardStatus.textContent = warning;
+    stockDashboardRenderStatusUpdates();
+  });
+}
+
+async function stockDashboardCheckSavedStatus(requestId, target, reason = "") {
+  if (!stockDashboardSession) return;
+  const generation = stockDashboardAuthGeneration;
+  const current = stockDashboardStatusUpdates.get(requestId);
+  if (current?.stage === "checking") return;
+  stockDashboardStatusUpdates.set(requestId, { stage: "checking", target, message: "Checking saved status…" });
+  stockDashboardRenderStatusUpdates();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await stockDashboardFetch(stockDashboardBuildApiUrl(`/api/lab/stock-requests/${encodeURIComponent(requestId)}`), {
+      cache: "no-store", headers: stockDashboardGetHeaders(), signal: controller.signal
+    });
+    if (await stockDashboardHandleUnauthorizedResponse(response, "check_saved_status")) return;
+    if (generation !== stockDashboardAuthGeneration || !stockDashboardSession) return;
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload?.ok !== true || !stockDashboardIsConfirmedRequest(payload?.request, requestId)) throw new Error("Unconfirmed status");
+    const saved = stockDashboardNewestRequest(payload.request);
+    if (stockDashboardNormalizeStatus(saved.status) === target) {
+      stockDashboardConfirmSavedStatus(saved, target);
+    } else {
+      stockDashboardApplySavedRequest(saved);
+      const message = `${reason || "The requested change is not confirmed."} Saved status: ${stockDashboardFormatStatus(saved.status)}.`;
+      stockDashboardStatusUpdates.set(requestId, { stage: "error", target, message });
+      stockDashboardStatus.textContent = message;
+      if (!["pending", "ready"].includes(stockDashboardNormalizeStatus(saved.status))) stockDashboardStatusReceipt = { id: requestId, message };
+      stockDashboardRenderStatusUpdates();
+    }
+  } catch {
+    if (generation !== stockDashboardAuthGeneration || !stockDashboardSession) return;
+    const message = "The saved status could not be confirmed. Check your connection, then choose Check saved status before trying another change.";
+    stockDashboardStatusUpdates.set(requestId, { stage: "unconfirmed", target, message });
+    stockDashboardStatus.textContent = message;
+    stockDashboardRenderStatusUpdates();
+  } finally { clearTimeout(timeout); }
+}
+
+async function updateStockDashboardRequestStatus(requestId, status, { confirmed = false } = {}) {
   if (!requestId || !status || !stockDashboardSession) return;
-
+  const existing = stockDashboardStatusUpdates.get(requestId);
+  if (["saving", "checking", "unconfirmed"].includes(existing?.stage)) return;
   const safeStatus = stockDashboardNormalizeStatus(status);
-  if (safeStatus === "completed" || safeStatus === "collected") {
-    const confirmed = window.confirm(`${stockDashboardFormatStatus(safeStatus)} this order? Stock on hand will be deducted once and the order will move to Archives.`);
-    if (!confirmed) return;
+  const request = stockDashboardDatasets.stockRequests.find(row => row.id === requestId);
+  if (!request) { stockDashboardStatus.textContent = "Refresh the dashboard before updating this order."; return; }
+  if (["collected", "completed", "cancelled", "no-stock"].includes(safeStatus) && !confirmed) {
+    const message = ["collected", "completed"].includes(safeStatus)
+      ? `Confirm ${stockDashboardFormatStatus(safeStatus)} for order ${requestId}? Stock will be deducted once and the order will move to Archives.`
+      : safeStatus === "cancelled" ? `Cancel order ${requestId}?` : `Mark the whole order ${requestId} as No Stock? It will leave the active queue.`;
+    stockDashboardStatusUpdates.set(requestId, { stage: "confirm", target: safeStatus, message, expectedStatus: stockDashboardNormalizeStatus(request.status) });
+    stockDashboardRenderStatusUpdates();
+    [...stockDashboardRequestList.querySelectorAll("[data-dashboard-request]")].find(row => row.dataset.dashboardRequest === requestId)?.querySelector("[data-status-confirmed]")?.focus();
+    return;
   }
-  if (safeStatus === "no-stock") {
-    const confirmed = window.confirm("Mark this order as No Stock? It will move out of the active queue without deducting stock.");
-    if (!confirmed) return;
-  }
-
-  stockDashboardStatus.textContent = `Updating ${requestId}...`;
-
+  const generation = stockDashboardAuthGeneration;
+  const expectedStatus = existing?.stage === "confirm" ? existing.expectedStatus : stockDashboardNormalizeStatus(request.status);
+  stockDashboardStatusReceipt = null;
+  stockDashboardMutationSequence += 1;
+  stockDashboardStatusUpdates.set(requestId, { stage: "saving", target: safeStatus, message: `Saving ${stockDashboardFormatStatus(safeStatus)}…` });
+  stockDashboardRenderStatusUpdates();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
   try {
     const response = await stockDashboardFetch(stockDashboardBuildApiUrl(`/api/stock-requests/${encodeURIComponent(requestId)}/status`), {
-      method: "PATCH",
-      headers: stockDashboardGetHeaders(true),
-      body: JSON.stringify({ status: safeStatus })
+      method: "PATCH", headers: stockDashboardGetHeaders(true), signal: controller.signal,
+      body: JSON.stringify({ status: safeStatus, expectedStatus })
     });
-
     if (await stockDashboardHandleUnauthorizedResponse(response, "update_request_status")) return;
-    if (response.status === 403) {
-      stockDashboardStatus.textContent = "You do not have permission to update request status.";
-      return;
-    }
-
+    if (generation !== stockDashboardAuthGeneration || !stockDashboardSession) return;
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (response.status === 409 && Array.isArray(payload?.shortages) && payload.shortages.length) {
-        const shortageLines = payload.shortages
-          .map((row) => {
-            const label = String(row?.label || "Stock item");
-            const shortBy = Number(row?.shortBy || 0);
-            const onHand = Number(row?.onHand || 0);
-            return `${label}: short by ${shortBy} (on hand: ${onHand})`;
-          })
-          .join("; ");
-        throw new Error(`${payload?.error || "Not enough stock on hand to complete this order."} ${shortageLines}`);
+        throw new Error("Not enough recorded stock. " + payload.shortages.map(row => `${String(row.label || "Stock item")}: short by ${Number(row.shortBy || 0)} (on hand: ${Number(row.onHand || 0)})`).join("; "));
       }
-      throw new Error(payload?.error || "Could not update request status");
+      throw new Error(response.status >= 500 && payload?.code !== "collection_setup_required"
+        ? "The service could not confirm the update." : payload?.error || "The update could not be saved.");
     }
-
-    await loadStockDashboard();
-    if (payload?.sheetSync && payload.sheetSync.ok === false) {
-      stockDashboardStatus.textContent = `Updated ${requestId}, but Google Sheets still needs attention.`;
+    if (payload?.ok !== true || !stockDashboardIsConfirmedRequest(payload?.request, requestId) || stockDashboardNormalizeStatus(payload.request.status) !== safeStatus) {
+      throw new Error("The service did not confirm the requested status.");
     }
-  } catch {
-    stockDashboardStatus.textContent = `Could not update ${requestId}.`;
-  }
+    stockDashboardConfirmSavedStatus(payload.request, safeStatus);
+  } catch (error) {
+    if (generation !== stockDashboardAuthGeneration || !stockDashboardSession) return;
+    await stockDashboardCheckSavedStatus(requestId, safeStatus, error.name === "AbortError" || error instanceof TypeError
+      ? "The connection was interrupted before confirmation." : error.message);
+  } finally { clearTimeout(timeout); }
 }
 
 async function checkStockDashboardSession() {
@@ -3655,12 +3802,18 @@ stockDashboardUserList?.addEventListener("click", (event) => {
 
 stockDashboardRequestList?.addEventListener("click", (event) => {
   handleStockRequestDetailsClick(event);
-  const button = event.target.closest("[data-request-id][data-request-status]");
-  if (!(button instanceof HTMLButtonElement)) return;
-
-  const requestId = button.getAttribute("data-request-id") || "";
-  const status = button.getAttribute("data-request-status") || "";
-  updateStockDashboardRequestStatus(requestId, status);
+  const target = event.target instanceof Element ? event.target : null;
+  const keep = target?.closest("[data-status-keep]");
+  if (keep) { stockDashboardStatusUpdates.delete(keep.dataset.statusKeep); stockDashboardRenderStatusUpdates(); return; }
+  const check = target?.closest("[data-check-request-status]");
+  if (check) {
+    const update = stockDashboardStatusUpdates.get(check.dataset.checkRequestStatus);
+    void stockDashboardCheckSavedStatus(check.dataset.checkRequestStatus, update?.target);
+    return;
+  }
+  const button = target?.closest("[data-request-id][data-request-status]");
+  if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+  void updateStockDashboardRequestStatus(button.dataset.requestId, button.dataset.requestStatus, { confirmed: button.dataset.statusConfirmed === "true" });
 });
 
 stockDashboardAccessCloseBtn?.addEventListener("click", () => {

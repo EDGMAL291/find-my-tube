@@ -405,3 +405,32 @@ html[data-theme] body[data-app-page="stock-order"] .stock-order-item-card .stock
 .stock-availability-editor label span { min-width: 0; overflow-wrap: anywhere; }
 .stock-availability-editor input[type="checkbox"] { width: 20px; height: 20px; flex: 0 0 20px; accent-color: #e6cf8c; }
 .stock-availability-editor-status { min-height: 1.5em; }
+
+/* Each order owns its update state, with confirmation kept beside the action. */
+.stock-dashboard-request-number { display: block; margin-top: 4px; font-size: .75rem; overflow-wrap: anywhere; color: #c9d8e2; }
+.stock-dashboard-status-primary { min-height: 44px; font-weight: 600; }
+.stock-dashboard-status-other { width: 100%; font-size: .88rem; }
+.stock-dashboard-status-other summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.stock-dashboard-status-other[open] { display: grid; gap: 8px; }
+.stock-dashboard-request-feedback { flex-basis: 100%; margin: 8px 0 0; font-size: .85rem; line-height: 1.45; overflow-wrap: anywhere; }
+.stock-dashboard-request-feedback[data-kind="error"], .stock-dashboard-request-feedback[data-kind="unconfirmed"] { color: #ffd2bd; }
+.stock-dashboard-request-feedback[data-kind="success"] { color: #c6e9ce; }
+.stock-dashboard-status-confirm { display: grid; gap: 8px; width: 100%; }
+.stock-dashboard-status-confirm .stock-dashboard-request-feedback { margin: 0; }
+.stock-dashboard-update-receipt { margin: 0 0 14px; padding: 12px; border-left: 2px solid #b9d7c1; background: rgba(185, 215, 193, .08); }
+.stock-dashboard-update-receipt p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.stock-dashboard-status-btn:disabled { opacity: .65; cursor: wait; }
+html[data-theme] body[data-app-page="stock-dashboard"] #stockDashboardRequestList .stock-dashboard-status-primary {
+  border-radius: 4px !important; background: #e6cf8c !important; color: #102c3d !important;
+  border: 1px solid #e6cf8c !important;
+}
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-request-feedback {
+  padding: 8px; background: rgba(3, 17, 31, .8); color: #fff1c9;
+}
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-request-feedback[data-kind="error"],
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-request-feedback[data-kind="unconfirmed"] { color: #ffd2bd; }
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-request-feedback[data-kind="success"] { color: #c6e9ce; }
+.stock-dashboard-status-other summary { gap: 8px; }
+html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-status-other summary { color: #fffdf8; text-shadow: 0 1px 3px #03111f; }
+.stock-dashboard-status-confirm button { border-radius: 4px !important; }
+.stock-dashboard-update-receipt { color: #fffdf8; background: rgba(3, 17, 31, .8); }
