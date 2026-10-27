@@ -1,0 +1,28 @@
+# Browser push notifications
+
+Lab staff can opt in on the signed-in dashboard for new stock orders. Clients can opt in on their successful order receipt or that order’s details on the same device, for status and item availability updates. Every opt-in is explicit. Enable alerts, then Send test alert to check the device. Turn off alerts removes that channel only; other orders and lab alerts on that browser remain subscribed.
+
+## Activate on production
+
+1. Apply `supabase/migrations/20261027_browser_push.sql` in the existing Supabase project after the existing schema migrations. It creates two private tables, queue functions and triggers. It does not change inventory or order status rules. Re-running it is supported.
+2. Run `npm run push:keys` once in a trusted environment. It writes a new key pair to ignored `.push-keys.env` with mode 0600 and refuses to overwrite an existing file. Keep a secure backup. Copy its three values into the Render API service environment settings; never into app-config.js, source control or chat. Existing deployments need these settings added even when render.yaml has changed.
+3. Deploy the API and frontend. With the migration and valid keys available, `/api/push/config` returns `configured: true` and only the public key. `/api/health` reports key configuration, not proof of delivery. The worker needs outbound HTTPS to browser push providers. No email service is required.
+4. Sign in on the dashboard, enable alerts and send a test. In a separate client browser place an order, enable its alerts and send a test. Close/background the pages. Verify a new order alerts staff, Ready/Collected updates alert the client, and publishing/clearing an item availability notice alerts the client. Check notification taps open the correct page/order, then test turning each channel off and staff logout. Verify the existing ordering/status flow even with push disabled.
+
+On iOS/iPadOS 16.4 or newer, use Safari → Share → Add to Home Screen, open the installed app and enable alerts there. Supported Android and desktop browsers can opt in directly. HTTPS is required. Browser permissions, operating system notification settings, network and battery restrictions can prevent or delay delivery; Track Orders remains authoritative.
+
+## Privacy and lifetime
+
+A signed HMAC capability returned only in the successful new-order response links a client device to its order. It is kept in localStorage, sent in the Authorization header, and never included in URLs, public tracking lists or notification previews. Anyone with that capability can manage that order’s alerts; protect it like a private receipt. Clearing site data, changing devices or key rotation loses this ability. Previously placed orders without a capability cannot opt in. Capabilities and client subscriptions expire after 30 days. Finished orders cannot start new subscriptions, but an existing channel can be turned off.
+
+Staff subscriptions are bound to the current server session and expire with it (currently 12 hours). Logout, replacement sessions and inactive users revoke delivery; sign in and enable alerts again to renew. Every send rechecks authorization. One browser push endpoint may serve multiple independent channels. Notifications contain generic order messages, not names, wards, extension numbers, stock balances or item quantities. Exact current details are fetched from the site on opening. Client deep links use the same public order projection and never expose contact extensions.
+
+Only the service role can access subscription keys and delivery jobs; anonymous/authenticated database access and function execution are revoked. Approved HTTPS provider hosts are validated before storage and delivery to prevent arbitrary outbound requests. No subscriptions are exposed through public tracking APIs. Existing service workers with a push subscription are updated in place, preserving device registration during cache version changes.
+
+## Delivery and operations
+
+Database triggers queue staff alerts after all order items exist, and client alerts when logical status or unavailable items change. Events are deduplicated per subscription. Packed → Ready is one logical status. Queue failures warn without breaking saved orders or status changes. A separate API-process worker claims jobs with row locks and five-minute leases, checks current authorization and sends encrypted Web Push. Accepted jobs are recorded, failed temporary deliveries retry up to five attempts with delays, and expired endpoints (404/410) are removed. Jobs expire after one day and stale rows are cleaned hourly by the worker. A crash after provider acceptance but before the database acknowledgement can result in a duplicate; notification tags replace the same event quietly. Provider acceptance does not prove a person received or read it.
+
+The worker runs in the API process every 15 seconds, so the API host must stay running. Monitor generic `[web-push]` errors and Supabase queue warnings; logs deliberately omit endpoints, credentials and personal details. Failed jobs remain until expiry for diagnosis. Fix the configuration rather than repeatedly resubmitting an order. With missing keys or migration the optional controls remain unavailable and existing ordering is unaffected. Keep VAPID keys stable: rotation invalidates receipt capabilities and requires browser subscription renewal.
+
+Local automated tests cover actual PostgreSQL migration/trigger behavior, authorization, retries, endpoint validation and browser controls. Real provider delivery and production activation require the steps above; a Git push alone does not enable notifications.

@@ -61,7 +61,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027b" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027c" />
 </head>
 <body data-app-page="find-my-tube">
   <main class="container">
@@ -289,7 +289,7 @@
   <script src="assets/data/data.js?v=20261012o"></script>
   <script src="assets/js/app-config.js?v=20260416a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261019b"></script>
-  <script src="assets/js/script.js?v=20261027a"></script>
+  <script src="assets/js/script.js?v=20261027c"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
@@ -306,7 +306,11 @@
         const needsHardRefresh = storedVersion !== APP_VERSION;
         const resetAppCache = async () => {
           const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map((registration) => registration.unregister()));
+          await Promise.all(registrations.map(async (registration) => {
+            // Preserve registration if the browser cannot confirm subscription state.
+            const subscription = await registration.pushManager?.getSubscription().catch(() => true);
+            if (!subscription) await registration.unregister();
+          }));
           if ("caches" in window) {
             const cacheKeys = await caches.keys();
             await Promise.all(cacheKeys.map((key) => caches.delete(key)));
@@ -314,7 +318,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261018a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261027c", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

@@ -2020,11 +2020,10 @@ function stockDashboardNotifyBrowser(newRequests) {
   if (!newRequests.length) return;
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
-  if (!stockDashboardBrowserAlertsEnabled()) return;
+  if (!stockDashboardBrowserAlertsEnabled() || window.FMT_PUSH?.labEnabled) return;
 
-  const newestRequest = newRequests[0];
   const body = newRequests.length === 1
-    ? `${stockDashboardFormatRequesterName(newestRequest.requestedBy) || "A ward"} · ${newestRequest.wardUnit || "No ward"}`
+    ? "A new stock request is waiting. Open the lab dashboard."
     : `${newRequests.length} new stock requests are waiting in the dashboard.`;
 
   const notification = new Notification("Find My Tube Lab Alert", {
@@ -2098,6 +2097,7 @@ function stockDashboardSetSession(user) {
   if (stockDashboardSession) {
     stockDashboardSetSignedOutOverride(false);
   }
+  window.FMT_PUSH?.labSessionChanged(Boolean(stockDashboardSession));
 
   if (!stockDashboardSession) {
     stockDashboardStatusUpdates.clear();

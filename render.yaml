@@ -20,6 +20,12 @@ services:
         sync: false
       - key: STOCK_ORDER_EMAIL_FROM
         sync: false
+      - key: WEB_PUSH_PUBLIC_KEY
+        sync: false
+      - key: WEB_PUSH_PRIVATE_KEY
+        sync: false
+      - key: WEB_PUSH_SUBJECT
+        value: https://findmytube.co.za/about.html
       - key: DATA_DIR
         value: /var/data/find-my-tube
     disk:

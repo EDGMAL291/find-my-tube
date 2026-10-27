@@ -882,6 +882,10 @@ const legalContentById = {
         </ul>
       </article>
       <article class="legal-copy">
+        <h4>Optional Browser Notifications</h4>
+        <p>When you opt in, your browser push subscription is linked to your lab session or your own stock order. A private order receipt is stored on your device. Client alerts expire after 30 days; lab alerts expire with the session. Delivery jobs expire after one day, with expired records cleaned in the background. Push providers deliver generic previews without names, wards, extensions or stock balances. Use Turn off alerts to remove a channel, or browser settings to block notifications. Turn off your order alerts before leaving a shared device.</p>
+      </article>
+      <article class="legal-copy">
         <h4>Operational Data</h4>
         <ul>
           <li>If this site is hosted by a third party, standard technical logs such as IP address, browser type, and access times may be processed by that hosting provider.</li>
@@ -2018,6 +2022,7 @@ function showStockRequestDetails(requestOrKey) {
     window.stockDashboardRenderAvailabilityEditor(request, body);
   }
 
+  if (document.body.dataset.appPage !== "stock-dashboard") window.FMT_PUSH?.renderOrderControls(body, request.id, normalizeStockRequestStatus(request.status));
   modal.hidden = false;
   document.body.classList.add("stock-request-detail-open");
   modal.querySelector("button[data-stock-request-close]")?.focus?.({ preventScroll: true });
@@ -2738,6 +2743,7 @@ function showStockOrderSubmissionConfirmation(record = null, payload = null) {
     if (wardUnit) targetUrl.searchParams.set("ward", wardUnit);
     stockOrderTrackOrderBtn.setAttribute("href", `${targetUrl.pathname}${targetUrl.search}`);
   }
+  window.FMT_PUSH?.renderOrderControls(stockOrderSubmissionCard, requestId);
 }
 
 function hideStockOrderSubmissionConfirmation() {
@@ -2875,6 +2881,7 @@ function initStockOrderPanel() {
       if (result?.ok !== true || !result?.request?.id) {
         throw new Error("The server did not confirm an order number. Check Track Orders before trying again.");
       }
+      if (typeof window !== "undefined") window.FMT_PUSH?.rememberOrder(result.request.id, result.orderPushToken);
       submittedStockOrderRecord = result.request;
       stockOrderStatusMode = "submitted";
       const sheetSyncWarning = result?.sheetSync && result.sheetSync.ok === false

@@ -434,3 +434,10 @@ html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-request-
 html[data-theme] body[data-app-page="stock-dashboard"] .stock-dashboard-status-other summary { color: #fffdf8; text-shadow: 0 1px 3px #03111f; }
 .stock-dashboard-status-confirm button { border-radius: 4px !important; }
 .stock-dashboard-update-receipt { color: #fffdf8; background: rgba(3, 17, 31, .8); }
+
+.push-controls { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.2); }
+.push-controls h4 { margin: 0 0 8px; }
+.push-controls-status { margin: 0 0 10px; font-size: .88rem; line-height: 1.5; overflow-wrap: anywhere; }
+.push-controls-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.push-controls-actions button { min-height: 44px; }
+#labPushPanel .push-controls { margin-top: 0; padding-top: 0; border-top: 0; }

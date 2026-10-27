@@ -90,3 +90,23 @@ test("service worker never reads or writes cached API responses", async () => {
   assert.equal(networkCalls, 3);
   assert.equal(cacheCalls, 0);
 });
+
+test('app cache resets preserve subscribed workers, including uncertain subscription reads', async () => {
+  for (const page of ['index.html', 'find-my-tube.html', 'order-stock.html', 'stock-dashboard.html']) {
+    const source = fs.readFileSync(path.join(root, page), 'utf8');
+    const body = source.match(/const resetAppCache = (async \(\) => \{[\s\S]*?\n        \});/)[1];
+    for (const subscribed of [true, false, 'unavailable']) {
+      let unregistered = 0, cleared = 0;
+      const reset = vm.runInNewContext(`(${body})`, {
+        navigator: { serviceWorker: { getRegistrations: async () => [{
+          pushManager: { getSubscription: async () => { if (subscribed === 'unavailable') throw new Error('Browser unavailable'); return subscribed ? {} : null; } },
+          unregister: async () => { unregistered++; }
+        }] } },
+        window: { caches: {} }, caches: { keys: async () => ['old-cache'], delete: async () => { cleared++; } }
+      });
+      await reset();
+      assert.equal(unregistered, subscribed === false ? 1 : 0, `${page}: preserve device subscription`);
+      assert.equal(cleared, 1, `${page}: still refresh cached assets`);
+    }
+  }
+});

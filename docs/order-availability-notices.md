@@ -7,7 +7,7 @@
 3. Choose **Publish notice** and wait for confirmation.
 4. When an item is available again, uncheck it and publish. Unchecking every item clears the notice.
 
-The requester sees **Stock update** with the unavailable item names in Track Orders and an item-specific label inside the order details. It appears on the next tracking refresh or normal polling update, including when the unavailable item falls outside the compact three-item summary. This is an on-site notice; it does not send an email, SMS, WhatsApp message or phone push notification.
+The requester sees **Stock update** with the unavailable item names in Track Orders and an item-specific label inside the order details. It appears on the next tracking refresh or normal polling update, including when the unavailable item falls outside the compact three-item summary. This is an on-site notice. Clients who have enabled [browser push](browser-push.md) for their own order also receive a generic update alert when the unavailable items change or the notice is cleared. It does not send email, SMS or WhatsApp messages.
 
 The notice does not cancel an order, remove items, change requested quantities, deduct inventory or enable partial fulfilment. Existing status transitions and inventory checks still apply. Notices are hidden after an order is collected, completed or cancelled; their audit history remains. Stock balances and private extensions remain restricted to the dashboard.
 

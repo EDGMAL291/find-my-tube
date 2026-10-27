@@ -16,6 +16,7 @@
 
   const params = new URLSearchParams(window.location.search || "");
   const highlightedRequestId = String(params.get("requestId") || "").trim().toLowerCase();
+  let openNotificationOrder = params.get("openOrder") === "1";
   let trackOrders = [];
   let pollTimer = 0;
   let wardFetchDebounceTimer = 0;
@@ -221,6 +222,12 @@
       const payload = await response.json().catch(() => ({}));
       trackOrders = Array.isArray(payload?.requests) ? payload.requests : [];
       renderRows();
+      if (openNotificationOrder) {
+        openNotificationOrder = false;
+        const id = params.get("requestId");
+        const request = trackOrders.find(order => order.id === id) || await window.FMT_PUSH?.getOwnedOrder(id).catch(() => null);
+        if (request && typeof showStockRequestDetails === "function") showStockRequestDetails(request);
+      }
 
     } catch (error) {
       meta.hidden = false;

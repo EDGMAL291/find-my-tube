@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261018b" />
   <link rel="stylesheet" href="assets/css/stock-inventory.css?v=20261013c" />
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027b" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027c" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -154,6 +154,8 @@
           <button type="button" class="quick-tool-clear-btn" id="stockDashboardLogoutBtn" hidden>Log out</button>
         </div>
       </section>
+
+      <section class="stock-order-request-card" id="labPushPanel" hidden aria-label="Lab push notifications"></section>
 
       <section class="stock-order-request-card" id="stockDashboardRequestsCard" hidden>
         <div class="stock-order-request-head">
@@ -411,9 +413,9 @@
   <script src="assets/data/data.js?v=20261012o"></script>
   <script src="assets/js/app-config.js?v=20260420a"></script>
   <script src="assets/js/stock-catalog-data.js?v=20261019b"></script>
-  <script src="assets/js/script.js?v=20261027a"></script>
+  <script src="assets/js/script.js?v=20261027c"></script>
   <script src="assets/js/order-archive.js?v=20261007a"></script>
-  <script src="assets/js/stock-dashboard.js?v=20261027b"></script>
+  <script src="assets/js/stock-dashboard.js?v=20261027c"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
       const APP_VERSION = "2026-10-18.1";
@@ -427,7 +429,11 @@
       window.addEventListener("load", () => {
         const resetAppCache = async () => {
           const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map((registration) => registration.unregister()));
+          await Promise.all(registrations.map(async (registration) => {
+            // Preserve registration if the browser cannot confirm subscription state.
+            const subscription = await registration.pushManager?.getSubscription().catch(() => true);
+            if (!subscription) await registration.unregister();
+          }));
           if ("caches" in window) {
             const cacheKeys = await caches.keys();
             await Promise.all(cacheKeys.map((key) => caches.delete(key)));
@@ -448,7 +454,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20261018a", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20261027c", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 
@@ -458,5 +464,6 @@
       });
     }
   </script>
+  <script src="assets/js/push-notifications.js?v=20261027c"></script>
 </body>
 </html>

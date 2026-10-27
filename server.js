@@ -10,11 +10,13 @@ const { createClient } = require("@supabase/supabase-js");
 const STOCK_CATALOG = require("./assets/js/stock-catalog-data.js");
 const ORDER_ARCHIVE = require("./assets/js/order-archive.js");
 const { createStockOrderEmailSender } = require("./lib/stock-order-email.js");
+const { createBrowserPush } = require("./lib/browser-push.js");
+const { createPushApi } = require("./lib/push-api.js");
 
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-10-27.2";
+const APP_RELEASE = "2026-10-27.3";
 const stockOrderEmail = createStockOrderEmailSender({
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.STOCK_ORDER_EMAIL_FROM
@@ -76,6 +78,14 @@ const supabase = HAS_SUPABASE
     auth: { persistSession: false, autoRefreshToken: false }
   })
   : null;
+
+const browserPush = createBrowserPush({ db: supabase,
+  publicKey: String(process.env.WEB_PUSH_PUBLIC_KEY || "").trim(),
+  privateKey: String(process.env.WEB_PUSH_PRIVATE_KEY || "").trim(),
+  subject: String(process.env.WEB_PUSH_SUBJECT || "https://findmytube.co.za/about.html").trim()
+});
+const handlePushApi = createPushApi({ push: browserPush, getSession: requireLabSession,
+  readBody: collectRequestBody, send: sendJson, rateLimit: enforceRateLimit, getOrder: async id => { const row = await dbGetRequestById(id); return row ? toPublicStockRequest(mapRequestFromDb(row)) : null; } });
 
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
@@ -1174,7 +1184,8 @@ async function dbGetSession(req) {
     id: session.id,
     user,
     token,
-    tokenHash
+    tokenHash,
+    expiresAt: session.expires_at
   };
 }
 
@@ -2106,7 +2117,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
       service: "find-my-tube-backend",
       release: APP_RELEASE,
       commit: String(process.env.RENDER_GIT_COMMIT || "").slice(0, 12) || null,
-      notifications: { stockOrderEmailConfigured: stockOrderEmail.configured },
+      notifications: { stockOrderEmailConfigured: stockOrderEmail.configured, browserPushConfigured: browserPush.configured },
       timestamp: new Date().toISOString()
     });
     return;
@@ -2145,6 +2156,8 @@ async function handleApiRequest(req, res, pathname, searchParams) {
     });
     return;
   }
+
+  if (await handlePushApi(req, res, pathname, searchParams)) return;
 
   // Public catalogue clients never receive balances, even with a dashboard cookie.
   if (req.method === "GET" && pathname === "/api/stock-inventory") {
@@ -3194,6 +3207,7 @@ async function handleApiRequest(req, res, pathname, searchParams) {
         status: record.status,
         createdAt: record.createdAt
       },
+      orderPushToken: browserPush.issueOrderToken(record.id),
       sheetSync,
       emailNotification,
       sheetMirror: {
@@ -3392,6 +3406,9 @@ function startServer() {
     console.log(`Stock order email configured: ${stockOrderEmail.configured ? "yes" : "no"}`);
   });
 }
+
+server.on("listening", () => browserPush.start());
+server.on("close", () => browserPush.stop());
 
 if (require.main === module) {
   startServer();

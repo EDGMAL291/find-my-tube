@@ -30,6 +30,7 @@ Set these environment variables in Render:
 - `SUPABASE_SERVICE_ROLE_KEY` (server-only secret)
 - optional: `SUPABASE_ANON_KEY` (frontend-safe only if needed for direct browser Supabase calls)
 - optional: `ALLOWED_ORIGINS` (comma-separated extra frontend origins)
+- optional browser push: `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY`, `WEB_PUSH_SUBJECT`; see [Browser push activation](browser-push.md).
 - optional stock email notifications: `RESEND_API_KEY` and `STOCK_ORDER_EMAIL_FROM`; see [Stock order emails](stock-order-email.md).
 
 Apply schema migrations in filename order, excluding `20260617_reset_current_stock_only.sql` (a one-time inventory reset). The latest migration enables RLS and installs the atomic order-fulfilment function; apply it before relying on atomic inventory deduction in production.

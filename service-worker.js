@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v375";
+const CACHE_NAME = "find-my-tube-v376";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -12,9 +12,9 @@ const CORE_ASSETS = [
   "./assets/css/modern.css?v=20261013c",
   "./assets/css/discovery.css?v=20261018b",
   "./assets/css/scenes.css?v=20261013c",
-  "./assets/css/workflows.css?v=20261027b",
+  "./assets/css/workflows.css?v=20261027c",
   "./assets/js/stock-catalog-data.js?v=20261019b",
-  "./assets/js/script.js?v=20261027a",
+  "./assets/js/script.js?v=20261027c",
   "./assets/js/premium-home.js?v=20261019b",
   "./assets/js/quick-guide.js?v=20261019b",
   "./assets/data/data.js?v=20261012o",
@@ -118,4 +118,37 @@ self.addEventListener("fetch", (event) => {
         .catch(() => Response.error());
     })
   );
+});
+
+// Push messages contain no requester/contact details. Opening a notification
+// always navigates within this application's scope, never to a payload URL.
+self.addEventListener("push", event => {
+  let payload = {};
+  try { payload = event.data?.json() || {}; } catch { /* Show a generic alert for malformed payloads. */ }
+  const kind = payload.kind === "lab" ? "lab" : payload.kind === "client" ? "client" : "home";
+  const target = new URL(kind === "lab" ? "stock-dashboard.html" : kind === "client" ? "track-orders.html" : "index.html", self.registration.scope);
+  if (kind === "client" && typeof payload.orderId === "string" && payload.orderId.length <= 80) { target.searchParams.set("requestId", payload.orderId); target.searchParams.set("openOrder", "1"); }
+  const title = typeof payload.title === "string" ? payload.title.slice(0, 80) : "Find My Tube update";
+  const body = typeof payload.body === "string" ? payload.body.slice(0, 240) : "Open Find My Tube to see the latest update.";
+  const tag = kind === "client" && typeof payload.orderId === "string" ? `fmt-order-${payload.orderId.slice(0, 80)}` : `fmt-push-${String(payload.eventId || "update").slice(0, 100)}`;
+  event.waitUntil(self.registration.showNotification(title, { body, tag, renotify: false,
+    icon: new URL("assets/icons/icon-192.png", self.registration.scope).href,
+    badge: new URL("assets/icons/icon-192.png", self.registration.scope).href,
+    data: { url: target.href }
+  }));
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    const scope = new URL(self.registration.scope);
+    let target;
+    try { target = new URL(event.notification.data?.url || "index.html", scope); } catch { target = new URL("index.html", scope); }
+    const allowed = ["index.html", "stock-dashboard.html", "track-orders.html"].map(path => new URL(path, scope).pathname);
+    if (target.origin !== scope.origin || !allowed.includes(target.pathname)) target = new URL("index.html", scope);
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const existing = windows.find(client => { try { const url = new URL(client.url); return url.origin === target.origin && url.pathname === target.pathname; } catch { return false; } });
+    if (existing) { try { if (existing.url !== target.href) await existing.navigate(target.href); return await existing.focus(); } catch { /* Open a fresh window if the previous one closed. */ } }
+    return self.clients.openWindow(target.href);
+  })());
 });
