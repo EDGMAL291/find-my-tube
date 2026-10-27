@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="assets/css/discovery.css?v=20261027d" />
   <link rel="stylesheet" href="assets/css/stock-inventory.css?v=20261027d" />
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027f" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027g" />
 </head>
 <body data-app-page="stock-dashboard">
   <div class="container">
@@ -454,7 +454,7 @@
             localStorage.setItem("fmt-app-version", APP_VERSION);
           }
 
-          await navigator.serviceWorker.register("./service-worker.js?v=20261027f", { updateViaCache: "none" });
+          await navigator.serviceWorker.register("./service-worker.js?v=20261027g", { updateViaCache: "none" });
           localStorage.setItem("fmt-app-version", APP_VERSION);
         };
 
@@ -464,6 +464,6 @@
       });
     }
   </script>
-  <script src="assets/js/push-notifications.js?v=20261027f"></script>
+  <script src="assets/js/push-notifications.js?v=20261027g"></script>
 </body>
 </html>

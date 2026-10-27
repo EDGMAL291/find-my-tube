@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const { generateVAPIDKeys } = require('web-push');
+const crypto = require('node:crypto');
 const base = process.env.FMT_TEST_URL || 'http://127.0.0.1:3000';
 const publicKey = generateVAPIDKeys().publicKey;
 (async () => {
@@ -12,22 +13,29 @@ const publicKey = generateVAPIDKeys().publicKey;
    window.pushPermissionRequests=0; window.pushUnsubscriptions=0;
    window.Notification = class { static permission='default'; static async requestPermission(){ window.pushPermissionRequests++; this.permission='granted'; return 'granted'; } };
    window.PushManager = class {};
-   const sub = { options:{}, toJSON:()=>({endpoint:'https://fcm.googleapis.com/fcm/send/fixture',keys:{p256dh:'fixture',auth:'fixture'}}), unsubscribe:async()=>{window.pushUnsubscriptions++;return true;} };
+   const sub = { endpoint:'https://fcm.googleapis.com/fcm/send/fixture', options:{}, toJSON:()=>({endpoint:'https://fcm.googleapis.com/fcm/send/fixture',keys:{p256dh:'fixture',auth:'fixture'}}), unsubscribe:async()=>{window.pushUnsubscriptions++;return true;} };
    let current=null;
-   const registration = { pushManager:{getSubscription:async()=>current,subscribe:async()=>{current=sub;return sub;}},unregister:async()=>true };
-   Object.defineProperty(navigator,'serviceWorker',{value:{register:async()=>registration,ready:Promise.resolve(registration),getRegistrations:async()=>[]},configurable:true});
+   window.removeFixturePushRegistration=()=>{current=null;localStorage.removeItem('push-fixture-registered');};
+   const registration = { pushManager:{getSubscription:async()=>current || (localStorage.getItem('push-fixture-registered') ? sub : null),subscribe:async()=>{current=sub;localStorage.setItem('push-fixture-registered','1');return sub;}},unregister:async()=>true };
+   Object.defineProperty(navigator,'serviceWorker',{value:{register:async()=>registration,ready:Promise.resolve(registration),getRegistration:async()=>registration,getRegistrations:async()=>[]},configurable:true});
   });
-  let bindings=new Set(),tests=0,signedIn=true,issued=0;
+  let bindings=new Set(),tests=0,signedIn=true,issued=0,deliveryState='pending',checkFails=false,configReady=true;
+  const hashes=new Map(),testJobs=new Set();
   const calls=[];
   const order={id:'PUSH-ORDER-1',requestedBy:'Fixture Nurse',wardUnit:'ICU',createdAt:new Date().toISOString(),status:'pending',items:[]};
   const token = Buffer.from(JSON.stringify({id:order.id,exp:Date.now()+86400000})).toString('base64url')+'.fixture-signature';
   await page.route('**/api/**',async route=>{
    const req=route.request(),url=new URL(req.url()),path=url.pathname;
-   if(path==='/api/push/config')return route.fulfill({json:{ok:true,configured:true,publicKey}});
+   if(path==='/api/push/config')return route.fulfill({json:{ok:true,configured:configReady,publicKey}});
    if(path.includes('/push/')&&path.includes('subscriptions')){
     calls.push({method:req.method(),path,authorization:req.headers().authorization});
-    if(path.endsWith('/test')){tests++;return route.fulfill({status:202,json:{ok:true}});}
-    if(req.method()==='POST'){const id=`00000000-0000-0000-0000-${String(++issued).padStart(12,'0')}`;bindings.add(id);return route.fulfill({status:201,json:{ok:true,subscription:{id}}});}
+    if(path.endsWith('/check')) {
+     if(checkFails)return route.fulfill({status:503,json:{ok:false}});
+     const id=path.split('/').at(-2);
+     return route.fulfill({json:{ok:true,enabled:bindings.has(id),matchesDevice:bindings.has(id)&&req.postDataJSON().endpointHash===hashes.get(id),lastTest:testJobs.has(id)?{state:deliveryState,attempts:1,expiresAt:new Date(Date.now()+86400000).toISOString()}:null}});
+    }
+    if(path.endsWith('/test')){tests++;testJobs.add(path.split('/').at(-2));return route.fulfill({status:202,json:{ok:true}});}
+    if(req.method()==='POST'){const id=`00000000-0000-0000-0000-${String(++issued).padStart(12,'0')}`;bindings.add(id);hashes.set(id,crypto.createHash('sha256').update(req.postDataJSON().subscription.endpoint).digest('hex'));return route.fulfill({status:201,json:{ok:true,subscription:{id}}});}
     const id=path.split('/').at(-1);
     if(req.method()==='DELETE'){bindings.delete(id);return route.fulfill({json:{ok:true}});}
     return route.fulfill({json:{ok:true,enabled:bindings.has(id)}});
@@ -87,9 +95,39 @@ const publicKey = generateVAPIDKeys().publicKey;
   assert.equal(await lab.isEnabled(),true,'Turning off the saved channel remains available');
   assert.doesNotMatch(await labStatus.innerText(),/Alerts are on/);
   await page.evaluate(()=>{Notification.permission='granted';window.dispatchEvent(new Event('focus'));});
-  await labStatus.filter({hasText:'Alerts are on'}).waitFor();
+  await labStatus.filter({hasText:'Use Check this device to verify'}).waitFor();
   assert.equal(await labTest.isEnabled(),true);
-  await page.screenshot({path:`/tmp/fmt-push-controls-${width}.png`});
+  const deviceCheck=page.locator('#labPushPanel [data-push-check]');
+  const report=page.locator('#labPushPanel [data-push-report]');
+  const beforeReadOnlyTest=tests,beforeReadOnlyPermission=await page.evaluate(()=>window.pushPermissionRequests);
+  await deviceCheck.click();
+  await report.waitFor({state:'visible'});
+  assert.match(await report.innerText(),/this device matches/);
+  assert.match(await report.innerText(),/waiting for a delivery retry/);
+  assert.equal(tests,beforeReadOnlyTest,'Checking never sends a notification');
+  assert.equal(await page.evaluate(()=>window.pushPermissionRequests),beforeReadOnlyPermission,'Checking never prompts for permission');
+  deliveryState='accepted';await deviceCheck.click();
+  await report.filter({hasText:'accepted by the push provider'}).waitFor();
+  assert.match(await report.innerText(),/does not confirm that the phone displayed it/);
+  deliveryState='failed';await deviceCheck.click();
+  await report.filter({hasText:'could not be sent'}).waitFor();
+  // A missing browser subscription must not continue to claim that alerts are on.
+  await page.evaluate(()=>window.removeFixturePushRegistration());
+  await deviceCheck.click();
+  await labTest.filter({hasText:'Reconnect & test'}).waitFor();
+  assert.doesNotMatch(await labStatus.innerText(),/Alerts are on/);
+  await labTest.click();await labStatus.filter({hasText:'Test alert queued'}).waitFor();
+  assert.equal(tests,beforeReadOnlyTest+1);
+  await deviceCheck.click();await report.filter({hasText:'this device matches'}).waitFor();
+  // Also repair a server binding that disappeared while the browser remained registered.
+  bindings.clear();await deviceCheck.click();
+  await lab.filter({hasText:'Enable alerts'}).waitFor();
+  await lab.click();await lab.filter({hasText:'Turn off alerts'}).waitFor();
+  checkFails=true;await deviceCheck.click();
+  await labStatus.filter({hasText:'temporarily unavailable'}).waitFor();
+  assert.equal(await deviceCheck.isEnabled(),true,'A failed check can be retried');
+  checkFails=false;await deviceCheck.click();await report.filter({hasText:'this device matches'}).waitFor();
+  await page.screenshot({path:`/tmp/fmt-push-device-check-${width}.png`});
   await page.evaluate(()=>window.FMT_PUSH.labSessionChanged(false));
   assert.equal(await page.locator('#labPushPanel').isVisible(),false);
   assert.equal(await page.evaluate(()=>window.FMT_PUSH.labEnabled),false);

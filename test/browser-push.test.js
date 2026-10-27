@@ -101,3 +101,40 @@ test('API rejects malformed subscriptions, finished orders and unavailable setup
  assert.equal(await run('{'),400); assert.equal(await run(JSON.stringify({subscription:{...subscription(),endpoint:'https://localhost/private'}})),400);
  finished=true; assert.equal(await run('{}'),409); finished=false;ready=false;assert.equal(await run('{}'),503);assert.equal(writes,0);
 });
+
+test('device inspection is scoped, read-only, and exposes only a safe last-test summary', async () => {
+ const traces=[];let jobReads=0;
+ const expiry=new Date(Date.now()+60000).toISOString();
+ const db={from(table){const trace={table,filters:[]};traces.push(trace);const q={select(){return q;},eq(key,value){trace.filters.push([key,value]);return q;},like(key,value){trace.filters.push([key,value]);return q;},order(){return q;},limit(){return q;},abortSignal(){
+  if(table==='web_push_subscriptions')return Promise.resolve({data:trace.filters.some(([key,value])=>key==='user_id'&&value==='intruder')?[]:[{id:'own',expires_at:expiry,endpoint_hash:'a'.repeat(64),endpoint:'private-endpoint',auth:'secret'}]});
+  jobReads++;return Promise.resolve({data:[{state:'delivered',attempts:1,created_at:'created',delivered_at:'accepted',expires_at:expiry,payload:{private:'never return'},last_error_code:500}]});
+ }};return q;}};
+ const push=setup({db});const scope={kind:'lab',recipient:'session',sessionId:'session',userId:'owner'};
+ const result=await push.inspect(scope,'own','a'.repeat(64));
+ assert.equal(result.enabled,true);assert.equal(result.matchesDevice,true);
+ assert.deepEqual(result.lastTest,{state:'accepted',attempts:1,createdAt:'created',acceptedAt:'accepted',expiresAt:expiry});
+ assert.doesNotMatch(JSON.stringify(result),/secret|endpoint|payload|private|last_error/);
+ assert.deepEqual(traces[0].filters,[['id','own'],['kind','lab'],['recipient_key','session'],['lab_session_id','session'],['user_id','owner']]);
+ assert.deepEqual(traces[1].filters,[['subscription_id','own'],['event_key','test:%']]);
+ assert.equal((await push.inspect(scope,'own','b'.repeat(64))).matchesDevice,false);
+ const before=jobReads;
+ assert.deepEqual(await push.inspect({...scope,userId:'intruder'},'own','a'.repeat(64)),{enabled:false,matchesDevice:false,expiresAt:null,lastTest:null});
+ assert.equal(jobReads,before,'Unauthorized channels cannot even query job history');
+});
+
+test('device-check API validates fingerprints and applies staff/client ownership before inspection', async () => {
+ const push=setup();const token=push.issueOrderToken('ORDER-1');let answer;const calls=[];
+ Object.assign(push,{ready:async()=>true,inspect:async(...args)=>{calls.push(args);return {enabled:true,matchesDevice:true,lastTest:null};}});
+ const api=createPushApi({push,getSession:async()=>({id:'session',expiresAt:'date',user:{id:'owner'}}),readBody:async req=>req.body,send:(req,res,status,body)=>{answer={status,body};},rateLimit:()=>true,getOrder:async()=>({status:'pending'})});
+ const id='12345678-1234-1234-1234-123456789012';
+ const run=async(path,body,auth=token,method='POST')=>{await api({method,headers:{authorization:`Bearer ${auth}`},body:JSON.stringify(body)},{},path);return answer;};
+ const path=`/api/push/orders/ORDER-1/subscriptions/${id}/check`;
+ assert.equal((await run(path,{endpointHash:'a'.repeat(64)})).status,200);assert.equal(calls[0][0].orderId,'ORDER-1');
+ assert.equal((await run(path,{endpointHash:'bad'})).status,400);
+ assert.equal((await run(path,{endpointHash:{}})).status,400);
+ assert.equal((await run(path,{endpointHash:null},'unrelated')).status,403);
+ assert.equal((await run(path,{},token,'GET')).status,405);
+ assert.equal(calls.length,1);
+ assert.equal((await run(`/api/lab/push/subscriptions/${id}/check`,{endpointHash:null})).status,200);
+ assert.equal(calls[1][0].sessionId,'session');assert.equal(calls[1][0].userId,'owner');
+});

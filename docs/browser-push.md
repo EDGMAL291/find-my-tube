@@ -2,6 +2,14 @@
 
 Lab staff can opt in on the signed-in dashboard for new stock orders. Clients can opt in on their successful order receipt or that order’s details on the same device, for status and item availability updates. Every opt-in is explicit. Enable alerts, then Send test alert to check the device. Turn off alerts removes that channel only; other orders and lab alerts on that browser remain subscribed.
 
+## Check this device
+
+The new **Check this device** action reads browser support, notification permission, the existing device registration and the saved server channel. It neither asks for permission nor creates subscriptions or sends test alerts. The server compares a SHA-256 endpoint fingerprint and returns only a match result and a safe summary of the latest test for that authorized channel. Endpoints, encryption keys, job payloads and other devices’ history are never returned.
+
+Checks refresh the public configuration without requiring a reload, so setup can be checked again after a deployment. A missing browser registration offers **Reconnect & test**. Sending a test verifies the current browser registration against the server and reconnects a missing or mismatched channel before queuing a test. It leaves other order channels and their shared browser subscription intact. Changed server keys require an explicit browser permission reset; the app does not silently unsubscribe shared registrations.
+
+The report distinguishes queued, sending, retrying, failed, expired and provider-accepted tests. Provider acceptance does not prove that a phone displayed or a person read the notification. Check again after a queued test; delivery is asynchronous and depends on the API worker being awake. The report is available only for the current signed-in lab session or an order’s private receipt capability. No database migration is required for this addition.
+
 ## Activate on production
 
 1. Apply `supabase/migrations/20261027_browser_push.sql` in the existing Supabase project after the existing schema migrations. It creates two private tables, queue functions and triggers. It does not change inventory or order status rules. Re-running it is supported.

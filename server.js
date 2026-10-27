@@ -16,7 +16,7 @@ const { createPushApi } = require("./lib/push-api.js");
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
-const APP_RELEASE = "2026-10-27.3";
+const APP_RELEASE = "2026-10-27.4";
 const stockOrderEmail = createStockOrderEmailSender({
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.STOCK_ORDER_EMAIL_FROM

@@ -73,7 +73,7 @@
     }
   </script>
   <link rel="stylesheet" href="assets/css/scenes.css?v=20261013c" />
-  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027f" />
+  <link rel="stylesheet" href="assets/css/workflows.css?v=20261027g" />
 </head>
 <body data-app-page="stock-order">
   <main class="container">
@@ -1314,7 +1314,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261027f", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261027g", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
@@ -1358,6 +1358,6 @@
     }
   </script>
   <script src="assets/js/quick-guide.js?v=20261019b"></script>
-  <script src="assets/js/push-notifications.js?v=20261027f"></script>
+  <script src="assets/js/push-notifications.js?v=20261027g"></script>
 </body>
 </html>

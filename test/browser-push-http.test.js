@@ -11,12 +11,22 @@ test('HTTP push config reveals only public key; receipt reads use the public ord
  const push = createBrowserPush({ db: {}, ...keys });
  const token = push.issueOrderToken('PUSH-HTTP');
  const row = { id: 'PUSH-HTTP', status: 'pending', requester_name: 'Fixture Nurse', ward_or_unit: 'Ward', contact_extension: 'private-extension', request_text: 'private-legacy-contact', status_history: [], stock_request_items: [], created_at: new Date().toISOString() };
+ const subscriptionId='12345678-1234-1234-1234-123456789012';
+ const hash='a'.repeat(64);let jobReads=0;
  let subscriptionWrites=0;
  const fixture = http.createServer(async (req,res) => {
   const url=new URL(req.url,'http://localhost');let text='';for await(const chunk of req)text+=chunk;
   const send=payload=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(payload));};
   if(url.pathname.endsWith('/stock_requests'))return send([row]);
-  if(url.pathname.endsWith('/web_push_subscriptions')){if(req.method==='POST')subscriptionWrites++;return send([]);}
+  if(url.pathname.endsWith('/web_push_subscriptions')) {
+   if(req.method==='POST')subscriptionWrites++;
+   const owned=url.searchParams.get('id')===`eq.${subscriptionId}`&&url.searchParams.get('kind')==='eq.client'&&url.searchParams.get('recipient_key')==='eq.PUSH-HTTP'&&url.searchParams.get('order_id')==='eq.PUSH-HTTP';
+   return send(owned?[{id:subscriptionId,expires_at:new Date(Date.now()+60000).toISOString(),endpoint_hash:hash}]:[]);
+  }
+  if(url.pathname.endsWith('/web_push_jobs')&&req.method==='GET') {
+   jobReads++;assert.equal(url.searchParams.get('subscription_id'),`eq.${subscriptionId}`);assert.equal(url.searchParams.get('event_key'),'like.test:%');
+   return send([{state:'delivered',attempts:1,created_at:new Date().toISOString(),delivered_at:new Date().toISOString(),expires_at:new Date(Date.now()+86400000).toISOString()}]);
+  }
   return send([]);
  });
  await new Promise(resolve=>fixture.listen(0,'127.0.0.1',resolve));
@@ -37,6 +47,12 @@ test('HTTP push config reveals only public key; receipt reads use the public ord
   const own=await fetch(base+'/api/push/orders/PUSH-HTTP',{headers:{Authorization:`Bearer ${token}`}});
   assert.equal(own.status,200);const body=await own.text();assert.ok(body.includes('Fixture Nurse'));assert.doesNotMatch(body,/private-extension|private-legacy-contact|contactExtension|requestText/);
   assert.equal((await fetch(base+'/api/lab/push/subscriptions',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,401);
+  const check=(id=subscriptionId,authorization=token)=>fetch(`${base}/api/push/orders/PUSH-HTTP/subscriptions/${id}/check`,{method:'POST',headers:{Authorization:`Bearer ${authorization}`,'Content-Type':'application/json'},body:JSON.stringify({endpointHash:hash})});
+  assert.equal((await check(subscriptionId,'other-token')).status,403);
+  const result=await(await check()).json();assert.equal(result.matchesDevice,true);assert.equal(result.lastTest.state,'accepted');
+  assert.doesNotMatch(JSON.stringify(result),/private-|endpoint_hash|p256dh|auth|payload/);
+  assert.equal((await(await check('22345678-1234-1234-1234-123456789012')).json()).enabled,false);
+  assert.equal(jobReads,1,'Only an owned channel may read its test history');
   assert.equal(subscriptionWrites,0);assert.ok(!errors.includes(keys.privateKey));
  } finally {
   await new Promise(resolve=>{child.once('exit',resolve);child.kill();});
