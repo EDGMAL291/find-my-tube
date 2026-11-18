@@ -41,7 +41,7 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20260729a" />
-    <link rel="stylesheet" href="assets/css/modern.css?v=20261027d" />
+    <link rel="stylesheet" href="assets/css/modern.css?v=20261118c" />
     <link rel="stylesheet" href="assets/css/discovery.css?v=20261027d" />
   <script type="application/ld+json">
     {
@@ -220,13 +220,24 @@
             <a class="home-hero-primary" href="./order-stock.html" data-menu-action="stock"><span class="home-hero-label">Order My Stock</span><span class="home-hero-arrow" aria-hidden="true">→</span></a>
           </div>
         </article>
-        <div class="home-hero-controls" aria-label="Choose a hero slide">
-          <button type="button" class="home-hero-dot is-active" data-hero-dot aria-label="Show laboratory overview" aria-current="true"></button>
-          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Tube" aria-current="false"></button>
-          <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Order My Stock" aria-current="false"></button>
-          <span class="home-hero-swipe-hint" aria-hidden="true"><span class="home-hero-swipe-arrow">↔</span> Swipe</span>
+        <div class="home-hero-controls" role="group" aria-label="Browse home slides">
+          <button type="button" class="home-hero-step" data-hero-step="-1" aria-label="Previous slide">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg>
+          </button>
+          <div class="home-hero-pagination">
+            <span class="home-hero-swipe-hint" aria-hidden="true">Swipe left or right</span>
+            <div class="home-hero-dots">
+              <button type="button" class="home-hero-dot is-active" data-hero-dot aria-label="Show laboratory overview" aria-current="true"></button>
+              <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Find My Tube" aria-current="false"></button>
+              <button type="button" class="home-hero-dot" data-hero-dot aria-label="Show Order My Stock" aria-current="false"></button>
+            </div>
+          </div>
+          <button type="button" class="home-hero-step" data-hero-step="1" aria-label="Next slide">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><use href="#lab-icon-arrow"></use></svg>
+          </button>
           <button type="button" class="home-hero-guide-btn" id="openHomeIntroBtn" aria-haspopup="dialog" aria-controls="homeIntroDialog">Quick guide</button>
         </div>
+        <span class="sr-only" role="status" data-hero-status></span>
       </section>
 
       <div class="home-lab-desk-backdrop" id="homeLabDeskBackdrop" hidden></div>
@@ -559,7 +570,7 @@
   <script src="assets/js/stock-catalog-data.js?v=20261019b"></script>
   <script src="assets/js/script.js?v=20261027e"></script>
   <script src="assets/js/find-my-test.js?v=20261007a"></script>
-  <script src="assets/js/premium-home.js?v=20261019b"></script>
+  <script src="assets/js/premium-home.js?v=20261118c"></script>
   <script>
     if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
       const APP_VERSION = "2026-10-18.1";
@@ -587,7 +598,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261118b", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261118c", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {

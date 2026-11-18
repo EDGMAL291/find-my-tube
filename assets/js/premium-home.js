@@ -4,6 +4,7 @@
 
   const slides = Array.from(carousel.querySelectorAll("[data-hero-slide]"));
   const dots = Array.from(carousel.querySelectorAll("[data-hero-dot]"));
+  const status = carousel.querySelector("[data-hero-status]");
   let activeIndex = 0;
   let touchStartX = null;
   let touchStartY = null;
@@ -22,6 +23,10 @@
       dot.classList.toggle("is-active", isActive);
       dot.setAttribute("aria-current", String(isActive));
     });
+    if (status) {
+      const title = slides[activeIndex].querySelector("h2").textContent.trim();
+      status.textContent = `${title} (slide ${activeIndex + 1} of ${slides.length})`;
+    }
   };
 
   dots.forEach((dot, index) => {
@@ -32,6 +37,10 @@
 
   carousel.querySelectorAll("[data-hero-next]").forEach((control) => {
     control.addEventListener("click", () => showSlide(1));
+  });
+
+  carousel.querySelectorAll("[data-hero-step]").forEach((control) => {
+    control.addEventListener("click", () => showSlide(activeIndex + Number(control.dataset.heroStep)));
   });
 
   carousel.addEventListener("touchstart", (event) => {
