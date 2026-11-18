@@ -34,21 +34,12 @@ html body[data-app-page="home"] #clinicalWorkupResetBtn {
   margin-left: auto;
 }
 html body[data-app-page="home"] #clinicalChoiceModal {
-  background-color: #03111f;
-  background-image: var(--fmt-scene-tone), url("../images/scene-reference-20261013.webp");
-  background-position: center;
-  background-size: cover;
-}
-html body[data-app-page="home"] #clinicalChoiceModal[data-choice-type="pregnancy"] {
-  background-image:
-    linear-gradient(90deg, rgba(3, 24, 42, .64), rgba(7, 31, 46, .24)),
-    url("../images/scene-pregnancy-20261013.webp");
-  background-position: center, 76% center;
+  background: transparent;
 }
 html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-backdrop {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: #071a2533;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 html body[data-app-page="home"] #clinicalChoiceModal .clinical-choice-sheet {
   background: transparent !important;

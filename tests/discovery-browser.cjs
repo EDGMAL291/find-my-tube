@@ -325,7 +325,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         }));
         assert.deepEqual(hamburger, { background:'rgba(0, 0, 0, 0)', border:'none', paths:3, middleOpacity:'1' });
         const menuToggleBox = await page.locator('#menuToggleBtn').boundingBox();
-        const contentGuide = await page.locator('.laboratory-heading h2').boundingBox();
+        const contentGuide = await page.locator('#tubeWorkspaceTitle').boundingBox();
         const brandTitle = await page.locator('.brand-home-btn').evaluate(el => ({
           top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
           size:getComputedStyle(el).fontSize
@@ -688,7 +688,7 @@ async function exerciseTubePlanWorkflow(page, width) {
             sheet:getComputedStyle(el.querySelector('.clinical-choice-sheet')).backgroundColor,
             option:getComputedStyle(el.querySelector('.clinical-choice-option:not(.is-selected)')).backgroundColor
           }));
-          assert.equal(choiceVisual.image, 'none', 'Choice modal shows the workstation behind it');
+          assert.equal(choiceVisual.image, 'none', 'Choice modal shows the Find My Test page behind it');
           assert.equal(choiceVisual.background, 'rgba(0, 0, 0, 0)');
           assert.equal(choiceVisual.sheet, 'rgba(0, 0, 0, 0)', 'Choice sheet lets the scene show through');
           assert.equal(choiceVisual.option, 'rgba(3, 17, 31, 0.06)', 'Choice rows stay transparent');
