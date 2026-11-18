@@ -39,7 +39,7 @@
   }
   const bytes = value => Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), char => char.charCodeAt(0));
   async function browserSubscription(publicKey) {
-    const url = new URL('./service-worker.js?v=20261027g', location.href);
+    const url = new URL('./service-worker.js?v=20261118a', location.href);
     const registered = await navigator.serviceWorker.register(url, { updateViaCache: 'none' });
     // An older active worker may satisfy `ready` while the push-capable update installs.
     const updating = registered.installing || registered.waiting;
@@ -86,6 +86,14 @@
       ]);
     } finally { clearTimeout(timeout); }
   }
+  function testProgress(test) {
+    if (!test) return { message: 'No recent test found. Send a test alert to check delivery.', finished: false };
+    if (test.state === 'accepted') return { message: 'Accepted by the push provider. This does not confirm that the phone displayed it. If the alert did not appear, check this device’s notification settings.', finished: true };
+    if (Date.parse(test.expiresAt) <= Date.now()) return { message: 'Expired before provider acceptance. Send a new test alert.', finished: true };
+    if (test.state === 'failed') return { message: 'The alert could not be sent. Try again or contact the administrator if it keeps failing.', finished: true };
+    if (test.state === 'sending') return { message: 'Sending the test alert.', finished: false };
+    return { message: test.attempts > 0 ? 'Waiting for a delivery retry.' : 'Queued and waiting to be sent.', finished: false };
+  }
   function controls(container, scope) {
     if (!container) return;
     const previous = container.querySelector('.push-controls');
@@ -96,17 +104,56 @@
     panel.innerHTML = `<h4>${scope.lab ? 'New-order push alerts' : 'Order alerts on this device'}</h4>
       <p class="push-controls-status" role="status" aria-live="polite">Checking notification options…</p>
       <div class="push-controls-actions"><button type="button" class="quick-tool-launch-btn" data-push-toggle disabled>Enable alerts</button><button type="button" class="quick-tool-clear-btn" data-push-test hidden>Send test alert</button><button type="button" class="quick-tool-clear-btn" data-push-check disabled>Check this device</button></div>
+      <p class="push-controls-status" data-push-progress role="status" aria-live="polite"></p>
       <ul class="push-device-checks" data-push-report aria-label="Device notification checks" hidden></ul>`;
     container.append(panel);
     const status = panel.querySelector('.push-controls-status'), toggle = panel.querySelector('[data-push-toggle]'), test = panel.querySelector('[data-push-test]');
     const check = panel.querySelector('[data-push-check]'), report = panel.querySelector('[data-push-report]');
+    const progress = panel.querySelector('[data-push-progress]');
     const key = scope.lab ? labKey : prefix + scope.orderId;
     const root = scope.lab ? '/api/lab/push/subscriptions' : `/api/push/orders/${encodeURIComponent(scope.orderId)}/subscriptions`;
     const generation = labGeneration;
     let enabled = false, busy = true, config, deviceState = 'unchecked', lastPermission = permissionState();
+    let trackedTest = null;
     const active = () => panel.isConnected && (!scope.lab || (labSignedIn && generation === labGeneration));
     const record = () => read(key) || {};
     const saveBinding = bindingId => { const value = record(); if (scope.lab) write(key, bindingId ? { subscriptionId: bindingId } : null); else write(key, { ...value, subscriptionId: bindingId || null }); };
+    function clearTestProgress() {
+      trackedTest = null;
+      progress.textContent = '';
+    }
+    async function followTest(testId, bindingId, subscription) {
+      trackedTest = testId;
+      const current = () => trackedTest === testId && active() && record().subscriptionId === bindingId
+        && permissionState() === 'granted';
+      try {
+        const hash = await endpointHash(subscription);
+        for (const delay of [2000, 4000, 8000, 12000, 15000]) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          if (!current()) return;
+          const state = await request(`${root}/${bindingId}/check`, {
+            method: 'POST', body: JSON.stringify({ endpointHash: hash, testId })
+          }, scope.token);
+          if (!current()) return;
+          if (!state.enabled || !state.matchesDevice) {
+            enabled = state.enabled;
+            deviceState = 'mismatch';
+            if (!enabled) saveBinding(null);
+            render();
+            progress.textContent = 'This device is disconnected. Use Check this device to verify its settings.';
+            return;
+          }
+          if (!state.lastTest) continue;
+          const result = testProgress(state.lastTest);
+          const message = `Test alert: ${result.message}`;
+          if (progress.textContent !== message) progress.textContent = message;
+          if (result.finished) return;
+        }
+        if (current()) progress.textContent = 'The test is still awaiting a result. Use Check this device for the latest status.';
+      } catch {
+        if (current()) progress.textContent = 'The delivery check was interrupted. Use Check this device to see the latest status.';
+      }
+    }
     function render(message) {
       if (!active()) return;
       if (scope.lab) window.FMT_PUSH.labEnabled = enabled && deviceState === 'ready' && permissionState() === 'granted';
@@ -148,15 +195,7 @@
       deviceState = config?.configured && subscription && !sameServerKey(subscription, config.publicKey) ? 'key-mismatch'
         : !subscription ? 'missing' : !state.matchesDevice ? 'mismatch' : 'ready';
       if (!showDetails) return;
-      const last = state.lastTest;
-      let lastMessage = 'Last test: no recent test found. Send a test alert to check delivery.';
-      if (last) {
-        if (last.state !== 'accepted' && Date.parse(last.expiresAt) <= Date.now()) lastMessage = 'Last test: expired before acceptance. Send a new test alert.';
-        else if (last.state === 'accepted') lastMessage = 'Last test: accepted by the push provider. This does not confirm that the phone displayed it; check your phone’s notification settings if it did not appear.';
-        else if (last.state === 'failed') lastMessage = 'Last test: could not be sent. Try a new test; if it fails again, contact the administrator.';
-        else if (last.state === 'sending') lastMessage = 'Last test: being sent. Check again in a moment.';
-        else lastMessage = last.attempts > 0 ? 'Last test: waiting for a delivery retry. Check again shortly.' : 'Last test: queued and waiting to be sent. Check again shortly.';
-      }
+      const lastMessage = `Last test. ${testProgress(state.lastTest).message}`;
       const lines = [unsupported || 'Browser: push alerts are supported here.',
         permissionState() === 'granted' ? 'Permission: allowed.' : permissionState() === 'denied' ? 'Permission: blocked. Allow this site in browser settings.' : 'Permission: not granted yet.',
         deviceState === 'key-mismatch' ? 'Device: registered with older notification settings.' : subscription ? 'Device: browser registration found.' : 'Device: no current browser registration found.',
@@ -178,7 +217,9 @@
     });
     const refreshPermission = () => {
       if (!active()) { permissionRefreshers.delete(refreshPermission); return; }
-      if (!busy && permissionState() !== lastPermission) { deviceState = 'unchecked'; report.hidden = true; render(); }
+      if (!busy && permissionState() !== lastPermission) {
+        clearTestProgress(); deviceState = 'unchecked'; report.hidden = true; render();
+      }
     };
     permissionRefreshers.add(refreshPermission);
     (async () => {
@@ -195,6 +236,7 @@
     toggle.addEventListener('click', async () => {
       if (busy || !active()) return;
       busy = true;
+      clearTestProgress();
       // Request permission directly from the click, before awaiting network/SW work.
       try {
         const permission = enabled ? null : permissionState() === 'default' ? Notification.requestPermission() : Promise.resolve(permissionState());
@@ -220,6 +262,7 @@
       if (busy || !active() || test.disabled) return;
       const needsPermission = permissionState() === 'default';
       busy = true;
+      clearTestProgress();
       try {
         // Request permission directly from the tap; checks never show a prompt.
         const permission = needsPermission ? Notification.requestPermission() : Promise.resolve(permissionState());
@@ -237,8 +280,16 @@
           saveBinding(result.subscription.id);
         }
         enabled = true; deviceState = 'ready';
-        await request(`${root}/${record().subscriptionId}/test`, { method: 'POST' }, scope.token);
-        render('Test alert queued. It may take a moment to appear. Use Check this device to see its send status.');
+        const bindingId = record().subscriptionId;
+        const { testId } = await request(`${root}/${bindingId}/test`, { method: 'POST' }, scope.token);
+        if (!active()) return;
+        if (testId) {
+          render();
+          progress.textContent = 'Test alert queued. Checking delivery…';
+          void followTest(testId, bindingId, subscription);
+        } else {
+          render('Test alert queued. Use Check this device to see its send status.');
+        }
       }
       catch (error) { render(error.message); }
       finally { busy = false; render(status.textContent); }

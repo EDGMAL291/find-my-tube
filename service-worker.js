@@ -1,4 +1,4 @@
-const CACHE_NAME = "find-my-tube-v381";
+const CACHE_NAME = "find-my-tube-v382";
 const isLocalPreview = () => (
   self.location.hostname === "127.0.0.1"
   || self.location.hostname === "localhost"
@@ -134,7 +134,9 @@ self.addEventListener("push", event => {
   if (kind === "client" && typeof payload.orderId === "string" && payload.orderId.length <= 80) { target.searchParams.set("requestId", payload.orderId); target.searchParams.set("openOrder", "1"); }
   const title = typeof payload.title === "string" ? payload.title.slice(0, 80) : "Find My Tube update";
   const body = typeof payload.body === "string" ? payload.body.slice(0, 240) : "Open Find My Tube to see the latest update.";
-  const tag = kind === "client" && typeof payload.orderId === "string" ? `fmt-order-${payload.orderId.slice(0, 80)}` : `fmt-push-${String(payload.eventId || "update").slice(0, 100)}`;
+  const eventId = String(payload.eventId || "update").slice(0, 100);
+  const tag = kind === "client" && typeof payload.orderId === "string" && !eventId.startsWith("test:")
+    ? `fmt-order-${payload.orderId.slice(0, 80)}` : `fmt-push-${eventId}`;
   event.waitUntil(self.registration.showNotification(title, { body, tag, renotify: false,
     icon: new URL("assets/icons/icon-192.png", self.registration.scope).href,
     badge: new URL("assets/icons/icon-192.png", self.registration.scope).href,

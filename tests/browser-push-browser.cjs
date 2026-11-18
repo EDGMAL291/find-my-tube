@@ -20,7 +20,7 @@ const publicKey = generateVAPIDKeys().publicKey;
    Object.defineProperty(navigator,'serviceWorker',{value:{register:async()=>registration,ready:Promise.resolve(registration),getRegistration:async()=>registration,getRegistrations:async()=>[]},configurable:true});
   });
   let bindings=new Set(),tests=0,signedIn=true,issued=0,deliveryState='pending',checkFails=false,configReady=true;
-  const hashes=new Map(),testJobs=new Set();
+  const hashes=new Map(),testJobs=new Map();
   const calls=[];
   const order={id:'PUSH-ORDER-1',requestedBy:'Fixture Nurse',wardUnit:'ICU',createdAt:new Date().toISOString(),status:'pending',items:[]};
   const token = Buffer.from(JSON.stringify({id:order.id,exp:Date.now()+86400000})).toString('base64url')+'.fixture-signature';
@@ -32,9 +32,11 @@ const publicKey = generateVAPIDKeys().publicKey;
     if(path.endsWith('/check')) {
      if(checkFails)return route.fulfill({status:503,json:{ok:false}});
      const id=path.split('/').at(-2);
-     return route.fulfill({json:{ok:true,enabled:bindings.has(id),matchesDevice:bindings.has(id)&&req.postDataJSON().endpointHash===hashes.get(id),lastTest:testJobs.has(id)?{state:deliveryState,attempts:1,expiresAt:new Date(Date.now()+86400000).toISOString()}:null}});
+     const {endpointHash,testId}=req.postDataJSON();
+     const matchingTest=testJobs.has(id)&&(!testId||testJobs.get(id)===testId);
+     return route.fulfill({json:{ok:true,enabled:bindings.has(id),matchesDevice:bindings.has(id)&&endpointHash===hashes.get(id),lastTest:matchingTest?{state:deliveryState,attempts:1,expiresAt:new Date(Date.now()+86400000).toISOString()}:null}});
     }
-    if(path.endsWith('/test')){tests++;testJobs.add(path.split('/').at(-2));return route.fulfill({status:202,json:{ok:true}});}
+    if(path.endsWith('/test')){tests++;const testId=crypto.randomUUID();testJobs.set(path.split('/').at(-2),testId);return route.fulfill({status:202,json:{ok:true,testId}});}
     if(req.method()==='POST'){const id=`00000000-0000-0000-0000-${String(++issued).padStart(12,'0')}`;bindings.add(id);hashes.set(id,crypto.createHash('sha256').update(req.postDataJSON().subscription.endpoint).digest('hex'));return route.fulfill({status:201,json:{ok:true,subscription:{id}}});}
     const id=path.split('/').at(-1);
     if(req.method()==='DELETE'){bindings.delete(id);return route.fulfill({json:{ok:true}});}
@@ -61,6 +63,13 @@ const publicKey = generateVAPIDKeys().publicKey;
   assert.ok(!page.url().includes(token));
   await page.locator('#stockOrderSubmissionCard [data-push-test]').click();
   await page.locator('.push-controls-status').filter({hasText:'Test alert queued'}).waitFor();assert.equal(tests,1);
+  const progress=page.locator('#stockOrderSubmissionCard [data-push-progress]');
+  await progress.filter({hasText:'Waiting for a delivery retry'}).waitFor();
+  deliveryState='accepted';
+  await progress.filter({hasText:'Accepted by the push provider'}).waitFor();
+  assert.match(await progress.innerText(),/does not confirm that the phone displayed it/);
+  assert.equal(tests,1,'Tracking the queued test never sends it again');
+  deliveryState='pending';
   // A tap can open the exact owned order even outside the public list window.
   await page.goto(base+'/track-orders.html?requestId='+order.id+'&openOrder=1');
   await page.locator('#stockRequestDetailsTitle').filter({hasText:order.id}).waitFor();
@@ -74,7 +83,8 @@ const publicKey = generateVAPIDKeys().publicKey;
   await lab.click(); await lab.filter({hasText:'Turn off alerts'}).waitFor();
   assert.ok(calls.find(c=>c.method==='POST'&&c.path==='/api/lab/push/subscriptions'));
   const labTest=page.locator('#labPushPanel [data-push-test]');
-  const labStatus=page.locator('#labPushPanel .push-controls-status');
+  const labStatus=page.locator('#labPushPanel .push-controls-status').first();
+  const labProgress=page.locator('#labPushPanel [data-push-progress]');
   assert.equal(await labTest.isEnabled(),true);
   assert.equal(await labTest.evaluate(el=>getComputedStyle(el).opacity),'1');
   assert.equal(await labTest.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(230, 207, 140)');
@@ -86,7 +96,7 @@ const publicKey = generateVAPIDKeys().publicKey;
   const beforeTest=tests;
   const beforePermission=await page.evaluate(()=>window.pushPermissionRequests);
   await labTest.click();
-  await labStatus.filter({hasText:'Test alert queued'}).waitFor();
+  await labProgress.filter({hasText:'Test alert queued'}).waitFor();
   assert.equal(tests,beforeTest+1);
   assert.equal(await page.evaluate(()=>window.pushPermissionRequests),beforePermission+1);
   await page.evaluate(()=>{Notification.permission='denied';window.dispatchEvent(new Event('focus'));});
@@ -103,7 +113,7 @@ const publicKey = generateVAPIDKeys().publicKey;
   await deviceCheck.click();
   await report.waitFor({state:'visible'});
   assert.match(await report.innerText(),/this device matches/);
-  assert.match(await report.innerText(),/waiting for a delivery retry/);
+  assert.match(await report.innerText(),/waiting for a delivery retry/i);
   assert.equal(tests,beforeReadOnlyTest,'Checking never sends a notification');
   assert.equal(await page.evaluate(()=>window.pushPermissionRequests),beforeReadOnlyPermission,'Checking never prompts for permission');
   deliveryState='accepted';await deviceCheck.click();
@@ -116,7 +126,7 @@ const publicKey = generateVAPIDKeys().publicKey;
   await deviceCheck.click();
   await labTest.filter({hasText:'Reconnect & test'}).waitFor();
   assert.doesNotMatch(await labStatus.innerText(),/Alerts are on/);
-  await labTest.click();await labStatus.filter({hasText:'Test alert queued'}).waitFor();
+  await labTest.click();await labProgress.filter({hasText:'Test alert queued'}).waitFor();
   assert.equal(tests,beforeReadOnlyTest+1);
   await deviceCheck.click();await report.filter({hasText:'this device matches'}).waitFor();
   // Also repair a server binding that disappeared while the browser remained registered.
