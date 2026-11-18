@@ -532,7 +532,7 @@ function syncSiteMenuClosePosition() {
     siteMenuPanel.style.setProperty("--site-menu-title-size", getComputedStyle(title).fontSize);
     siteMenuPanel.style.setProperty("--site-menu-content-top", `${Math.max(76, top + box.height + 24)}px`);
   }
-  const intro = [...document.querySelectorAll(".tube-workspace-intro h2, .clinical-workspace-intro h2, .stock-control-intro h2, .stock-order-head h2, .home-hero-content h2")]
+  const intro = [...document.querySelectorAll(".laboratory-heading h2, .tube-workspace-intro h2, .clinical-workspace-intro h2, .stock-control-intro h2, .stock-order-head h2, .home-hero-content h2")]
     .find(el => el.getClientRects().length && el.getBoundingClientRect().top >= 76 && el.getBoundingClientRect().top < window.innerHeight / 2);
   const contentBox = document.querySelector(".container")?.getBoundingClientRect();
   const introBox = intro?.getBoundingClientRect();

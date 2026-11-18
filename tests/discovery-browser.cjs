@@ -148,8 +148,9 @@ async function exerciseTubePlanWorkflow(page, width) {
   const names = await page.evaluate(() => [...selectedTestNames]);
   await search.fill('INR');
   await page.locator('[data-test-name="INR"] .discovery-select').click();
-  assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), names);
-  assert.equal(await search.inputValue(), '', 'Repeat selection also clears the field');
+  assert.deepEqual(await page.evaluate(() => [...selectedTestNames]), names.filter(name => name !== 'INR'));
+  assert.equal(await search.inputValue(), 'INR', 'Removing a test keeps the current search');
+  await select('INR', 'INR');
   // Details is a distinct keyboard control and never changes plan membership.
   const details = page.locator('[data-test-name="INR"] .discovery-inspect');
   await details.focus();
@@ -192,7 +193,7 @@ async function exerciseTubePlanWorkflow(page, width) {
   await page.locator('#closeDrawPlannerBtn').focus();
   await page.keyboard.press('Shift+Tab');
   assert.equal(await page.locator('#drawModal').evaluate(el => el.contains(document.activeElement)), true, 'Planner traps focus');
-  await page.locator('[aria-label="Remove INR from Tube Plan"]').click();
+  await page.locator('#drawModal [aria-label="Remove INR from Tube Plan"]').click();
   assert.equal(await page.evaluate(() => selectedTestNames.has('INR')), false);
   assert.equal(await page.locator('#drawModal').evaluate(el => el.contains(document.activeElement)), true, 'Removal retains usable focus');
   await page.keyboard.press('Escape');
@@ -324,7 +325,7 @@ async function exerciseTubePlanWorkflow(page, width) {
         }));
         assert.deepEqual(hamburger, { background:'rgba(0, 0, 0, 0)', border:'none', paths:3, middleOpacity:'1' });
         const menuToggleBox = await page.locator('#menuToggleBtn').boundingBox();
-        const contentGuide = await page.locator('#tubeWorkspaceTitle').boundingBox();
+        const contentGuide = await page.locator('.laboratory-heading h2').boundingBox();
         const brandTitle = await page.locator('.brand-home-btn').evaluate(el => ({
           top:el.getBoundingClientRect().top, center:el.getBoundingClientRect().left+el.getBoundingClientRect().width/2,
           size:getComputedStyle(el).fontSize
@@ -527,16 +528,17 @@ async function exerciseTubePlanWorkflow(page, width) {
         assert.equal(header.titleOpacity, '1', 'Planner title stays visible');
         await page.screenshot({ path:path.join(screenshots, `scrolled-plan-${width}-${theme}.png`) });
         await page.locator('#drawPlannerBody').evaluate(el => { el.scrollTop = 0; });
-        await page.locator('[aria-label="Remove FBC from Tube Plan"]').click();
+        await page.locator('#drawModal [aria-label="Remove FBC from Tube Plan"]').click();
         assert.equal(await page.locator('.draw-selected-chip').count(), 4);
         await page.evaluate(() => {
           selectedTestNames.clear(); selectedTestNames.add('HIV ELISA'); refreshSelectionUi({ rerenderCards: false });
         });
         await page.locator('#closeDrawPlannerBtn').click();
         await card.locator('.discovery-select').click();
-        assert.equal(await page.evaluate(() => selectedTestNames.size), 1, 'Selected result cannot silently remove');
+        assert.equal(await page.evaluate(() => selectedTestNames.size), 0, 'Selecting an active result removes it');
+        await card.locator('.discovery-select').click();
         await page.locator('#selectionCartBar').click();
-        await page.locator('[aria-label="Remove HIV ELISA from Tube Plan"]').click();
+        await page.locator('#drawModal [aria-label="Remove HIV ELISA from Tube Plan"]').click();
         assert.equal(await page.evaluate(() => selectedTestNames.size), 0);
         await page.locator('#closeDrawPlannerBtn').click();
         // Real local records and production planner functions; no external mappings.
@@ -641,7 +643,6 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.deepEqual(actual.sort(), expected.sort(), `Drug search: ${query}`);
     }
     await drugPage.locator('#searchInput').fill('valproac acid');
-    await drugPage.locator('.discovery-open').click();
     await drugPage.locator('.discovery-inspect').click();
     assert.match(await drugPage.locator('.discovery-body').innerText(), /Gold\/Yellow/);
     await drugPage.locator('.discovery-select').click();
@@ -679,14 +680,16 @@ async function exerciseTubePlanWorkflow(page, width) {
       assert.equal(initialVisual.panelImage, 'none', 'Find My Test form does not cover the photograph');
       assert.equal(initialVisual.input, 'rgba(0, 0, 0, 0)', 'Find My Test fields use untinted frost');
       if (width === 390) {
-        for (const [index, imageName] of [[0, 'scene-reference-20261013'], [1, 'scene-pregnancy-20261013']]) {
+        for (const index of [0, 1]) {
           await testPage.locator('.clinical-choice-trigger').nth(index).click();
           const choiceVisual = await testPage.locator('#clinicalChoiceModal').evaluate(el => ({
             image:getComputedStyle(el).backgroundImage,
+            background:getComputedStyle(el).backgroundColor,
             sheet:getComputedStyle(el.querySelector('.clinical-choice-sheet')).backgroundColor,
             option:getComputedStyle(el.querySelector('.clinical-choice-option:not(.is-selected)')).backgroundColor
           }));
-          assert.match(choiceVisual.image, new RegExp(imageName), 'Choice background stays inside the lab');
+          assert.equal(choiceVisual.image, 'none', 'Choice modal shows the workstation behind it');
+          assert.equal(choiceVisual.background, 'rgba(0, 0, 0, 0)');
           assert.equal(choiceVisual.sheet, 'rgba(0, 0, 0, 0)', 'Choice sheet lets the scene show through');
           assert.equal(choiceVisual.option, 'rgba(3, 17, 31, 0.06)', 'Choice rows stay transparent');
           await testPage.locator('#clinicalChoiceCloseBtn').click();

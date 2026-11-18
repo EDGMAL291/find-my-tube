@@ -26,7 +26,6 @@ const base = process.env.FMT_TEST_URL || 'http://127.0.0.1:3000';
         assert.match(await card.locator('.discovery-details').innerText(), /Clinical use/);
         await card.locator('.discovery-select').click();
         assert.equal(await search.inputValue(), '', 'Selecting a new assay still clears search');
-        await card.locator('.discovery-select').click();
         assert.equal(await page.evaluate(name => getSelectedTests().filter(test => test.name === name).length, record.name), 1);
 
         const audit = await page.evaluate(expected => {
