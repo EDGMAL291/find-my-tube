@@ -1315,7 +1315,7 @@
         };
 
         const registerServiceWorker = () => navigator.serviceWorker
-          .register("./service-worker.js?v=20261112a", { updateViaCache: "none" })
+          .register("./service-worker.js?v=20261118a", { updateViaCache: "none" })
           .then((registration) => {
             if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
             registration.addEventListener("updatefound", () => {
@@ -1360,6 +1360,6 @@
   </script>
   <script src="assets/js/laboratory.js?v=20261112a"></script>
   <script src="assets/js/quick-guide.js?v=20261019b"></script>
-  <script src="assets/js/push-notifications.js?v=20261027g"></script>
+  <script src="assets/js/push-notifications.js?v=20261118a"></script>
 </body>
 </html>

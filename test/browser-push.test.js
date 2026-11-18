@@ -78,6 +78,9 @@ test('service worker displays safe in-scope deep links and rejects external clic
  vm.runInNewContext(fs.readFileSync('service-worker.js', 'utf8'), { self, URL, console });
  handlers.push({ data: { json: () => ({ kind: 'client', orderId: 'ORDER-1', url: 'https://evil.test' }) }, waitUntil: p => { pending = p; } }); await pending;
  assert.equal(new URL(notification.data.url).pathname, '/app/track-orders.html'); assert.equal(new URL(notification.data.url).searchParams.get('openOrder'), '1');
+ assert.equal(notification.tag, 'fmt-order-ORDER-1');
+ handlers.push({ data: { json: () => ({ kind: 'client', orderId: 'ORDER-1', eventId: 'test:fixture' }) }, waitUntil: p => { pending = p; } }); await pending;
+ assert.equal(notification.tag, 'fmt-push-test:fixture');
  handlers.notificationclick({ notification: { close() {}, data: { url: 'https://evil.test' } }, waitUntil: p => { pending = p; } }); await pending;
  assert.equal(opened, `${scope}index.html`);
  handlers.push({ data: { json() { throw new Error(); } }, waitUntil: p => { pending = p; } }); await pending; assert.ok(notification.body);

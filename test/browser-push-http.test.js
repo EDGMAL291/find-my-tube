@@ -12,7 +12,7 @@ test('HTTP push config reveals only public key; receipt reads use the public ord
  const token = push.issueOrderToken('PUSH-HTTP');
  const row = { id: 'PUSH-HTTP', status: 'pending', requester_name: 'Fixture Nurse', ward_or_unit: 'Ward', contact_extension: 'private-extension', request_text: 'private-legacy-contact', status_history: [], stock_request_items: [], created_at: new Date().toISOString() };
  const subscriptionId='12345678-1234-1234-1234-123456789012';
- const hash='a'.repeat(64);let jobReads=0;
+ const hash='a'.repeat(64);const jobFilters=[];let queuedTest;
  let subscriptionWrites=0;
  const fixture = http.createServer(async (req,res) => {
   const url=new URL(req.url,'http://localhost');let text='';for await(const chunk of req)text+=chunk;
@@ -23,8 +23,15 @@ test('HTTP push config reveals only public key; receipt reads use the public ord
    const owned=url.searchParams.get('id')===`eq.${subscriptionId}`&&url.searchParams.get('kind')==='eq.client'&&url.searchParams.get('recipient_key')==='eq.PUSH-HTTP'&&url.searchParams.get('order_id')==='eq.PUSH-HTTP';
    return send(owned?[{id:subscriptionId,expires_at:new Date(Date.now()+60000).toISOString(),endpoint_hash:hash}]:[]);
   }
+  if(url.pathname.endsWith('/web_push_jobs')&&req.method==='POST') {
+   queuedTest=JSON.parse(text);
+   return send([]);
+  }
   if(url.pathname.endsWith('/web_push_jobs')&&req.method==='GET') {
-   jobReads++;assert.equal(url.searchParams.get('subscription_id'),`eq.${subscriptionId}`);assert.equal(url.searchParams.get('event_key'),'like.test:%');
+   assert.equal(url.searchParams.get('subscription_id'),`eq.${subscriptionId}`);
+   const eventFilter=url.searchParams.get('event_key');
+   jobFilters.push(eventFilter);
+   if(eventFilter!=='like.test:%'&&eventFilter!==`eq.${queuedTest?.event_key}`)return send([]);
    return send([{state:'delivered',attempts:1,created_at:new Date().toISOString(),delivered_at:new Date().toISOString(),expires_at:new Date(Date.now()+86400000).toISOString()}]);
   }
   return send([]);
@@ -47,12 +54,20 @@ test('HTTP push config reveals only public key; receipt reads use the public ord
   const own=await fetch(base+'/api/push/orders/PUSH-HTTP',{headers:{Authorization:`Bearer ${token}`}});
   assert.equal(own.status,200);const body=await own.text();assert.ok(body.includes('Fixture Nurse'));assert.doesNotMatch(body,/private-extension|private-legacy-contact|contactExtension|requestText/);
   assert.equal((await fetch(base+'/api/lab/push/subscriptions',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,401);
-  const check=(id=subscriptionId,authorization=token)=>fetch(`${base}/api/push/orders/PUSH-HTTP/subscriptions/${id}/check`,{method:'POST',headers:{Authorization:`Bearer ${authorization}`,'Content-Type':'application/json'},body:JSON.stringify({endpointHash:hash})});
+  const check=(id=subscriptionId,authorization=token,testId)=>fetch(`${base}/api/push/orders/PUSH-HTTP/subscriptions/${id}/check`,{method:'POST',headers:{Authorization:`Bearer ${authorization}`,'Content-Type':'application/json'},body:JSON.stringify({endpointHash:hash,testId})});
   assert.equal((await check(subscriptionId,'other-token')).status,403);
   const result=await(await check()).json();assert.equal(result.matchesDevice,true);assert.equal(result.lastTest.state,'accepted');
   assert.doesNotMatch(JSON.stringify(result),/private-|endpoint_hash|p256dh|auth|payload/);
   assert.equal((await(await check('22345678-1234-1234-1234-123456789012')).json()).enabled,false);
-  assert.equal(jobReads,1,'Only an owned channel may read its test history');
+  const testResponse=await fetch(`${base}/api/push/orders/PUSH-HTTP/subscriptions/${subscriptionId}/test`,{method:'POST',headers:{Authorization:`Bearer ${token}`}});
+  assert.equal(testResponse.status,202);
+  const {testId}=await testResponse.json();
+  assert.equal(queuedTest.event_key,`test:${testId}`);
+  assert.equal((await(await check(subscriptionId,token,testId)).json()).lastTest.state,'accepted');
+  const unknownTestId='12345678-1234-1234-1234-123456789013';
+  assert.equal((await(await check(subscriptionId,token,unknownTestId)).json()).lastTest,null);
+  assert.equal((await check(subscriptionId,token,'invalid')).status,400);
+  assert.deepEqual(jobFilters,['like.test:%',`eq.test:${testId}`,`eq.test:${unknownTestId}`]);
   assert.equal(subscriptionWrites,0);assert.ok(!errors.includes(keys.privateKey));
  } finally {
   await new Promise(resolve=>{child.once('exit',resolve);child.kill();});
